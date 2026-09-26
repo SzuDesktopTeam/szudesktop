@@ -1,0 +1,62 @@
+/* The same objects appear on the planning card and inside the lived-in garden. */
+.garden-projects{margin:0 0 22px;background:#fbf5e5}
+.project-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:20px}
+.project-heading .eyebrow{font-size:12px;margin:0 0 5px;color:#78683f}
+.project-heading h2{font-size:26px;margin:0;color:#476247}
+.project-count{flex-shrink:0;padding:6px 9px;border:1px solid #cbb996;font-size:12px;color:#756342;background:#f1e6cb}
+.project-feature{display:grid;grid-template-columns:160px minmax(0,1fr);gap:24px;align-items:center}
+.project-art-card{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;background:linear-gradient(#e8edd3 0 66%,#c3cf93 66%);border:2px solid #a7ae78;box-shadow:inset 0 0 0 4px #f4f0d1;min-height:150px}
+.project-pixel-art{display:block;width:100%;height:auto;image-rendering:pixelated;flex-shrink:0}
+.project-art-card .project-pixel-art{max-width:140px}
+.project-art-card>span{margin-top:14px;font-size:12px;line-height:1.5;color:#4c6241;text-align:center}
+.project-copy h3{font-size:24px;color:#655032;margin:0 0 8px}
+.project-copy>p{font-size:13px;color:#706046;margin:0 0 13px;line-height:1.8}
+.project-materials{display:flex;gap:10px 18px;flex-wrap:wrap;margin:0 0 12px;padding:0;list-style:none}
+.project-materials li{display:flex;align-items:center;gap:7px;color:#6a5b40;font-size:13px}
+.project-materials .sprite{width:24px;height:24px}
+.project-materials strong{font-variant-numeric:tabular-nums;margin-left:6px;font-weight:600}
+.project-copy .project-requirement{font-size:12px;color:#795f3d;margin-bottom:13px}
+.project-copy .project-requirement.is-met{color:#4f7047}
+.project-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:13px;border-top:1px dashed #cfc099}
+.project-bottom>span{font-size:12px;line-height:1.7;color:#756043}
+.project-bottom>button{flex-shrink:0;font-size:14px}
+.project-owned{display:flex;gap:13px;flex-wrap:wrap;padding-top:18px;margin-top:20px;border-top:1px solid #ded0b1}
+.project-owned>div{display:flex;align-items:center;gap:9px;flex:1;min-width:220px;background:#f2ecd8;padding:10px;border:1px solid #d7c8a7}
+.project-owned .project-pixel-art{width:56px}
+.project-owned>div>span{flex:1}
+.project-owned strong{display:block;font-size:13px;color:#67563b}
+.project-owned small{display:block;font-size:12px;color:#726a50;margin-top:3px}
+.project-owned .quiet{font-size:12px;min-height:34px}
+.project-finished{font-size:14px;color:#655b43;line-height:1.9}
+.garden-project-strip{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(70px,auto);align-items:center;gap:10px;min-width:0;margin:0 0 20px;padding:12px;border:1px solid #bdc195;background:#f0f1da;box-shadow:inset 3px 0 #899766}
+.garden-project-strip>.project-pixel-art{width:44px;height:36px}
+.garden-project-strip>div{min-width:0}
+.garden-project-strip small{display:block;font-size:13px;color:#506344;font-weight:600}
+.garden-project-strip p{font-size:12px;line-height:1.5;color:#6c6148;margin:3px 0 0}
+.garden-project-strip>button{min-width:0;max-width:92px;white-space:normal;font-size:12px;min-height:34px;padding:4px;line-height:1.5}
+.garden-built-scene{display:flex;align-items:flex-end;gap:9px;pointer-events:none;position:absolute;z-index:2}
+.garden-built-piece{display:block;width:85px;filter:drop-shadow(1px 2px #52653b22)}
+.garden-built-piece--lakeLights{width:108px}
+/* Reserve a separate lawn below the harvest note: decorations never cover a
+   plot or its instructions, even after all three projects have been equipped. */
+.farm-landscape:has(.garden-built-scene--farm){padding-bottom:88px}
+.garden-built-scene--farm{left:12px;right:12px;bottom:12px;max-width:none;min-height:60px;justify-content:center;gap:12px}
+.garden-built-scene--farm .garden-built-piece{width:92px;flex:0 1 92px;min-width:0}
+.garden-built-scene--farm .garden-built-piece--lakeLights{width:108px;flex-basis:108px}
+.garden-built-scene--room{left:12px;right:12px;bottom:6px;justify-content:space-between}
+.garden-built-scene--room .garden-built-piece{width:70px}
+.garden-built-scene--room .garden-built-piece--lakeLights{position:absolute;right:10px;bottom:76px;width:90px}
+.garden-built-scene--home{right:22px;bottom:103px;max-width:54%}
+.garden-built-scene--home .garden-built-piece{width:74px}
+.garden-built-scene--home .garden-built-piece--lakeLights{width:95px}
+[data-theme=night] .garden-projects{background:#342f29}
+[data-theme=night] .project-heading h2,[data-theme=night] .project-copy h3{color:#e7cf9e}
+[data-theme=night] .project-heading .eyebrow,[data-theme=night] .project-copy>p,[data-theme=night] .project-bottom>span,[data-theme=night] .project-materials li,[data-theme=night] .project-finished{color:#dbc9a4}
+[data-theme=night] .project-count,[data-theme=night] .project-owned>div{background:#453c30;color:#e0cc9d;border-color:#786347}
+[data-theme=night] .project-owned strong,[data-theme=night] .project-owned small{color:#dec99e}
+[data-theme=night] .project-owned .quiet,[data-theme=night] .garden-project-strip>.quiet{color:#f0d7a5}
+[data-theme=night] .project-owned .quiet:hover,[data-theme=night] .garden-project-strip>.quiet:hover{color:#fff0cb;background:#665435;border-color:#b39a64}
+[data-theme=night] .garden-project-strip{background:#364133;border-color:#63714f;box-shadow:inset 3px 0 #8e9e67}
+[data-theme=night] .garden-project-strip small,[data-theme=night] .garden-project-strip p,[data-theme=night] .project-copy .project-requirement.is-met{color:#d4dfb0}
+@media(max-width:780px){.project-feature{grid-template-columns:125px minmax(0,1fr);gap:16px}.project-bottom{align-items:flex-start;flex-direction:column}.garden-built-piece{width:68px}.garden-built-piece--lakeLights{width:82px}}
+@media(max-width:480px){.project-heading{align-items:flex-start;gap:9px}.project-heading h2{font-size:22px}.project-count{font-size:12px;padding:4px 6px}.project-feature{grid-template-columns:1fr}.project-art-card{min-height:104px;flex-direction:row;gap:14px}.project-art-card>.project-pixel-art{width:118px}.project-art-card>span{margin:0;max-width:100px;text-align:left}.project-copy h3{font-size:22px}.project-bottom>button{width:100%}.project-owned>div{min-width:100%}.garden-project-strip{gap:8px;padding:10px;grid-template-columns:36px minmax(0,1fr) minmax(64px,auto)}.garden-project-strip>.project-pixel-art{width:36px;height:30px}.garden-project-strip small{font-size:12px}.garden-project-strip>button{max-width:82px}.farm-landscape:has(.garden-built-scene--farm){padding-bottom:76px}.garden-built-scene--farm{left:10px;right:10px;bottom:10px;min-height:52px;gap:8px}.garden-built-scene--farm .garden-built-piece{width:80px;flex-basis:80px}.garden-built-scene--farm .garden-built-piece--lakeLights{width:96px;flex-basis:96px}.garden-built-scene--home{right:12px;gap:2px}.garden-built-scene--home .garden-built-piece{width:48px}.garden-built-scene--home .garden-built-piece--lakeLights{width:65px}.garden-built-scene--room .garden-built-piece{width:56px}}

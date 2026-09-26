@@ -212,26 +212,57 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     await until(async()=>(await preferences()).motion===value,'animation preference did not save');
     // A persisted write can become visible before the UI finishes its response.
     await until(()=>main("Boolean(document.querySelector('#profile-form button') && !document.querySelector('#profile-form button').disabled)"),'animation setting save did not finish');
-    getPetMenu().getMenuItemById('home').click();
-    await until(()=>main("location.hash==='#home'"),'animation setting did not return home');
   };
-  const animationFrames={verified:false,systemReducedMotion:await pet("matchMedia('(prefers-reduced-motion: reduce)').matches"),preferenceRestored:false};
+  const reducedMotion=()=>pet("matchMedia('(prefers-reduced-motion: reduce)').matches");
+  const animationFrames={verified:false,systemReducedMotion:await reducedMotion(),emulationUsed:false,
+    environment:'system',systemReducedMotionRespected:null,mediaRestored:false,preferenceRestored:false};
+  const debuggerClient=petWin.webContents.debugger;
+  let debuggerAttached=false;
   try{
     await setMotion(true);
     if(animationFrames.systemReducedMotion){
       await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'system reduced-motion setting must retain static artwork');
-      animationFrames.reason='System reduced motion is enabled; frame advance was not exercised.';
-    }else{
-      await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'enabling animation did not reach the desktop companion');
-      const previous=await pet("document.querySelector('#pet-use').getAttribute('href')");
-      await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')!==${JSON.stringify(previous)}`),'desktop frame clock did not advance');
-      animationFrames.verified=true;
+      animationFrames.systemReducedMotionRespected=true;
+      // Only this isolated renderer receives a CSS media override; Windows
+      // preferences and application behavior outside smoke remain untouched.
+      // https://www.electronjs.org/docs/latest/api/debugger
+      // https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setEmulatedMedia
+      assert.equal(debuggerClient.isAttached(),false,'animation smoke owns its debugger session');
+      debuggerClient.attach('1.3');debuggerAttached=true;
+      await debuggerClient.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+      animationFrames.emulationUsed=true;
+      animationFrames.environment='renderer-media-emulation';
+      await until(async()=>!await reducedMotion(),'renderer media override did not take effect');
     }
+    await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'enabling animation did not reach the desktop companion without navigation');
+    const frame=()=>pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {id:use.getAttribute('href').slice(1),species:svg.dataset.species,action:svg.dataset.action,width:box.width,height:box.height}})()");
+    const first=await frame();
+    writeFileSync(path.join(evidenceDir,'pet-animation-before.png'),(await petWin.webContents.capturePage()).toPNG());
+    let second;
+    await until(async()=>{second=await frame();return second.id!==first.id;},'desktop frame clock did not advance');
+    writeFileSync(path.join(evidenceDir,'pet-animation-after.png'),(await petWin.webContents.capturePage()).toPNG());
+    for(const current of [first,second]){
+      assert.ok(PET_CLIPS[current.species]?.[current.action]?.frames.some(f=>f.id===current.id),'animation resolves to a registered drawing');
+      assert.ok(current.width>0&&current.height>0,'animated frame has visible SVG artwork');
+    }
+    assert.notEqual(first.id,second.id,'two distinct drawings are rendered');
+    animationFrames.frameIds=[first.id,second.id];
+    animationFrames.verified=true;
   }finally{
-    if(originalPreferences.motion!==true)await setMotion(originalPreferences.motion);
-    assert.deepEqual(await preferences(),originalPreferences,'animation check restores every upgrade preference');
-    animationFrames.preferenceRestored=true;
-    if(originalPreferences.motion===false)await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'restoring disabled motion did not reach the desktop companion');
+    try{
+      if(debuggerAttached){
+        try{await debuggerClient.sendCommand('Emulation.setEmulatedMedia',{features:[]});}
+        finally{debuggerClient.detach();}
+        assert.equal(debuggerClient.isAttached(),false,'animation debugger is detached');
+      }
+      await until(async()=>(await reducedMotion())===animationFrames.systemReducedMotion,'original system media preference was not restored');
+      animationFrames.mediaRestored=true;
+    }finally{
+      if(originalPreferences.motion!==true)await setMotion(originalPreferences.motion);
+      assert.deepEqual(await preferences(),originalPreferences,'animation check restores every upgrade preference');
+      if(originalPreferences.motion===false||animationFrames.systemReducedMotion)await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'restoring reduced motion did not reach the desktop companion without navigation');
+      animationFrames.preferenceRestored=true;
+    }
   }
   mainWin.close();
   menu('打开主窗口').click();

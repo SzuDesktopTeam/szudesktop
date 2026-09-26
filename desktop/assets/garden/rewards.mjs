@@ -1,4 +1,5 @@
 import {CROPS,JOURNEY,level} from './engine.mjs';
+import {PROJECTS} from './garden-loop.mjs';
 
 const increase=(before,after)=>Number.isFinite(before)&&Number.isFinite(after)?Math.max(0,after-before):0;
 
@@ -10,6 +11,32 @@ export function actionReward(before,after,action){
  const items=[];
  let title;
  switch(action.type){
+ case 'puzzleClaim':{
+  const claim=g.puzzle?.supplyClaim;
+  const coins=increase(old.coins,g.coins);
+  if(!claim||old.puzzle?.earnedDay===g.puzzle.earnedDay||!increase(old.seeds[claim.crop],g.seeds[claim.crop])||!coins)return null;
+  const pet=g.pets[g.active],beforePet=old.pets.find(p=>p.species===pet.species);
+  const xp=increase(beforePet?.xp,pet.xp),bond=increase(beforePet?.bond,pet.bond);
+  return {title:'备种礼已收进背包',items:[`${CROPS[claim.crop].name}种子 +${claim.quantity}`,`荔枝币 +${coins}`,`${pet.name}成长 +${xp} · 亲密 +${bond}`],levelUp:beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
+ }
+ case 'orderDeliver':{
+  const order=g.orders?.offers.find(o=>o.id===action.id);
+  if(!order||old.orders?.completed.includes(action.id)||!g.orders.completed.includes(action.id)||!increase(old.coins,g.coins))return null;
+  const pet=g.pets.find(p=>p.species===order.pet),beforePet=old.pets.find(p=>p.species===order.pet);
+  const given=Object.entries(order.needs).map(([id,n])=>`${CROPS[id].name} −${n}`).join('、');
+  const xp=increase(beforePet?.xp,pet?.xp),bond=increase(beforePet?.bond,pet?.bond);
+  return {title:`${pet?.name||'伙伴'}收到了你的心意`,items:[given,`荔枝币 +${increase(old.coins,g.coins)}`,`${pet?.name||'伙伴'}成长 +${xp} · 亲密 +${bond}`],levelUp:pet&&beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
+ }
+ case 'decor':{
+  const project=PROJECTS[action.id];
+  if(!project||old.decor.includes(action.id)||!g.decor.includes(action.id)||g.coins>=old.coins)return null;
+  return {title:`${project.name}建好啦`,items:[Object.entries(project.needs).map(([id,n])=>`${CROPS[id].name} −${n}`).join('、'),`荔枝币 −${old.coins-g.coins}`,'小屋与湖畔已经有了新的样子'],levelUp:false};
+ }
+ case 'sellSurplus':{
+  const count=increase(g.stock[action.crop],old.stock[action.crop]);
+  if(!count||!increase(old.coins,g.coins))return null;
+  return {title:'多余收成换成了下一份期待',items:[`${CROPS[action.crop].name} −${count}`,`荔枝币 +${increase(old.coins,g.coins)}`,'委托和下一项建设的材料已保留'],levelUp:false};
+ }
  case 'harvest':{
   const plot=old.plots?.[action.index];
   if(!plot||!CROPS[plot.crop]||g.plots?.[action.index]!==null||!increase(old.stats?.harvest,g.stats?.harvest))return null;

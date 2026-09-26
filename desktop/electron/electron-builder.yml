@@ -41,6 +41,8 @@ extraResources:
     to: puzzle2048.mjs
   - from: ../assets/garden/garden-orders.mjs
     to: garden-orders.mjs
+  - from: ../assets/garden/garden-loop.mjs
+    to: garden-loop.mjs
   - from: ../../dist/szudesktop-windows-amd64.exe
     to: szudesktop-windows-amd64.exe
   # 托盘图标：打包后 main.mjs 从 process.resourcesPath 解析。

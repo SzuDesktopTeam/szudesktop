@@ -3,6 +3,7 @@ import {PETS,AVAILABLE_PETS,PET_LIMIT,petDefinition} from './pet-catalog.mjs';
 import {PET_CONTEXTS,pickPetDialogue} from './pet-dialogue.mjs';
 import {createPuzzle,normalizePuzzle,movePuzzle,restartPuzzle,undoPuzzle} from './puzzle2048.mjs';
 import {createOrders,normalizeOrders,dailyOrders,deliverOrder} from './garden-orders.mjs';
+import {PROJECTS,projectStatus,sellableStock,puzzleSupply} from './garden-loop.mjs';
 export {PETS,DEFAULT_PET,AVAILABLE_PETS,petSprite,petViewBox} from './pet-catalog.mjs';
 export const CROPS={
  radish:{name:'小萝卜',icon:'radish',time:60000,price:4,sell:3,yield:2,level:1,xp:1},
@@ -78,7 +79,7 @@ export function normalize(input,now=Date.now()){
  for(const k of Object.keys(QUESTS))check(Number.isFinite(g.daily[k])&&g.daily[k]>=0,'每日任务数值错误');
  for(const k of ['harvest','focus','minutes','planted','tasks'])check(g.stats&&Number.isFinite(g.stats[k])&&g.stats[k]>=0,'累计记录格式错误');
  for(const k of ['discovered','decor','equipped','achievements','log'])check(Array.isArray(g[k]),'收藏存档格式错误');
- g.decor=g.decor.filter(k=>DECOR[k]);g.equipped=g.equipped.filter(k=>g.decor.includes(k));g.discovered=g.discovered.filter(k=>CROPS[k]);
+ g.decor=g.decor.filter(k=>DECOR[k]||PROJECTS[k]);g.equipped=g.equipped.filter(k=>g.decor.includes(k));g.discovered=g.discovered.filter(k=>CROPS[k]);
  g.log=g.log.slice(0,30).filter(x=>x&&typeof x.text==='string'&&Number.isFinite(x.time)).map(x=>({time:x.time,text:x.text.slice(0,180)}));
  check(!g.focus||(Number.isFinite(g.focus.end)&&Number.isInteger(g.focus.duration)&&g.focus.duration>=1&&g.focus.duration<=120),'专注存档格式错误');
  g.focus=g.focus?focusFields(g.focus):null;
@@ -170,8 +171,8 @@ export function act(state,a,now=Date.now()){
   break;}
  case 'puzzleUndo':g.puzzle=undoPuzzle(g.puzzle);break;
  case 'puzzleRestart':g.puzzle=restartPuzzle(g.puzzle,now);break;
- case 'puzzleClaim':check(g.puzzle.qualifiedDay===dayKey(now),'今天合成一次 128 或更大的数字，就能领取小礼物');check(g.puzzle.earnedDay!==dayKey(now),'今天的小游戏礼物已经领取');g.puzzle.earnedDay=dayKey(now);g.coins+=8;p.bond=clamp(p.bond+2,0,100);say(p,companionLine(g,p,'gameWin'),now);note(g,'小游戏小礼物：8 荔枝币、2 点亲密度。',now);break;
- case 'orderDeliver':{const result=deliverOrder(g,a.id,dayKey(now),CROPS,gardenLevel(g));say(p,companionLine(g,p,'harvest'),now);note(g,'完成伙伴委托「'+result.order.title+'」，收下 '+result.order.coins+' 荔枝币。',now);break;}
+ case 'puzzleClaim':{check(g.puzzle.qualifiedDay===dayKey(now),'今天合成一次 128 或更大的数字，就能领取小礼物');check(g.puzzle.earnedDay!==dayKey(now),'今天的小游戏礼物已经领取');const supply=puzzleSupply(g);g.puzzle.earnedDay=dayKey(now);g.puzzle.supplyClaim={day:dayKey(now),crop:supply.crop,quantity:supply.quantity};g.seeds[supply.crop]+=supply.quantity;g.coins+=8;p.bond=clamp(p.bond+2,0,100);p.xp+=3;p.mood=clamp(p.mood+10,0,100);g.daily.care++;say(p,companionLine(g,p,'gameWin'),now);note(g,'合成补给：'+CROPS[supply.crop].name+'种子 ×'+supply.quantity+'、8 荔枝币；伙伴成长 +3、亲密度 +2，计入一次陪伴。准备带去「'+supply.target+'」。',now);break;}
+ case 'orderDeliver':{const result=deliverOrder(g,a.id,dayKey(now),CROPS,gardenLevel(g)),recipient=g.pets.find(pet=>pet.species===result.order.pet);if(recipient){recipient.xp+=5;recipient.bond=clamp(recipient.bond+3,0,100);say(recipient,companionLine(g,recipient,'harvest'),now)}note(g,'完成伙伴委托「'+result.order.title+'」，收下 '+result.order.coins+' 荔枝币；'+(recipient?.name||PETS[result.order.pet].name)+'成长 +5、亲密度 +3。',now);break;}
  case 'gift':check(!g.daily.gift,'今天的补给已经领过啦');g.daily.gift=true;g.coins+=20;g.food++;g.seeds.radish+=2;say(p,'补给到手！今天也请多指教。',now);note(g,'领取每日补给：20 荔枝币、1 份食物、2 颗萝卜种子。',now);break;
  case 'pat':check(now-p.lastPat>=10000,'让它享受一下，稍等 10 秒再摸摸');p.lastPat=now;if((g.daily.pats[g.active]||0)<PAT_REWARD_LIMIT){g.daily.pats[g.active]=(g.daily.pats[g.active]||0)+1;p.xp+=2;care();}else g.daily.care++;p.mood=clamp(p.mood+5,0,100);say(p,companionLine(g,p,'pat'),now);note(g,'摸摸头，'+p.name+'舒服地眯起了眼。',now);break;
  case 'feed':check(!p.sleeping,'先唤醒伙伴再喂食');check(p.hunger<98,'它已经吃饱了，留着下次吧');
@@ -193,8 +194,9 @@ export function act(state,a,now=Date.now()){
  case 'unlock':{const n=g.plots.filter(x=>x!=='locked').length;const cost=60+(n-3)*30;check(g.plots[a.index]==='locked','这块地已经解锁');check(g.coins>=cost,'荔枝币不够，收获后去集市出售作物吧');g.coins-=cost;g.plots[a.index]=null;note(g,'新开垦了一块农田。',now);break;}
  case 'buySeed':{const c=CROPS[a.crop];check(c&&gardenLevel(g)>=c.level,'庭院还没有解锁这种作物');check(g.coins>=c.price,'荔枝币不够');g.coins-=c.price;g.seeds[a.crop]++;break;}
  case 'sell':{const c=CROPS[a.crop],n=g.stock[a.crop]||0;check(c&&n>0,'没有可出售的作物');g.coins+=n*c.sell;g.stock[a.crop]=0;note(g,'出售'+c.name+' ×'+n+'，获得 '+(n*c.sell)+' 荔枝币。',now);break;}
+ case 'sellSurplus':{const c=CROPS[a.crop];check(c,'没有这种作物');const n=sellableStock(g,a.crop);check(n>0,'这些收成已为伙伴委托和下一项建设留好，暂时没有多余的');g.coins+=n*c.sell;g.stock[a.crop]-=n;note(g,'出售多余的'+c.name+' ×'+n+'，获得 '+(n*c.sell)+' 荔枝币；为委托和建设留好的收成仍在篮子里。',now);break;}
  case 'buyFood':check(g.coins>=8,'需要 8 荔枝币');g.coins-=8;g.food++;break;
- case 'decor':{const d=DECOR[a.id];check(d,'没有这件装饰');if(!g.decor.includes(a.id)){check(g.coins>=d.price,'荔枝币不够');g.coins-=d.price;g.decor.push(a.id);}g.equipped=g.equipped.includes(a.id)?g.equipped.filter(x=>x!==a.id):[...g.equipped,a.id];break;}
+ case 'decor':{const d=DECOR[a.id]||PROJECTS[a.id];check(d,'没有这件装饰');if(!g.decor.includes(a.id)){if(PROJECTS[a.id]){const status=projectStatus(g,a.id);check(status.unlocked,d.requirement.kind==='harvest'?'累计收获 '+d.requirement.count+' 次后可以建设':'完成 '+d.requirement.count+' 份伙伴委托后可以建设');check(status.missing.every(item=>item.missing===0),'建设材料还没有齐，先去农田收获吧')}check(g.coins>=d.price,'荔枝币不够');g.coins-=d.price;if(d.needs)for(const [crop,n] of Object.entries(d.needs))g.stock[crop]-=n;g.decor.push(a.id);if(PROJECTS[a.id])note(g,'建好了「'+d.name+'」，收成变成了庭院里看得见的一角。',now)}g.equipped=g.equipped.includes(a.id)?g.equipped.filter(x=>x!==a.id):[...g.equipped,a.id];break;}
  case 'quest':{const q=QUESTS[a.id];check(q&&g.daily[a.id]>=q.target,'目标还没有完成');check(!g.daily.claimed.includes(a.id),'奖励已领取');g.daily.claimed.push(a.id);g.coins+=q.reward;note(g,'完成每日目标：'+q.name+'。',now);break;}
  case 'achievement':{const x=achievementList(g).find(x=>x.id===a.id);check(x?.done,'成就还没有完成');check(!g.achievements.includes(a.id),'奖励已领取');g.achievements.push(a.id);g.coins+=30;note(g,'获得纪念章：'+x.name+'。',now);break;}
  case 'focusStart':{check(!g.focus,'请先完成或取消当前专注');check(Number.isInteger(a.minutes)&&a.minutes>=1&&a.minutes<=120,'专注时长请输入 1–120 的整数分钟');const todo=a.todoId?s.todos.find(t=>t.id===a.todoId):null;check(!a.todoId||(todo&&!todo.done&&!todo.archived),'请选择一件未完成的事项');g.focus={startedAt:now,end:now+a.minutes*60000,duration:a.minutes,todoId:todo?.id||'',task:todo?.text||''};say(p,({libao:'我把小椅子搬好了。这一段安静陪你。',chestnut:'你忙你的。我在这个位置值班。',egret:'我就在这里，陪你安静一会儿。',pingu:'我先把玩具放好，小小声陪着你。',skipper:'进入专注行动。队长负责保持安静。',turtle:'这一段路，我们慢慢走。'})[p.species],now);break;}

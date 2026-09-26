@@ -28,7 +28,7 @@ export function puzzleCanMove(board){
  return false;
 }
 export function createPuzzle(seed=Date.now()){
- const state={board:emptyBoard(),score:0,best:0,rng:Number(seed)>>>0,moves:0,over:false,won:false,milestones:[],undo:null,earnedDay:'',qualifiedDay:''};
+ const state={board:emptyBoard(),score:0,best:0,rng:Number(seed)>>>0,moves:0,over:false,won:false,milestones:[],undo:null,earnedDay:'',qualifiedDay:'',supplyClaim:null};
  addTile(state);addTile(state);return state;
 }
 function snapshot(raw){
@@ -47,6 +47,7 @@ export function normalizePuzzle(raw,seed){
   undo:raw.undo?snapshot(raw.undo):null,
   earnedDay:typeof raw.earnedDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.earnedDay)?raw.earnedDay:'',
   qualifiedDay:typeof raw.qualifiedDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.qualifiedDay)?raw.qualifiedDay:'',
+  supplyClaim:raw.supplyClaim&&raw.supplyClaim.day===raw.earnedDay&&/^\d{4}-\d{2}-\d{2}$/.test(raw.supplyClaim.day)&&['radish','strawberry','blueberry','lychee'].includes(raw.supplyClaim.crop)&&raw.supplyClaim.quantity===1?{day:raw.supplyClaim.day,crop:raw.supplyClaim.crop,quantity:1}:null,
  };
 }
 function lineIndexes(direction,line){
@@ -87,6 +88,6 @@ export function undoPuzzle(input){
 }
 export function restartPuzzle(input,seed){
  const previous=normalizePuzzle(input),state=createPuzzle(seed);
- state.best=previous.best;state.milestones=[...previous.milestones];state.earnedDay=previous.earnedDay;state.qualifiedDay=previous.qualifiedDay;
+ state.best=previous.best;state.milestones=[...previous.milestones];state.earnedDay=previous.earnedDay;state.qualifiedDay=previous.qualifiedDay;state.supplyClaim=previous.supplyClaim;
  return state;
 }

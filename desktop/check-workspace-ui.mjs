@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {CROPS,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet} from './assets/garden/engine.mjs';
+import {CROPS,DECOR,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet} from './assets/garden/engine.mjs';
 import {todoView,focusView,weeklyView} from './assets/garden/productivity.mjs';
 import {ordersView} from './assets/garden/arcade-ui.mjs';
+import {reservedStock,sellableStock} from './assets/garden/garden-loop.mjs';
+import {cropPurpose,readyOrders} from './assets/garden/garden-path.mjs';
+import {projectScene} from './assets/garden/garden-loop-ui.mjs';
 
 // Exercise the actual page handlers with an isolated DOM and workspace API.
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
@@ -23,15 +26,15 @@ function farmFixture(){
  const plots=state.game.plots.map((p,i)=>{const classes=new Set(),el={dataset:{farmPlot:String(i),growth:''},attrs:{},disabled:false,isConnected:true,html:'',ready:{dataset:{},textContent:''},soil:{classList:{add:value=>classes.add(value),remove:value=>classes.delete(value),contains:value=>classes.has(value)}},setAttribute(name,value){this.attrs[name]=value},querySelector(){return this.soil},set innerHTML(value){this.html=value;classes.clear();for(const c of /class="soil ([^"]+)"/.exec(value)?.[1].split(' ')||[])classes.add(c);const due=/data-ready="(\d+)"/.exec(value);this.ready.dataset.ready=due?due[1]:''},get innerHTML(){return this.html}};readyLabels.push(el.ready);return el});
  for(const [id,node] of Object.entries({'farm-selected-title':title,'farm-plot-details':details,'farm-plot-actions':actions,'seed-choice':seeds}))nodes.set(id,node);
  const money={outerHTML:''},basket={outerHTML:''},daily={outerHTML:''},activity={hidden:true};
- const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,selectedCrop:'radish',selectedPlot:0,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
+ const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
-  render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
+  render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},paintGardenPath(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
   schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},
   api:async(path,data)=>{assert.equal(path,'/api/workspace');assert.ok(data?.data);requests++;return {revision:requests+1}},
  });
  context.$=selector=>context.document.querySelector(selector);
- vm.runInContext(section('function plotGrowth(','function market(')+section('function countdown(','function stampVersion(')+section('async function commit(','function renderPetCare(')+section('async function run(','// 只有下列公开查询')+section('function clocks(){','function paintDay('),context);
+ vm.runInContext(section('const $=','const pageIcons=')+section('function plotGrowth(','function market(')+section('function countdown(','function stampVersion(')+section('async function commit(','function renderPetCare(')+section('async function run(','// 只有下列公开查询')+section('function clocks(){','function paintDay('),context);
  vm.runInContext(section("document.addEventListener('click'","document.addEventListener('submit'")+section("document.addEventListener('change'",'let exiting='),context);
  context.renderFarmState();
  return {context,plots,seeds,title,details,actions,money,basket,now:()=>now,advanceTo:t=>{now=t},requests:()=>requests,
@@ -184,33 +187,45 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  assert.match(source,/addEventListener\('visibilitychange',[^]*?if\(!document\.hidden\)clocks\(\)/);
 });
 
-await check('midnight replaces yesterday orders and paints the new arcade day without remounting its board',()=>{
+await check('midnight refreshes order reservations and sale quantities while retaining the arcade board',()=>{
  const before=new Date(2026,8,27,23,59).getTime(),now=new Date(2026,8,28,0,1).getTime();
  class Clock extends Date {constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
  for(const tab of ['market','arcade']){
   const current=settle(createState(before),before);current.preferences.motion=false;
+  // Keep the first offer deliverable so its real submit ID identifies the day;
+  // an unfilled offer now routes to its missing crop instead of a disabled ID.
+  current.game.stock.radish=10;
   current.game.puzzle.qualifiedDay='2026-09-27';current.game.puzzle.earnedDay='2026-09-27';
-  current.game.orders.completed=[current.game.orders.offers[0].id];current.game.orders.total=1;
+  current.game.orders.completed=current.game.orders.offers.map(order=>order.id);current.game.orders.total=3;
   const orderCard={outerHTML:ordersView(current.game,{crops:CROPS})},board={id:'existing-board',listeners:{keydown:()=>{}}},paints=[];
   const main={board,set innerHTML(_value){assert.fail('跨日不得重挂整个游戏角或棋盘')}};
-  const context=vm.createContext({state:current,busy:false,workspaceReady:false,visitAttemptDay:'',page:'garden',gardenTab:tab,todoFilter:'open',Date:Clock,settle,dayKey,CROPS,ordersView,cropIcon:()=>'',
+  let marketMarkup='',marketRenders=0;
+  const context=vm.createContext({state:current,busy:false,workspaceReady:false,visitAttemptDay:'',page:'garden',gardenTab:tab,todoFilter:'open',Date:Clock,settle,dayKey,CROPS,DECOR,ordersView,gardenLevel,reservedStock,sellableStock,cropIcon:()=>'',sprite:()=>'',cat:()=>'',esc:String,
+   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,
    document:{activeElement:board,getElementById:id=>id==='main'?main:null,querySelector:selector=>selector==='.garden-orders'?orderCard:null,querySelectorAll:()=>[]},
    paintArcade:(root,game,options)=>paints.push({root,game,options}),
-   render(){assert.fail('跨日不能重建整个页面')},mountGardenPlayers(){assert.fail('跨日不能重新绑定棋盘')},
+   render(){assert.equal(tab,'market','跨日不能重建游戏角');marketRenders++;marketMarkup=context.market(context.state.game)},mountGardenPlayers(){assert.fail('跨日不能重新绑定棋盘')},
   });
+  vm.runInContext(section('function market(','function journal('),context);
+  marketMarkup=context.market(current.game);
+  assert.match(marketMarkup,/出售多余 ×6/,'昨天的委托全部完成时只预留建设材料');
   vm.runInContext(section('function paintDay(','function countdown('),context);
   context.refreshDay();
   assert.equal(context.state.game.daily.day,'2026-09-28');assert.equal(context.state.game.orders.day,'2026-09-28');
   if(tab==='market'){
-   assert.match(orderCard.outerHTML,/data-id="2026-09-28:0"/);assert.doesNotMatch(orderCard.outerHTML,/data-id="2026-09-27:/);
-   assert.match(orderCard.outerHTML,/今日 <b>0 \/ 3<\/b>/);assert.equal(paints.length,0);
+   assert.match(marketMarkup,/data-id="2026-09-28:0"/);assert.doesNotMatch(marketMarkup,/data-id="2026-09-27:/);
+   assert.match(marketMarkup,/今日 <b>0 \/ 3<\/b>/);assert.equal(paints.length,0);assert.equal(marketRenders,1);
+   const game=context.state.game,reserved=Math.min(game.stock.radish,reservedStock(game).radish),sale=sellableStock(game,'radish');
+   assert.ok(sale<6,'新委托会预留更多萝卜');
+   assert.match(marketMarkup,new RegExp(`为委托和下一项建设留 ${reserved} 个`));
+   assert.match(marketMarkup,new RegExp(`data-action="sellSurplus" data-crop="radish" ${sale?'':'disabled'}>出售多余 ×${sale}`));
   }else{
    assert.equal(paints.length,1);assert.equal(paints[0].root,main);assert.equal(paints[0].game.daily.day,'2026-09-28');
    assert.equal(paints[0].game.puzzle.earnedDay,'2026-09-27','旧领奖日期不能被改成今天，画面需按新的一天重新判断');
    assert.equal(paints[0].options.reducedMotion,true);assert.equal(main.board,board);assert.equal(context.document.activeElement,board);
    assert.equal(typeof board.listeners.keydown,'function');assert.match(orderCard.outerHTML,/data-id="2026-09-27:0"/,'未展示的集市无需重画');
   }
-  context.refreshDay();assert.equal(paints.length,tab==='arcade'?1:0,'当天的秒级时钟不得重复重画棋盘');
+  context.refreshDay();assert.equal(paints.length,tab==='arcade'?1:0,'当天的秒级时钟不得重复重画棋盘');assert.equal(marketRenders,tab==='market'?1:0,'当天的秒级时钟不得反复重绘集市');
  }
 });
 
@@ -258,7 +273,7 @@ function formFixture(){
   toast:message=>messages.push(message),
   document:{activeElement:draft,addEventListener:(name,callback)=>{listeners[name]=callback},getElementById:id=>nodes.get(id)||null,
    querySelector:selector=>selector==='.focus-studio'?focusPanel:selector==='.weekly-card'?weekPanel:null},
-  FormData:class {constructor(form){return new Map(Object.entries(form.elements).filter(([,value])=>typeof value==='object').map(([name,field])=>[name,field.value]));}},
+  FormData:class {constructor(form){return new Map(Object.entries(form.elements).filter(([,value])=>typeof value==='object'&&(value.type!=='checkbox'||value.checked)).map(([name,field])=>[name,field.value]));}},
   render:()=>{fullRenders++;draft.value='';},
  });
  context.run=work=>{pending=work();return pending;};
@@ -311,5 +326,29 @@ await check('focus start, custom start, claim and cancel preserve the adjacent t
   assert.equal(Boolean(f.context.state.game.focus),action==='focusStart'||action==='customStart');
   if(action==='customStart')assert.equal(f.context.state.game.focus.duration,7);
  }
+});
+
+await check('saving the animation preference immediately syncs the desktop pet only after the save',async()=>{
+ const f=formFixture(),notifications=[];
+ f.context.szuDesktop={petResult:result=>notifications.push({result,motion:f.context.state.preferences.motion,revision:f.context.revision})};
+ let release;const gate=new Promise(resolve=>{release=resolve}),save=f.context.api;
+ f.context.api=async(...args)=>{await gate;return save(...args)};
+ const form={id:'profile-form',elements:{name:{value:'庭院同学'},college:{value:'深大'},theme:{value:'night'},motion:{type:'checkbox',checked:false,value:'on'}}};
+ const pending=f.submit(form);
+ await farmTick();assert.equal(notifications.length,0,'pending settings must not reach the pet');
+ release();await pending;
+ assert.equal(f.writes.length,1);assert.equal(f.context.state.preferences.motion,false);assert.equal(f.context.state.preferences.theme,'night');
+ assert.equal(notifications.length,1);assert.deepEqual(JSON.parse(JSON.stringify(notifications[0])),{result:{ok:true,message:''},motion:false,revision:2});
+ assert.equal(f.fullRenders,1);assert.match(f.messages.at(-1),/已保存/);
+});
+
+await check('failed animation preference saves do not tell the desktop pet they succeeded',async()=>{
+ const f=formFixture(),notifications=[];
+ f.context.szuDesktop={petResult:result=>notifications.push(result)};
+ f.context.api=async()=>{throw Error('workspace write failed')};
+ const originalMotion=f.context.state.preferences.motion;
+ const form={id:'profile-form',elements:{name:{value:'庭院同学'},college:{value:''},theme:{value:'day'},motion:{type:'checkbox',checked:!originalMotion,value:'on'}}};
+ await assert.rejects(()=>f.submit(form),/workspace write failed/);
+ assert.equal(notifications.length,0);assert.equal(f.context.state.preferences.motion,originalMotion);assert.equal(f.fullRenders,0);assert.equal(f.messages.length,0);
 });
 console.log(`${checks} workspace UI checks passed`);

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import {arcadeView,ordersView,bindArcade,paintArcade} from './assets/garden/arcade-ui.mjs';
+import {arcadeView,ordersView,bindArcade,paintArcade,stickerItems,stickerShelfHTML} from './assets/garden/arcade-ui.mjs';
+import {createState} from './assets/garden/engine.mjs';
 import {createPuzzle,movePuzzle} from './assets/garden/puzzle2048.mjs';
 import {createOrders,dailyOrders,deliverOrder} from './assets/garden/garden-orders.mjs';
 
 const crops={radish:{name:'小萝卜',sell:6,level:1},strawberry:{name:'草莓',sell:12,level:1}},date=new Date();
 const day=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-const game={puzzle:createPuzzle(17),pets:[{species:'libao',name:'<新名字>',say:'<一句话>'}],active:0,coins:0,stock:{radish:0,strawberry:0},orders:createOrders()};
+const game={...createState().game,puzzle:createPuzzle(17),pets:[{species:'libao',name:'<新名字>',say:'<一句话>'}],active:0,coins:0,orders:createOrders()};
 dailyOrders(game,day,crops,1);
 let passed=0;const check=(title,fn)=>{fn();passed++;console.log('PASS',title);};
 
@@ -20,14 +21,26 @@ check('view renders all cells, controls, and escaped companion details',()=>{
 check('daily reward depends on today’s earned qualification, not an old large tile',()=>{
  game.puzzle.board[0]=128;
  assert.match(arcadeView(game),/class="arcade-claim " disabled/);
- game.puzzle.qualifiedDay=day;assert.match(arcadeView(game),/class="arcade-claim primary" >领取今天的小礼/);
+ game.puzzle.qualifiedDay=day;assert.match(arcadeView(game),/class="arcade-claim primary" >领取种子与小礼/);
  game.puzzle.earnedDay=day;assert.match(arcadeView(game),/class="arcade-claim " disabled>今天已领取/);
 });
 check('orders display insufficient materials, real payouts and completed deliveries',()=>{
- let html=ordersView(game,{crops});assert.match(html,/材料还没齐/);assert.match(html,/还差/);
+ let html=ordersView(game,{crops});assert.match(html,/data-action="gardenRoute" data-tab="farm" data-crop="radish"/);assert.match(html,/去准备小萝卜/);assert.match(html,/还差/);
  const order=game.orders.offers[0];Object.assign(game.stock,order.needs);
  html=ordersView(game,{crops});assert.ok(html.includes(`data-id="${order.id}"  class="primary"`));assert.ok(html.includes(`含额外答谢 ${order.bonus} 币`));
  deliverOrder(game,order.id,day,crops,1);html=ordersView(game,{crops});assert.match(html,/已送达，谢谢你/);assert.match(html,/第一张感谢便笺/);
+});
+check('claimed supply links to the actual saved crop, even when the next need has changed',()=>{
+ game.puzzle.supplyClaim={day,crop:'strawberry',quantity:1};
+ const html=arcadeView(game);
+ assert.match(html,/草莓种子 ×1/);assert.match(html,/data-action="gardenRoute" data-tab="farm" data-crop="strawberry"/);
+ assert.match(ordersView(game,{crops}),/成长 ＋5 · 亲密度 ＋3/);
+});
+check('stickers share one collection contract and stay optional beside the board',()=>{
+ game.puzzle.milestones=[128,256];
+ assert.equal(stickerItems(game).filter(item=>item.owned).length,2);
+ assert.equal((stickerShelfHTML(game,{ownedOnly:true}).match(/class="arcade-sticker/g)||[]).length,2);
+ assert.match(arcadeView(game),/<details class="card arcade-collection">/);
 });
 
 // Deliberately tiny event/element surface. Browser layout and animation are checked in the real UI.

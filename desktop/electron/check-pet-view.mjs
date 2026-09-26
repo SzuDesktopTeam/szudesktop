@@ -116,6 +116,6 @@ assert.deepEqual(reactions,['eat','celebrate','wake']);
 
 const packaging=read('electron-builder.yml');
 for(const name of ['pet-player.mjs','pet-animation.mjs','pet-animation-art.mjs','pet-dialogue.mjs'])assert.ok(packaging.includes('      - '+name),'renderer package needs '+name);
-for(const name of ['pet-dialogue.mjs','puzzle2048.mjs','garden-orders.mjs'])assert.ok(packaging.includes('    to: '+name),'engine package needs '+name);
+for(const name of ['pet-dialogue.mjs','puzzle2048.mjs','garden-orders.mjs','garden-loop.mjs'])assert.ok(packaging.includes('    to: '+name),'engine package needs '+name);
 assert.ok(packaging.includes('to: licenses/2048-MIT.txt'),'the adapted game license ships in the installer');
 console.log('Pet view: shared frame player, scale variables, IPC reactions and packaged dependencies passed');

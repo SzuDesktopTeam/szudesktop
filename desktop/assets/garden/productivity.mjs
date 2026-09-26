@@ -1,5 +1,6 @@
 import {dayKey,activePet,petSprite,journeyList} from './engine.mjs';
 import {petViewBox} from './pet-catalog.mjs';
+import {nextProject,projectStatus} from './garden-loop.mjs';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(label,action,attrs='',cls='quiet')=>`<button class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;
 const dateLabel=value=>value?new Date(value).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}):'';
@@ -27,7 +28,8 @@ export function weeklyView(state,now=Date.now()){
 
 export function focusView(state){
  const g=state.game,f=g.focus;
- return `<section class="card focus-studio"><p class="eyebrow">把这一刻留给自己</p><h2>专注一下</h2><div class="timer" id="focus-clock">25:00</div><p class="timer-label">${f?esc(f.task||'正在陪你完成这一段时间'):'选一件小事，或者只给自己留点时间。'}</p>${f?`<div class="actions focus-actions">${button('完成并领取奖励','focusClaim','id="focus-claim"','primary')}${button('结束本次专注','focusCancel')}</div>`:`<label for="focus-task">这次想做什么？</label><select id="focus-task"><option value="">不关联待办</option>${state.todos.filter(t=>!t.done&&!t.archived).map(t=>`<option value="${esc(t.id)}">${esc(t.text)}</option>`).join('')}</select><div class="actions focus-actions">${[5,25,45].map(n=>button(n+' 分钟','focusStart',`data-minutes="${n}"`,n===25?'primary':'')).join('')}</div><form id="focus-form" class="focus-custom"><label for="focus-minutes">自定时长</label><input id="focus-minutes" name="minutes" type="number" min="1" max="120" step="1" value="25" required><span>分钟</span><button>开始</button></form>`}<p class="focus-note">每完成 1 分钟，获得 1 荔枝币与 1 点成长。${g.stats.minutes?'已累计 '+g.stats.minutes+' 分钟。':''}计时不监测你的学习行为。</p>${f?'<p class="muted">计时已保存。安装版保持运行时可以在后台提醒；完全退出应用后不会发送通知。</p>':''}</section>`;
+ const project=nextProject(g),gap=project?Math.ceil(projectStatus(g,project.id).coinShort):0;
+ return `<section class="card focus-studio"><p class="eyebrow">把这一刻留给自己</p><h2>专注一下</h2><div class="timer" id="focus-clock">25:00</div><p class="timer-label">${f?esc(f.task||'正在陪你完成这一段时间'):'选一件小事，或者只给自己留点时间。'}</p>${f?`<div class="actions focus-actions">${button('完成并领取奖励','focusClaim','id="focus-claim"','primary')}${button('结束本次专注','focusCancel')}</div>`:`<label for="focus-task">这次想做什么？</label><select id="focus-task"><option value="">不关联待办</option>${state.todos.filter(t=>!t.done&&!t.archived).map(t=>`<option value="${esc(t.id)}">${esc(t.text)}</option>`).join('')}</select><div class="actions focus-actions">${[5,25,45].map(n=>button(n+' 分钟','focusStart',`data-minutes="${n}"`,n===25?'primary':'')).join('')}</div><form id="focus-form" class="focus-custom"><label for="focus-minutes">自定时长</label><input id="focus-minutes" name="minutes" type="number" min="1" max="120" step="1" value="25" required><span>分钟</span><button>开始</button></form>`}<p class="focus-note">每完成 1 分钟，获得 1 荔枝币与 1 点成长。${g.stats.minutes?'已累计 '+g.stats.minutes+' 分钟。':''}计时不监测你的学习行为。</p>${project?`<div class="focus-garden-note"><span>${gap?`这份积累可以用来准备${esc(project.name)}，还差 ${gap} 荔枝币。`:`${esc(project.name)}的材料钱已攒够，接下来慢慢备齐收成。`}</span>${button('看看庭院心愿 →','gardenRoute','data-tab="journal" data-anchor="garden-projects"')}</div>`:''}${f?'<p class="muted">计时已保存。安装版保持运行时可以在后台提醒；完全退出应用后不会发送通知。</p>':''}</section>`;
 }
 
 export function journeyView(g){

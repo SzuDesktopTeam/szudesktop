@@ -12,13 +12,16 @@
 .pet-action-book{margin-top:18px;border-top:1px dashed #c8a56f;padding-top:12px}
 .pet-action-book summary{cursor:pointer;font-weight:bold;color:#73532a}
 .pet-action-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}
-.pet-action-tabs button{font-size:11px;padding:4px 7px;min-height:30px}
+.pet-action-tabs button{font-size:12px;padding:4px 7px;min-height:30px}
 .pet-action-tabs button[aria-pressed=true]{background:#e4b963;color:#382817;border-color:#795428}
 .pet-frame-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .pet-frame-strip figure{margin:0;padding:6px 2px;border:1px solid #cfb990;background:#f2e5bd;text-align:center}
 .pet-frame-strip svg{width:100%;height:68px;image-rendering:pixelated}
-.pet-frame-strip figcaption{font-size:11px;color:#775837;font-variant-numeric:tabular-nums}
-.pet-frame-strip small{display:block;font-size:10px;color:#8d775a}
+.pet-frame-strip figcaption{font-size:12px;color:#775837;font-variant-numeric:tabular-nums}
+.pet-frame-strip small{display:block;font-size:12px;color:#8d775a}
+.pet-frame-details{margin-top:14px;padding-top:11px;border-top:1px dashed #c8b78f}
+.pet-frame-details>summary{font-size:12px;font-weight:400;color:#786242}
+.pet-frame-details[open]>summary{margin-bottom:12px}
 [data-theme=night] .pet-personality{background:linear-gradient(120deg,#372b28,#2e2927)}
 [data-theme=night] .pet-traits>span{background:#354536;color:#d3d8af;border-color:#758266}
 [data-theme=night] .pet-action-book summary{color:#d7ba85}

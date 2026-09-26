@@ -27,11 +27,13 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects frame-by-frame companions, personalities and garden games with saved progression. All 32 UI and desktop check groups, real browser playthroughs and local builds passed. Feature commit `a1685e0` passed [all nine remote CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36264549047), including installation upgrades, saved-data preservation and desktop-pet interactions. The Windows runner has system reduced motion enabled: frame progression was verified in the main-window browser, while this native-pet run verified static rendering and reaction reset, not animated playback. Full evidence and candidate checksums are recorded in [STATUS section 57](STATUS.md#57-逐帧伙伴与庭院小游戏2026-09-27源码未发布). The older screenshots below belong to earlier candidates and do not establish acceptance for the new animations.
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The current iteration connects the companion table, planting, requests, construction and collections: bring back a useful seed after a game, share your harvest, and gradually furnish your corner of the lake. Source remains in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Current build, visual and CI evidence belongs in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布). The [nine passing CI jobs for `a1685e0`](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36264549047) cover the earlier animation/game baseline in section 57, not this new garden loop; older screenshots below also do not establish acceptance for the new scenes.
 
 ### Companions with their own movement and personality
 
 All six species, including A-Qing in older saves, have **12 actions with 6 frames each: 432 independently rendered pixel frames**. The actions cover idle, looking around, walking, patting, eating, playing, sleeping, stretching awake, celebrating, accompanying focus, low mood and greeting. Eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player, with individual idle pacing and reactions to sleep, focus and care. The room's action book lets you play each action and inspect every frame. Another 30 static portraits remain available for reduced motion and postcard export. With motion disabled, care reactions resolve immediately so later sleep or focus changes are not blocked by an unfinished gesture.
+
+Saving the animation setting now immediately synchronizes the desktop pet; a failed save does not change it early. The new installation smoke first checks static behavior under system reduced motion, then emulates animation conditions only in its isolated renderer, verifies actual frame progression and restores all settings. **This native animation check is still awaiting the new CI run**; it does not modify Windows preferences.
 
 **576 Chinese lines cover 16 contexts**, with six alternatives per species and context. Each companion's rotation progress is saved. “Chat a little” responds to sleep, hunger, tiredness and time of day; care, harvests, focus, todos and game outcomes have their own replies.
 
@@ -46,10 +48,23 @@ All six species, including A-Qing in older saves, have **12 actions with 6 frame
 
 ![Companion personality and frame-by-frame action book in the running app](screenshot-pet-animation-preview.png)
 
-### A familiar game and two garden goals
+### From a single seed to a new corner of the garden
 
-- **Lychee Garden → Game corner: Merge Garden.** Complete 2048 rules, arrow keys, WASD, swipes and directional buttons, with short movement, merge and spawn animations. The board saves automatically, supports one-step undo and restart, and continues beyond 2048. Current and best scores are separate. First reaching 128 / 256 / 512 / 1024 / 2048 unlocks permanent stickers. Actually merging 128 or above today qualifies for one daily gift of **8 coins and 2 bond points**; keeping an old large tile does not grant a new day's reward.
-- **Lychee Garden → Market: companion harvest requests.** Three fixed daily requests consume existing produce. Payment equals the produce's regular sale value plus a **3 / 3 / 4-coin** bonus, totaling 10 extra coins daily. Completing 1 / 3 / 8 / 15 requests unlocks keepsakes. Missing materials and completed deliveries are explicit; no duplicate turn-ins, streak requirement or missed-day penalty.
+**Focus and companionship → seeds and planting → harvests → companion requests and construction → visible scenery and collections.** These rules replace the initial minigame reward in section 57, using the same seeds, produce, coins and companion progression throughout.
+
+- **Companion table · Prepare seeds together.** Full 2048 rules retain arrow-key / WASD / swipe input, saved boards, one-step undo and best scores. Actually merging 128 or above today unlocks one daily gift: **one needed seed, 8 coins, +3 growth, +2 bond and +10 mood**, counting as one daily care interaction. The seed fills a shortage in unfinished requests or the next project, taking stored produce, existing seeds and growing crops into account; locked crops are excluded. Go straight to planting after claiming. An old large tile cannot qualify for another day's gift.
+- **My farm · Harvests with a purpose.** Seed selection shows which companions and project need the crop. An incomplete request leads directly to that crop and an empty plot. Produce can also be fed to companions in their room. The market's “Sell surplus” retains materials for today's unfinished requests and the next construction project, selling only the remainder.
+- **Garden market · Deliver to the companion who asked.** Three fixed daily requests pay regular produce value plus **3 / 3 / 4 coins**. The requesting companion gains **+5 growth and +3 bond**, even when another pet is currently active. Completing 1 / 3 / 8 / 15 requests unlocks keepsakes, with no missed-day penalty.
+- **Memories and construction · Make harvests visible.** Construction spends the materials and coins below and places the finished item automatically. Putting an owned item away or displaying it again is free. Built decorations appear in the home, companion room and farm pixel scenes.
+- **Room collection and “Next step”.** Five 2048 milestone stickers, request keepsakes and visit-story mementos share the companion room. The home and garden suggest one actionable next step from real progress, leading to a ripe plot, deliverable request, construction, seed shop or focus session. Growing crops count toward what is already being prepared.
+
+| Garden project | Unlock condition | First construction cost |
+| :-- | :-- | :-- |
+| Lakeside picnic corner | Harvest 3 times | 60 coins + 4 radishes + 2 strawberries |
+| Window seedling shelf | Deliver 3 requests | 120 coins + 4 strawberries + 3 blueberries |
+| Lakeside lantern path | Deliver 8 requests | 240 coins + 4 blueberries + 3 lychees |
+
+The original daily supply remains 20 coins, one food item and two radish seeds, separate from the companion table's daily seed gift. Focus, planting and care can support garden progression without a mandatory 2048 milestone.
 
 ![2048 Merge Garden in the running app](screenshot-arcade-preview.png)
 

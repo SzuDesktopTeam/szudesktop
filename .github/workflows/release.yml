@@ -32,6 +32,9 @@ jobs:
           node desktop/check-arcade.mjs
           node desktop/check-garden-arcade.mjs
           node desktop/check-arcade-ui.mjs
+          node desktop/check-garden-loop.mjs
+          node desktop/check-garden-path.mjs
+          node desktop/check-garden-loop-ui.mjs
           node desktop/check-pet-dialogue.mjs
           node desktop/check-pet-animation.mjs
           node desktop/check-pet-player.mjs
