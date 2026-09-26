@@ -2555,7 +2555,7 @@ Pingu 的角色参考来自[官方介绍](https://www.pingu.jp/biz/about/)和[�
 - **真实页面**：用既有独立合成预览存档唤醒 Pingu、点击拿手动作、查看十八动作册与六帧 Noot，实际播种/浇水/等待成熟/收获/交付。播种回复“盖好土，别把我翅膀也盖住。”、浇水回复“浇这里，对，别浇我的影子。”。当前伙伴 Pingu 时交付栗栗委托，奖励框同时显示真实材料、31币、栗栗成长/亲密和“栗栗：东西齐了，纸条可以解除职务。”；没有把感谢语错算给 Pingu。
 - **布局与截图**：420px 视口的文档宽405px，无横向溢出；伙伴块底部641.45px、第一田块顶部696.45px，没有遮挡。恢复默认窗口后核对小屋、农田与动作册；控制台无警告或错误。新图：[Pingu小屋](screenshot-pingu-refined-preview.png)、[Noot六帧动作册](screenshot-pet-signatures-preview.png)、[农田伙伴](screenshot-pet-farm-preview.png)。
 - **构建与资源**：Go、便携ZIP、Electron NSIS均已按本轮最终源码重建；两类包许可检查通过。asar六个pet模块、resources内engine/dialogue/catalog/loop、Go内嵌副本与源码逐字节一致；Electron sidecar及ZIP内EXE与新Go输出一致。没有在用户本机运行安装程序。
-- **远端验收待推送后确认**：草稿PR #19继续使用；第58节CI不作为本轮证据。本轮没有新增学校真实业务验收，公开下载仍为beta0.9.2。
+- **远端验收已完成**：功能提交 `f4cb9cd` 的 [CI 36268378124](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36268378124) 9项验证/构建全部通过，release按分支策略跳过。草稿PR #19继续使用，详见59.5；本轮没有新增学校真实业务验收，公开下载仍为beta0.9.2。
 
 | 本地候选文件 | 字节数 | SHA-256 |
 |---|---:|---|
@@ -2564,3 +2564,14 @@ Pingu 的角色参考来自[官方介绍](https://www.pingu.jp/biz/about/)和[�
 | `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118437235 | `7b2575602e4475714e03dfcb463748a168fab42867997fd14a4042e1927dfdf7` |
 
 中英文README同步本轮内容、截图和未发布边界；没有另建任务清单。
+
+### 59.5 远端安装与桌宠证据
+
+功能提交 `f4cb9cd` 的 [CI 36268378124](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36268378124) **9 / 9通过**。下载该次 `electron-install-smoke-evidence`，检查安装汇总与三条打开路径：
+
+- 安装与渲染、beta0.9.1跨版本升级、旧程序文件清理、合成凭据解密、原伙伴进度保留、备份恢复、重开、便携内核共存、桌宠和托盘、缩放持久化、企鹅切换及卸载均通过。
+- `after-upgrade.json`、`reopen.json`、`reuse-portable.json` 的动画结果均为 `verified=true`、`systemReducedMotion=true`、`systemReducedMotionRespected=true`、`emulationUsed=true`、`environment=renderer-media-emulation`、`mediaRestored=true`、`preferenceRestored=true`。实际读取 `petanim-libao-idle-0` 与 `petanim-libao-idle-1`，已查看前后两张截图。
+- 已查看此次实际安装版 `companion-pingu.png`：圆头、红嘴、白肚与橙色脚的新画稿真实出现在独立桌宠中。此截图证明安装版新画稿与切换；18组动作的完整覆盖来自共享播放器/画稿检查，不把荔宝两帧的安装冒烟说成每一组动作都做了原生逐帧人工验收。
+- CI安装包 SHA-256 为 `70719e3b60047e905af71cf3c6713f1500a3d6c8a8b42fcf8b9317c1ae4ddf06`。59.4的本地包来自相同功能源码、不同构建环境，校验值不混用。
+
+后续只补充本次验证证据和中英文README；不合并PR，不打发布标签，不替换公开下载。
