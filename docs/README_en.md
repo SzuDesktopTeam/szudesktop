@@ -27,6 +27,8 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
+The changes are pushed in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), which tracks the candidate's Windows installation and upgrade checks. Public downloads have not switched to the candidate.
+
 **These changes are not publicly released. The download above is still beta0.9.2; local beta0.9.3 installer and portable candidates have been built.** The home, farm, companion room and study screenshots below come from the same candidate with a separate test save. Key browser workflows and build contents have been checked; actual installation, upgrades, system notifications and launch at login still need validation.
 
 ![Unreleased home page preview from the current source](screenshot-home-preview.png)

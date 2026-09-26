@@ -165,14 +165,14 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#cat-')"),'garden selection did not update desktop immediately');
   await main("document.querySelector('.companion-choice[data-index=\"0\"]').click()");
   await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#libao-')"),'garden cannot select libao');
-  await main("document.querySelector('.companion-picker').scrollIntoView({block:'center'})");
+  await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'})");
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
   writeFileSync(path.join(evidenceDir,'companion-picker.png'),(await mainWin.webContents.capturePage()).toPNG());
-  const picker=await main("(()=>{const r=document.querySelector('.companion-picker').getBoundingClientRect();return {x:Math.ceil(r.x),y:Math.ceil(r.y),width:Math.floor(r.width),height:Math.floor(r.height)}})()");
+  const picker=await main("(()=>{const r=document.querySelector('.pet-roster-card').getBoundingClientRect();return {x:Math.ceil(r.x),y:Math.ceil(r.y),width:Math.floor(r.width),height:Math.floor(r.height)}})()");
   writeFileSync(path.join(evidenceDir,'companion-roster.png'),(await mainWin.webContents.capturePage(picker)).toPNG());
   const mainSize=mainWin.getSize();
   mainWin.setMinimumSize(390,600);mainWin.setSize(420,780);
-  await main("document.querySelector('.companion-picker').scrollIntoView({block:'center'});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))");
+  await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))");
   assert.ok(await main('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),'companion page overflows in a narrow window');
   writeFileSync(path.join(evidenceDir,'companion-narrow.png'),(await mainWin.webContents.capturePage()).toPNG());
   mainWin.setSize(...mainSize);

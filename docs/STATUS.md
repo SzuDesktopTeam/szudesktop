@@ -2220,13 +2220,15 @@ Use case: stylized-concept. Asset type: original pixel-art background for an int
 
 | 文件 | 字节数 | SHA-256 |
 |---|---:|---|
-| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118,283,719 | `9dfb34e9d7347c14e55ca2478a5a32a617a2b3e48946708e6a535ce531c04373` |
+| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118,283,590 | `7547c7fd4f7bcb56caa8a1ea4dcf51341feb264b38c7682386de9ffa0c344fae` |
 | `dist/szudesktop-windows-amd64.exe` | 13,108,224 | `b565865ad1c4d59ffe379ff9062b39e98f378a666fee731a85638227bd871b7a` |
 | `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 7,850,720 | `32594df8bfd35175e5fac352ed04fd153e372226ade1fe2abaf3d2997dac8e8d` |
 
 安装包 SHA-256 与同名校验文件一致。最终四张界面截图均来自上述便携程序与独立合成测试存档：[首页](screenshot-home-preview.png)、[农田](screenshot-farm-preview.png)、[伙伴小屋](screenshot-garden-preview.png)、[学习与周回顾](screenshot-study-preview.png)。[分享图](screenshot-share-preview.png)为同一程序实际导出文件，展示合成测试存档中的实际累计值，不含学校个人数据。
 
-发布说明抽取 12 项检查与许可检查通过。升级验收脚本同步处理了新待办/偏好字段、四伙伴状态图标与学校登录卡片分区；保留旧格式升级样本，严格核对原有内容及明确的新字段默认值，丢失内容或伪造日期仍会使检查失败。纯 Node、Python 断言与语法检查通过，实际安装路径交由本 PR 的 Windows CI 执行。
+发布说明抽取 12 项检查与许可检查通过。升级验收脚本同步处理了新待办/偏好字段、四伙伴状态图标与学校登录卡片分区；保留旧格式升级样本，严格核对原有内容及明确的新字段默认值，丢失内容或伪造日期仍会使检查失败。纯 Node、Python 断言与语法检查通过。
+
+代码已推送至 [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19)。首轮 [CI 36258992671](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36258992671) 的功能回归、macOS 凭据、五平台 CLI 构建及 Windows 便携包运行检查通过。Windows 安装流程已实际完成旧版安装、升级、旧文件清理和升级前存档/凭据/宠物配置字节保留，后续界面检查因脚本仍引用已改名的 `.companion-picker` 中止。滚动和截图选择器已改为当前的 `.pet-roster-card`，并核对其他选择器；不跳过断言，完整安装闭环以修正后的 CI 结果为准。
 
 早一轮便携候选曾通过运行冒烟；本节不将该结果算作最终安装包验收，也不沿用 beta0.9.2 的安装升级结果。后续原生验收、远端 CI 和发布结果直接更新本节，不另建清单。
 
