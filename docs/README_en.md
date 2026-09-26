@@ -39,9 +39,13 @@ An original pixel-art lakeside scene now surrounds six working plots. Select a p
 
 [Earlier candidate companion room](screenshot-garden-preview.png) · [Study and weekly review](screenshot-study-preview.png) · [An actual exported garden postcard](screenshot-share-preview.png). Existing local saves remain compatible, with revised progression rules. Crops do not wither, and daily goals require no streak. The original garden backdrop was generated with the built-in image tool and is bundled with the app.
 
-Meet **Pingu** and **Skipper**, the penguin captain from *Madagascar*: one waddles and says Noot Noot; the other takes your rest breaks very seriously. Xiaobai, the campus egret, stays. Chestnut has been redrawn with a crooked ear, round belly and a slightly bewildered face. New saves start with five companions. A-Qing remains under “Old friends” in existing saves, preserving names, growth and the active selection.
+Meet **Pingu** and **Skipper**, the penguin captain from *Madagascar*: one waddles and says Noot Noot; the other takes your rest breaks very seriously. Both penguins have normal, happy, low-mood and sleeping states. Xiaobai, the campus egret, stays. Chestnut returns to its original chunky, abstract pixel proportions: utterly serious about occupying a cardboard box, and unaware of its own odd charm. New saves start with five companions. A-Qing remains under “Old friends” in existing saves, preserving names, growth and the active selection.
 
-![Unreleased penguin companions and the redrawn Chestnut](screenshot-pets-preview.png)
+![Unreleased penguin companions and the abstract Chestnut](screenshot-pets-preview.png)
+
+[Chestnut’s four expressions](cat-rough-preview.png): it takes being a cat seriously and never jokes about its own looks.
+
+Penguin integration baseline `1f5a23b` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079), including installation upgrades and native rendering and switching for both penguins. Chestnut’s subsequent return to abstract proportions and matter-of-fact dialogue has passed real-room, interaction-line and four-state artwork checks, and the local candidate packages have been rebuilt; the earlier CI remains the penguin integration baseline. Progress and artifact records are in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
 
 Implemented in the current source:
 

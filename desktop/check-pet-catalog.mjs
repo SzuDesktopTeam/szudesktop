@@ -97,7 +97,7 @@ test('desktop and garden share every species state and viewBox, including the re
    assert.equal(PET_SPRITES[sprite],spec.viewBox);assert.equal(petViewBox(pet),spec.viewBox);
   }
  }
- assert.equal(petViewBox('chestnut'),'0 0 32 36');
+ assert.equal(petViewBox('chestnut'),'0 0 20 22');
  assert.equal(petViewBox('pingu'),'0 0 32 40');assert.equal(petViewBox('skipper'),'0 0 32 40');
  for(const id of ['constructor','toString','__proto__','unknown'])assert.equal(petDefinition(id),PETS[DEFAULT_PET]);
 });

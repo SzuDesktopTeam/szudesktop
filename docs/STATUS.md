@@ -7,7 +7,7 @@
 
 ## 1. 当前状态
 
-- 2026-09-27 继续完善候选 beta0.9.3 宠物阵容：新增 Pingu 与 Skipper，保留小白，栗栗重画为歪耳、圆肚、呆脸；新档默认五位，阿青留在旧档的「老朋友」，原索引、名字与成长不变。名册与立绘已统一为共享扩展入口，规则回归通过；本轮真实界面、打包及远端 CI 证据单独记录在第 56 节，不能沿用下条 `09c2240` 的基线结论。
+- 2026-09-27 继续完善候选 beta0.9.3 宠物阵容：新增 Pingu 与 Skipper，保留小白，栗栗按反馈恢复原来的粗像素抽象比例，并以一本正经、不知道自己丑萌的猫语回应；新档默认五位，阿青留在旧档的「老朋友」，原索引、名字与成长不变。名册与立绘已统一为共享扩展入口；企鹅整合基线 `1f5a23b` 的 9 项 CI 与原生企鹅显示/切换已通过，之后的栗栗视觉和台词修订待最终核验。证据见第 56 节，不把旧包作为最终猫形象的验收。
 - 2026-09-27 产品审查后的 **beta0.9.3 本地候选版已构建，尚未公开发布**。补齐页面分区、待办编辑归档、专注记录与周回顾、跨日刷新、常驻偏好与提醒、七次回访故事、分享图、版本检查和反馈；调整成长规则，完成选田后集中操作与四伙伴四状态。关键浏览器路径、同版截图、构建一致性与许可检查已通过；[PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19) 的 `09c2240` 已通过全部 9 项 CI 工作，包括 Windows 真实安装升级、备份恢复与桌宠交互。系统通知实际弹出、开启自启后的登录启动、学校业务和真实同学试用仍待验收。UX01–UX26 状态见第 54.9 节，证据与候选文件校验值见第 55 节。
 - 新版首页与首次使用引导已在本地源码完成，尚未发布：以文山湖场景、首页伙伴互动和 5 分钟专注组织第一印象；中英文 README 已换宣传结构和真实源码截图。具体改动与检查见第 52 节，公开安装包仍是 beta0.9.2。
 - 庭院继续打磨：新增原创湖畔农田场景，重排伙伴小屋、每日目标、纪念章与作物图鉴，奖励反馈读取实际存档变化。源码构建与本机浏览器验收完成，详情见第 53 节；尚未进入公开安装包。
@@ -2258,7 +2258,7 @@ Use case: stylized-concept. Asset type: original pixel-art background for an int
 | 伙伴 | 本轮处理 | 形象与性格 |
 |---|---|---|
 | 荔宝 `libao` | 保留默认伙伴 | 既有荔枝形象，热情、爱笑 |
-| 栗栗 `chestnut` | 丑萌重绘与台词更新 | 歪耳朵、圆肚皮、呆脸，动作与回应慢半拍；沿用存档 ID |
+| 栗栗 `chestnut` | 恢复抽象形象与台词更新 | 原来 20×22 的粗像素比例与呆脸；一本正经地占纸箱，不知道自己丑萌，不自嘲脸、耳朵或肚子；沿用存档 ID |
 | 小白 `egret` | 保留 | 文山湖白鹭，与校园场景相连，安静陪伴 |
 | Pingu `pingu` | 新增 | 红嘴巴、圆肚子、摇晃小步，Noot Noot 式回应 |
 | Skipper `skipper` | 新增 | 《马达加斯加》的企鹅队长，认真眉眼与队长式回应 |
@@ -2277,7 +2277,7 @@ Use case: stylized-concept. Asset type: original pixel-art background for an int
 1. 在 `desktop/assets/garden/pet-catalog.mjs` 的 `PETS` 中登记稳定的种类 ID。字段为 `name`、`description`、`sprite`、`viewBox`、`states`、`available`、`greeting` 与 `lines`。`lines` 含 `pat/feed/play/sleep/wake/focus/harvest`，每项两句、每句不超过 60 字。`available:true` 加入新档默认阵容并为未满额旧档补齐；停用时改为 `false`，不要删除已进入存档的定义。
 2. 在 `desktop/assets/garden/pet-art.mjs` 增加该角色完整立绘，并纳入导出的 `PET_SYMBOLS`。四态使用 `<sprite>-normal`、`<sprite>-happy`、`<sprite>-sad`、`<sprite>-sleep`，另保留代表普通状态的基础 `<sprite>`。各帧使用登记的同一 `viewBox`，包含完整图形，不依赖外部文件或嵌套 `<use>`，供庭院、桌宠与明信片共用。
 
-名册会派生 `AVAILABLE_PETS`、`PET_LIMIT`、`PET_SPRITES`；`petDefinition()`、`petViewBox()` 和 `petSprite()` 统一角色回退、视框与表情选择。`states:true` 时，睡眠优先；心情小于 35 为低落、大于 65 为开心，其余普通。`states:false` 可使用单帧基础立绘。当前栗栗视框为 `0 0 32 36`，两只企鹅均为 `0 0 32 40`。引擎继续兼容导出既有 `PETS`、`DEFAULT_PET` 与 `petSprite` 接口。
+名册会派生 `AVAILABLE_PETS`、`PET_LIMIT`、`PET_SPRITES`；`petDefinition()`、`petViewBox()` 和 `petSprite()` 统一角色回退、视框与表情选择。`states:true` 时，睡眠优先；心情小于 35 为低落、大于 65 为开心，其余普通。`states:false` 可使用单帧基础立绘。当前栗栗视框恢复为 `0 0 20 22`，两只企鹅均为 `0 0 32 40`。引擎继续兼容导出既有 `PETS`、`DEFAULT_PET` 与 `petSprite` 接口。
 
 庭院与分享图直接使用这两个来源。Electron 开发目录以同名转导模块引用它们；打包映射把实际名册与立绘放入 `app.asar` 根目录，不把指向仓库外的转导路径装进去。桌面照料使用的 `resources/garden-engine.mjs` 旁边也放同源 `pet-catalog.mjs`，保证安装后引擎相对导入可解析。桌宠通信仅接受规范非负整数索引，实际可选范围由当前存档决定，不再固定到第八只。新增角色无需再编辑庭院/桌宠两套种类表、状态视框表或 HTML 中重复的 SVG。
 
@@ -2293,12 +2293,24 @@ node desktop/electron/check-pet-view.mjs
 
 ### 56.3 本轮验证与交付证据
 
+企鹅整合基线 `1f5a23b` 已通过全部 9 项 CI。用户随后要求栗栗恢复此前粗像素、抽象的比例，并明确它不知道自己丑萌；后续视觉与台词修订已完成真实小屋与摸头台词检查、四态画稿检查、名册 8 项及桌宠命令 16 项、共享立绘检查，并重新构建两种本地候选包。下面区分原生 CI 基线与此次形象修订。
+
 | 范围 | 当前证据 | 后续记录位置 |
 |---|---|---|
 | 名册与迁移 | `check-pet-catalog.mjs` 8 项通过：默认五只、旧四只追加企鹅且保留原索引/当前伙伴/成长/摸头计数、部分档不补阿青、满额不挤旧记录、两企鹅独立成长、台词完整、庭院/桌宠状态与视框一致、切换专属问候 | 如后续改变迁移规则，在此更新对应结果 |
 | 既有规则 | `check-ui.mjs` 16 项、`check-garden-progress.mjs` 15 项通过；互动台词检查按默认名册数量遍历；`electron/check-pet-policy.mjs` 通过；桌宠菜单命令 16 项通过，包含未来索引 8/10 可通过桥接、越界不写入 | 这些是本轮源码规则检查，不是原生窗口验收 |
-| 实际页面、桌宠与明信片 | 全部 26 个 Node 检查脚本通过；真实浏览器完成 Pingu/Skipper/栗栗切换、Pingu摸头与睡眠、阿青旧伙伴展开切换、Skipper明信片预览；420px 窄窗 scrollWidth=clientWidth=405；截图见 `screenshot-pets-preview.png` | 原生安装桌宠运行与升级交由本轮 CI；浏览器不代替安装验收 |
-| 候选包一致性 | 待记录包含本轮宠物的安装包/便携包及共享模块核对 | 在此补充文件、校验值和打包验证；不得沿用第 55 节文件 |
-| 远端 CI 与发布 | 尚未记录本轮新增宠物的远端 CI 通过证据；公开版本仍为 beta0.9.2 | 在此补充实际提交、CI/PR 链接及最终发布状态 |
+| 实际页面、桌宠与明信片 | 企鹅整合基线的 26 个 Node 脚本通过；真实浏览器完成 Pingu/Skipper/栗栗切换、Pingu 摸头与睡眠、阿青旧伙伴展开切换、Skipper 明信片预览；420px 窄窗无横向溢出。基线原生安装报告 `penguins_render_and_switch=true`，默认五位与两只企鹅切换通过 | 最终栗栗在真实小屋显示粗像素形象并回应「批准你再摸两下」；`screenshot-pets-preview.png` 与 `cat-rough-preview.png` 已更新。企鹅画稿未改，最后一次猫图修订未额外重复原生安装验收 |
+| 候选包一致性 | 企鹅整合基线的安装包与便携包已构建；asar 内名册/画稿与源一致，资源引擎与名册一致且实际 import 成功，默认五只；Go sidecar 与 dist 一致；两种包许可检查通过 | 最终栗栗修订后已重建：asar 内画稿/名册与源逐字节一致，资源引擎可 import 且猫视框为 20×22，Go sidecar 与 dist 一致；最新校验值如下 |
+| 远端 CI 与发布 | 企鹅整合基线 `1f5a23b` 位于 [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19)；[CI 36261199079](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079) 全部 9 项工作通过。原生报告确认安装、重开、beta0.9.1 升级保留数据、备份恢复、原伙伴成长保留、两只企鹅显示与切换、缩放保留、卸载通过 | 后续栗栗视觉与台词修订尚未有最终 CI 证据；PR 为草稿，公开版本仍为 beta0.9.2 |
 
 本节只完善伙伴体验与扩展结构，不改变学校业务验收结论。系统通知、自启、物理多屏、长期运行与真实同学试用仍按既有清单推进。
+
+最新本地构建文件（含两只企鹅与最终抽象栗栗；覆盖本节先前本地候选，第 55 节仅作此前基线）：
+
+| 文件 | 字节数 | SHA-256 |
+|---|---:|---|
+| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118,294,965 | `d44ba40e19c3d6c2d0a0fe84bd880508ed41468cef7c8bd7bf8dcb0cd8c2dcb9` |
+| `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 7,856,986 | `9fb830fc158d3878371f4d46d2eaf2770d4707cd88b0fc62c6b0fbb89a9b8525` |
+| `dist/szudesktop-windows-amd64.exe` | 13,120,000 | `5757c0ad3bd69847e77dd6ec718020e39b92f727c6b54acd223b83c1f2f7d07e` |
+
+便携包快速开始也已改为新五位伙伴，说明旧阿青入口；此处安装包只做了本地构建与内容一致性检查，不以它代替 CI 生成安装包的运行验收。

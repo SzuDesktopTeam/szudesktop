@@ -168,59 +168,64 @@ const LAKESIDE_SYMBOLS = `<symbol id="egret" viewBox="0 0 32 32" shape-rendering
     <path fill="#7EABC0" d="M24 5h5v1h-1v1h-1v1h-1v1h3v1h-5V9h1V8h1V7h1V6h-3z"/>
   </symbol>`;
 
-// 栗栗: a lopsided ear, sleepy mismatched eyes, round belly and one tiny tooth.
-const CAT_STANDING = `
-  <path class="tail" fill="#694330" d="M25 20h3v-5h2v-3h2v12h-2v5h-5z"/>
-  <path class="tail" fill="#B97538" d="M27 21h2v-5h1v7h-2v4h-2v-3h1z"/>
-  <path fill="#694330" d="M8 16h15v3h3v3h2v8h-2v3h-4v2h-7v-2h-3v2H5v-3H3v-9h2v-4h3z"/>
-  <path fill="#DEA151" d="M9 18h13v3h3v3h1v6h-3v2h-3v1h-3v-2h-7v2H6v-3H5v-6h2v-3h2z"/>
-  <path fill="#B97538" d="M23 23h3v7h-3v2h-3v-2h3zM6 30h4v3H6zM17 31h4v2h-4z"/>
-  <path fill="#FFF0CD" d="M12 21h7v2h3v6h-2v2h-9v-2H8v-5h2v-2h2z"/>
-  <path fill="#E4C998" d="M19 26h3v3h-2v2h-9v-2h8z"/>
-  <path fill="#80502F" d="M5 23h3v2H5zM24 25h2v2h-2zM7 32h1v1H7zM19 32h1v1h-1z"/>
-  <path fill="#694330" d="M5 3h3v2h3v2h9V5h7v5h1v9h-2v3h-5v2H10v-2H5v-3H3V9h2z"/>
-  <path fill="#DEA151" d="M6 5h2v2h3v2h10V7h4v4h1v7h-2v3h-4v1H10v-2H6v-3H5v-6h1z"/>
-  <path fill="#EFB96E" d="M8 9h12v1H8zM6 11h2v5H6zM10 19h9v2h-9z"/>
-  <path fill="#D38766" d="M6 7h2v3H6zM22 7h3v2h-3z"/>
-  <path fill="#B97538" d="M12 8h2v3h-2zM16 8h2v2h-2zM20 8h2v3h-2zM24 14h2v4h-2v3h-4v-1h3v-3h1z"/>
-  <path fill="#FFF0CD" d="M11 16h9v2h2v2h-3v2h-8v-2H9v-2h2z"/>
-  <path fill="#D38766" d="M14 16h4v2h-1v1h-2v-1h-1zM6 17h3v1H6zM23 18h3v1h-3z"/>
-  <path fill="#694330" d="M2 16h4v1H2zM1 19h5v1H1zM25 16h5v1h-5zM25 20h5v1h-5z"/>
-`;
+// 栗栗 keeps the original rough 20×22 block silhouette; only a few facial pixels
+// are lopsided. Its awkward proportions are deliberate, not a polished mascot.
 const CAT_ART = {
-  normal: CAT_STANDING + `
-    <path fill="#FFF8E8" d="M8 11h5v4H8zM19 12h4v4h-4z"/>
-    <path fill="#3D3028" d="M11 12h2v3h-2zM19 13h2v3h-2zM8 10h4v1H8zM20 11h3v1h-3zM13 19h2v1h4v-1h1v2h-7z"/>
-    <path fill="#FFF8E8" d="M17 20h2v2h-2z"/>
+  normal: `
+    <rect class="tail" x="17" y="9" width="2" height="6" fill="#E8862E"/>
+    <rect x="3" y="2" width="3" height="3" fill="#E8862E"/><rect x="12" y="3" width="3" height="2" fill="#E8862E"/>
+    <rect x="4" y="3" width="1" height="2" fill="#F8C8A0"/><rect x="13" y="4" width="1" height="1" fill="#F8C8A0"/>
+    <rect x="2" y="4" width="14" height="9" fill="#F0A03A"/>
+    <rect x="6" y="4" width="2" height="2" fill="#E8862E"/><rect x="10" y="4" width="2" height="2" fill="#E8862E"/>
+    <rect x="4" y="7" width="2" height="3" fill="#2A2222"/><rect x="12" y="8" width="2" height="2" fill="#2A2222"/>
+    <rect x="4" y="7" width="1" height="1" fill="#FFFFFF"/><rect x="13" y="8" width="1" height="1" fill="#FFFFFF"/>
+    <rect x="8" y="10" width="2" height="1" fill="#E07070"/>
+    <rect x="8" y="12" width="3" height="1" fill="#B05030"/>
+    <rect x="1" y="13" width="16" height="7" fill="#F0A03A"/><rect x="5" y="15" width="8" height="5" fill="#FFF6E0"/>
+    <rect x="2" y="13" width="1" height="3" fill="#E8862E"/><rect x="15" y="14" width="1" height="3" fill="#E8862E"/>
+    <rect x="3" y="20" width="3" height="2" fill="#E8862E"/><rect x="12" y="20" width="3" height="2" fill="#E8862E"/>
   `,
-  happy: CAT_STANDING + `
-    <path fill="#3D3028" d="M8 13h1v-2h3v1h1v2h-1v-1h-2v1H8zM19 14h1v-2h2v1h2v2h-2v-1h-1v1h-2zM12 19h8v3h-2v1h-4v-1h-2z"/>
-    <path fill="#FFF8E8" d="M16 19h2v2h-2z"/>
-    <path fill="#D38766" d="M14 22h3v1h-3zM6 15h4v2H6zM22 16h4v2h-4z"/>
-    <path fill="#D56B72" d="M26 1h2v1h1V1h2v3h-1v1h-2V4h-1V3h-1z"/>
+  happy: `
+    <rect class="tail" x="17" y="9" width="2" height="6" fill="#E8862E"/>
+    <rect x="3" y="2" width="3" height="3" fill="#E8862E"/><rect x="12" y="3" width="3" height="2" fill="#E8862E"/>
+    <rect x="4" y="3" width="1" height="2" fill="#F8C8A0"/><rect x="13" y="4" width="1" height="1" fill="#F8C8A0"/>
+    <rect x="2" y="4" width="14" height="9" fill="#F0A03A"/>
+    <rect x="6" y="4" width="2" height="2" fill="#E8862E"/><rect x="10" y="4" width="2" height="2" fill="#E8862E"/>
+    <rect x="4" y="7" width="2" height="1" fill="#2A2222"/><rect x="12" y="8" width="2" height="1" fill="#2A2222"/>
+    <rect x="8" y="10" width="2" height="1" fill="#E07070"/>
+    <rect x="7" y="11" width="5" height="2" fill="#B05030"/><rect x="8" y="12" width="2" height="1" fill="#E07070"/>
+    <rect x="1" y="13" width="16" height="7" fill="#F0A03A"/><rect x="5" y="15" width="8" height="5" fill="#FFF6E0"/>
+    <rect x="2" y="13" width="1" height="3" fill="#E8862E"/><rect x="15" y="14" width="1" height="3" fill="#E8862E"/>
+    <rect x="3" y="20" width="3" height="2" fill="#E8862E"/><rect x="12" y="20" width="3" height="2" fill="#E8862E"/>
+    <rect x="15" y="2" width="1" height="1" fill="#E8607A"/><rect x="17" y="2" width="1" height="1" fill="#E8607A"/>
+    <rect x="15" y="3" width="3" height="1" fill="#E8607A"/><rect x="16" y="4" width="1" height="1" fill="#E8607A"/>
   `,
-  sad: CAT_STANDING + `
-    <path fill="#B97538" d="M7 11h5v1H7zM20 11h4v1h-4z"/>
-    <path fill="#FFF8E8" d="M8 12h5v3H8zM19 13h4v3h-4z"/>
-    <path fill="#3D3028" d="M11 13h2v2h-2zM19 14h2v2h-2zM7 11h3v1h3v1h-3v-1H7zM20 12h4v1h-4zM14 20h4v1h-4z"/>
-    <path fill="#B97538" d="M8 16h4v1H8zM20 17h3v1h-3z"/>
-    <path fill="#8BB6BF" d="M23 15h1v3h-1z"/>
+  sad: `
+    <rect class="tail" x="17" y="16" width="2" height="5" fill="#C96A18"/>
+    <rect x="2" y="5" width="3" height="2" fill="#E8862E"/><rect x="13" y="5" width="3" height="2" fill="#E8862E"/>
+    <rect x="2" y="4" width="14" height="9" fill="#E8963A"/>
+    <rect x="6" y="4" width="2" height="2" fill="#E8862E"/><rect x="10" y="4" width="2" height="2" fill="#E8862E"/>
+    <rect x="4" y="7" width="2" height="2" fill="#2A2222"/><rect x="12" y="8" width="2" height="2" fill="#2A2222"/>
+    <rect x="4" y="7" width="1" height="1" fill="#FFFFFF"/><rect x="13" y="8" width="1" height="1" fill="#FFFFFF"/>
+    <rect x="12" y="10" width="1" height="2" fill="#6FA8E0"/>
+    <rect x="8" y="10" width="2" height="1" fill="#E07070"/>
+    <rect x="8" y="12" width="3" height="1" fill="#B05030"/><rect x="7" y="11" width="1" height="1" fill="#B05030"/>
+    <rect x="1" y="13" width="16" height="7" fill="#E8963A"/><rect x="5" y="15" width="8" height="5" fill="#F5E4C0"/>
+    <rect x="3" y="20" width="3" height="2" fill="#C96A18"/><rect x="12" y="20" width="3" height="2" fill="#C96A18"/>
   `,
   sleep: `
-    <path fill="#694330" d="M11 16h11v2h5v3h3v8h-2v4h-4v2H7v-2H3V22h3v-4h5z"/>
-    <path fill="#DEA151" d="M12 18h9v2h5v3h2v6h-2v3h-4v1H8v-2H5v-8h3v-3h4z"/>
-    <path fill="#FFF0CD" d="M17 23h6v2h2v4h-3v2h-8v-3h3z"/>
-    <path fill="#B97538" d="M24 21h3v3h-3zM26 26h2v3h-2z"/>
-    <path fill="#694330" d="M5 12h3v3h7v-2h7v5h2v8h-3v3H7v-2H3v-9h2z"/>
-    <path fill="#DEA151" d="M6 15h2v2h8v-2h4v4h2v6h-3v2H8v-2H5v-6h1z"/>
-    <path fill="#D38766" d="M6 16h2v3H6zM17 15h3v2h-3zM11 23h3v1h-3z"/>
-    <path fill="#B97538" d="M10 17h2v3h-2zM14 17h2v2h-2z"/>
-    <path fill="#FFF0CD" d="M9 24h9v2H9z"/>
-    <path fill="#3D3028" d="M7 21h5v1H7zM16 22h5v1h-5zM12 25h3v1h-3z"/>
-    <path class="tail" fill="#694330" d="M6 27h3v3h15v-2h4v3h-2v3H8v-2H6z"/>
-    <path class="tail" fill="#B97538" d="M8 28h1v3h16v-2h2v2h-2v2H9v-1H8z"/>
-    <path fill="#E4C998" d="M10 31h4v2h-4z"/>
-    <path fill="#7EABC0" d="M24 6h6v1h-1v1h-1v1h-1v1h3v1h-6v-1h1V9h1V8h1V7h-3z"/>
+    <rect x="3" y="4" width="3" height="3" fill="#E8862E"/><rect x="12" y="4" width="3" height="3" fill="#E8862E"/>
+    <rect x="2" y="6" width="14" height="9" fill="#F0A03A"/>
+    <rect x="6" y="6" width="2" height="2" fill="#E8862E"/><rect x="10" y="6" width="2" height="2" fill="#E8862E"/>
+    <rect x="4" y="10" width="2" height="1" fill="#2A2222"/><rect x="12" y="11" width="2" height="1" fill="#2A2222"/>
+    <rect x="8" y="12" width="2" height="1" fill="#E07070"/><rect x="9" y="14" width="3" height="1" fill="#B05030"/>
+    <rect x="1" y="15" width="16" height="6" fill="#F0A03A"/><rect x="5" y="17" width="8" height="4" fill="#FFF6E0"/>
+    <rect x="2" y="21" width="4" height="1" fill="#E8862E"/><rect x="12" y="21" width="4" height="1" fill="#E8862E"/>
+    <rect class="tail" x="17" y="17" width="2" height="4" fill="#E8862E"/>
+    <g class="zz" fill="#FFF6E0">
+      <rect x="15" y="1" width="3" height="1"/><rect x="16" y="2" width="1" height="1"/>
+      <rect x="15" y="3" width="3" height="1"/>
+    </g>
   `,
 };
 
@@ -351,7 +356,7 @@ const SKIPPER_ART = {
 export const PET_SYMBOLS = [
   LIBAO_SYMBOLS,
   LAKESIDE_SYMBOLS,
-  frames('cat', '0 0 32 36', CAT_ART),
+  frames('cat', '0 0 20 22', CAT_ART),
   frames('pingu', '0 0 32 40', PINGU_ART),
   frames('skipper', '0 0 32 40', SKIPPER_ART),
 ].join('\n');
