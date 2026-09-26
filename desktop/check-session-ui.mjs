@@ -43,4 +43,16 @@ await check('saving or clearing a session removes previous personal results',asy
  assert.doesNotMatch(node('#online-score').innerHTML,/&lt;img/);
  assert.match(ui.grades(),/不会注销浏览器或撤销学校会话/);
 });
+await check('new and excluded course totals remain empty while an actual zero GPA stays zero',async()=>{
+ let state=createState();const view=createCampusUI({getState:()=>state,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async()=>({})});
+ assert.match(view.grades(),/尚未录入 · 加权绩点 <b>—<\/b>/);
+ state.courses=[{name:'Course',credit:2,point:0,included:true}];assert.match(view.grades(),/加权绩点 <b>0.00<\/b>/);
+ state.courses[0].included=false;assert.match(view.grades(),/暂无计入课程 · 加权绩点 <b>—<\/b>/);
+});
+await check('academic identity defaults initialize after state arrives and follow later preference changes',async()=>{
+ let state;const view=createCampusUI({getState:()=>state,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async()=>({})});
+ state=createState();state.preferences.studentLevel='graduate';assert.match(view.grades(),/id="online-score-level"><option value="undergrad" >本科<\/option><option value="graduate" selected/);
+ state.preferences.studentLevel='undergrad';assert.match(view.grades(),/id="online-score-level"><option value="undergrad" selected/);
+ assert.doesNotMatch(view.services('notices'),/图书馆与自习提醒|常用联系与入口/);assert.match(view.services('directory'),/常用联系与入口/);assert.doesNotMatch(view.services('directory'),/学校公告/);
+});
 console.log(`${count} session UI checks passed`);

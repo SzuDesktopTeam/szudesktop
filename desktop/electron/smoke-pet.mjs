@@ -3,12 +3,24 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {readPetSettings} from './pet-settings.mjs';
+import {readDesktopSettings} from './desktop-settings.mjs';
 import {petWindowBounds} from './pet-policy.mjs';
+import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
+import {PET_CLIPS} from './pet-animation.mjs';
 
 async function until(read, message) {
   const end=Date.now()+6000;
   while(Date.now()<end){if(await read())return;await new Promise(r=>setTimeout(r,50));}
   throw Error(message);
+}
+
+// Migration adds only these defaults to old personal records. Keep every old
+// field in the comparison so accepting new fields cannot hide lost user data.
+function personalAfterMigration(data){
+  return {...data,
+    preferences:{noticeSource:'undergrad',studentLevel:'undergrad',...data.preferences},
+    todos:data.todos.map(todo=>({date:'',createdAt:0,completedAt:0,archived:false,...todo})),
+  };
 }
 
 // Exercise the same download, file input and confirmation used by users. This
@@ -19,7 +31,7 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   const seed=await snapshot();
   const original=structuredClone(seed.data);
   seed.data.profile.name='备份验收';
-  seed.data.todos=[{id:'backup-task',text:'验收后恢复学习记录',done:false,rewarded:false}];
+  seed.data.todos=[{id:'backup-task',text:'验收后恢复学习记录',done:false,rewarded:false,date:'',createdAt:0,completedAt:0,archived:false}];
   seed.data.courses=[{code:'backup-course',name:'合成课程',credit:2,point:3.5}];
   const saved=await fetch(baseUrl+'/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
   assert.ok(saved.ok,'synthetic backup fixture saved');
@@ -41,8 +53,9 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   assert.equal(backup.profile.name,'备份验收');
   assert.equal(backup.todos[0].id,'backup-task');
   assert.equal(backup.courses[0].code,'backup-course');
-  assert.equal(backup.game.pets.length,4);
-  for(const key of ['profile','preferences','todos','reminders','semester'])assert.deepEqual(backup[key],seed.data[key],'export preserves '+key);
+  assert.deepEqual(backup.game.pets.map(p=>p.species),seed.data.game.pets.map(p=>p.species),'backup preserves the whole companion roster');
+  const expectedSeed=personalAfterMigration(seed.data);
+  for(const key of ['profile','preferences','todos','reminders','semester'])assert.deepEqual(backup[key],expectedSeed[key],'export preserves '+key);
   for(const key of ['coins','food','seeds','stock','plots','stats'])assert.deepEqual(backup.game[key],seed.data.game[key],'export preserves garden '+key);
   assert.equal(backup.password,undefined);
   assert.equal(backup.account,undefined);
@@ -76,7 +89,8 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   await until(async()=>(await snapshot()).revision>beforeReset.revision,'original upgrade fixture not restored');
   await ready();
   const reset=(await snapshot()).data;
-  for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],original[key],'original '+key+' retained');
+  const expectedOriginal=personalAfterMigration(original);
+  for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],expectedOriginal[key],'original '+key+' retained');
 }
 
 export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,screen,initialScale,userData,evidenceDir,baseUrl}){
@@ -129,38 +143,52 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     const before=active(await game()).sleeping;
     getPetMenu().getMenuItemById('sleep').click();
     await until(async()=>active(await game()).sleeping!==before,'pet sleep menu did not save');
-    await until(()=>pet(`document.querySelector('#bubble-text').textContent.includes('${before?'醒来':'晚安'}')`),'saved action did not reach the pet bubble');
+    const savedPet=active(await game());
+    await until(()=>pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(savedPet.say.slice(0,60))}`),'saved personality dialogue did not reach the pet bubble');
   }
   const beforeFeed=await game(),canFeed=!active(beforeFeed).sleeping&&active(beforeFeed).hunger<98&&beforeFeed.food>0;
   trace('feed');
   getPetMenu().getMenuItemById('feed').click();
-  await until(()=>pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)"),'feed result was not shown');
+  await until(async()=>{
+    if(canFeed)return pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(active(await game()).say.slice(0,60))}`);
+    return pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)");
+  },'feed result was not shown');
   assert.equal((await game()).food,beforeFeed.food-(canFeed?1:0),'food changes only after a valid meal');
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
-  assert.deepEqual(companions.map(p=>p.species),['libao','chestnut','egret','turtle'],'four base companions are available');
-  for(const [index,sprite] of [[2,'egret'],[3,'turtle'],[0,'libao']]){
+  const companionSpecies=companions.map(p=>p.species);
+  assert.ok(AVAILABLE_PETS.every(id=>companionSpecies.includes(id)),'every default companion is available');
+  assert.ok(companionSpecies.every(id=>Object.hasOwn(PETS,id)),'old companions still have registered artwork');
+  for(const [index,companion] of [...companions.entries()].reverse()){
+    const sprite=PETS[companion.species].sprite;
     getPetMenu().getMenuItemById(`switchPet:${index}`).click();
     await until(async()=>(await game()).active===index,'menu choice did not persist');
-    await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')==='#${sprite}'`),'desktop sprite did not follow the choice');
+    await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(companion.species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop frame did not follow the choice');
+    const rendered=await pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {sprite:use.getAttribute('href').slice(1),action:svg.dataset.action,viewBox:svg.getAttribute('viewBox'),width:box.width,height:box.height}})()");
+    assert.equal(rendered.viewBox,PETS[companion.species].viewBox,'desktop uses the catalog viewBox');
+    if(rendered.sprite.startsWith('petanim-'))assert.ok(PET_CLIPS[companion.species][rendered.action].frames.some(f=>f.id===rendered.sprite),'desktop renders a registered frame');
+    assert.ok(rendered.width>0&&rendered.height>0,'selected companion resolves to visible SVG artwork');
     assert.equal(mainWin.isVisible(),false,'switching companions need not open the main window');
     await pet('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
     writeFileSync(path.join(evidenceDir,`companion-${sprite}.png`),(await petWin.webContents.capturePage()).toPNG());
   }
   getPetMenu().getMenuItemById('garden').click();
-  await until(()=>main("document.querySelectorAll('.companion-choice').length===4"),'companion picker did not render four choices');
-  await main("document.querySelector('.companion-choice[data-index=\"1\"]').click()");
-  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#cat-')"),'garden selection did not update desktop immediately');
-  await main("document.querySelector('.companion-choice[data-index=\"0\"]').click()");
-  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href')==='#libao'"),'garden cannot select libao');
-  await main("document.querySelector('.companion-picker').scrollIntoView({block:'center'})");
+  await until(()=>main(`document.querySelectorAll('.companion-choice').length===${companions.length}`),'companion picker did not render the saved roster');
+  for(const species of ['pingu','skipper','chestnut',DEFAULT_PET]){
+    const index=companionSpecies.indexOf(species),sprite=PETS[species].sprite;
+    assert.ok(index>=0,'garden includes '+species);
+    await main(`document.querySelector('.companion-choice[data-index="${index}"]').click()`);
+    await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'garden selection did not update desktop: '+species);
+    assert.equal((await game()).active,index,'garden selection persists '+species);
+  }
+  await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'})");
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
   writeFileSync(path.join(evidenceDir,'companion-picker.png'),(await mainWin.webContents.capturePage()).toPNG());
-  const picker=await main("(()=>{const r=document.querySelector('.companion-picker').getBoundingClientRect();return {x:Math.ceil(r.x),y:Math.ceil(r.y),width:Math.floor(r.width),height:Math.floor(r.height)}})()");
+  const picker=await main("(()=>{const r=document.querySelector('.pet-roster-card').getBoundingClientRect();return {x:Math.ceil(r.x),y:Math.ceil(r.y),width:Math.floor(r.width),height:Math.floor(r.height)}})()");
   writeFileSync(path.join(evidenceDir,'companion-roster.png'),(await mainWin.webContents.capturePage(picker)).toPNG());
   const mainSize=mainWin.getSize();
   mainWin.setMinimumSize(390,600);mainWin.setSize(420,780);
-  await main("document.querySelector('.companion-picker').scrollIntoView({block:'center'});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))");
+  await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))");
   assert.ok(await main('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),'companion page overflows in a narrow window');
   writeFileSync(path.join(evidenceDir,'companion-narrow.png'),(await mainWin.webContents.capturePage()).toPNG());
   mainWin.setSize(...mainSize);
@@ -172,14 +200,86 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   getPetMenu().getMenuItemById('home').click();
   await until(()=>main("location.hash==='#home'"),'main menu did not restore home');
   await until(()=>mainWin.isVisible(),'pet menu cannot restore main window');
-  await until(async()=>['idle','happy','sad','sleep'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
+  await until(async()=>['idle','sad','sleep','focus'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
+  // The upgrade fixture deliberately has motion disabled. Exercise the real
+  // setting and IPC path temporarily, then retain all original preferences.
+  const preferences=async()=>{const response=await fetch(baseUrl+'/api/workspace');assert.ok(response.ok);return (await response.json()).data.preferences;};
+  const originalPreferences=await preferences();
+  const setMotion=async value=>{
+    await main("document.querySelector('[data-action=\"navigate\"][data-page=\"settings\"]').click()");
+    await until(()=>main("Boolean(document.querySelector('#profile-form input[name=motion]') && !document.querySelector('#profile-form button').disabled)"),'animation setting is not ready');
+    await main(`(()=>{const form=document.querySelector('#profile-form');form.querySelector('input[name=motion]').checked=${JSON.stringify(value)};form.requestSubmit();})()`);
+    await until(async()=>(await preferences()).motion===value,'animation preference did not save');
+    // A persisted write can become visible before the UI finishes its response.
+    await until(()=>main("Boolean(document.querySelector('#profile-form button') && !document.querySelector('#profile-form button').disabled)"),'animation setting save did not finish');
+  };
+  const reducedMotion=()=>pet("matchMedia('(prefers-reduced-motion: reduce)').matches");
+  const animationFrames={verified:false,systemReducedMotion:await reducedMotion(),emulationUsed:false,
+    environment:'system',systemReducedMotionRespected:null,mediaRestored:false,preferenceRestored:false};
+  const debuggerClient=petWin.webContents.debugger;
+  let debuggerAttached=false;
+  try{
+    await setMotion(true);
+    if(animationFrames.systemReducedMotion){
+      await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'system reduced-motion setting must retain static artwork');
+      animationFrames.systemReducedMotionRespected=true;
+      // Only this isolated renderer receives a CSS media override; Windows
+      // preferences and application behavior outside smoke remain untouched.
+      // https://www.electronjs.org/docs/latest/api/debugger
+      // https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setEmulatedMedia
+      assert.equal(debuggerClient.isAttached(),false,'animation smoke owns its debugger session');
+      debuggerClient.attach('1.3');debuggerAttached=true;
+      await debuggerClient.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+      animationFrames.emulationUsed=true;
+      animationFrames.environment='renderer-media-emulation';
+      await until(async()=>!await reducedMotion(),'renderer media override did not take effect');
+    }
+    await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'enabling animation did not reach the desktop companion without navigation');
+    const frame=()=>pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {id:use.getAttribute('href').slice(1),species:svg.dataset.species,action:svg.dataset.action,width:box.width,height:box.height}})()");
+    const first=await frame();
+    writeFileSync(path.join(evidenceDir,'pet-animation-before.png'),(await petWin.webContents.capturePage()).toPNG());
+    let second;
+    await until(async()=>{second=await frame();return second.id!==first.id;},'desktop frame clock did not advance');
+    writeFileSync(path.join(evidenceDir,'pet-animation-after.png'),(await petWin.webContents.capturePage()).toPNG());
+    for(const current of [first,second]){
+      assert.ok(PET_CLIPS[current.species]?.[current.action]?.frames.some(f=>f.id===current.id),'animation resolves to a registered drawing');
+      assert.ok(current.width>0&&current.height>0,'animated frame has visible SVG artwork');
+    }
+    assert.notEqual(first.id,second.id,'two distinct drawings are rendered');
+    animationFrames.frameIds=[first.id,second.id];
+    animationFrames.verified=true;
+  }finally{
+    try{
+      if(debuggerAttached){
+        try{await debuggerClient.sendCommand('Emulation.setEmulatedMedia',{features:[]});}
+        finally{debuggerClient.detach();}
+        assert.equal(debuggerClient.isAttached(),false,'animation debugger is detached');
+      }
+      await until(async()=>(await reducedMotion())===animationFrames.systemReducedMotion,'original system media preference was not restored');
+      animationFrames.mediaRestored=true;
+    }finally{
+      if(originalPreferences.motion!==true)await setMotion(originalPreferences.motion);
+      assert.deepEqual(await preferences(),originalPreferences,'animation check restores every upgrade preference');
+      if(originalPreferences.motion===false||animationFrames.systemReducedMotion)await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'restoring reduced motion did not reach the desktop companion without navigation');
+      animationFrames.preferenceRestored=true;
+    }
+  }
   mainWin.close();
   menu('打开主窗口').click();
   assert.ok(mainWin.isVisible(),'tray opens main');
   menu('隐藏宠物').click();
   assert.equal(petWin.isVisible(),false);
+  assert.equal(readDesktopSettings(userData).petVisible,false,'tray hide survives restart');
   menu('显示宠物').click();
   assert.equal(petWin.isVisible(),true);
+  assert.equal(readDesktopSettings(userData).petVisible,true,'tray show persists the choice');
+  const initialDesktop=await main('window.szuDesktop.desktopSettings()');
+  await main('window.szuDesktop.setDesktopSettings({petAlwaysOnTop:false,doNotDisturb:true,focusNotifications:false})');
+  assert.equal(petWin.isAlwaysOnTop(),false,'always-on-top can be disabled');
+  const quiet=readDesktopSettings(userData);
+  assert.equal(quiet.petAlwaysOnTop,false);assert.equal(quiet.doNotDisturb,true);assert.equal(quiet.focusNotifications,false);
+  await main(`window.szuDesktop.setDesktopSettings(${JSON.stringify({petAlwaysOnTop:initialDesktop.petAlwaysOnTop,doNotDisturb:initialDesktop.doNotDisturb,focusNotifications:initialDesktop.focusNotifications})})`);
+  assert.equal(petWin.isAlwaysOnTop(),initialDesktop.petAlwaysOnTop,'restore the chosen window level');
 
   for(const scale of [0.6,1,1.5]){
     sizeItems().find(item=>item.label.includes(`${scale*100}%`)).click();
@@ -204,6 +304,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   }
   writeFileSync(path.join(evidenceDir,'pet-settings.png'),(await mainWin.webContents.capturePage()).toPNG());
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"study\"]').click()");
+  await main("document.querySelector('[data-action=\"studyTab\"][data-tab=\"timetable\"]').click()");
   assert.ok(await main("Boolean(document.querySelector('#official-account [data-action=\"official-open\"]'))"),'school login entry rendered');
   assert.equal(await main("Boolean(document.querySelector('#session-cookie'))"),false,'installed UI does not ask for cookies');
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
@@ -211,6 +312,6 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   trace('backup-restore');
   await checkBackup(mainWin,baseUrl,evidenceDir);
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
-  return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
+  return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
 }

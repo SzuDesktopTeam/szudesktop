@@ -10,12 +10,16 @@ await check('official periods, weeks and unarranged courses are preserved and es
  const text=timetableHTML(sample);assert.match(text,/&lt;img src=x&gt;/);assert.doesNotMatch(text,/<img src=x>/);assert.match(text,/第 3–4 节/);assert.match(text,/1–16周（单）/);assert.match(text,/待排课程/);
 });
 await check('login and timetable are two separate cards',()=>{
- const L=ui.loginCard(),T=ui.timetableCard();
+ const L=ui.loginCard(),T=ui.timetableCard('graduate'),U=ui.timetableCard('undergrad');
  // 登录卡只放认证：学号/密码/验证码/清除登录
  for(const need of [/学号/,/教务密码/,/school-captcha/,/清除本次登录/])assert.match(L,need);
  // 课表卡只放读取与展示，不再混进密码框
  assert.doesNotMatch(L,/读取我的课表/);assert.doesNotMatch(L,/id="school-timetable"/);
- assert.match(T,/读取我的课表/);assert.match(T,/id="school-timetable"/);assert.match(T,/本科 · 我的课表/);
+ assert.match(T,/读取我的课表/);assert.match(T,/id="school-timetable"/);assert.match(T,/研究生 · 本学期课表/);
+ assert.doesNotMatch(T,/id="undergrad-timetable"|data-action="school-undergrad"/);
+ assert.match(U,/读取本科个人课表/);assert.match(U,/id="undergrad-timetable"/);assert.match(U,/本科 · 本学期课表/);
+ assert.doesNotMatch(U,/id="school-timetable"|data-action="school-read"/);
+ assert.equal(ui.timetableCard(),U,'默认本科分区不混入研究生读取按钮');
  assert.doesNotMatch(T,/教务密码/);assert.doesNotMatch(T,/清除本次登录/);
 });
 await check('official empty timetable is distinct from not queried',()=>{
@@ -35,5 +39,17 @@ await check('expired session removes old schedule and disables read',async()=>{
 await check('undergraduate personal timetable preserves and escapes source text',()=>{
  const html=undergradTimetableHTML({term:'2026-2027-1',fetched_at:sample.fetched_at,courses:[{name:'<script>',arrangement:'周一 3-4节\n<img src=x>',teacher:'老师'}]});
  assert.match(html,/&lt;script&gt;/);assert.match(html,/周一 3-4节/);assert.match(html,/&lt;img src=x&gt;/);assert.doesNotMatch(html,/<script>|<img/);
+});
+await check('installed graduate view exposes query failures without a login card or a false empty schedule',async()=>{
+ const beforeDocument=globalThis.document;globalThis.szuDesktop={openSchool(){}};
+ const visible=new Map(['school-query-status','school-timetable','school-timetable-hint'].map(id=>[id,{innerHTML:'',textContent:''}]));
+ globalThis.document={getElementById:id=>visible.get(id)||null,querySelector:()=>null};
+ try{
+  const installed=createSchoolUI({toast(){},api:async path=>{if(path.endsWith('/session'))return {authenticated:true};throw Error('学校连接超时 <request>')}});
+  assert.equal(installed.loginCard(),'');await installed.load();await installed.click('school-read');
+  assert.match(visible.get('school-query-status').innerHTML,/学校连接超时 &lt;request&gt;/);
+  assert.equal(visible.get('school-timetable').innerHTML,'');assert.match(installed.timetableCard('graduate'),/id="school-query-status"/);
+  assert.doesNotMatch(installed.timetableCard('graduate'),/学校当前学期没有返回|登录后点击「读取我的课表」/);
+ }finally{globalThis.document=beforeDocument;delete globalThis.szuDesktop}
 });
 console.log(`${count} school checks passed`);

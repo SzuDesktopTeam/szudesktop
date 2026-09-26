@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+const workspaceMaxBytes = 2 << 20
+
 type workspaceSnapshot struct {
 	Version  int             `json:"version"`
 	Revision uint64          `json:"revision"`
@@ -71,14 +73,24 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var incoming workspaceSnapshot
-	dec := json.NewDecoder(io.LimitReader(r.Body, 512<<10))
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, workspaceMaxBytes))
 	dec.DisallowUnknownFields()
-	if err = dec.Decode(&incoming); err != nil || incoming.Version != 1 || len(incoming.Data) == 0 || string(incoming.Data) == "null" {
+	err = dec.Decode(&incoming)
+	var tooLarge *http.MaxBytesError
+	if errors.As(err, &tooLarge) {
+		writeAPIError(w, http.StatusRequestEntityTooLarge, errors.New("存档不能超过 2 MiB，原存档已保留"))
+		return
+	}
+	if err != nil || incoming.Version != 1 || len(incoming.Data) == 0 || string(incoming.Data) == "null" {
 		writeAPIError(w, 400, errors.New("存档格式不正确"))
 		return
 	}
 	var trailing any
-	if dec.Decode(&trailing) != io.EOF {
+	if err = dec.Decode(&trailing); err != io.EOF {
+		if errors.As(err, &tooLarge) {
+			writeAPIError(w, http.StatusRequestEntityTooLarge, errors.New("存档不能超过 2 MiB，原存档已保留"))
+			return
+		}
 		writeAPIError(w, 400, errors.New("存档不能包含额外内容"))
 		return
 	}

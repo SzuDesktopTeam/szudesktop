@@ -3,9 +3,12 @@ package ui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -104,8 +107,37 @@ func TestBookingRedirectIsNotReportedAsNoAvailability(t *testing.T) {
 	if err == nil {
 		t.Fatal("被重定向到登录页却报成查询成功")
 	}
-	if !strings.Contains(err.Error(), "校园网") {
-		t.Fatalf("错误没有告诉用户需要校园网：%v", err)
+	if !strings.Contains(err.Error(), "重定向") || !strings.Contains(err.Error(), "即使已在校园网") {
+		t.Fatalf("重定向不能被误判为校外网络：%v", err)
+	}
+}
+
+func TestBookingTransportFailuresExplainObservedCause(t *testing.T) {
+	for _, tc := range []struct {
+		cause error
+		want  string
+	}{
+		{&net.DNSError{Err: "no such host", Name: "redacted.invalid"}, "名称解析失败"},
+		{context.DeadlineExceeded, "超时"},
+		{io.EOF, "空响应"},
+		{io.ErrUnexpectedEOF, "空响应"},
+		{errors.New("private upstream debug value"), "连接中断"},
+	} {
+		b := newBookingService()
+		b.client.Transport = calendarTransport(func(r *http.Request) (*http.Response, error) {
+			return nil, &url.Error{Op: "Get", URL: r.URL.String(), Err: tc.cause}
+		})
+		err := b.request(context.Background(), "/booth/list", nil, nil)
+		if err == nil || !strings.Contains(err.Error(), tc.want) || !strings.Contains(err.Error(), "无法据此判断是否在校园网") || !strings.Contains(err.Error(), "官方 WebVPN") || strings.Contains(err.Error(), "private upstream") || strings.Contains(err.Error(), "redacted.invalid") {
+			t.Fatalf("cause %v produced misleading or unsafe error: %v", tc.cause, err)
+		}
+	}
+	b := newBookingService()
+	b.client.Transport = calendarTransport(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader("")), Header: make(http.Header)}, nil
+	})
+	if err := b.request(context.Background(), "/booth/list", nil, nil); err == nil || !strings.Contains(err.Error(), "空响应") {
+		t.Fatalf("empty HTTP 200 must not become a format or availability result: %v", err)
 	}
 }
 

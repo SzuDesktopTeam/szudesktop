@@ -110,34 +110,6 @@ main { position: relative; padding: 26px; background: #f3ecd8; border: 4px solid
 .badge { display: inline-block; background: #efe3b0; color: #65602b; border: 1px solid #bdb071; padding: 4px 8px; font-size: 12px; line-height: 1.5; }
 .stat { font-family: var(--pixel); font-size: 32px; line-height: 1.5; color: #986218; font-variant-numeric: tabular-nums; }
 .stat small { font-family: var(--body); font-size: 13px; color: var(--muted); }
-.hero { display: flex; align-items: center; gap: 24px; margin: 0 0 24px; padding: 0 0 22px; border-bottom: 1px solid var(--line); }
-.hero-copy { flex: 1; min-width: 0; }
-.hero h1 { font-size: 32px; }.hero p:last-child { margin-bottom: 0; }
-.welcome-side { display:flex; flex-direction:column; align-items:flex-end; gap:12px; max-width:35%; }
-.welcome-side .profile-line { overflow-wrap:anywhere; text-align:right; }
-.welcome-side button { white-space:nowrap; }
-.home-grid { grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); }
-.home-network,.home-garden { display:flex; flex-direction:column; }
-.card-foot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; margin-top:auto; padding-top:6px; }
-.card-foot small { display:flex; align-items:center; gap:6px; }
-.card-foot .item-icon { width:16px; height:16px; flex-basis:16px; }
-.garden-postcard { display:grid; grid-template-columns:136px minmax(0,1fr); gap:18px; align-items:center; margin-bottom:18px; }
-.postcard-scene { position:relative; height:140px; overflow:hidden; border:2px solid #81926b; background:linear-gradient(0deg,#91aa5b 0 15%,transparent 15%),url(campus.png) 50% 48% / 500px; box-shadow:inset 0 0 0 3px #fff9de70; }
-.postcard-scene .postcard-tree { position:absolute; left:-15px; bottom:12px; width:78px; height:112px; object-fit:contain; }
-.postcard-scene .postcard-grass { position:absolute; right:-4px; bottom:3px; width:48px; height:34px; object-fit:contain; }
-.postcard-scene .sprite { position:absolute; width:78px; height:86px; bottom:13px; right:9px; filter:drop-shadow(3px 3px #30412840); }
-.postcard-note { min-width:0; }
-.postcard-note strong { display:block; font:24px/1.4 var(--pixel); color:var(--success); overflow-wrap:anywhere; }
-.postcard-note strong span { font-size:16px; color:var(--muted); white-space:nowrap; }
-.postcard-note p { font-size:14px; margin:7px 0; }
-.home-garden .wallet { margin-top:auto; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; border-top:1px solid var(--line); padding-top:14px; }
-.home-garden .wallet span { border:0; box-shadow:none; background:transparent; padding:2px 6px; font-size:14px; justify-content:center; }
-.home-garden .wallet span+span { border-left:1px solid var(--line); }
-.home-focus { display:flex; align-items:center; gap:20px; background:#e9efdf; border-color:#a8b590; }
-.focus-emblem { display:flex; align-items:center; justify-content:center; width:64px; height:64px; flex-shrink:0; background:#f8f8eb; border:1px solid #bec9a7; box-shadow:2px 2px #99ab7c30; }
-.focus-invitation { flex:1; min-width:0; }.focus-invitation h2 { margin:0 0 4px; color:#42654b; }.focus-invitation p { margin:0; color:var(--muted); font-size:14px; }
-.focus-progress { padding:0 24px; border-left:1px solid #bac7a6; text-align:center; }.focus-progress strong { display:block; font:32px/1.2 var(--pixel); color:#42654b; }.focus-progress small { display:block; white-space:nowrap; }
-.home-focus > button { flex-shrink:0; }
 .sprite { width: 40px; height: 40px; flex-shrink: 0; overflow: visible; }
 .links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .service { display: block; text-decoration: none; color: var(--ink); background: #fffdf4; border: 1px solid #dacaa8; padding: 15px 13px 15px 53px; position: relative; box-shadow: 0 2px #a9987810; transition: background .15s, border-color .15s, transform .15s; }
@@ -216,7 +188,6 @@ dialog { border: 4px solid #7d4c25; background: #fff0cd; color: var(--ink); padd
 .skip { position: absolute; top: -60px; left: 10px; background: var(--paper); padding: 10px; z-index: 100; }.skip:focus { top: 5px; }
 body[data-theme=night] { background-color: #283847; background-blend-mode: multiply; --paper: #f1e7d1; --paper-hi: #faf0d9; }
 body[data-theme=night] main { background:#e2d7bf; }
-body[data-theme=night] .home-focus { background:#dfe6ce; }
 body[data-motion=off] * { animation: none !important; transition: none !important; }
 @keyframes breathe { 50% { transform: translateY(-3px); } }
 @media(prefers-reduced-motion:reduce) { * { animation: none !important; transition: none !important; } }
@@ -224,8 +195,7 @@ body[data-motion=off] * { animation: none !important; transition: none !importan
 @media(max-width:900px) {
   nav { gap: 5px; padding: 7px; }nav button { gap: 6px; padding: 8px 5px; font-size: 16px; }nav .sprite { width: 18px; height: 18px; }
   main { padding: 18px; }.grid { grid-template-columns: 1fr; }.grid.three,.service-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .card { padding: 18px; }.plots { padding: 15px; }.home-grid { grid-template-columns: 1fr; }
-  .home-focus { flex-wrap:wrap; }.focus-progress { margin-left:auto; padding:0 16px; }.home-focus > button { margin-left:84px; }
+  .card { padding: 18px; }.plots { padding: 15px; }
 }
 @media(max-width:650px) {
   html { scroll-padding-top: 120px; }.mast,.shell { margin-left: 12px; margin-right: 12px; }.mast { min-height: 184px; padding-top: 10px; }
@@ -233,9 +203,7 @@ body[data-motion=off] * { animation: none !important; transition: none !importan
   .brand { padding: 10px 23px; margin-top: 17px; }.brand strong { font-size: 26px; }.brand small { font-size: 12px; }.brand-fruit { width: 30px; height: 32px; }
   .scene-tree { left: 0; width: 42px; height: 65px; }.scene-bush { left: 36px; width: 45px; height: 38px; }.scene-grass { right: 36px; width: 35px; }.scene-fern { right: 0; width: 37px; }
   nav { grid-template-columns: repeat(3,minmax(0,1fr)); }nav button { font-size: 16px; min-height: 38px; }main { padding: 17px 13px; border-width: 4px; scroll-margin-top: 120px; }
-  h1 { font-size: 24px; }h2 { font-size: 20px; }.hero { padding:0 0 18px; gap:16px; flex-wrap:wrap; }.hero h1 { font-size:26px; }.hero-copy { flex-basis:100%; }.welcome-side { max-width:100%; flex-direction:row; align-items:center; flex-wrap:wrap; }.welcome-side .profile-line { text-align:left; }.pagehead h1 { font-size:28px; }
-  .garden-postcard { grid-template-columns:110px minmax(0,1fr); gap:14px; }.postcard-note strong { font-size:22px; }.home-garden .wallet span { padding:2px 3px; font-size:13px; gap:4px; }.home-garden .wallet .sprite { width:16px; height:16px; flex-basis:16px; }
-  .home-focus { gap:14px; }.focus-emblem { width:48px; height:48px; }.focus-emblem .sprite { width:32px; height:32px; }.focus-invitation { flex-basis:calc(100% - 62px); }.focus-progress { margin-left:0; border-left:0; padding:0; text-align:left; }.focus-progress strong { display:inline; margin-right:8px; }.focus-progress small { display:inline; }.home-focus > button { margin-left:0; }.card-foot { gap:12px; }
+  h1 { font-size: 24px; }h2 { font-size: 20px; }.pagehead h1 { font-size:28px; }
   .pagehead { align-items: flex-start; flex-direction: column; gap: 12px; }.pagehead .wallet { margin-top: 2px; }.garden-tools { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 9px; }.grid { gap: 17px; }.card { padding: 17px; }
   .service-grid { grid-template-columns: 1fr; }.links { gap: 8px; }.service { padding: 12px 9px 12px 35px; }.service strong { font-size: 16px; }.service-fruit { left: 8px; }.service-fruit .sprite { width: 20px; height: 20px; }
   .plots { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 12px; margin-left: -7px; margin-right: -7px; }.plot { padding: 8px; }.soil { height: 88px; }.plot button { font-size: 14px; padding: 7px 3px; }

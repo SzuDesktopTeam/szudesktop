@@ -11,12 +11,12 @@ contextBridge.exposeInMainWorld('szuPet', Object.freeze({
     if (typeof cb !== 'function') return;
     ipcRenderer.on('pet:say', (_event, text) => cb(String(text).slice(0, 60)));
   },
-  // 主进程推送的基础动作与配套的精力/睡眠状态，供渲染层做加权随机待机。
+  // 主进程推送当前伙伴与学习/动画设置，两个窗口共用同一个逐帧播放器。
   onAction: (cb) => {
     if (typeof cb !== 'function') return;
     ipcRenderer.on('pet:action', (_event, payload) => {
       const view = payload && typeof payload === 'object' ? payload : {};
-      cb({id: String(view.id ?? ''), energy: Number(view.energy), sleeping: Boolean(view.sleeping)});
+      cb({species:String(view.species??''),mood:Number(view.mood),energy:Number(view.energy),sleeping:Boolean(view.sleeping),focus:Boolean(view.focus),motion:view.motion!==false});
     });
   },
   // 主进程推送的缩放倍数，用于驱动 CSS 变量。
@@ -25,7 +25,9 @@ contextBridge.exposeInMainWorld('szuPet', Object.freeze({
     ipcRenderer.on('pet:scale', (_event, value) => cb(Number(value)));
   },
   onReaction: (cb) => {
-    if (typeof cb === 'function') ipcRenderer.on('pet:react', () => cb());
+    if (typeof cb === 'function') ipcRenderer.on('pet:react', (_event,action) => {
+      if(typeof action==='string'&&/^[a-zA-Z]{1,32}$/.test(action))cb(action);
+    });
   },
   openMenu: () => ipcRenderer.send('pet:menu'),
   scaleStep: (direction) => {

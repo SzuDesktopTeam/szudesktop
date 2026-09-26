@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {petWindowOptions,petWindowBounds,petScaleClamp,petSay,petSpriteFor,activePetOf,isPetSender,PET_WIDTH,PET_HEIGHT,PET_MARGIN,PET_SAY_MAX,PET_SCALE_MIN,PET_SCALE_MAX,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_ACTIONS,petBaseAction,petActionFor,petIdleWeights,petIdleAction,petPresetFor} from './pet-policy.mjs';
+import {petSprite} from '../assets/garden/engine.mjs';
+import {petWindowOptions,petWindowBounds,petScaleClamp,petSay,petSpriteFor,activePetOf,isPetSender,PET_WIDTH,PET_HEIGHT,PET_MARGIN,PET_SAY_MAX,PET_SCALE_MIN,PET_SCALE_MAX,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,petPresetFor} from './pet-policy.mjs';
 
 // 窗口选项：spec §7 的每一项都要钉死。
 const wa={x:0,y:0,width:1920,height:1080};
@@ -30,10 +31,17 @@ assert.equal(petSay('荔'.repeat(61)),'荔'.repeat(60));
 assert.equal(petSay('b'.repeat(120)).length,60);
 assert.equal(petSay(2026),'2026');
 
-// 立绘映射：默认荔宝；栗栗按 sleeping/mood 四帧。
-assert.equal(petSpriteFor({species:'libao',mood:5,sleeping:true}),'libao');
-assert.equal(petSpriteFor({species:'egret',mood:85,sleeping:false}),'egret');
-assert.equal(petSpriteFor({species:'turtle',mood:5,sleeping:true}),'turtle');
+// 立绘映射：荔宝与栗栗都按 sleeping/mood 四帧。
+assert.equal(petSpriteFor({species:'libao',mood:5,sleeping:true}),'libao-sleep');
+assert.equal(petSpriteFor({species:'libao',mood:34}),'libao-sad');
+assert.equal(petSpriteFor({species:'libao',mood:35}),'libao-normal');
+assert.equal(petSpriteFor({species:'libao',mood:65}),'libao-normal');
+assert.equal(petSpriteFor({species:'libao',mood:66}),'libao-happy');
+for(const species of ['egret','turtle'])for(const [mood,sleeping,state] of [[34,false,'sad'],[35,false,'normal'],[65,false,'normal'],[66,false,'happy'],[90,true,'sleep']]){
+  const pet={species,mood,sleeping};
+  assert.equal(petSpriteFor(pet),`${species}-${state}`);
+  assert.equal(petSpriteFor(pet),petSprite(pet),'庭院和桌面伙伴状态必须一致');
+}
 assert.equal(petSpriteFor({species:'chestnut',sleeping:true,mood:90}),'cat-sleep');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:34}),'cat-sad');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:35}),'cat-normal');
@@ -41,8 +49,8 @@ assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:50}),'cat-norm
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:65}),'cat-normal');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:66}),'cat-happy');
 // 未知/缺失种类回退默认荔宝（与 engine 的 PETS[DEFAULT_PET] 兜底一致）。
-assert.equal(petSpriteFor({species:'unknown',sleeping:false,mood:90}),'libao');
-assert.equal(petSpriteFor({}),'libao');
+assert.equal(petSpriteFor({species:'unknown',sleeping:false,mood:90}),'libao-happy');
+assert.equal(petSpriteFor({}),'libao-normal');
 
 // activePet：镜像 engine.mjs 的 activePet()，读不到返回 null 不伪造。
 const pets=[{species:'libao'},{species:'chestnut',mood:90,sleeping:false}];
@@ -152,84 +160,7 @@ for(const area of [tiny,{x:20,y:-40,width:260,height:320},{width:1,height:1},{}]
   assert.ok(b.width>=1&&b.height>=1,'窗口尺寸始终为正');
 }
 
-// 动作表：8 个，id 唯一，kind 只有 loop/once，duration 为正整数。
-const ACTION_IDS=Object.keys(PET_ACTIONS);
-assert.deepEqual(ACTION_IDS,['idle','happy','sad','sleep','blink','yawn','walk','react']);
-assert.equal(new Set(ACTION_IDS).size,8);
-for(const [id,spec] of Object.entries(PET_ACTIONS)){
-  assert.ok(spec.kind==='loop'||spec.kind==='once',id);
-  assert.ok(Number.isInteger(spec.duration)&&spec.duration>0,id);
-  assert.equal(typeof spec.label,'string',id);
-}
-assert.equal(PET_ACTIONS.blink.kind,'once');
-assert.equal(PET_ACTIONS.walk.kind,'once');
-assert.equal(PET_ACTIONS.yawn.kind,'once');
-assert.equal(PET_ACTIONS.react.kind,'once');
-assert.equal(PET_ACTIONS.idle.kind,'loop');
-assert.equal(PET_ACTIONS.happy.kind,'loop');
-assert.equal(PET_ACTIONS.sad.kind,'loop');
-assert.equal(PET_ACTIONS.sleep.kind,'loop');
-
-// 基础动作：与 engine.mjs 的 petSprite() 同源判断。
-assert.equal(petBaseAction(null),'idle');
-assert.equal(petBaseAction({}),'idle');
-assert.equal(petBaseAction({species:'chestnut',mood:90,sleeping:false}),'happy');
-assert.equal(petBaseAction({species:'chestnut',mood:66,sleeping:false}),'happy');
-assert.equal(petBaseAction({species:'chestnut',mood:65,sleeping:false}),'idle');
-assert.equal(petBaseAction({species:'chestnut',mood:50,sleeping:false}),'idle');
-assert.equal(petBaseAction({species:'chestnut',mood:35,sleeping:false}),'idle');
-assert.equal(petBaseAction({species:'chestnut',mood:34,sleeping:false}),'sad');
-assert.equal(petBaseAction({species:'chestnut',mood:1,sleeping:false}),'sad');
-// 睡觉压过心情。
-assert.equal(petBaseAction({species:'chestnut',mood:90,sleeping:true}),'sleep');
-assert.equal(petBaseAction({species:'chestnut',mood:1,sleeping:true}),'sleep');
-// mood 非数字时不当成 0，回落 idle。
-assert.equal(petBaseAction({mood:'high',sleeping:false}),'idle');
-assert.equal(petBaseAction({mood:NaN,sleeping:false}),'idle');
-
-// 一次性覆盖优先；未知 id 与 null 被忽略。
-assert.equal(petActionFor({mood:90,sleeping:false},'react'),'react');
-assert.equal(petActionFor({mood:10,sleeping:false},'blink'),'blink');
-assert.equal(petActionFor({mood:90,sleeping:true},'react'),'react');
-assert.equal(petActionFor({mood:90,sleeping:false},'nope'),'happy');
-assert.equal(petActionFor({mood:90,sleeping:false},null),'happy');
-assert.equal(petActionFor({mood:90,sleeping:false},undefined),'happy');
-assert.equal(petActionFor({mood:90,sleeping:false},42),'happy');
-// 循环动作也可以被显式指定（ Phase 3 的 agent 事件可能直接推 sleep）。
-assert.equal(petActionFor({mood:50,sleeping:false},'sleep'),'sleep');
-assert.equal(petActionFor(null,null),'idle');
-
-// 待机权重：睡觉不走动，低精力多打哈欠；全部为非负整数。
-const awake=petIdleWeights({energy:80,sleeping:false});
-const tired=petIdleWeights({energy:10,sleeping:false});
-const asleep=petIdleWeights({energy:10,sleeping:true});
-assert.equal(awake.walk,3);
-assert.equal(asleep.walk,0);
-assert.ok(tired.yawn>awake.yawn,'低精力时打哈欠权重必须更高');
-for(const w of [awake,tired,asleep]){
-  for(const v of Object.values(w)) assert.ok(Number.isInteger(v)&&v>=0);
-}
-
-// 待机挑选：确定性（同 tick 同输入同输出）。
-for(let tick=0;tick<50;tick++){
-  assert.equal(petIdleAction(tick,{energy:80,sleeping:false}),petIdleAction(tick,{energy:80,sleeping:false}),`tick ${tick} 必须可复现`);
-}
-// 返回值只可能是三个一次性动作或 null，永不 undefined。
-const seen=new Set();
-for(let tick=0;tick<2000;tick++){
-  const pick=petIdleAction(tick,{energy:80,sleeping:false});
-  assert.ok(pick===null||Object.hasOwn(PET_ACTIONS,pick),`tick ${tick} 返回了表外值 ${pick}`);
-  assert.notEqual(pick,undefined);
-  assert.notEqual(pick,'idle','待机挑选不应返回循环动作');
-  seen.add(pick);
-}
-// 覆盖率：四个候选都出现过（否则加权是死的）。
-assert.ok(seen.has('blink'),'2000 个 tick 内必须出现过眨眼');
-assert.ok(seen.has('yawn'),'2000 个 tick 内必须出现过打哈欠');
-assert.ok(seen.has('walk'),'2000 个 tick 内必须出现过走动');
-assert.ok(seen.has(null),'2000 个 tick 内必须出现过「什么都不做」');
-// 睡着时永远选不出走动。
-for(let tick=0;tick<2000;tick++) assert.notEqual(petIdleAction(tick,{energy:10,sleeping:true}),'walk');
+// 逐帧动作与物种节奏由共享 check-pet-animation.mjs 覆盖。
 
 // 预设反查：命中档位返回 id，自定义值返回 null。
 assert.equal(petPresetFor(0.6),'small');

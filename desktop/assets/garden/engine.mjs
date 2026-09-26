@@ -1,50 +1,70 @@
 // Original local-only garden rules. No accounts, passwords, or remote services.
+import {PETS,AVAILABLE_PETS,PET_LIMIT,petDefinition} from './pet-catalog.mjs';
+import {PET_CONTEXTS,pickPetDialogue} from './pet-dialogue.mjs';
+import {createPuzzle,normalizePuzzle,movePuzzle,restartPuzzle,undoPuzzle} from './puzzle2048.mjs';
+import {createOrders,normalizeOrders,dailyOrders,deliverOrder} from './garden-orders.mjs';
+import {PROJECTS,projectStatus,sellableStock,puzzleSupply} from './garden-loop.mjs';
+export {PETS,DEFAULT_PET,AVAILABLE_PETS,petSprite,petViewBox} from './pet-catalog.mjs';
 export const CROPS={
- radish:{name:'小萝卜',icon:'radish',time:60000,price:4,sell:6,yield:2,level:1},
- strawberry:{name:'草莓',icon:'strawberry',time:300000,price:12,sell:12,yield:2,level:1},
- blueberry:{name:'蓝莓',icon:'blueberry',time:1200000,price:24,sell:23,yield:2,level:2},
- lychee:{name:'荔枝',icon:'lychee',time:3600000,price:40,sell:38,yield:3,level:3},
+ radish:{name:'小萝卜',icon:'radish',time:60000,price:4,sell:3,yield:2,level:1,xp:1},
+ strawberry:{name:'草莓',icon:'strawberry',time:300000,price:12,sell:12,yield:2,level:1,xp:5},
+ blueberry:{name:'蓝莓',icon:'blueberry',time:1200000,price:24,sell:38,yield:2,level:2,xp:20},
+ lychee:{name:'荔枝',icon:'lychee',time:3600000,price:40,sell:70,yield:3,level:3,xp:60},
 };
 export const DECOR={flower:{name:'窗边小花',price:35},scarf:{name:'猫咪围巾',price:60},lantern:{name:'暖光灯笼',price:90}};
-// 宠物名册：sprite 对应 index.html 里的 symbol id；states=true 表示按心情切换
-// cat-normal / cat-happy / cat-sad / cat-sleep 四帧，false 表示只有单帧立绘。
-// 荔宝是新存档的默认伙伴；旧存档补齐名册时保留已有伙伴及其名字和成长。
-export const PETS={
- libao:{name:'荔宝',sprite:'libao',states:false,description:'荔枝庭院的老朋友，热情又爱笑。'},
- chestnut:{name:'栗栗',sprite:'cat',states:true,description:'爱晒太阳的栗色小猫，心情都写在脸上。'},
- egret:{name:'小白',sprite:'egret',states:false,description:'湖边散步的白鹭，喜欢安静地陪你。'},
- turtle:{name:'阿青',sprite:'turtle',states:false,description:'慢慢悠悠的小龟，最擅长陪你专注。'},
-};
-export const DEFAULT_PET='libao';
-const PET_GREETINGS={libao:'嗨，我是荔宝！今天也一起加油。',chestnut:'喵，我在这儿呢。',egret:'湖边的风很舒服，陪你坐一会儿。',turtle:'不着急，我们一步一步来。'};
+function companionLine(g,p,action){
+ p.dialogue??={};
+ const line=pickPetDialogue(p.species,action,{cursor:p.dialogue[action]||0,last:p.say,seed:g.created});
+ p.dialogue[line.context]=line.cursor;
+ return line.text;
+}
 function createPet(species,now){
- return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PET_GREETINGS[species],saidAt:now};
+ return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PETS[species].greeting,saidAt:now,dialogue:{}};
 }
 // 每只宠物的字段。新增字段必须同时加进 createState / normalize 的迁移与白名单，
 // 否则旧存档读进来会是 undefined。
-const PET_FIELDS=['species','name','xp','bond','hunger','energy','mood','sleeping','lastPat','lastPlay','say','saidAt'];
+const PET_FIELDS=['species','name','xp','bond','hunger','energy','mood','sleeping','lastPat','lastPlay','say','saidAt','dialogue'];
 export const activePet=g=>g.pets[g.active]||g.pets[0];
-// 立绘取哪一帧：栗栗按心情四帧切换，其余伙伴是单帧。
-export function petSprite(p){
- const spec=Object.hasOwn(PETS,p.species)?PETS[p.species]:PETS[DEFAULT_PET];
- if(!spec.states)return spec.sprite;
- return p.sleeping?'cat-sleep':p.mood<35?'cat-sad':p.mood>65?'cat-happy':'cat-normal';
-}
 // 宠物说的话。saidAt 只用于界面判断是否新鲜，不影响逻辑。
 export function say(p,text,now){p.say=String(text).slice(0,60);p.saidAt=now}
 export const QUESTS={care:{name:'陪伴伙伴 3 次',target:3,reward:15},plant:{name:'种下一颗种子',target:1,reward:10},harvest:{name:'收获一块农田',target:1,reward:15},focus:{name:'完成一次专注',target:1,reward:25}};
 export const dayKey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 export const level=g=>Math.min(20,1+Math.floor(activePet(g).xp/50));
+// Garden unlocks belong to the garden, even when a younger companion takes over.
+export function gardenLevel(g){
+ const earned=Math.max(1,...g.pets.map(p=>Math.min(20,1+Math.floor(p.xp/50))));
+ const crops=Object.entries(CROPS).filter(([id])=>g.discovered.includes(id)||g.seeds[id]>0||g.stock[id]>0||g.plots.some(p=>p?.crop===id));
+ return Math.max(earned,Number.isInteger(g.gardenLevel)?clamp(g.gardenLevel,1,20):1,...crops.map(([,c])=>c.level));
+}
+export const PAT_REWARD_LIMIT=3;
+export const TODO_REWARD_LIMIT=5;
+export const JOURNEY=[
+ {id:'hello',visit:1,title:'给你留了一盏灯',story:'荔宝把小屋门前的灯拨亮了一点：“不用先做完所有事，来坐坐也很好。”你们给这片小庭院留了一个位置。',keepsake:'初见小灯'},
+ {id:'lake',visit:2,title:'文山湖边的慢半拍',story:'小白在湖边停下来，等一圈水纹慢慢散开。今天没有急着赶路，你们记住了风吹过树叶的声音。',keepsake:'湖边羽签'},
+ {id:'shade',visit:3,title:'栗栗的午后座位',story:'栗栗把窗边晒暖的那一角让出来一点。你翻了几页书，它换了个舒服的姿势。一段安静的时间，也可以一起度过。',keepsake:'暖阳坐垫'},
+ {id:'rain',visit:4,title:'等雨停的十分钟',story:'雨落在屋檐上，Pingu 把一条干毛巾推到你手边，轻轻 Noot 了一声。你们把湿伞放在门边，等杯里的热气慢慢变淡。',keepsake:'雨天小伞'},
+ {id:'books',visit:5,title:'夹在书页里的话',story:'桌上的书多了一张小纸条：“今天做过的那一点，已经算数。”荔宝画了一个歪歪的小太阳，让你下次翻到这里还能看见。',keepsake:'荔园书签'},
+ {id:'basket',visit:6,title:'分一半给朋友',story:'伙伴们把收获篮摆到窗边，各自挑了一小份。没有比较谁攒得更多，剩下的可以留到下一次相聚。',keepsake:'分享小篮'},
+ {id:'home',visit:7,title:'这儿已经有你的样子',story:'灯、书签和坐垫都留在原来的地方。你不必连续每天来；每次回来，伙伴都认得你。这片庭院，已经有了你的日常。',keepsake:'七次相遇相框'},
+];
+export function journeyList(g){return JOURNEY.map(chapter=>({...chapter,available:(g.journey?.days.length||0)>=chapter.visit,claimed:!!g.journey?.claimed.includes(chapter.id)}))}
+const KEEPSAKE_ICONS={hello:'i-lantern',lake:'i-quill',shade:'i-flower',rain:'i-water',books:'i-book',basket:'i-chest',home:'i-cottage'};
+export function journeyKeepsakes(g){return journeyList(g).filter(c=>c.claimed).map(c=>({id:c.id,name:c.keepsake,icon:KEEPSAKE_ICONS[c.id],storyTitle:c.title}))}
+const dailyState=now=>({day:dayKey(now),gift:false,care:0,plant:0,harvest:0,focus:0,claimed:[],pats:[],todoRewards:0});
 export function createState(now=Date.now()){
- return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',motion:true,onboarded:false},todos:[],courses:[],reminders:[],semester:'',
+ return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:{radish:4,strawberry:2,blueberry:0,lychee:0},stock:{radish:0,strawberry:0,blueberry:0,lychee:0},
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
- pets:Object.keys(PETS).map(species=>createPet(species,now)),active:0,
- daily:{day:dayKey(now),gift:false,care:0,plant:0,harvest:0,focus:0,claimed:[]},stats:{harvest:0,focus:0,minutes:0,planted:1,tasks:0},discovered:[],decor:[],equipped:[],achievements:[],focus:null,log:[{time:now,text:'欢迎来到荔枝庭院。第一块萝卜地已经种好，记得来收获。'}]}};
+ pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,puzzle:createPuzzle(now),orders:createOrders(),
+ daily:dailyState(now),stats:{harvest:0,focus:0,minutes:0,planted:1,tasks:0},discovered:[],decor:[],equipped:[],achievements:[],gardenLevel:1,focus:null,focusHistory:[],journey:{days:[dayKey(now)],claimed:[]},log:[{time:now,text:'欢迎来到荔枝庭院。第一块萝卜地已经种好，记得来收获。'}]}};
 }
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function check(ok,message){if(!ok)throw Error(message)}
 function note(g,text,now){g.log.unshift({time:now,text});g.log=g.log.slice(0,30)}
+function validDate(value){return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&dayKey(new Date(value+'T12:00:00').getTime())===value}
+const timeValue=n=>Number.isFinite(n)&&n>=0?n:0;
+function todoDate(value){check(value===''||validDate(value),'请选择有效的事项日期');return value}
+function focusFields(f){return {startedAt:timeValue(f.startedAt)||f.end-f.duration*60000,end:f.end,duration:f.duration,todoId:String(f.todoId||'').slice(0,60),task:String(f.task||'').slice(0,120)}}
 export function normalize(input,now=Date.now()){
  // schema 2 是早期的单伙伴存档：只有 g.pet。这里统一升级成 pets 数组，
  // 用户改过的名字原样保留（迁移不覆盖用户数据），species 记为栗栗。
@@ -59,14 +79,21 @@ export function normalize(input,now=Date.now()){
  for(const k of Object.keys(QUESTS))check(Number.isFinite(g.daily[k])&&g.daily[k]>=0,'每日任务数值错误');
  for(const k of ['harvest','focus','minutes','planted','tasks'])check(g.stats&&Number.isFinite(g.stats[k])&&g.stats[k]>=0,'累计记录格式错误');
  for(const k of ['discovered','decor','equipped','achievements','log'])check(Array.isArray(g[k]),'收藏存档格式错误');
- g.decor=g.decor.filter(k=>DECOR[k]);g.equipped=g.equipped.filter(k=>g.decor.includes(k));g.discovered=g.discovered.filter(k=>CROPS[k]);
+ g.decor=g.decor.filter(k=>DECOR[k]||PROJECTS[k]);g.equipped=g.equipped.filter(k=>g.decor.includes(k));g.discovered=g.discovered.filter(k=>CROPS[k]);
  g.log=g.log.slice(0,30).filter(x=>x&&typeof x.text==='string'&&Number.isFinite(x.time)).map(x=>({time:x.time,text:x.text.slice(0,180)}));
- check(!g.focus||(Number.isFinite(g.focus.end)&&Number.isFinite(g.focus.duration)&&g.focus.duration>=1&&g.focus.duration<=120),'专注存档格式错误');
+ check(!g.focus||(Number.isFinite(g.focus.end)&&Number.isInteger(g.focus.duration)&&g.focus.duration>=1&&g.focus.duration<=120),'专注存档格式错误');
+ g.focus=g.focus?focusFields(g.focus):null;
+ g.focusHistory=(Array.isArray(g.focusHistory)?g.focusHistory:[]).filter(f=>f&&Number.isInteger(f.minutes)&&f.minutes>=1&&f.minutes<=120&&Number.isFinite(f.startedAt)&&Number.isFinite(f.endedAt)&&f.startedAt>=0&&f.endedAt>=f.startedAt).slice(0,365).map(f=>({startedAt:f.startedAt,endedAt:f.endedAt,minutes:f.minutes,todoId:String(f.todoId||'').slice(0,60),task:String(f.task||'').slice(0,120)}));
+ g.journey={days:[...new Set((Array.isArray(g.journey?.days)?g.journey.days:[]).filter(validDate))].sort().slice(0,7),claimed:[...new Set((Array.isArray(g.journey?.claimed)?g.journey.claimed:[]).filter(id=>JOURNEY.some(c=>c.id===id)))]};
+ g.journey.claimed=g.journey.claimed.filter(id=>JOURNEY.find(c=>c.id===id).visit<=g.journey.days.length);
+ g.puzzle=normalizePuzzle(g.puzzle,g.created);
+ g.orders=normalizeOrders(g.orders,CROPS);
+ g.daily={day:g.daily.day,gift:!!g.daily.gift,...Object.fromEntries(Object.keys(QUESTS).map(k=>[k,g.daily[k]])),claimed:g.daily.claimed.filter(k=>Object.hasOwn(QUESTS,k)),pats:(Array.isArray(g.daily.pats)?g.daily.pats:[]).slice(0,PET_LIMIT).map(n=>Number.isInteger(n)?clamp(n,0,PAT_REWARD_LIMIT):0),todoRewards:Number.isInteger(g.daily.todoRewards)?clamp(g.daily.todoRewards,0,TODO_REWARD_LIMIT):0};
  check(Number.isFinite(g.last)&&g.last>0&&g.last<=now+86400000,'存档时间异常');
 
  // —— 宠物：单只（schema 2）迁移成数组，并逐只校验 ——
  if(Array.isArray(g.pets)){
-  check(g.pets.length>=1&&g.pets.length<=8,'伙伴数量不对');
+  check(g.pets.length>=1&&g.pets.length<=PET_LIMIT,'伙伴数量不对');
  }else{
   check(g.pet&&typeof g.pet==='object','伙伴存档格式错误');
   g.pets=[{...g.pet,species:'chestnut'}];
@@ -83,13 +110,14 @@ export function normalize(input,now=Date.now()){
   out.sleeping=!!p.sleeping;
   for(const k of ['lastPat','lastPlay','saidAt'])out[k]=Number.isFinite(p[k])&&p[k]>=0?p[k]:0;
   out.say=String(p.say||'').slice(0,60);
+  out.dialogue=Object.fromEntries(PET_CONTEXTS.filter(k=>Number.isSafeInteger(p.dialogue?.[k])&&p.dialogue[k]>=0).map(k=>[k,p.dialogue[k]]));
   return out;
  });
  g.active=Number.isInteger(g.active)&&g.active>=0&&g.active<g.pets.length?g.active:0;
 
  s.profile={name:String(s.profile?.name||'').slice(0,20),college:String(s.profile?.college||'').slice(0,40)};
- s.preferences={theme:s.preferences?.theme==='night'?'night':'day',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true};
- s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,100).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>({id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded}));
+ s.preferences={theme:s.preferences?.theme==='night'?'night':'day',homeSkin:['pixel','lake','bookshop','terrace'].includes(s.preferences?.homeSkin)?s.preferences.homeSkin:'pixel',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'undergrad',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
+ s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,500).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>({id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded,date:validDate(x.date)?x.date:'',createdAt:timeValue(x.createdAt),completedAt:x.done?timeValue(x.completedAt):0,archived:!!x.archived&&!!x.done}));
  s.courses=(Array.isArray(s.courses)?s.courses:[]).slice(0,300).filter(x=>x&&Number.isFinite(x.credit)&&Number.isFinite(x.point)&&x.credit>0&&x.credit<=100&&x.point>=0&&x.point<=5).map(x=>({name:String(x.name||'课程').slice(0,100),credit:x.credit,point:x.point,term:String(x.term||'').slice(0,40),code:String(x.code||'').slice(0,40),level:['undergrad','graduate'].includes(x.level)?x.level:'',grade:String(x.grade||'').slice(0,20),source:String(x.source||'手动录入').slice(0,30),included:x.included!==false}));
  s.reminders=(Array.isArray(s.reminders)?s.reminders:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.place==='string'&&Number.isFinite(x.start)&&Number.isFinite(x.end)&&x.end>x.start&&x.end-x.start<=86400000).slice(0,50).map(x=>({id:x.id.slice(0,80),place:x.place.slice(0,80),start:x.start,end:x.end}));
  s.semester=/^\d{4}-\d{2}-\d{2}$/.test(s.semester||'')?s.semester:'';
@@ -97,11 +125,12 @@ export function normalize(input,now=Date.now()){
  for(const k of Object.keys(createState(now).game))clean.game[k]=g[k];
  clean.game.pets=g.pets;clean.game.active=g.active;
  const settled=settle(clean,now);
- // 先结算原有伙伴，再迎接新伙伴；已有记录不覆盖、不重排，满 8 只时不挤掉旧伙伴。
- for(const species of Object.keys(PETS)){
-  if(settled.game.pets.length>=8)break;
+ // 先结算原有伙伴，再补齐上架伙伴；已有记录不覆盖、不重排，满额时不挤掉旧伙伴。
+ for(const species of AVAILABLE_PETS){
+  if(settled.game.pets.length>=PET_LIMIT)break;
   if(!settled.game.pets.some(p=>p.species===species))settled.game.pets.push(createPet(species,now));
  }
+ settled.game.gardenLevel=gardenLevel(settled.game);
  return settled;
 }
 export function settle(state,now=Date.now()){
@@ -114,13 +143,14 @@ export function settle(state,now=Date.now()){
  }
  g.last=now;
  const day=dayKey(now);
- if(day>g.daily.day)g.daily={day,gift:false,care:0,plant:0,harvest:0,focus:0,claimed:[]};
+ if(day>g.daily.day)g.daily=dailyState(now);
+ dailyOrders(g,day,CROPS,gardenLevel(g));
  return s;
 }
 export function achievementList(g){return [
  {id:'harvest',name:'第一篮收成',hint:'收获一次',done:g.stats.harvest>=1},
- {id:'friend',name:'熟悉的朋友',hint:'伙伴达到 3 级',done:level(g)>=3},
- {id:'focus',name:'专注的午后',hint:'完成 3 次专注',done:g.stats.focus>=3},
+ {id:'friend',name:'熟悉的朋友',hint:'有一位伙伴达到 3 级',done:g.pets.some(p=>p.xp>=100)||g.achievements.includes('friend')},
+ {id:'focus',name:'专注的午后',hint:'累计专注 75 分钟',done:g.stats.minutes>=75||g.achievements.includes('focus')},
  {id:'gardener',name:'小小园艺家',hint:'累计收获 10 次',done:g.stats.harvest>=10},
  {id:'land',name:'庭院主人',hint:'解锁全部 6 块地',done:g.plots.every(p=>p!=='locked')},
  {id:'collection',name:'四季收藏家',hint:'收获全部 4 种作物',done:g.discovered.length===4},
@@ -129,39 +159,64 @@ export function act(state,a,now=Date.now()){
  const s=settle(state,now),g=s.game,p=activePet(g);now=g.last;
  const care=()=>{g.daily.care++;p.bond=clamp(p.bond+3,0,100)};
  switch(a.type){
- case 'gift':check(!g.daily.gift,'今天的补给已经领过啦');g.daily.gift=true;g.coins+=20;g.food++;g.seeds.radish+=2;say(p,'补给到手！今天也请多指教。',now);note(g,'领取每日补给：20 荔枝币、1 份食物、2 颗萝卜种子。',now);break;
- case 'pat':check(now-p.lastPat>=10000,'让它享受一下，稍等 10 秒再摸摸');p.lastPat=now;p.xp+=2;p.mood=clamp(p.mood+5,0,100);care();say(p,'呼…被摸头了，好舒服。',now);note(g,'摸摸头，'+p.name+'舒服地眯起了眼。',now);break;
+ case 'chat':{
+  const hour=new Date(now).getHours();
+  const context=p.sleeping?'sleep':p.hunger<40?'hungry':p.energy<35?'tired':hour<10?'morning':hour>=21?'night':'idle';
+  say(p,companionLine(g,p,context),now);break;}
+ case 'petSignature':{
+  check(!p.sleeping,'伙伴正在睡觉，醒来后再看它的拿手动作吧');
+  check(!g.focus||g.focus.end<=now,'伙伴正在安静陪你专注，结束后再看吧');
+  say(p,companionLine(g,p,'signature'),now);break;}
+ case 'puzzleMove':{
+  const result=movePuzzle(g.puzzle,a.direction);g.puzzle=result.state;
+  if(result.changed&&result.merges.some(m=>m.value>=128))g.puzzle.qualifiedDay=dayKey(now);
+  if(result.newMilestones.length)say(p,companionLine(g,p,'gameWin'),now);
+  else if(result.changed&&result.over)say(p,companionLine(g,p,'gameLose'),now);
+  break;}
+ case 'puzzleUndo':g.puzzle=undoPuzzle(g.puzzle);break;
+ case 'puzzleRestart':g.puzzle=restartPuzzle(g.puzzle,now);break;
+ case 'puzzleClaim':{check(g.puzzle.qualifiedDay===dayKey(now),'今天合成一次 128 或更大的数字，就能领取小礼物');check(g.puzzle.earnedDay!==dayKey(now),'今天的小游戏礼物已经领取');const supply=puzzleSupply(g);g.puzzle.earnedDay=dayKey(now);g.puzzle.supplyClaim={day:dayKey(now),crop:supply.crop,quantity:supply.quantity};g.seeds[supply.crop]+=supply.quantity;g.coins+=8;p.bond=clamp(p.bond+2,0,100);p.xp+=3;p.mood=clamp(p.mood+10,0,100);g.daily.care++;say(p,companionLine(g,p,p.sleeping?'sleep':'supply'),now);note(g,'合成补给：'+CROPS[supply.crop].name+'种子 ×'+supply.quantity+'、8 荔枝币；伙伴成长 +3、亲密度 +2，计入一次陪伴。准备带去「'+supply.target+'」。',now);break;}
+ case 'orderDeliver':{const result=deliverOrder(g,a.id,dayKey(now),CROPS,gardenLevel(g)),recipient=g.pets.find(pet=>pet.species===result.order.pet);if(recipient){recipient.xp+=5;recipient.bond=clamp(recipient.bond+3,0,100);say(recipient,companionLine(g,recipient,recipient.sleeping?'sleep':'order'),now)}note(g,'完成伙伴委托「'+result.order.title+'」，收下 '+result.order.coins+' 荔枝币；'+(recipient?.name||PETS[result.order.pet].name)+'成长 +5、亲密度 +3。',now);break;}
+ case 'gift':check(!g.daily.gift,'今天的补给已经领过啦');g.daily.gift=true;g.coins+=20;g.food++;g.seeds.radish+=2;say(p,companionLine(g,p,p.sleeping?'sleep':'supply'),now);note(g,'领取每日补给：20 荔枝币、1 份食物、2 颗萝卜种子。',now);break;
+ case 'pat':check(now-p.lastPat>=10000,'让它享受一下，稍等 10 秒再摸摸');p.lastPat=now;if((g.daily.pats[g.active]||0)<PAT_REWARD_LIMIT){g.daily.pats[g.active]=(g.daily.pats[g.active]||0)+1;p.xp+=2;care();}else g.daily.care++;p.mood=clamp(p.mood+5,0,100);say(p,companionLine(g,p,'pat'),now);note(g,'摸摸头，'+p.name+'舒服地眯起了眼。',now);break;
  case 'feed':check(!p.sleeping,'先唤醒伙伴再喂食');check(p.hunger<98,'它已经吃饱了，留着下次吧');
   if(a.crop){check(CROPS[a.crop]&&g.stock[a.crop]>0,'背包里没有这种作物');g.stock[a.crop]--;}else{check(g.food>0,'食物用完了，可以去集市购买');g.food--;}
-  p.hunger=clamp(p.hunger+30,0,100);p.energy=clamp(p.energy+5,0,100);p.xp+=8;care();say(p,'好吃！肚子暖暖的。',now);note(g,'吃饱啦，伙伴的亲密度和成长增加了。',now);break;
- case 'play':check(!p.sleeping,'先唤醒伙伴');check(p.energy>=25,'它有点累了，让它休息一会儿');check(now-p.lastPlay>=30000,'再等一会儿，30 秒后可以继续玩');p.lastPlay=now;p.energy-=10;p.mood=clamp(p.mood+20,0,100);p.xp+=5;care();say(p,'玩得好开心！再来一次好不好。',now);note(g,'陪'+p.name+'玩了一会儿，心情变好了。',now);break;
- case 'sleep':p.sleeping=!p.sleeping;say(p,p.sleeping?'晚安…梦里见。':'我醒啦，伸了一个大懒腰。',now);note(g,p.sleeping?p.name+'睡下了，休息时会恢复精力。':p.name+'醒来，伸了一个大懒腰。',now);break;
+  p.hunger=clamp(p.hunger+30,0,100);p.energy=clamp(p.energy+5,0,100);p.xp+=8;care();say(p,companionLine(g,p,'feed'),now);note(g,'吃饱啦，伙伴的亲密度和成长增加了。',now);break;
+ case 'play':check(!p.sleeping,'先唤醒伙伴');check(p.energy>=25,'它有点累了，让它休息一会儿');check(now-p.lastPlay>=30000,'再等一会儿，30 秒后可以继续玩');p.lastPlay=now;p.energy-=10;p.mood=clamp(p.mood+20,0,100);p.xp+=5;care();say(p,companionLine(g,p,'play'),now);note(g,'陪'+p.name+'玩了一会儿，心情变好了。',now);break;
+ case 'sleep':p.sleeping=!p.sleeping;say(p,companionLine(g,p,p.sleeping?'sleep':'wake'),now);note(g,p.sleeping?p.name+'睡下了，休息时会恢复精力。':p.name+'醒来，伸了一个大懒腰。',now);break;
  case 'rename':check(String(a.name||'').trim().length>0,'给伙伴取个名字吧');p.name=String(a.name).trim().slice(0,12);say(p,'以后我就叫这个名字啦。',now);break;
  case 'switchPet':{
   check(Number.isInteger(a.index)&&a.index>=0&&a.index<g.pets.length,'没有这个伙伴');
   check(a.index!==g.active,'它已经在这里陪你啦');
   g.active=a.index;const q=activePet(g);
-  say(q, q.sleeping?'（睡着的 '+q.name+' 翻了个身）':'嘿，轮到我了！',now);
+  say(q,q.sleeping?companionLine(g,q,'sleep'):companionLine(g,q,'greet'),now);
   note(g,'切换伙伴：现在陪着你的是 '+q.name+'。',now);break;}
  case 'plant':{
-  const c=CROPS[a.crop];check(Number.isInteger(a.index)&&a.index>=0&&a.index<6&&g.plots[a.index]===null,'请选择空地');check(c&&level(g)>=c.level,'伙伴等级还不够');check(g.seeds[a.crop]>0,'这种种子用完了，去集市补充吧');g.seeds[a.crop]--;g.plots[a.index]={crop:a.crop,planted:now,ready:now+c.time,watered:false};g.stats.planted++;g.daily.plant++;note(g,'种下了'+c.name+'，离线时也会继续生长。',now);break;}
- case 'water':{const x=g.plots[a.index];check(x&&x!=='locked','这块地还没有作物');check(!x.watered,'已经浇过水了');check(now<x.ready,'已经成熟，可以收获了');x.ready=now+Math.ceil((x.ready-now)*0.75);x.watered=true;p.xp+=1;note(g,'浇水完成，剩余生长时间缩短四分之一。',now);break;}
- case 'harvest':{const x=g.plots[a.index];check(x&&x!=='locked'&&now>=x.ready,'作物还没有成熟');const c=CROPS[x.crop];g.stock[x.crop]+=c.yield;if(!g.discovered.includes(x.crop))g.discovered.push(x.crop);g.plots[a.index]=null;g.stats.harvest++;g.daily.harvest++;p.xp+=10;say(p,'丰收啦！拿去集市换荔枝币吧。',now);note(g,'收获 '+c.name+' ×'+c.yield+'，已放入背包。',now);break;}
+  const c=CROPS[a.crop];check(Number.isInteger(a.index)&&a.index>=0&&a.index<6&&g.plots[a.index]===null,'请选择空地');check(c&&gardenLevel(g)>=c.level,'庭院还没有解锁这种作物');check(g.seeds[a.crop]>0,'这种种子用完了，去集市补充吧');g.seeds[a.crop]--;g.plots[a.index]={crop:a.crop,planted:now,ready:now+c.time,watered:false};g.stats.planted++;g.daily.plant++;say(p,companionLine(g,p,p.sleeping?'sleep':'plant'),now);note(g,'种下了'+c.name+'，离线时也会继续生长。',now);break;}
+ case 'water':{const x=g.plots[a.index];check(x&&x!=='locked','这块地还没有作物');check(!x.watered,'已经浇过水了');check(now<x.ready,'已经成熟，可以收获了');x.ready=now+Math.ceil((x.ready-now)*0.75);x.watered=true;say(p,companionLine(g,p,p.sleeping?'sleep':'water'),now);note(g,'浇水完成，剩余生长时间缩短四分之一。',now);break;}
+ case 'harvest':{const x=g.plots[a.index];check(x&&x!=='locked'&&now>=x.ready,'作物还没有成熟');const c=CROPS[x.crop];g.stock[x.crop]+=c.yield;if(!g.discovered.includes(x.crop))g.discovered.push(x.crop);g.plots[a.index]=null;g.stats.harvest++;g.daily.harvest++;p.xp+=c.xp;say(p,companionLine(g,p,p.sleeping?'sleep':'harvest'),now);note(g,'收获 '+c.name+' ×'+c.yield+'，已放入背包。',now);break;}
  case 'unlock':{const n=g.plots.filter(x=>x!=='locked').length;const cost=60+(n-3)*30;check(g.plots[a.index]==='locked','这块地已经解锁');check(g.coins>=cost,'荔枝币不够，收获后去集市出售作物吧');g.coins-=cost;g.plots[a.index]=null;note(g,'新开垦了一块农田。',now);break;}
- case 'buySeed':{const c=CROPS[a.crop];check(c&&level(g)>=c.level,'需要更高的伙伴等级');check(g.coins>=c.price,'荔枝币不够');g.coins-=c.price;g.seeds[a.crop]++;break;}
+ case 'buySeed':{const c=CROPS[a.crop];check(c&&gardenLevel(g)>=c.level,'庭院还没有解锁这种作物');check(g.coins>=c.price,'荔枝币不够');g.coins-=c.price;g.seeds[a.crop]++;break;}
  case 'sell':{const c=CROPS[a.crop],n=g.stock[a.crop]||0;check(c&&n>0,'没有可出售的作物');g.coins+=n*c.sell;g.stock[a.crop]=0;note(g,'出售'+c.name+' ×'+n+'，获得 '+(n*c.sell)+' 荔枝币。',now);break;}
+ case 'sellSurplus':{const c=CROPS[a.crop];check(c,'没有这种作物');const n=sellableStock(g,a.crop);check(n>0,'这些收成已为伙伴委托和下一项建设留好，暂时没有多余的');g.coins+=n*c.sell;g.stock[a.crop]-=n;note(g,'出售多余的'+c.name+' ×'+n+'，获得 '+(n*c.sell)+' 荔枝币；为委托和建设留好的收成仍在篮子里。',now);break;}
  case 'buyFood':check(g.coins>=8,'需要 8 荔枝币');g.coins-=8;g.food++;break;
- case 'decor':{const d=DECOR[a.id];check(d,'没有这件装饰');if(!g.decor.includes(a.id)){check(g.coins>=d.price,'荔枝币不够');g.coins-=d.price;g.decor.push(a.id);}g.equipped=g.equipped.includes(a.id)?g.equipped.filter(x=>x!==a.id):[...g.equipped,a.id];break;}
+ case 'decor':{const d=DECOR[a.id]||PROJECTS[a.id];check(d,'没有这件装饰');if(!g.decor.includes(a.id)){if(PROJECTS[a.id]){const status=projectStatus(g,a.id);check(status.unlocked,d.requirement.kind==='harvest'?'累计收获 '+d.requirement.count+' 次后可以建设':'完成 '+d.requirement.count+' 份伙伴委托后可以建设');check(status.missing.every(item=>item.missing===0),'建设材料还没有齐，先去农田收获吧')}check(g.coins>=d.price,'荔枝币不够');g.coins-=d.price;if(d.needs)for(const [crop,n] of Object.entries(d.needs))g.stock[crop]-=n;g.decor.push(a.id);say(p,companionLine(g,p,p.sleeping?'sleep':'build'),now);if(PROJECTS[a.id])note(g,'建好了「'+d.name+'」，收成变成了庭院里看得见的一角。',now)}g.equipped=g.equipped.includes(a.id)?g.equipped.filter(x=>x!==a.id):[...g.equipped,a.id];break;}
  case 'quest':{const q=QUESTS[a.id];check(q&&g.daily[a.id]>=q.target,'目标还没有完成');check(!g.daily.claimed.includes(a.id),'奖励已领取');g.daily.claimed.push(a.id);g.coins+=q.reward;note(g,'完成每日目标：'+q.name+'。',now);break;}
  case 'achievement':{const x=achievementList(g).find(x=>x.id===a.id);check(x?.done,'成就还没有完成');check(!g.achievements.includes(a.id),'奖励已领取');g.achievements.push(a.id);g.coins+=30;note(g,'获得纪念章：'+x.name+'。',now);break;}
- case 'focusStart':check(!g.focus,'请先完成或取消当前专注');check([5,25,45].includes(a.minutes),'请选择 5、25 或 45 分钟');g.focus={end:now+a.minutes*60000,duration:a.minutes};break;
+ case 'focusStart':{check(!g.focus,'请先完成或取消当前专注');check(Number.isInteger(a.minutes)&&a.minutes>=1&&a.minutes<=120,'专注时长请输入 1–120 的整数分钟');const todo=a.todoId?s.todos.find(t=>t.id===a.todoId):null;check(!a.todoId||(todo&&!todo.done&&!todo.archived),'请选择一件未完成的事项');g.focus={startedAt:now,end:now+a.minutes*60000,duration:a.minutes,todoId:todo?.id||'',task:todo?.text||''};say(p,companionLine(g,p,p.sleeping?'sleep':'focusStart'),now);break;}
  case 'focusCancel':g.focus=null;break;
- case 'focusClaim':check(g.focus&&now>=g.focus.end,'专注还没结束');g.stats.minutes+=g.focus.duration;g.stats.focus++;g.daily.focus++;g.coins+=g.focus.duration;p.xp+=10;p.mood=clamp(p.mood+10,0,100);note(g,'完成 '+g.focus.duration+' 分钟专注，获得等量荔枝币。',now);g.focus=null;break;
- case 'todoAdd':{const text=String(a.text||'').trim();check(text,'先写下一件小事');check(s.todos.length<100,'清单已满，请先清理已完成事项');s.todos.push({id:String(a.id),text:text.slice(0,120),done:false,rewarded:false});break;}
- case 'todoToggle':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');t.done=!t.done;if(t.done&&!t.rewarded){t.rewarded=true;g.stats.tasks++;p.xp+=2;}break;}
+ case 'focusClaim':check(g.focus&&now>=g.focus.end,'专注还没结束');g.stats.minutes+=g.focus.duration;g.stats.focus++;g.daily.focus++;g.coins+=g.focus.duration;p.xp+=g.focus.duration;p.mood=clamp(p.mood+10,0,100);g.focusHistory.unshift({startedAt:g.focus.startedAt,endedAt:g.focus.end,minutes:g.focus.duration,todoId:g.focus.todoId,task:g.focus.task});g.focusHistory=g.focusHistory.slice(0,365);say(p,companionLine(g,p,'focus'),now);note(g,'完成 '+g.focus.duration+' 分钟专注，获得等量荔枝币与成长。',now);g.focus=null;break;
+ case 'todoAdd':{const text=String(a.text||'').trim(),id=String(a.id||'').slice(0,60);check(text,'先写下一件小事');check(id&&!s.todos.some(t=>t.id===id),'事项标识重复，请重新添加');check(s.todos.filter(t=>!t.archived).length<100&&s.todos.length<500,'清单已满，请先归档或清理已完成事项');s.todos.push({id,text:text.slice(0,120),done:false,rewarded:false,date:todoDate(a.date===undefined?dayKey(now):a.date),createdAt:now,completedAt:0,archived:false});break;}
+ case 'todoEdit':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');if(a.text!==undefined){const text=String(a.text).trim();check(text,'事项不能留空');t.text=text.slice(0,120)}if(a.date!==undefined)t.date=todoDate(a.date);break;}
+ case 'todoToggle':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');check(!t.archived,'请先从归档中恢复事项');t.done=!t.done;t.completedAt=t.done?now:0;if(t.done&&!t.rewarded){t.rewarded=true;g.stats.tasks++;if(g.daily.todoRewards<TODO_REWARD_LIMIT){g.daily.todoRewards++;p.xp+=2;}}if(t.done)say(p,companionLine(g,p,'task'),now);break;}
+ case 'todoArchive':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');const archive=a.archived!==false;check(!archive||t.done,'完成后再归档这件小事');check(archive||!t.archived||s.todos.filter(x=>!x.archived).length<100,'未归档事项已满，请先整理');t.archived=archive;break;}
+ case 'todoArchiveDone':for(const t of s.todos)if(t.done)t.archived=true;break;
  case 'todoDelete':s.todos=s.todos.filter(x=>x.id!==a.id);break;
+ case 'visit':{const day=dayKey(now);if(g.journey.days.length<7&&!g.journey.days.includes(day)&&(!g.journey.days.length||day>g.journey.days.at(-1)))g.journey.days.push(day);break;}
+ case 'journeyClaim':{const chapter=journeyList(g).find(c=>c.id===a.id);check(chapter?.available,'这段故事会在之后的来访中慢慢展开');check(!chapter.claimed,'这份纪念物已经收好啦');g.journey.claimed.push(chapter.id);note(g,'读完「'+chapter.title+'」，收好'+chapter.keepsake+'。',now);break;}
  default:throw Error('未知操作');
  }
+ g.gardenLevel=gardenLevel(g);
  return s;
 }
 export function gpa(courses){courses=courses.filter(c=>c.included!==false);const total=courses.reduce((n,c)=>n+c.credit,0);return {credits:total,value:total?courses.reduce((n,c)=>n+c.credit*c.point,0)/total:0}}

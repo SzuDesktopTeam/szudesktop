@@ -15,7 +15,7 @@ const stamp=app.slice(app.indexOf('function stampVersion('),app.indexOf('async f
 const refresh=app.slice(app.indexOf('async function refresh(){'),app.indexOf('\nfunction networkResult'));
 const meta={content:''};
 const nodes={'#network-summary':{innerHTML:'',dataset:{}},'#network-badge':{innerHTML:'',dataset:{}},'#app-badge':{textContent:'非官方应用'},'#about-version':{textContent:''}};
-const ctx=vm.createContext({networkSummaryHTML,networkBadgeHTML,networkTone,$:s=>nodes[s],document:{querySelector:()=>meta},api:async()=>connected});
+const ctx=vm.createContext({networkSummaryHTML,networkBadgeHTML,networkTone,$:s=>nodes[s],document:{querySelector:()=>meta,getElementById:()=>null},releaseUI:{},feedbackUI:{},api:async()=>connected});
 vm.runInContext('let net=null,saved=false,probing=false,appVersion="";'+stamp+refresh,ctx);
 assert.equal(await vm.runInContext('refresh()',ctx),true);
 assert.equal(meta.content,'beta9.9.9');

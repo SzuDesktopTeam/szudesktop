@@ -2,60 +2,165 @@
 
 # szuDesktop · Lychee Garden
 
-A small green corner for everyday life at Shenzhen University: the campus network,
-school services, study tools, and a little garden that keeps growing even offline.
+A little piece of Shenzhen University, on your desktop.
+
+Choose a pixel companion, spend a little time focusing, and come back to a harvest.
+Your everyday campus tools live here too.
 
 <p>
-  <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-4a6fa5?style=flat-square">
-  <img alt="go" src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=flat-square&logo=go&logoColor=white">
+  <img alt="desktop platform" src="https://img.shields.io/badge/desktop-Windows-4a6fa5?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-2f7d32?style=flat-square">
   <img alt="release" src="https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=c9a227">
-  <img alt="runtime" src="https://img.shields.io/badge/runtime-no%20dependencies-6b7280?style=flat-square">
 </p>
 
 [简体中文](../README.md) · **English**
 
 Unofficial · Built by a student · Not affiliated with Shenzhen University
 
-[Download](#download) · [Features](#features) · [Command line](#command-line-szunet) · [FAQ](#faq) · [Privacy](#privacy-and-security) · [Development status](STATUS.md)
+**[Download for Windows · beta0.9.2](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.2/szuDesktop-Setup-0.9.2.exe)**
+
+[Other downloads and release details](#download) · [Features](#features) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues) · [FAQ](#faq) · [Development status](STATUS.md)
 
 </div>
 
 ---
 
-## Preview
+## Source preview: preparing for beta0.9.3
 
-| Main window | Lychee Garden | Network sign-in |
-| :---------: | :-----------: | :-------------: |
-| ![Main window](screenshot-desktop.png) | ![Lychee Garden](screenshot-garden.png) | ![Network sign-in](screenshot-login.png) |
+**These changes are not publicly released; the download above remains beta0.9.2.** The beta0.9.3 source adds three selectable cel-shaded home scenes in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Integration and final verification are recorded in [STATUS sections 61–62](STATUS.md#62-首页收尾与合并验收2026-09-27). Local candidate installers in section 60 belong to the earlier 2048 artwork version.
 
----
+### A different window onto campus
 
-## What it solves
+Open **Change scenery** at the top of the home page to choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace**, or return to the original **Pixel Courtyard**. The selection is saved locally and survives reopening; companions, crops and tasks keep their existing progress. The picker folds away after a selection, leaving room for the view.
 
-The campus network at Shenzhen University is split into **two zones that do not
-work with each other**, each using a completely different sign-in method:
+| Scene | Outside the window |
+|---|---|
+| Lakeside Daylight | A curved lake path, southern palms, white-and-red campus buildings and a bicycle beside a bench |
+| After-rain Bookshop | A recessed shopfront, bookshelves, awning and a quiet seat beside potted plants |
+| Blue-hour Terrace | Stepped terraces, a seedling rack, warm windows and strings of lights at dusk |
 
-| Zone | System | How it works |
-| :--- | :----- | :----------- |
-| Teaching / office / library areas | SRun (深澜) | Rolled out in early 2025. Password goes through HMAC-MD5, user data through XXTEA with a custom Base64, plus a SHA1 checksum |
-| Dormitory / staff areas | Dr.COM (ePortal) | A single GET request is enough |
+![Lakeside Daylight running in the home view](screenshot-home-lake-preview.png)
 
-That creates two headaches:
+[View After-rain Bookshop](screenshot-home-bookshop-preview.png) · [View Blue-hour Terrace](screenshot-home-terrace-preview.png)
 
-1. **Every tutorial and script written before 2024 fails in the teaching area** —
-   they were all built for the old Dr.COM.
-2. **Nobody explains the error messages** — `ldap auth error`, `Rad:userid error1`,
-   `登陆失败[05]`, `Unknow ac-type`… so people just guess and retry.
+These campus-inspired scenes use real 3D geometry. The stepped lighting, tinted shadows, depth ink, sky and colour pipeline are adapted from MIT-licensed [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing), with Three.js 0.180.0 bundled locally. Scene geometry is new work for this project; attribution and adaptations are recorded in [Third-party notices](../THIRD_PARTY_NOTICES.md).
 
-szuDesktop handles both: **one button to sign in, one button to tell you where it got stuck.**
+Scenes render only while the home view is visible and release their resources when leaving it. The animation setting covers companions and home scenery, supports a still frame and respects system reduced motion. If 3D rendering is unavailable, the pixel campus and normal controls remain accessible.
 
-It does not decide the zone by "can I reach the portal". It looks at the **protocol
-fingerprint** — the handshake behaviour that only that protocol has (SRun: whether
-`get_challenge` succeeds; Dr.COM: whether the ePortal login endpoint exists). The reason is
-practical: the dorm portal also returns HTTP 200 on machines in the teaching area, so a
-plain reachability test mis-detects the zone while offline and then fires the Dr.COM
-protocol at an endpoint that isn't there.
+Pet care and task saves reuse the same canvas, keeping background animation continuous. A small nameplate replaces the idle companion bubble; replies expand briefly and fold away again. Dusk text contrast, distant greenery and bookshop paving have also been refined.
+
+The bottom hint bar now follows the active companion, keeping its portrait and name consistent after switching, renaming, navigation and reopening. This fix is available in source and the local preview, but not in a public installer yet; see STATUS section 60.4 for verification.
+
+### Bring the harvest to the companion table
+
+The 2048 tiles now belong to the same garden: **2 seed bag → 4 sprout → 8 radish → 16 strawberry → 32 blueberry → 64 lychee → 128 radish basket → 256 strawberry basket → 512 blueberry basket → 1024 lychee basket → 2048 Libao harvest gift**. At 4096 and beyond, celebration decorations appear while the complete number remains visible.
+
+The farm and board share crop artwork, and moving tiles use the same drawings as settled tiles. A small trail shows the current harvest and the next tier; the full illustrated guide stays collapsed until opened. Merge rules, scoring, saves, undo and the daily seed gift are unchanged. Board illustrations do not directly become stored produce: claiming the existing gift still connects a game to planting.
+
+![Garden-themed 2048 artwork on a preset high-tier board in an isolated test save](screenshot-arcade-garden-preview.png)
+
+This screenshot uses a preset board to inspect all 11 designs. It is not a completed run from a fresh game or evidence of a naturally earned score.
+
+### Companions with their own movement and personality
+
+All six species, including A-Qing in older saves, have **18 actions with 6 frames each: 648 independently rendered pixel frames**. The existing daily actions gain **watering, carrying a harvest, offering a gift, building, pondering and a signature gesture**. Watering cans, baskets, gift boxes and hammers have preparation, action and settling poses, while eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player. The action book groups daily, interaction and garden actions, with playback and an expandable view of every frame. Another 30 static portraits remain available for reduced motion and postcard export.
+
+**Pingu has been redrawn.** Small bead eyes on a black face, a round head and short neck, a broad white chest and belly, a projecting red beak and wide orange feet share one drawing across static and animated states. His beak opens into a trumpet for Noot. Skipper retains his own upright stance, white face and low brows.
+
+Saving the animation setting or starting a custom focus session immediately synchronizes the desktop pet; a failed save does not notify it early. Sleep and focus take priority, signature gestures do not interrupt them, and reduced motion uses static art. This build passed installation upgrade, reopen and shared-sidecar checks: system reduced motion was respected, real frame progression was captured with animation permitted only in the isolated renderer, and media conditions and preferences were restored. No Windows settings were changed.
+
+**1,656 Chinese lines cover 23 contexts**, with 12 alternatives per species and context. Each companion's rotation progress is saved. New replies cover planting, watering, request delivery, construction, seed supplies, starting focus and signature gestures. Chestnut remains an entirely self-assured cardboard-box supervisor; Pingu is curious about little objects, while Skipper treats even rest as logistics. Dialogue follows events rather than continually interrupting you.
+
+The active companion now appears beside the farm, so planting, watering and harvests can show its reaction where the action happens. Signature gestures are free: they spend no resources and grant no growth or bond. Crop, request and minigame reward rules are unchanged in this iteration.
+
+| Companion | Personality | Signature gesture |
+| :-- | :-- | :-- |
+| Libao | Warm, eager to organize things and slightly clumsy; always ready to help | Raises a little cheering sign |
+| Chestnut | A serious cardboard-box supervisor convinced everything is under control; chunky abstract artwork, completely unaware of its own odd charm | Inspects and sits in a box |
+| Xiaobai | A quiet campus egret who notices small changes | Preens its feathers |
+| Pingu | Curious and childlike, eager to try things; an occasional happy Noot | Opens his red beak for a trumpet Noot |
+| Skipper | A tactical penguin captain who schedules snacks and rest as seriously as missions | Surveys the garden through a telescope |
+| A-Qing | Patient and practical, taking its own steady steps; retained under “Old friends” in existing saves | Lifts a small leaf umbrella |
+
+![Redrawn Pingu and signature interaction in the running app](screenshot-pingu-refined-preview.png)
+
+[View all six Noot frames](screenshot-pet-signatures-preview.png) · [View the farm companion and its replies](screenshot-pet-farm-preview.png)
+
+### From a single seed to a new corner of the garden
+
+**Focus and companionship → seeds and planting → harvests → companion requests and construction → visible scenery and collections.** These rules replace the initial minigame reward in section 57, using the same seeds, produce, coins and companion progression throughout.
+
+- **Companion table · Prepare seeds together.** Full 2048 rules retain arrow-key / WASD / swipe input, saved boards, one-step undo and best scores. Actually merging 128 or above today unlocks one daily gift: **one needed seed, 8 coins, +3 growth, +2 bond and +10 mood**, counting as one daily care interaction. The seed fills a shortage in unfinished requests or the next project, taking stored produce, existing seeds and growing crops into account; locked crops are excluded. Go straight to planting after claiming. An old large tile cannot qualify for another day's gift.
+- **My farm · Harvests with a purpose.** Seed selection shows which companions and project need the crop. An incomplete request leads directly to that crop and an empty plot. Produce can also be fed to companions in their room. The market's “Sell surplus” retains materials for today's unfinished requests and the next construction project, selling only the remainder.
+- **Garden market · Deliver to the companion who asked.** Three fixed daily requests pay regular produce value plus **3 / 3 / 4 coins**. The requesting companion gains **+5 growth and +3 bond**, even when another pet is currently active. Completing 1 / 3 / 8 / 15 requests unlocks keepsakes, with no missed-day penalty.
+- **Memories and construction · Make harvests visible.** Construction spends the materials and coins below and places the finished item automatically. Putting an owned item away or displaying it again is free. Built decorations appear in the home, companion room and farm pixel scenes.
+- **Room collection and “Next step”.** Five 2048 milestone stickers, request keepsakes and visit-story mementos share the companion room. The home and garden suggest one actionable next step from real progress, leading to a ripe plot, deliverable request, construction, seed shop or focus session. Growing crops count toward what is already being prepared.
+
+| Garden project | Unlock condition | First construction cost |
+| :-- | :-- | :-- |
+| Lakeside picnic corner | Harvest 3 times | 60 coins + 4 radishes + 2 strawberries |
+| Window seedling shelf | Deliver 3 requests | 120 coins + 4 strawberries + 3 blueberries |
+| Lakeside lantern path | Deliver 8 requests | 240 coins + 4 blueberries + 3 lychees |
+
+The original daily supply remains 20 coins, one food item and two radish seeds, separate from the companion table's daily seed gift. Focus, planting and care can support garden progression without a mandatory 2048 milestone.
+
+![Garden construction and next-step goals in the running app](screenshot-garden-goal-preview.png)
+
+[See the farm and its completed picnic corner](screenshot-garden-loop-preview.png)
+
+The 2048 rules are adapted from Gabriele Cirulli's [MIT-licensed original at a pinned revision](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc), with its [complete license retained](../desktop/assets/garden/licenses/2048-MIT.txt). Garden design takes inspiration from [Stardew Valley's farming and character relationships](https://www.stardewvalley.net/about/) and [Animal Crossing's material gathering and everyday goals](https://animalcrossing.nintendo.com/new-horizons/create/), linking harvests, companion requests and keepsakes. The request rules and writing are our own; no commercial-game artwork or code was copied for those mechanics.
+
+To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 23 dialogue contexts with 12 lines each, and 18 animation actions with 6 frames each, plus the relevant checks. This iteration’s extension requirements are in [STATUS section 59.3](STATUS.md#593-扩展契约与兼容); [section 57.4](STATUS.md#574-继续添加伙伴的统一契约) retains the base field names, exported APIs and packaging dependencies.
+
+This garden iteration does not close unverified school-account workflows or deploy a backend, Docker, cloud sync or hot updates.
+
+### Earlier candidate interfaces and verification
+
+The earlier baseline `09c2240` is in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). [All 9 CI jobs passed](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980), including an actual beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those results do not cover the new penguins or shared catalog changes below. The PR is not merged, and public downloads remain beta0.9.2.
+
+**These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+
+![Home page preview from the earlier unreleased candidate](screenshot-home-preview.png)
+
+An original pixel-art lakeside scene now surrounds six working plots. Select a plot, then choose seeds, plant, water or harvest from one tool panel. The companion room brings care, growth and daily goals together. Reward messages show actual gains, and the crop collection only lights up after a real harvest.
+
+![Unreleased lakeside farm preview using a separate test save](screenshot-farm-preview.png)
+
+[Earlier candidate companion room](screenshot-garden-preview.png) · [Study and weekly review](screenshot-study-preview.png) · [An actual exported garden postcard](screenshot-share-preview.png). Existing local saves remain compatible, with revised progression rules. Crops do not wither, and daily goals require no streak. The original garden backdrop was generated with the built-in image tool and is bundled with the app.
+
+Meet **Pingu** and **Skipper**, the penguin captain from *Madagascar*: one waddles and says Noot Noot; the other takes your rest breaks very seriously. Both penguins have normal, happy, low-mood and sleeping states. Xiaobai, the campus egret, stays. Chestnut returns to its original chunky, abstract pixel proportions: utterly serious about occupying a cardboard box, and unaware of its own odd charm. New saves start with five companions. A-Qing remains under “Old friends” in existing saves, preserving names, growth and the active selection.
+
+![Unreleased penguin companions and the abstract Chestnut](screenshot-pets-preview.png)
+
+[Chestnut’s four expressions](cat-rough-preview.png): it takes being a cat seriously and never jokes about its own looks.
+
+Penguin integration baseline `1f5a23b` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079), including installation upgrades and native rendering and switching for both penguins. Chestnut’s subsequent return to abstract proportions and matter-of-fact dialogue has passed real-room, interaction-line and four-state artwork checks, and the local candidate packages have been rebuilt; the earlier CI remains the penguin integration baseline. Progress and artifact records are in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+
+Implemented in the current source:
+
+- **A clearer study workflow.** Separate focus, timetable and grades views; editable todos with dates, completion records, archives and restoration. Focus accepts 1–120 minutes and an optional todo, with completed sessions in a seven-day review. It does not automatically mark the todo complete.
+- **Fairer progression.** Each completed and claimed focus minute gives one garden coin and one growth point. Switching companions no longer removes crop unlocks; longer crops give more per harvest. Each companion's first three pats per day give growth, with further interaction still available.
+- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. The four static states remain, with dialogue and motion expanded to the 1,656 lines and 648 frames above. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
+- **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
+- **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
+
+For the earlier baseline, all 25 relevant check scripts and the Go checks passed. Real browser workflows covered focus, todo editing and archiving, planting, watering, harvesting, restored preferences, release lookup and PNG preview/save. The final farm scrolls fully without horizontal overflow at 420px; candidate files, build resources and license materials were checked. The CI build passed installation, upgrades, uninstall-with-data-retention and pet interaction checks using synthetic data on one display. Full art consistency, actual notification and startup triggers, school services, long-running resource use and longer-term balance still need their respective validation or trials. That candidate’s implementation, checksums and evidence stay in [STATUS section 55](STATUS.md#55-产品体验实施与候选版准备2026-09-27源码未发布); the new roster, shared catalog and artwork extension guide are in [section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+
+The product review, current UX01–UX26 status and proposed seven-day trial are tracked in [STATUS section 54](STATUS.md#54-面向真实用户的完整产品审查2026-09-27分析与提案). Source improvements are not yet part of the downloadable installer. Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
+
+## What you can do today
+
+The following describes the downloadable **beta0.9.2** release.
+
+- **Keep a companion on your desktop.** Choose Libao, Chestnut, Xiaobai or A-Qing to accompany your work. Click to care for them, drag them into place and scroll to resize. Their names and growth stay in your local save.
+- **Give focus a small reward.** Write a todo, start a 5, 25 or 45-minute focus session, then claim companion growth and garden coins. Grow crops, water them and decorate your room; crops keep growing while you are away.
+- **Find campus tools in one place.** Read public college notices and the official calendar, open common school services and run diagnostics when the campus network will not connect.
+
+The garden, todos and focus timer work offline without a school account. The floating desktop companion is included in the Windows installer; macOS and Linux currently have command-line tools.
+
+**Personal school services are still being tested:** undergraduate/graduate timetables and grades, installer login handoff, in-app booking and college piano access are not all verified, so complete functionality is not yet guaranteed. See the [feature table](#features) for current support.
+
+[Tell us what was awkward or what you would like to use next](https://github.com/SzuDesktopTeam/szudesktop/issues). Describe what you were trying to do and where you got stuck. Please leave out passwords, cookies and personal grades.
 
 ---
 
@@ -71,7 +176,7 @@ The current installer is **[szuDesktop-Setup-0.9.2.exe](https://github.com/SzuDe
 | Current version | `beta0.9.2` · Released; four companions, cross-version upgrade and backup restoration checked |
 | Saved data | Both Windows editions use the same local garden and study records; export a backup from Settings before updating |
 
-The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. Installer autostart is still not implemented.
+The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. The published beta0.9.2 installer cannot enable launch at login; the local beta0.9.3 candidate adds this option, with actual launch-at-login behavior still awaiting validation.
 
 Released on 2026-09-26: [PR #17](https://github.com/SzuDesktopTeam/szudesktop/pull/17) is merged and the [beta0.9.2 release checks](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36242237913) passed. Upgrading from the published beta0.9.1 installer preserved garden and study records, encrypted account data and pet settings, removed obsolete program resources, and passed backup export/restoration, reopening and uninstall checks. These checks use synthetic data; live school-account boundaries remain in [STATUS](STATUS.md).
 
@@ -96,15 +201,19 @@ Export a backup from Settings before upgrading. A clean Windows environment pass
 
 The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Four companions are released and this cross-version upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Gaps stay in [STATUS section 50.2](STATUS.md#502-10-剩余任务暂不部署后端). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
 
-### First run
+### First run (released beta0.9.2)
 
-1. Open the app and go to **Campus network**
-2. Enter your campus card number and unified identity password; tick "remember" if you
-   don't want to type it every time
-3. Press **Sign in** — it detects whether you're in the teaching or dorm area and uses
-   the matching protocol
-4. If it fails, press **Diagnostics** — it lists the zone decision, portal reachability,
-   protocol fingerprint and what that means
+1. Open **Lychee Garden → Companion room** and choose a companion. The installer edition also switches the floating desktop pet.
+2. Visit **My farm** to see your first radishes already planted; they are ready in about a minute. Or write a todo and try a 5-minute focus session. No school account is needed.
+3. Open notices, the calendar or official school links when you need them.
+
+To connect to the campus network, open **Campus network**, enter your campus card number and unified identity password, then sign in. Tick **Remember** if you want credentials saved after a successful sign-in. Run **Diagnostics** if the connection fails. Campus network authentication and school business login are separate.
+
+### Your first session in the source preview
+
+A new save starts with 40 garden coins, three pet snacks, four radish seeds, two strawberry seeds and one already planted radish plot. Choose a companion, write a small todo and try five minutes of focus; completing and claiming it gives five coins and five growth points. Radishes take about one minute, or about 45 seconds if watered immediately, and yield two radishes plus one growth point. No school account is needed.
+
+The story progresses over seven different visiting days without resetting when you miss a day. Records stay local. Missing dates and focus history are not invented for old saves; existing totals, companion growth and claimed medals are preserved.
 
 ### Opening and exiting
 
@@ -115,7 +224,7 @@ The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment 
   (meant for headless / sidecar use — the Electron shell starts the Go engine the same way)
 - A short, skippable guide appears on first launch; it explains where your data lives,
   how to quit, and what to try first
-- The installer edition can disable an existing autostart entry but does not create one in this release. Portable and CLI autostart remain available; unreadable status is reported explicitly
+- The published beta0.9.2 installer can disable an existing autostart entry but does not create one. Portable and CLI autostart remain available; unreadable status is reported explicitly. The source preview's new opt-in control is described above and is not enabled on the user's behalf
 
 ### Where my data lives
 
@@ -156,6 +265,8 @@ These entries describe beta0.9.2. Verified desktop features and queries are dist
 
 **Current limitations:** actual score fields and pagination still need live validation; balance is not integrated. Graduate alternative login and the current timetable have live evidence. The undergraduate page returned 403 for the test account, the official graduate scores page did not render its list, and the college piano service could not be reached. The official browser allowed slot selection and opened the booking confirmation form; no reservation was submitted. Installer room details and subsequent browser connectivity still have unresolved acceptance gaps. Full booking and business-session handoff require validation. See [STATUS.md](STATUS.md).
 
+On 2026-09-27, the user confirmed being on the campus network without an undergraduate-authorized test account. The official graduate page was reachable but its session had expired; a new login is pending. Local room queries still encountered access failures. Source error handling now distinguishes those failures instead of always reporting a campus-network requirement. This is not a new successful school-service acceptance test.
+
 **College notice filtering:** selecting a college automatically reads its public column. Unsupported units have an official-site link; authenticated internal notices are not included. This update is included in beta0.6.1.
 
 **Booking flow:** the installer opens a separate official school window for WebVPN, verification, selecting a slot, submitting and viewing results. Its isolated login state lasts only until full application exit. The Go service only reads public rooms and availability; it has no reservation write endpoints and does not confirm reservations automatically. The portable edition continues to use the system browser.
@@ -173,6 +284,37 @@ A real graduate account passed alternative login and displayed the school's curr
 The official calendar is checked daily. Windows OCR prefers Simplified Chinese; failed refreshes preserve the cache and report the cause. Teaching weeks support manual overrides. College piano rooms use a separate campus system with read-only queries; its current HTTP service should only be used on a trusted campus network with its own credentials.
 
 ---
+
+## How campus network authentication works
+
+<details>
+<summary>Why teaching and dormitory areas need different sign-in methods</summary>
+
+The campus network at Shenzhen University is split into **two zones that do not
+work with each other**, each using a completely different sign-in method:
+
+| Zone | System | How it works |
+| :--- | :----- | :----------- |
+| Teaching / office / library areas | SRun (深澜) | Rolled out in early 2025. Password goes through HMAC-MD5, user data through XXTEA with a custom Base64, plus a SHA1 checksum |
+| Dormitory / staff areas | Dr.COM (ePortal) | A single GET request is enough |
+
+That creates two headaches:
+
+1. **Every tutorial and script written before 2024 fails in the teaching area** —
+   they were all built for the old Dr.COM.
+2. **Nobody explains the error messages** — `ldap auth error`, `Rad:userid error1`,
+   `登陆失败[05]`, `Unknow ac-type`… so people just guess and retry.
+
+szuDesktop handles both: **one button to sign in, one button to tell you where it got stuck.**
+
+It does not decide the zone by "can I reach the portal". It looks at the **protocol
+fingerprint** — the handshake behaviour that only that protocol has (SRun: whether
+`get_challenge` succeeds; Dr.COM: whether the ePortal login endpoint exists). The reason is
+practical: the dorm portal also returns HTTP 200 on machines in the teaching area, so a
+plain reachability test mis-detects the zone while offline and then fires the Dr.COM
+protocol at an endpoint that isn't there.
+
+</details>
 
 ## Command line szunet
 
@@ -307,6 +449,8 @@ You need Go (see `go.mod`), Python 3 and Node.js.
 ```text
 python desktop/sync-assets.py      # sync interface assets
 node   desktop/check-ui.mjs        # the regressions below all run in CI
+node   desktop/check-rewards.mjs
+node   desktop/check-garden-progress.mjs
 node   desktop/check-campus.mjs
 node   desktop/check-notices.mjs
 node   desktop/check-session-ui.mjs
@@ -315,11 +459,16 @@ node   desktop/check-school.mjs
 node   desktop/check-booking.mjs
 node   desktop/check-network-ui.mjs
 node   desktop/check-workspace-ui.mjs
+node   desktop/check-productivity.mjs
 node   desktop/check-autostart-ui.mjs
+node   desktop/check-release-ui.mjs
+node   desktop/check-feedback.mjs
+python desktop/check_licenses.py
 node   desktop/electron/check-sidecar.mjs # Electron startup, shutdown and reuse regression
 node   desktop/electron/check-window-policy.mjs
 node   desktop/electron/check-pet-policy.mjs
 node   desktop/electron/check-pet-settings.mjs
+node   desktop/electron/check-desktop-settings.mjs
 node   desktop/electron/check-pet-view.mjs
 node   desktop/electron/check-school-policy.mjs
 node   desktop/check-interactions.mjs

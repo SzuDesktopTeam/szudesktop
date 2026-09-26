@@ -1,0 +1,50 @@
+/* Daily tools share the garden's warm paper, without nesting more timber frames. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.workspace-tabs{margin:0 0 24px;gap:8px;flex-wrap:wrap;background:transparent;box-shadow:none;border:0;padding:0}
+.workspace-tabs button{min-height:44px;padding:10px 20px;border:1px solid #bda77d;box-shadow:0 2px #aa885526;color:#615943;background:#f3ead4}
+.workspace-tabs button.active{background:#46664d;color:#fff6dc;border-color:#344f3c;box-shadow:inset 0 2px #759071}
+.focus-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:start}
+.focus-layout .card,.desktop-options{border:1px solid #bfae8e;box-shadow:0 3px #8c72481a;background:#fffaeb}
+.focus-studio{padding:30px;text-align:center}
+.focus-studio h2{font-size:30px;color:#44644c;margin:7px 0}
+.focus-studio .eyebrow{font:13px/1.6 var(--body);letter-spacing:0;color:#7f7155}
+.focus-studio .timer{font-size:72px;line-height:1.2;margin:25px 0 13px;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.focus-studio .timer-label{font-size:14px;min-height:25px;overflow-wrap:anywhere}
+.focus-studio label{text-align:left;font-size:13px}
+.focus-actions{justify-content:center;margin:22px 0 18px;gap:10px}
+.focus-custom{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding-top:18px;border-top:1px dashed #d2c3a4}
+.focus-custom label{margin:0}.focus-custom input{width:78px;min-width:0;padding:8px}.focus-custom button{padding:8px 14px}
+.focus-note{font:13px/1.8 var(--body);color:#70634f;margin:18px 0 0}
+.todo-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:15px}
+.todo-add input[type=date]{grid-column:1;grid-row:2;width:155px;max-width:100%;padding:7px;font-size:13px;color:#70634f}
+.todo-add button{grid-column:2;grid-row:1/3;align-self:start;padding:10px 14px}
+.todo-filters{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #d9ceb5;padding-bottom:12px}
+.todo-filters button{font:13px/1.4 var(--body);padding:6px 10px;min-height:34px;border:0;box-shadow:none;background:transparent}
+.todo-filters button.active{background:#e2ead5;color:#39563e}
+.todos li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px 10px;padding:15px 0;align-items:start;border-bottom:1px dashed #d8ccb3}
+.todos input[type=checkbox]{margin-top:4px;accent-color:#56754c}.todo-copy{min-width:0}
+.todo-copy>span{display:block;overflow-wrap:anywhere;font:15px/1.6 var(--body)}
+.todo-copy small{display:block;font-size:12px;color:#7b6c55;margin-top:4px}.todos .done .todo-copy>span{color:#807965;text-decoration:line-through}
+.todo-actions{grid-column:2;display:flex;gap:4px;flex-wrap:wrap}.todo-actions button{font:12px/1.4 var(--body);padding:4px 8px;min-height:29px;box-shadow:none}
+.weekly-card{grid-column:1/-1;padding:24px 28px}.weekly-card h2{font-size:25px;color:#506746}
+.week-totals{display:flex;flex-wrap:wrap;gap:28px;margin:18px 0;color:#756749;font-size:14px}.week-totals strong{font:34px/1 var(--pixel);color:#436449;margin-right:5px}
+.week-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:14px;max-width:680px;margin:20px 0}
+.week-bars>div{text-align:center;min-width:0}.week-bars>div>span{font-size:12px;color:#706348;display:block;margin-bottom:6px}
+.week-bar-track{height:70px;display:flex;align-items:flex-end;background:#f1ebd8;border-bottom:2px solid #b4bf97}.week-bar-track i{width:100%;background:#90aa79;box-shadow:inset 0 3px #baceaa}.week-bars small{font-size:12px;margin-top:7px;display:block;color:#76664c}
+.weekly-card p,.weekly-card summary{font-size:13px}.focus-history{padding:0;list-style:none}.focus-history li{display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px dashed #d2c4a6;font-size:13px}.focus-history li span{flex:1;overflow-wrap:anywhere}.focus-history time{color:#8d7959}.focus-history strong{white-space:nowrap;color:#53714c}
+.student-choice{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:12px 16px;background:#eee9d6;border-left:3px solid #7d956b}.student-choice label{margin:0;font-size:14px}.student-choice select{width:140px;padding:8px}.student-choice small{font-size:12px;color:#6c634e}
+.setting-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:17px 0;border-bottom:1px dashed #d5c7ab;cursor:pointer}.setting-row strong{font:15px/1.5 var(--body);font-weight:600;color:#4e6244}.setting-row small{display:block;font:13px/1.7 var(--body);color:#7a6e55;margin-top:5px}.setting-row input{width:20px;height:20px;flex-shrink:0;accent-color:#54734a}.desktop-options{margin:20px 0}.desktop-options h2{color:#516d4b}
+#garden-share{width:min(820px,94vw);max-height:90vh;overflow:auto}#garden-share img{display:block;width:100%;height:auto;border:2px solid #b79863}#garden-share p,#garden-share small{font:13px/1.8 var(--body)}
+.home-companions{padding:14px 20px}.home-companions summary{cursor:pointer;color:#4f6746;font:17px/1.6 var(--pixel)}.home-companions summary span{font:13px/1.6 var(--body);color:#817050;margin-left:12px}.home-companions[open] summary{margin-bottom:14px}.home-companions .companions-heading{display:none}
+.returning-home{min-height:270px}.returning-home .home-letter{padding:26px}.returning-home .home-letter h1{font-size:35px}.returning-home .home-letter .eyebrow{margin-bottom:10px}.returning-home .home-local{display:none}
+.journey-card{margin:0 0 22px;padding:24px 28px;border:1px solid #bea87b;background:#fdf5de;box-shadow:0 3px #88663b1a}.journey-card h2{color:#6b6c42;font-size:25px}.journey-card .eyebrow{font-size:12px;letter-spacing:1px;color:#997349}.journey-card>.muted{font-size:13px}
+.journey-feature{display:flex;gap:22px;align-items:flex-start;margin:23px 0;padding:20px;background:#f4ead0;border:1px solid #dfcda5}.journey-stamp{font:48px/1 var(--pixel);color:#988259;border:2px dashed #b8a17b;padding:12px;flex-shrink:0}.journey-feature h3{font-size:23px;color:#44614a;margin:0 0 8px}.journey-feature p{font-size:15px;line-height:1.9;max-width:55ch}.journey-feature small{font-size:13px;color:#8a693c}.journey-card summary{font-size:14px;cursor:pointer}.journey-list{padding-left:23px}.journey-list li{padding:12px 0;border-bottom:1px dashed #d1bf99}.journey-list strong,.journey-list span,.journey-list small{display:block;font-size:14px;line-height:1.8}.journey-list small{color:#887044;font-size:12px}
+.keepsakes{grid-column:1/-1}.keepsakes h2{color:#7b6541}.keepsake-shelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}.keepsake-shelf>span{display:flex;align-items:center;flex-direction:column;padding:18px 10px;background:#f6ebd1;border-bottom:4px solid #a68250;gap:9px}.keepsake-shelf .sprite{width:36px;height:36px}.keepsake-shelf strong{font:16px/1.5 var(--pixel)}.keepsake-shelf small{font-size:12px;text-align:center;color:#7e6b4e}.feedback-environment{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2ead6;padding:14px;font:14px/1.9 var(--body)}
+.daily-board .eyebrow,.daily-board li small,.daily-board .daily-kind,.daily-intro,.growth-unlock,.pet-roster-card .companion-caption small,.pet-roster-card .companion-selection{font-size:13px}
+.farm-landscape .plot>small,.watered-mark,.seed-picker label,.harvest-basket small,.farm-kind{font-size:12px}.farm-toolbar p,.farm-help,.daily-board li button{font-size:13px}
+.farm-landscape .soil{height:108px;border-width:3px;border-radius:12% 9% 5% 8%;background:repeating-linear-gradient(0deg,#745330 0 14px,#957044 14px 18px,#62462e 18px 21px);transform:perspective(500px) rotateX(12deg);box-shadow:inset 0 0 0 3px #ab8152,0 7px #31452375}.farm-landscape .soil .sprite{width:64px;height:64px;filter:drop-shadow(3px 4px #352b2577)}
+.farm-landscape .plot h3{font-size:17px}.farm-landscape .plot button{min-height:40px;font-size:14px}.farm-landscape .plot>small{background:#fff5deed;color:#41523a}
+body[data-theme=night] .focus-layout .card,body[data-theme=night] .weekly-card,body[data-theme=night] .desktop-options,body[data-theme=night] .journey-card{background:#ede0bf}body[data-theme=night] .home-landscape{filter:brightness(.82)}
+body[data-motion=off] .farm-landscape .soil.ready::after{animation:none}
+@media(max-width:850px){.focus-layout{grid-template-columns:1fr}.focus-studio{padding:25px}.weekly-card{padding:22px}.journey-card{padding:20px}}
+@media(max-width:550px){.workspace-tabs{gap:7px}.workspace-tabs button{flex:1 1 40%;padding:9px 10px;font-size:15px}.focus-studio .timer{font-size:58px}.todo-actions button{padding:5px 8px}.week-bars{gap:8px}.week-totals{gap:16px}.journey-feature{padding:14px;gap:12px}.journey-stamp{font-size:30px;padding:8px}.journey-feature h3{font-size:20px}.journey-feature p{font-size:14px}.setting-row{gap:12px}.returning-home .home-letter h1{font-size:30px}.student-choice small{width:100%}}

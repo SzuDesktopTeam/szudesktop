@@ -1,24 +1,40 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {petReaction} from './assets/garden/pet-player.mjs';
 import {act,activePet,createState,normalize} from './assets/garden/engine.mjs';
+import {PET_SPRITES,petSprite} from './assets/garden/pet-catalog.mjs';
 
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const handlers=source.slice(source.indexOf('async function run('),source.indexOf("document.addEventListener('click'"));
 const commitSource=source.slice(source.indexOf('async function commit('),source.indexOf('async function confirm('));
+const companionSource=source.slice(source.indexOf('const sprite='),source.indexOf('const cat='))+
+ source.slice(source.indexOf('const pageTips='),source.indexOf('const pages='))+
+ source.slice(source.indexOf('function paintCompanionDialog('),source.indexOf('function render(){'));
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}};
 function fixture(){
  const results=[],toasts=[],writes=[],controls=[{disabled:false,isConnected:true}];
+ const footer={portrait:{innerHTML:''},speaker:{textContent:''},tip:{textContent:''},attrs:{}};
+ const dialog={querySelector:selector=>selector==='.companion-portrait'?footer.portrait:footer.speaker,setAttribute:(name,value)=>{footer.attrs[name]=value}};
  const context=vm.createContext({
-  state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',
-  act,activePet,normalize,render(){},clocks(){},schoolUI:{sync(){}},
+  state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',studyTab:'focus',
+  act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},
+  $:selector=>selector==='.companion-dialog'?dialog:selector==='#companion-tip'?footer.tip:null,
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
   navigate:page=>{context.page=page},
   szuDesktop:{petResult:result=>results.push({...result})},
   api:async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:context.revision+1}},
  });
- vm.runInContext(commitSource+handlers,context);
- return {context,results,toasts,writes,controls,command:command=>context.handlePetCommand(command)};
+ vm.runInContext(companionSource+commitSource+handlers,context);
+ context.paintCompanionDialog();
+ return {context,results,toasts,writes,controls,footer,command:command=>context.handlePetCommand(command)};
+}
+function assertCompanion(f,pet=activePet(f.context.state.game)){
+ assert.equal(f.footer.speaker.textContent,pet.name);
+ assert.equal(f.footer.attrs['aria-label'],pet.name+'的小提示');
+ assert.ok(f.footer.portrait.innerHTML.includes(`href="#${petSprite(pet)}"`));
+ assert.ok(f.footer.portrait.innerHTML.includes(`viewBox="${PET_SPRITES[petSprite(pet)]}"`));
+ assert.doesNotMatch(f.footer.portrait.innerHTML,/data-animated-pet/,'the footer must not become the main animation target');
 }
 let checks=0;
 async function check(name,work){await work();checks++;console.log('PASS',name)}
@@ -31,12 +47,12 @@ await check('care commands save through the shared engine before reporting succe
  assert.equal(f.context.state.game.food,initial.game.food-1);
  assert.ok(activePet(f.context.state.game).hunger>activePet(initial.game).hunger);
  assert.equal(f.writes[0].revision,1);assert.equal(f.context.revision,2);
- assert.deepEqual(f.results,[{ok:true,message:'吃饱啦，谢谢你'}]);
+ assert.deepEqual(f.results,[{ok:true,message:activePet(f.context.state.game).say,action:'eat'}]);
  assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);
  for(const command of ['pat','play','sleep','sleep'])await f.command(command);
  assert.equal(f.writes.length,5);assert.ok(f.results.every(r=>r.ok));
  assert.equal(activePet(f.context.state.game).sleeping,false);
- assert.match(f.results.at(-2).message,/晚安/);assert.match(f.results.at(-1).message,/醒来/);
+ assert.equal(f.results.at(-2).action,'sleep');assert.equal(f.results.at(-1).action,'wake');
 });
 await check('cooldown and unavailable food are real failures without extra writes',async()=>{
  const f=fixture();await f.command('pat');await f.command('pat');
@@ -45,11 +61,14 @@ await check('cooldown and unavailable food are real failures without extra write
  assert.equal(f.writes.length,1);assert.equal(f.results.at(-1).ok,false);
 });
 await check('failed saves keep the original state and send an error instead of a success bubble',async()=>{
+ for(const command of ['feed','switchPet:1']){
  const f=fixture(),original=f.context.state;
- f.context.api=async()=>{throw Error('磁盘暂时无法写入')};await f.command('feed');
+ f.context.api=async()=>{throw Error('磁盘暂时无法写入')};await f.command(command);
  assert.equal(f.context.state,original);assert.equal(f.context.revision,1);
+ assertCompanion(f,activePet(original.game));
  assert.deepEqual(f.results,[{ok:false,message:'磁盘暂时无法写入'}]);
  assert.deepEqual(f.toasts,['磁盘暂时无法写入']);assert.equal(f.context.busy,false);
+ }
 });
 await check('a conflicting save refreshes the latest record without pretending to apply care',async()=>{
  const f=fixture(),latest=createState();latest.game.food=8;
@@ -66,17 +85,43 @@ await check('busy, startup, and shutdown reject commands explicitly',async()=>{
 await check('navigation selects the requested real page and the correct garden section',async()=>{
  const f=fixture();await f.command('farm');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'farm');
  await f.command('garden');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'pet');
- await f.command('study');assert.equal(f.context.page,'study');await f.command('home');assert.equal(f.context.page,'home');
+ f.context.studyTab='grades';await f.command('study');assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'focus','专注通知与托盘学习入口必须回到专注分区');await f.command('home');assert.equal(f.context.page,'home');
  assert.equal(f.writes.length,0);assert.equal(f.results.length,4);assert.ok(f.results.every(r=>r.ok));
 });
 await check('pet selection saves the active companion and refuses invalid or stale choices',async()=>{
- const f=fixture(),before=f.context.state.game.pets[0];
- await f.command('switchPet:1');
+ const f=fixture(),before=f.context.state.game.pets[0],gate=deferred(),save=f.context.api;
+ f.context.state.game.pets[1].name='栗子队长';
+ f.context.api=async(...args)=>{await gate.promise;return save(...args)};
+ const pending=f.command('switchPet:1');assertCompanion(f,before);
+ gate.resolve();await pending;
  assert.equal(f.context.state.game.active,1);assert.equal(f.results[0].ok,true);
+ assertCompanion(f);
  assert.equal(f.context.state.game.pets[0].xp,before.xp);assert.equal(f.writes.length,1);
- assert.match(f.results[0].message,/来陪你/);
- for(const command of ['switchPet:1','switchPet:7','switchPet:8','switchPet:-1','switchPet:0.5','switchPet:constructor'])await f.command(command);
+ assert.equal(f.results[0].action,'greet');assert.equal(f.results[0].message,activePet(f.context.state.game).say);
+ for(const command of ['switchPet:1','switchPet:7','switchPet:8','switchPet:12','switchPet:-1','switchPet:0.5','switchPet:01','switchPet:1e1','switchPet:1\n','switchPet:constructor'])await f.command(command);
  assert.equal(f.writes.length,1);assert.ok(f.results.slice(1).every(result=>!result.ok));
+ assertCompanion(f);
+ assert.equal(f.results[3].message,'没有这个伙伴','well-formed index 8 must reach the engine length check');
+ assert.equal(f.results[4].message,'没有这个伙伴','multi-digit indexes must reach the engine length check');
+});
+await check('the preload bridge supports future indexes beyond seven but only existing pets can be selected',async()=>{
+ const f=fixture();let bridge,listener,pending;
+ const context=vm.createContext({require:()=>({
+  contextBridge:{exposeInMainWorld:(_key,value)=>{bridge=value}},
+  ipcRenderer:{on:(_channel,fn)=>{listener=fn},removeListener(){},send(){}},
+ })});
+ vm.runInContext(readFileSync(new URL('./electron/preload.cjs',import.meta.url),'utf8'),context);
+ bridge.onPetCommand(command=>{pending=f.command(command)});
+ // Simulate a future catalog with eleven records without altering today's registry.
+ while(f.context.state.game.pets.length<11)f.context.state.game.pets.push({...f.context.state.game.pets[0],name:'未来伙伴'+f.context.state.game.pets.length});
+ for(const index of [8,10]){
+  listener({sender:'private'},'switchPet:'+index);await pending;
+  assert.equal(f.context.state.game.active,index);assert.equal(f.results.at(-1).ok,true);
+ }
+ assert.equal(f.writes.length,2);
+ listener({sender:'private'},'switchPet:11');await pending;
+ assert.equal(f.results.at(-1).ok,false);assert.equal(f.results.at(-1).message,'没有这个伙伴');
+ assert.equal(f.writes.length,2);assert.equal(f.context.state.game.active,10);
 });
 await check('pet selection refreshes the name field instead of keeping the previous companion draft',async()=>{
  const f=fixture();let replaced=false;
@@ -93,6 +138,7 @@ await check('a care conflict that changes companion cannot attach the previous n
  f.context.api=async(_path,body)=>{if(body)throw Object.assign(Error('conflict'),{code:409});return {revision:5,data:latest}};
  await f.command('feed');
  assert.equal(f.context.state.game.active,2);assert.equal(restored,false);assert.equal(f.results[0].ok,false);
+ assertCompanion(f,activePet(latest.game));
 });
 await check('the command boundary cannot trigger arbitrary game actions or inherited property names',async()=>{
  const f=fixture();for(const command of ['gift','shutdown','constructor','__proto__',null])await f.command(command);
@@ -105,6 +151,8 @@ await check('care leaves unrelated pages and their unfinished inputs in place',a
   f.context.render=()=>{throw Error('不应重绘与照料无关的页面')};
   await f.command('feed');
   assert.equal(f.results[0].ok,true);assert.equal(f.context.document.activeElement,field);
+  await f.command('switchPet:3');assert.equal(f.results.at(-1).ok,true);assertCompanion(f);
+  assert.equal(f.context.document.activeElement,field);
   assert.equal(field.value,'未提交内容');assert.equal(field.selectionStart,2);assert.equal(field.selectionEnd,3);
  }
 });
@@ -136,6 +184,17 @@ await check('care keeps the original form node, latest draft, focus, and selecti
   assert.ok(f.writes.every(body=>!JSON.stringify(body).includes('等待时又写了几字')));
  }
 });
+await check('care preserves the expanded snack panel after saving or refreshing a conflict',async()=>{
+ assert.match(source,/<details id="pet-care-details" class="care-details">/);
+ for(const open of [true,false])for(const conflict of [false,true]){
+  const f=fixture();f.context.page='garden';let panel={open};
+  f.context.document.getElementById=id=>id==='pet-care-details'?panel:null;
+  f.context.render=()=>{panel={open:false}};
+  if(conflict)f.context.api=async(_path,body)=>{if(body)throw Object.assign(Error('conflict'),{code:409});return {revision:5,data:createState()}};
+  await f.command('feed');
+  assert.equal(panel.open,open);assert.equal(f.results[0].ok,!conflict);
+ }
+});
 await check('shell size updates change existing controls without saving back',()=>{
  const field={value:'1'},label={textContent:'100%'};let received,saves=0;
  const context=vm.createContext({
@@ -156,8 +215,9 @@ await check('preload strips IPC events, filters command names, and restricts res
  })});
  vm.runInContext(readFileSync(new URL('./electron/preload.cjs',import.meta.url),'utf8'),context);
  const calls=[],unsubscribe=bridge.onPetCommand((...args)=>calls.push(args));
- for(const command of ['pat','feed','play','sleep','garden','farm','study','home','switchPet:0','switchPet:7','switchPet:8','switchPet:-1','switchPet:0.5','switchPet:__proto__','quit',{}])listener({sender:'private'},command);
- assert.equal(calls.length,10);assert.ok(calls.every(args=>args.length===1));
+ const allowed=['pat','feed','play','sleep','garden','farm','study','home','switchPet:0','switchPet:7','switchPet:8','switchPet:10'];
+ for(const command of [...allowed,'switchPet:-1','switchPet:0.5','switchPet:01','switchPet:+1','switchPet:1e1','switchPet:1\n','switchPet:','switchPet:__proto__','quit',{}])listener({sender:'private'},command);
+ assert.deepEqual(calls.map(args=>args[0]),allowed);assert.ok(calls.every(args=>args.length===1));
  unsubscribe();assert.equal(removed[0],'szu:pet-command');assert.equal(removed[1],listener);
  bridge.petResult({ok:true,message:'好'.repeat(121),secret:'never forward'});
  bridge.petResult({ok:'true',message:'invalid'});bridge.petResult({ok:true,message:5});
