@@ -2441,7 +2441,7 @@ node desktop/electron/check-pet-view.mjs
 | 贴纸、故事、委托纪念物各自独立 | 小屋「庭院收藏」统一展示故事与委托纪念物、伙伴小桌贴纸；「回忆与建设」保留故事、建设、图鉴和纪念章 | `desktop/assets/garden/app.mjs`、`arcade-ui.mjs` |
 | 页面入口多，却缺少下一步方向 | 首页和庭院加入依据存档计算的「下一步」；可定位成熟田块、交付按钮、建设、种子铺或专注，不重置正在填写的表单与棋盘 | `desktop/assets/garden/garden-path.mjs`、`app.mjs` |
 | 关闭动画后独立桌宠最多还动 30 秒 | 个人设置成功保存后立即通知桌宠同步，写入失败不通知，不再依赖跳页或下一次轮询 | `desktop/assets/garden/app.mjs`、`desktop/check-workspace-ui.mjs` |
-| 上轮 CI 的系统减少动态导致原生帧推进被跳过 | 隔离验收保留系统静态检查，再只对该桌宠渲染器模拟 `no-preference`，读取两个真实帧及绘制尺寸、截图；最终清除媒体模拟并恢复原偏好。实施完成，执行结果待补 | `desktop/electron/smoke-pet.mjs` |
+| 上轮 CI 的系统减少动态导致原生帧推进被跳过 | 隔离验收保留系统静态检查，再只对该桌宠渲染器模拟 `no-preference`，读取两个真实帧及绘制尺寸、截图；最终清除媒体模拟并恢复原偏好。三条安装验收路径实际通过，环境与结果见58.6 | `desktop/electron/smoke-pet.mjs` |
 
 ### 58.2 一个庭院内的完整循环
 
@@ -2462,16 +2462,52 @@ node desktop/electron/check-pet-view.mjs
 
 视觉延续像素深大、木框和纸张。新增建设像素画、材料进度、建设入口和三处实际场景布置；庭院分区统一为「伙伴小屋 / 我的农田 / 庭院集市 / 伙伴小桌 / 回忆与建设」。本轮仍保留栗栗原有粗像素比例和一本正经、毫不自知的性格，未替换伙伴画稿或减少原台词。
 
-### 58.3 验收与交付结果（本轮待补齐）
+### 58.3 验收与交付结果
 
 | 验收范围 | 已完成或已实施 | 本轮最终结果 |
 |---|---|---|
 | 庭院闭环、下一步与建设界面 | 新增 `check-garden-loop.mjs`、`check-garden-path.mjs`、`check-garden-loop-ui.mjs`，已列入 CI；覆盖规则、材料目的与入口、建设状态和收藏 | 本地 35 / 35 组 Node 检查通过；其中闭环 10、导览与奖励 12、建设界面 7 项通过 |
 | 原有界面与动画设置同步 | `check-workspace-ui.mjs` **18 项通过**：原 16 项保留；新增真实提交链中的保存后立即同步、保存失败不通知。原农田/跨日 fixture 使用新真实只读 helper，没有放松原行为断言 | 35 / 35 组通过；另修复市场跨午夜的委托、预留与可售数量同步，18 项工作区检查再次通过 |
-| 原生动画验收机制 | `smoke-pet.mjs` 语法检查、`check-pet-view.mjs` 与差异检查通过；不改 Windows 设置，不在本机执行安装程序 | 待新 CI：记录原始 `systemReducedMotion`、`emulationUsed`、`environment`、两个 `frameIds`、`verified`、`mediaRestored`、`preferenceRestored`，并查看截图 |
-| 实际页面与视觉 | 新布置来自真实拥有/装备状态，导览从当前存档推导；源码已接入 | 待主代理补入真实主窗、窄窗与完整闭环操作证据；旧截图不作为本轮证据 |
-| Windows 构建与资源 | `garden-loop.mjs` 已加入 Electron `extraResources`，现有资源依赖检查通过；生成副本仍由同步脚本维护 | 待主代理补入新 sidecar、便携包、安装包、许可与校验值 |
-| 远端 CI 与 PR | 草稿 PR #19 持续使用；第 57 节 CI 是旧基线 | 待主代理补入本轮功能提交、CI 链接及实际结论；未公开发布 |
+| 原生动画验收机制 | `smoke-pet.mjs` 语法检查、`check-pet-view.mjs` 与差异检查通过；不改 Windows 设置，不在本机执行安装程序 | CI三条路径 verified=true；系统减少动态正常遵守，测试渲染器模拟后记录 idle-0 / idle-1 两帧；媒体/偏好恢复为true，已查看两张截图。详见58.6 |
+| 实际页面与视觉 | 新布置来自真实拥有/装备状态，导览从当前存档推导；源码已接入 | 已用独立测试存档在真实页面完成备种→种植→等候成熟→交付→建设→刷新保留。420px 窗口页面宽405px，无横向溢出；暖阳/暮色实看通过，修复夜间按钮对比度与农田摆设遮挡。见下方过程和新截图 |
+| Windows 构建与资源 | `garden-loop.mjs` 已加入 Electron `extraResources`，现有资源依赖检查通过；生成副本仍由同步脚本维护 | Windows Go、便携ZIP、Electron NSIS全部重建；两类包许可检查通过，sidecar、共享引擎依赖和asar内9个关键模块与源码逐字节一致，包内引擎可导入并归一化存档。校验值见下表 |
+| 远端 CI 与 PR | 草稿 PR #19 持续使用；第 57 节 CI 是旧基线 | 功能提交 `c355360`，[CI 36266684147](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147) 9 / 9通过；本地包已重建。PR保持草稿，未合并或公开发布 |
 | 学校业务、后端与发布边界 | 本轮围绕庭院体验，没有新增学校真实数据验收，也未部署后端、Docker、云同步或热更新 | 既有 R01–R07 等学校业务缺口保持原状态；公开下载仍为 beta0.9.2 |
 
 原生动画证据必须写明环境：系统减少动态开启时，正常静态行为与 **仅在测试渲染器模拟无减少动态条件下的帧推进** 是两项不同的事实。即便后者通过，也不声称修改了用户系统设置，或把它写成该机器原始系统条件下会播放动画。
+
+
+### 58.4 实际闭环与视觉证据
+
+使用独立本机测试存档，不含学校账号或真实业务数据。初始 fixture 为65币、2个草莓和已有2次收获，棋盘预置两个64用于缩短备种奖励触发；没有把它描述成从零打通完整2048。其余步骤通过实际页面操作，没有快进作物时钟：
+
+1. 合出128并领取备种礼：65→73币，获得萝卜种子×1，栗栗成长+3、亲密+2；直接进入空田播种、浇水。
+2. 再花8币购买2颗萝卜种子，种下并浇水；等待实际成熟后收获三块田，共6个萝卜，累计收获由2→5。
+3. 收获篮带到Skipper委托；交付2个萝卜得到9币，65→74币。成长+5、亲密+3确实给Skipper，当前伙伴仍为栗栗。材料全部有用途时，「出售多余」数量为0且禁用。
+4. 消耗剩下4个萝卜、2个草莓和60币建成湖畔野餐角，余额74→14；刷新后材料扣除、场景摆设、128贴纸及伙伴进度仍保留。下一项自动展示窗边育苗架。
+
+新图来自本轮运行页面：[农田与已建野餐角](screenshot-garden-loop-preview.png)、[下一项建设和已拥有摆设](screenshot-garden-goal-preview.png)。窄窗下农田说明底部1341px、摆设顶部1355px，二者分开；暮色建设收起按钮为浅金文字。页面无控制台警告或错误。额外修复跨日市场订单变化后余量文案仍停留在昨天的问题，工作区回归18项通过。
+
+### 58.5 本地候选包
+
+以下包对应功能提交 `c355360`；仍是本地 beta0.9.3 候选，未上传到公开 Release。未在用户本机运行安装器。
+
+| 产物 | 字节数 | SHA-256 |
+|---|---:|---|
+| `dist/szudesktop-windows-amd64.exe` | 13270528 | `4cc7a049d8c1b90e5f792bb20dac4f09fb63b6b68a58ecc4588ba7fed99eda5c` |
+| `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 7918089 | `2979f7f54e197c4727faf26e2125f737cf7a172726c977fbbd2e5369c5ae04bf` |
+| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118375151 | `e5807a41a97a0583bd3f8789e973df111a6cb69d736ab937ad6da6bd2c099770` |
+
+产品判断：庭院已具备面向同学小范围试玩的完整循环。先用实际反馈确认游玩节奏、重复游玩意愿和内容消耗速度，再扩充更多作物、建设或玩法；学校真实账号流程和预约缺口仍按统一清单推进，不因庭院完成而算作正式1.0验收。
+
+
+### 58.6 远端安装、升级与原生动画验收
+
+功能提交 `c355360` 的 [CI 36266684147](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147) **9 / 9通过**。下载并读取 `electron-install-smoke-evidence` 的 `summary.json`、`after-upgrade.json`、`reopen.json`、`reuse-portable.json`：
+
+- 真实 beta0.9.1 → beta0.9.3 安装升级、主窗渲染、重开、便携内核共存、旧程序文件清理、合成凭据解密、原伙伴进度保留、备份恢复、托盘与桌宠、缩放持久化、两只企鹅切换、卸载全部为true。CI使用隔离安装目录与合成存档。
+- 三条路径的 `pet.animationFrames` 均为 `verified=true`、`systemReducedMotion=true`、`systemReducedMotionRespected=true`、`emulationUsed=true`、`environment=renderer-media-emulation`、`mediaRestored=true`、`preferenceRestored=true`。
+- 两个注册帧为 `petanim-libao-idle-0` 与 `petanim-libao-idle-1`；脚本检查SVG实际绘制尺寸，人工查看 `pet-animation-before.png`、`pet-animation-after.png` 确认荔宝实际渲染及轮廓位移。动画条件只在隔离渲染器临时模拟，未改变系统设置。
+- CI安装包SHA-256为 `0d5e1dc7894e04a3d5a429a190e41990e4cb404775a0068d68faa5f93b1ce76e`；它与58.5的本地包来自同一功能提交、不同构建环境，不能混用校验值。
+
+本轮不新增待办文档；进度、已修问题和未完业务继续集中在此文件。中英文README同步当前证据与新截图。

@@ -27,13 +27,13 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The current iteration connects the companion table, planting, requests, construction and collections: bring back a useful seed after a game, share your harvest, and gradually furnish your corner of the lake. Source remains in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Current build, visual and CI evidence belongs in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布). The [nine passing CI jobs for `a1685e0`](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36264549047) cover the earlier animation/game baseline in section 57, not this new garden loop; older screenshots below also do not establish acceptance for the new scenes.
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects the companion table, planting, requests, construction and collections: bring back a useful seed after a game, share your harvest, and gradually furnish your corner of the lake. Feature commit `c355360` is in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), with [all nine CI jobs passing](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147), including an actual cross-version installation upgrade and desktop-pet checks. All 35 local check groups passed, and the running UI completed the seed, planting, harvest, delivery and construction path. Current screenshots, local candidate-package hashes and evidence are recorded in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布).
 
 ### Companions with their own movement and personality
 
 All six species, including A-Qing in older saves, have **12 actions with 6 frames each: 432 independently rendered pixel frames**. The actions cover idle, looking around, walking, patting, eating, playing, sleeping, stretching awake, celebrating, accompanying focus, low mood and greeting. Eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player, with individual idle pacing and reactions to sleep, focus and care. The room's action book lets you play each action and inspect every frame. Another 30 static portraits remain available for reduced motion and postcard export. With motion disabled, care reactions resolve immediately so later sleep or focus changes are not blocked by an unfinished gesture.
 
-Saving the animation setting now immediately synchronizes the desktop pet; a failed save does not change it early. The new installation smoke first checks static behavior under system reduced motion, then emulates animation conditions only in its isolated renderer, verifies actual frame progression and restores all settings. **This native animation check is still awaiting the new CI run**; it does not modify Windows preferences.
+Saving the animation setting now immediately synchronizes the desktop pet; a failed save does not change it early. The installation smoke passed: it first confirmed static behavior under system reduced motion, then emulated permission to animate only in the isolated renderer and captured two different rendered frames. Upgrade, reopen and shared-sidecar paths passed, with media conditions and preferences restored. No Windows preferences were changed.
 
 **576 Chinese lines cover 16 contexts**, with six alternatives per species and context. Each companion's rotation progress is saved. “Chat a little” responds to sleep, hunger, tiredness and time of day; care, harvests, focus, todos and game outcomes have their own replies.
 
@@ -66,7 +66,9 @@ Saving the animation setting now immediately synchronizes the desktop pet; a fai
 
 The original daily supply remains 20 coins, one food item and two radish seeds, separate from the companion table's daily seed gift. Focus, planting and care can support garden progression without a mandatory 2048 milestone.
 
-![2048 Merge Garden in the running app](screenshot-arcade-preview.png)
+![Garden construction and next-step goals in the running app](screenshot-garden-goal-preview.png)
+
+[See the farm and its completed picnic corner](screenshot-garden-loop-preview.png)
 
 The 2048 rules are adapted from Gabriele Cirulli's [MIT-licensed original at a pinned revision](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc), with its [complete license retained](../desktop/assets/garden/licenses/2048-MIT.txt). Garden design takes inspiration from [Stardew Valley's farming and character relationships](https://www.stardewvalley.net/about/) and [Animal Crossing's material gathering and everyday goals](https://animalcrossing.nintendo.com/new-horizons/create/), linking harvests, companion requests and keepsakes. The request rules and writing are our own; no commercial-game artwork or code was copied for those mechanics.
 
