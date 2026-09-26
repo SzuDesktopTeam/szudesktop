@@ -135,6 +135,8 @@ def main():
         z.writestr("README-快速开始.txt", README.replace("__VERSION__", ver))
         z.writestr("FONT-LICENSE-OFL.txt", Path(DESKTOP, "assets", "fonts", "LICENSE-OFL.txt").read_bytes())
         z.writestr("2048-MIT.txt", Path(DESKTOP, "assets", "garden", "licenses", "2048-MIT.txt").read_bytes())
+        z.writestr("Three-MIT.txt", Path(DESKTOP, "assets", "garden", "vendor", "three", "LICENSE.txt").read_bytes())
+        z.writestr("Sakura-Crossing-MIT.txt", Path(DESKTOP, "assets", "garden", "vendor", "sakura", "LICENSE.txt").read_bytes())
         z.writestr("LICENSE", Path(ROOT, "LICENSE").read_bytes())
         z.writestr("THIRD_PARTY_NOTICES.md", Path(ROOT, "THIRD_PARTY_NOTICES.md").read_bytes())
 

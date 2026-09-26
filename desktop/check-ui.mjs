@@ -58,6 +58,21 @@ test('pets: full saves retain all records and inherited object keys are not vali
 });
 test('todos reward completion only once',()=>{let s=act(createState(now),{type:'todoAdd',id:'task',text:'test'},now);for(let i=0;i<3;i++)s=act(s,{type:'todoToggle',id:'task'},now);assert.equal(activePet(s.game).xp,2);assert.equal(s.game.stats.tasks,1)});
 test('invalid imports are rejected; unknown root fields are excluded',()=>{assert.throws(()=>normalize({schema:1},now));let s=createState(now);s.game.coins=-1;assert.throws(()=>normalize(s,now));s=createState(now);s.game.plots[0].crop='unknown';assert.throws(()=>normalize(s,now));s=createState(now);s.password='must-not-export';activePet(s.game).password='must-not-export';s.semester='2026-09-01';s=normalize(s,now);assert.equal(s.password,undefined);assert.equal(activePet(s.game).password,undefined);assert.equal(s.semester,'2026-09-01')});
+test('home scenery survives save round trips without changing garden progress',()=>{
+ const original=normalize(createState(now),now),before=structuredClone(original.game);
+ delete original.preferences.homeSkin;
+ assert.equal(normalize(original,now).preferences.homeSkin,'pixel');
+ for(const skin of ['pixel','lake','bookshop','terrace']){
+  const s=structuredClone(original);s.preferences.homeSkin=skin;
+  const reopened=normalize(JSON.parse(JSON.stringify(s)),now);
+  assert.equal(reopened.preferences.homeSkin,skin);
+  assert.deepEqual(reopened.game,before);
+ }
+ for(const invalid of ['constructor','not-a-skin',null,{}]){
+  const s=structuredClone(original);s.preferences.homeSkin=invalid;
+  assert.equal(normalize(s,now).preferences.homeSkin,'pixel');
+ }
+});
 test('GPA is credit-weighted without score conversion',()=>assert.deepEqual(gpa([{credit:3,point:4},{credit:1,point:2}]),{credits:4,value:3.5}));
 test('independent decoration ownership and achievement reward',()=>{let s=createState(now);s=act(s,{type:'decor',id:'flower'},now);assert.equal(s.game.coins,5);s=act(s,{type:'decor',id:'flower'},now);assert.equal(s.game.coins,5);assert.equal(s.game.equipped.length,0);s=act(s,{type:'harvest',index:0},now+60000);s=act(s,{type:'achievement',id:'harvest'},now+60000);assert.equal(s.game.coins,35);assert.throws(()=>act(s,{type:'achievement',id:'harvest'},now+60000))});
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');test('HTML IDs are unique',()=>{const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length)});

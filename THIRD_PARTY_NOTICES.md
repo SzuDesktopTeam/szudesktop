@@ -26,13 +26,23 @@ Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款
 
 候选 beta0.9.3 的 Pingu 与《马达加斯加》企鹅 Skipper 是项目自行绘制的粉丝像素形象，没有提取动画、电影或游戏的原始美术资源。角色及相关标识的权利属于各自原权利人；本项目的 MIT 许可不授予这些角色 IP 的使用权，也不表示获得官方授权或背书。
 
+## Three.js 与 Sakura Crossing 渲染模块
+
+以下模块目前属于尚未公开发布的 beta0.9.3 源码候选；公开 beta0.9.2 安装包不含新增三渲二首页。下述随包路径是本源码的打包配置。
+
+主页三渲二场景使用 [Three.js 0.180.0](https://www.npmjs.com/package/three/v/0.180.0)，Copyright © 2010-2025 three.js authors，采用 MIT License。完整条款保留在源码 `desktop/assets/garden/vendor/three/LICENSE.txt`，随安装版和便携版分发为 `Three-MIT.txt`。
+
+三渲二材质、描边、调色、天空、云纹理和后处理模块改编自 Kenton Wang 的 [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81)，固定版本为 `de01898e89c7f6ab3fad93fa802f0f5ac66fbd81`。Copyright (c) 2026 Kenton Wang，采用 MIT License。完整条款保留在源码 `desktop/assets/garden/vendor/sakura/LICENSE.txt`，随安装版和便携版分发为 `Sakura-Crossing-MIT.txt`。
+
+本项目调整模块引用为离线相对路径，并适配 Three.js 版本及场景卸载；复制与改编的文件、上游版本和变更记录见 `desktop/assets/garden/vendor/SOURCE.json`。校园场景另行实现，不捆绑上游音频、玩家控制或完整世界启动代码。
+
 ## 协议参考与美术
 
 - xEncode 实现改写自 MIT 项目 Sleepstars/SZU-login（https://github.com/Sleepstars/SZU-login），其上游为 vidar-team/srun-login；原始版权声明保留在 `LICENSE`。
 - 学校接口的事实性调研参考 MattDong123/tools4szu（https://github.com/MattDong123/tools4szu）。该参考仓库未声明开源许可；本项目按接口事实重新实现，不复制或再分发其代码。
-- 默认发行资源使用项目 SVG、像素角色、CSS 场景、开源字体和生成的校园背景。不捆绑 Stardew Valley、Terraria、Minecraft 的游戏美术或原版游戏字体。游戏名称属于各自权利人，风格参考不表示合作或授权。
+- 默认发行资源使用项目 SVG、像素角色、CSS 场景、开源字体和生成的校园背景；新增源码候选另含上述开源渲染模块和本项目校园三维场景。不捆绑 Stardew Valley、Terraria、Minecraft 的游戏美术或原版游戏字体。游戏名称属于各自权利人，风格参考不表示合作或授权。
 - 实验 VPN 模块不进入默认发行构建；该模块的第三方来源与授权仍待核实，不能视为完成许可核验的发行功能。
 
 这是学生制作的非官方项目，与深圳大学及上述项目或游戏的权利人没有隶属或背书关系。
 
-安装版的本项目、字体和 2048 许可位于 `resources/licenses/`；便携 ZIP 将其放在解压目录。Electron 自身许可保留在安装目录。
+安装版的本项目、字体、2048、Three.js 和 Sakura Crossing 许可位于 `resources/licenses/`；便携 ZIP 将其放在解压目录。Electron 自身许可保留在安装目录。

@@ -56,6 +56,10 @@ extraResources:
     to: licenses/FONT-LICENSE-OFL.txt
   - from: ../assets/garden/licenses/2048-MIT.txt
     to: licenses/2048-MIT.txt
+  - from: ../assets/garden/vendor/three/LICENSE.txt
+    to: licenses/Three-MIT.txt
+  - from: ../assets/garden/vendor/sakura/LICENSE.txt
+    to: licenses/Sakura-Crossing-MIT.txt
 win:
   target: nsis
   icon: ../assets/szudesktop.ico

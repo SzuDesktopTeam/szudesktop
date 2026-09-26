@@ -1,0 +1,116 @@
+{
+  "sakuraCrossing": {
+    "repository": "https://github.com/Kenton-GMI/sakura-crossing",
+    "commit": "de01898e89c7f6ab3fad93fa802f0f5ac66fbd81",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 Kenton Wang",
+    "files": [
+      {
+        "path": "sakura/core/palette.mjs",
+        "upstreamPath": "src/core/palette.js",
+        "upstreamSha256": "51ecd369145a17e77b565b8c0785f249a55b764f7f975ac80b711863b53bd588",
+        "sha256": "a99b8936e51c7e70ba3e1c9234f27f1832292117a536d537f0fbee54b717560e",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows."
+        ]
+      },
+      {
+        "path": "sakura/core/post.mjs",
+        "upstreamPath": "src/core/post.js",
+        "upstreamSha256": "3232d66acf48423c921e0b6f6ebdce0f0251683090acc89b91eff6568c8eeeff",
+        "sha256": "dd10d32e72932474694355b1bc39114a8c5beabe29a7af43e6ab974de9361916",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows."
+        ]
+      },
+      {
+        "path": "sakura/core/toon.mjs",
+        "upstreamPath": "src/core/toon.js",
+        "upstreamSha256": "03fa64e7863dfd9260f3d0b859262ac1858282a48ad536a52e56959e13ef44ac",
+        "sha256": "07bf63919fd776fad7ddcfb973033f805db91937051daa9badf9966c6beee2d8",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows.",
+          "Assign flatShading after construction for Three r180.",
+          "Remove disposed materials and gradient textures from caches for home-skin unmount."
+        ]
+      },
+      {
+        "path": "sakura/core/sky.mjs",
+        "upstreamPath": "src/core/sky.js",
+        "upstreamSha256": "12123c33c65cd1bd5c90eae7a7d2f801031c5b21e79716ae448621077a84c50a",
+        "sha256": "8e80e3b63165774d21bb22be138f0ef33106ed1202dcae88cd58861ced7c1873",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows."
+        ]
+      },
+      {
+        "path": "sakura/core/textures.mjs",
+        "upstreamPath": "src/core/textures.js",
+        "upstreamSha256": "3e9d55a100aa3a4719c4c82be8973be61d8ee7cfdba85ee147da4bc587bc05f1",
+        "sha256": "da4ce1b4820c398097bb413caaafe2ebe12377776f34cec745e11ce4272f73e7",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows.",
+          "Extract only cloudTex and its make/cached helpers; exclude town-specific texture code.",
+          "Remove disposed cloud textures from cache."
+        ]
+      },
+      {
+        "path": "sakura/core/util.mjs",
+        "upstreamPath": "src/core/util.js",
+        "upstreamSha256": "0d87a48031008ecff3917f6e7fb4baaeef5041736cbf9a9555dc42c5b2c53a9d",
+        "sha256": "6464183b4fd36ed761f16a9de4a27cf2f6b9c4c556154299f505e70a721b39aa",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows."
+        ]
+      },
+      {
+        "path": "sakura/core/outline.mjs",
+        "upstreamPath": "src/core/outline.js",
+        "upstreamSha256": "0b235b4db576d891f4fe771387ee6a4309b11e38ea2e7ccc098263faabb157d6",
+        "sha256": "ed43fa277572dd3a27a0de531d8f34e50e52b119bca035bd3603e64a6d56522d",
+        "changes": [
+          "Relative offline imports and .mjs extension for deterministic MIME on Windows.",
+          "Unregister disposed outline materials."
+        ]
+      }
+    ]
+  },
+  "three": {
+    "package": "three",
+    "version": "0.180.0",
+    "source": "https://www.npmjs.com/package/three/v/0.180.0",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "three/three.module.mjs",
+        "upstreamPath": "build/three.module.min.js",
+        "sha256": "812d83ba87c432983b73e80bf6ca6064a28743f495b6da2e99733c27192540c5",
+        "changes": "Rename to .mjs and rewrite imports to relative offline modules."
+      },
+      {
+        "path": "three/three.core.min.mjs",
+        "upstreamPath": "build/three.core.min.js",
+        "sha256": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+        "changes": "Rename to .mjs and rewrite imports to relative offline modules."
+      },
+      {
+        "path": "three/addons/postprocessing/Pass.mjs",
+        "upstreamPath": "examples/jsm/postprocessing/Pass.js",
+        "sha256": "1c04f2a8e27312c5bf592636ad50084a8235019c6c234bf19ae0fa5e360863b0",
+        "changes": "Rename to .mjs and rewrite imports to relative offline modules."
+      },
+      {
+        "path": "three/addons/utils/BufferGeometryUtils.mjs",
+        "upstreamPath": "examples/jsm/utils/BufferGeometryUtils.js",
+        "sha256": "e6b1db3447e4c9184c476dbf6ae1d17f15ee528380849afac159ae9a24017f57",
+        "changes": "Rename to .mjs and rewrite imports to relative offline modules."
+      }
+    ]
+  },
+  "integration": "Offline relative ES modules for szuDesktop. Original campus scenes are in home-scene-world.mjs; renderer lifecycle is in home-scene-renderer.mjs. No upstream audio, player controls or world bootstrap.",
+  "rendererAdaptations": [
+    "Home scenes use their own light and sky palette, a smaller sky/cloud volume, a 1.6M render pixel budget and a 30 fps animation limit.",
+    "Depth ink fades from 85 percent of each scene's fog-near distance to 42 percent into its fog span, approximately 32-64 units in the lake scene. The upstream resolution-adjusted ink sampling width is multiplied by 0.8 after every resize. Narrow-view camera retreat offsets both fog and ink ranges to preserve subject clarity. No extra postprocessing pass is added.",
+    "Host owns resize, reduced-motion still frames, page and viewport visibility pause, context loss fallback and GPU resource disposal."
+  ]
+}

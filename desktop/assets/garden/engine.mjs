@@ -52,7 +52,7 @@ const KEEPSAKE_ICONS={hello:'i-lantern',lake:'i-quill',shade:'i-flower',rain:'i-
 export function journeyKeepsakes(g){return journeyList(g).filter(c=>c.claimed).map(c=>({id:c.id,name:c.keepsake,icon:KEEPSAKE_ICONS[c.id],storyTitle:c.title}))}
 const dailyState=now=>({day:dayKey(now),gift:false,care:0,plant:0,harvest:0,focus:0,claimed:[],pats:[],todoRewards:0});
 export function createState(now=Date.now()){
- return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
+ return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:{radish:4,strawberry:2,blueberry:0,lychee:0},stock:{radish:0,strawberry:0,blueberry:0,lychee:0},
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
  pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,puzzle:createPuzzle(now),orders:createOrders(),
@@ -116,7 +116,7 @@ export function normalize(input,now=Date.now()){
  g.active=Number.isInteger(g.active)&&g.active>=0&&g.active<g.pets.length?g.active:0;
 
  s.profile={name:String(s.profile?.name||'').slice(0,20),college:String(s.profile?.college||'').slice(0,40)};
- s.preferences={theme:s.preferences?.theme==='night'?'night':'day',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'undergrad',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
+ s.preferences={theme:s.preferences?.theme==='night'?'night':'day',homeSkin:['pixel','lake','bookshop','terrace'].includes(s.preferences?.homeSkin)?s.preferences.homeSkin:'pixel',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'undergrad',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
  s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,500).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>({id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded,date:validDate(x.date)?x.date:'',createdAt:timeValue(x.createdAt),completedAt:x.done?timeValue(x.completedAt):0,archived:!!x.archived&&!!x.done}));
  s.courses=(Array.isArray(s.courses)?s.courses:[]).slice(0,300).filter(x=>x&&Number.isFinite(x.credit)&&Number.isFinite(x.point)&&x.credit>0&&x.credit<=100&&x.point>=0&&x.point<=5).map(x=>({name:String(x.name||'课程').slice(0,100),credit:x.credit,point:x.point,term:String(x.term||'').slice(0,40),code:String(x.code||'').slice(0,40),level:['undergrad','graduate'].includes(x.level)?x.level:'',grade:String(x.grade||'').slice(0,20),source:String(x.source||'手动录入').slice(0,30),included:x.included!==false}));
  s.reminders=(Array.isArray(s.reminders)?s.reminders:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.place==='string'&&Number.isFinite(x.start)&&Number.isFinite(x.end)&&x.end>x.start&&x.end-x.start<=86400000).slice(0,50).map(x=>({id:x.id.slice(0,80),place:x.place.slice(0,80),start:x.start,end:x.end}));

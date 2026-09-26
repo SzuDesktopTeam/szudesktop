@@ -9,6 +9,8 @@ EXPECTED = {
     "THIRD_PARTY_NOTICES.md": ROOT / "THIRD_PARTY_NOTICES.md",
     "FONT-LICENSE-OFL.txt": ROOT / "desktop/assets/fonts/LICENSE-OFL.txt",
     "2048-MIT.txt": ROOT / "desktop/assets/garden/licenses/2048-MIT.txt",
+    "Three-MIT.txt": ROOT / "desktop/assets/garden/vendor/three/LICENSE.txt",
+    "Sakura-Crossing-MIT.txt": ROOT / "desktop/assets/garden/vendor/sakura/LICENSE.txt",
 }
 
 

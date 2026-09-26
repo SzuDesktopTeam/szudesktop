@@ -27,7 +27,25 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The companion table's 2048 now uses the garden's own seeds, crops, baskets and Libao harvest gift. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). This iteration passed **71 checks across six focused local groups**. Artwork, real merging and undo evidence is recorded in [STATUS section 60](STATUS.md#60-2048-换上庭院素材2026-09-27源码未发布). Windows installer and portable candidates have been rebuilt, with all 132 embedded assets, sidecars and licenses verified; current checksums are recorded there. [CI](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36269898263) for the 2048 artwork commit `868556a` passed.
+**These changes are not publicly released; the download above remains beta0.9.2.** The beta0.9.3 source candidate adds three selectable cel-shaded home scenes in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Integration and verification are recorded in [STATUS section 61](STATUS.md#61-三渲二首页风景2026-09-27源码候选). Candidate installers and CI evidence in section 60 belong to the earlier 2048 artwork version.
+
+### A different window onto campus
+
+Choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace** at the top of the home page, or return to the original **Pixel Courtyard**. The selection is saved locally and survives reopening; companions, crops and tasks keep their existing progress.
+
+| Scene | Outside the window |
+|---|---|
+| Lakeside Daylight | A curved lake path, southern palms, white-and-red campus buildings and a bicycle beside a bench |
+| After-rain Bookshop | A recessed shopfront, bookshelves, awning and a quiet seat beside potted plants |
+| Blue-hour Terrace | Stepped terraces, a seedling rack, warm windows and strings of lights at dusk |
+
+![Lakeside Daylight running in the home view](screenshot-home-lake-preview.png)
+
+[View After-rain Bookshop](screenshot-home-bookshop-preview.png) · [View Blue-hour Terrace](screenshot-home-terrace-preview.png)
+
+These campus-inspired scenes use real 3D geometry. The stepped lighting, tinted shadows, depth ink, sky and colour pipeline are adapted from MIT-licensed [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing), with Three.js 0.180.0 bundled locally. Scene geometry is new work for this project; attribution and adaptations are recorded in [Third-party notices](../THIRD_PARTY_NOTICES.md).
+
+Scenes render only while the home view is visible and release their resources when leaving it. The animation setting covers companions and home scenery, supports a still frame and respects system reduced motion. If 3D rendering is unavailable, the pixel campus and normal controls remain accessible.
 
 The bottom hint bar now follows the active companion, keeping its portrait and name consistent after switching, renaming, navigation and reopening. This fix is available in source and the local preview, but not in a public installer yet; see STATUS section 60.4 for verification.
 
