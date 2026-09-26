@@ -119,6 +119,7 @@ async function commit(next,draft,paint=render){
  }
 }
 function renderPetCare(resetPetForm=false){
+ paintCompanionDialog();
  // 照料只影响今日与庭院；其余页面保留原 DOM，避免打断正在填写的学校登录和设置。
  if(page!=='home'&&page!=='garden')return;
  const forms=[...document.querySelectorAll('#main form[id]')],focused=document.activeElement;
@@ -237,7 +238,14 @@ function loadPetScale(){
  });
 }
 function showPetScale(scale){const input=$('#pet-scale');if(input)input.value=String(scale);const out=$('#pet-scale-value');if(out)out.textContent=Math.round(scale*100)+'%'}
-function render(){if(!state)return;document.body.dataset.theme=state.preferences.theme;document.body.dataset.page=page;document.body.dataset.motion=state.preferences.motion?'on':'off';$('#today').innerHTML=sprite('i-calendar','item-icon')+new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('#nav').innerHTML=Object.entries(pages).map(([k,v])=>`<button data-action="navigate" data-page="${k}" ${k===page?'aria-current="page"':''}>${sprite(pageIcons[k])}<span>${v}</span></button>`).join('');$('#companion-tip').textContent=pageTips[page];$('#main').innerHTML=pageHTML();if(page==='settings'){if(globalThis.szuDesktop?.shell!=='electron')loadAutostart();loadPetScale();desktopUI.load();}clocks();mountGardenPlayers()}
+function paintCompanionDialog(){
+ const pet=activePet(state.game),dialog=$('.companion-dialog');
+ dialog.querySelector('.companion-portrait').innerHTML=sprite(petSprite(pet));
+ dialog.querySelector('.speaker').textContent=pet.name;
+ dialog.setAttribute('aria-label',pet.name+'的小提示');
+ $('#companion-tip').textContent=pageTips[page];
+}
+function render(){if(!state)return;document.body.dataset.theme=state.preferences.theme;document.body.dataset.page=page;document.body.dataset.motion=state.preferences.motion?'on':'off';$('#today').innerHTML=sprite('i-calendar','item-icon')+new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('#nav').innerHTML=Object.entries(pages).map(([k,v])=>`<button data-action="navigate" data-page="${k}" ${k===page?'aria-current="page"':''}>${sprite(pageIcons[k])}<span>${v}</span></button>`).join('');paintCompanionDialog();$('#main').innerHTML=pageHTML();if(page==='settings'){if(globalThis.szuDesktop?.shell!=='electron')loadAutostart();loadPetScale();desktopUI.load();}clocks();mountGardenPlayers()}
 // 单页渲染兜底：任何页面函数抛异常，都换成一页可读的提示，而不是让 #main 保持空白、
 // 也不打断 clocks() 等后续刷新。存档与其它页面不受影响。
 function pageHTML(){try{return ({home,network,services:servicesPage,garden,study,settings})[page]()}catch(e){return `<section class="card"><h1>这个页面没能显示</h1><p class="notice error">${esc(e&&e.message||'渲染异常')}</p><p>你的存档和其他页面不受影响。可以切换到别的页面，或重新打开程序。</p><button data-action="navigate" data-page="home">回到今日</button></section>`}}
