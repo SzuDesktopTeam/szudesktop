@@ -201,8 +201,38 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await until(()=>main("location.hash==='#home'"),'main menu did not restore home');
   await until(()=>mainWin.isVisible(),'pet menu cannot restore main window');
   await until(async()=>['idle','sad','sleep','focus'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
-  const motion=await pet("!matchMedia('(prefers-reduced-motion: reduce)').matches && document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')");
-  if(motion){const previous=await pet("document.querySelector('#pet-use').getAttribute('href')");await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')!==${JSON.stringify(previous)}`),'desktop frame clock did not advance');}
+  // The upgrade fixture deliberately has motion disabled. Exercise the real
+  // setting and IPC path temporarily, then retain all original preferences.
+  const preferences=async()=>{const response=await fetch(baseUrl+'/api/workspace');assert.ok(response.ok);return (await response.json()).data.preferences;};
+  const originalPreferences=await preferences();
+  const setMotion=async value=>{
+    await main("document.querySelector('[data-action=\"navigate\"][data-page=\"settings\"]').click()");
+    await until(()=>main("Boolean(document.querySelector('#profile-form input[name=motion]') && !document.querySelector('#profile-form button').disabled)"),'animation setting is not ready');
+    await main(`(()=>{const form=document.querySelector('#profile-form');form.querySelector('input[name=motion]').checked=${JSON.stringify(value)};form.requestSubmit();})()`);
+    await until(async()=>(await preferences()).motion===value,'animation preference did not save');
+    // A persisted write can become visible before the UI finishes its response.
+    await until(()=>main("Boolean(document.querySelector('#profile-form button') && !document.querySelector('#profile-form button').disabled)"),'animation setting save did not finish');
+    getPetMenu().getMenuItemById('home').click();
+    await until(()=>main("location.hash==='#home'"),'animation setting did not return home');
+  };
+  const animationFrames={verified:false,systemReducedMotion:await pet("matchMedia('(prefers-reduced-motion: reduce)').matches"),preferenceRestored:false};
+  try{
+    await setMotion(true);
+    if(animationFrames.systemReducedMotion){
+      await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'system reduced-motion setting must retain static artwork');
+      animationFrames.reason='System reduced motion is enabled; frame advance was not exercised.';
+    }else{
+      await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'enabling animation did not reach the desktop companion');
+      const previous=await pet("document.querySelector('#pet-use').getAttribute('href')");
+      await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')!==${JSON.stringify(previous)}`),'desktop frame clock did not advance');
+      animationFrames.verified=true;
+    }
+  }finally{
+    if(originalPreferences.motion!==true)await setMotion(originalPreferences.motion);
+    assert.deepEqual(await preferences(),originalPreferences,'animation check restores every upgrade preference');
+    animationFrames.preferenceRestored=true;
+    if(originalPreferences.motion===false)await until(()=>pet("!document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')"),'restoring disabled motion did not reach the desktop companion');
+  }
   mainWin.close();
   menu('打开主窗口').click();
   assert.ok(mainWin.isVisible(),'tray opens main');
@@ -251,6 +281,6 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   trace('backup-restore');
   await checkBackup(mainWin,baseUrl,evidenceDir);
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
-  return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,
+  return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
     initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
 }

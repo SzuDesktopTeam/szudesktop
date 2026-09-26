@@ -26,6 +26,8 @@ f.player.setPet({species:'pingu',sleeping:false,mood:90});assert.equal(f.svg.att
 assert.match(f.defs.get('pet-animation-sprites').innerHTML,/petanim-pingu/);assert.doesNotMatch(f.defs.get('pet-animation-sprites').innerHTML,/petanim-cat/);
 f.doc.hidden=true;f.emit('visibilitychange');assert.equal(f.timers.size,0);f.doc.hidden=false;f.emit('visibilitychange');assert.equal(f.timers.size,1);
 f.player.setPet({species:'pingu',sleeping:false},{motion:false});assert.equal(f.timers.size,0);assert.equal(f.use.attributes.href,'#pingu-normal');
+f.player.play('greet');assert.equal(f.svg.dataset.action,'idle','reduced motion resolves a gesture without a timer');assert.equal(f.timers.size,0);
+f.player.setPet({species:'pingu',sleeping:true});assert.equal(f.svg.dataset.action,'sleep');assert.equal(f.use.attributes.href,'#pingu-sleep','disabled-motion gesture must not block a later sleeping state');
 f.player.setPet({species:'pingu',sleeping:false},{motion:true,focus:true});assert.equal(f.svg.dataset.action,'focus');assert.equal(f.timers.size,1);
 f.media.matches=true;f.emit('media:change');assert.equal(f.timers.size,0);
 f.player.destroy();assert.equal(f.timers.size,0);

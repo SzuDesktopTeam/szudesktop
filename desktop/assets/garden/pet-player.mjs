@@ -15,6 +15,9 @@ export function createPetPlayer(svg,{pet,focus=false,motion=true,document:doc=sv
  function begin(id,transient=false){action=animationClip(current?.species,id).action;once=transient;started=now();paint()}
  function paint(){
   cancel(timer);if(destroyed)return;
+  // With motion disabled there is no timer to finish a gesture. Resolve it now,
+  // so a later sleep/focus update is not blocked by a permanently active reaction.
+  if(reduced()&&once){once=false;action=base();started=now()}
   const clip=animationClip(current?.species,action),elapsed=Math.max(0,now()-started);
   if(!reduced()&&once&&elapsed>=clip.duration){begin(base());return}
   // Quiet personalities have longer frame timings; only the active portrait moves.
