@@ -27,7 +27,7 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects frame-by-frame companions, personalities and garden games with saved progression. All 32 UI and desktop check groups, real browser playthroughs and local builds passed. Remote CI results for the new installer are recorded in [STATUS section 57](STATUS.md#57-逐帧伙伴与庭院小游戏2026-09-27源码未发布). The older screenshots below belong to earlier candidates and do not establish acceptance for the new animations.
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects frame-by-frame companions, personalities and garden games with saved progression. All 32 UI and desktop check groups, real browser playthroughs and local builds passed. Feature commit `a1685e0` passed [all nine remote CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36264549047), including installation upgrades, saved-data preservation and desktop-pet interactions. The Windows runner has system reduced motion enabled: frame progression was verified in the main-window browser, while this native-pet run verified static rendering and reaction reset, not animated playback. Full evidence and candidate checksums are recorded in [STATUS section 57](STATUS.md#57-逐帧伙伴与庭院小游戏2026-09-27源码未发布). The older screenshots below belong to earlier candidates and do not establish acceptance for the new animations.
 
 ### Companions with their own movement and personality
 
