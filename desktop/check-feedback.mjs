@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {createFeedbackUI,environmentSummary} from './assets/garden/feedback.mjs';
+globalThis.document={getElementById:()=>null};
+const environment={version:'beta0.9.2',mode:'electron',navigatorInfo:{platform:'Win32',userAgent:'private-user-path-token',cookie:'secret-cookie',username:'student'}};
+const summary=environmentSummary(environment);
+assert.equal(summary,'szuDesktop beta0.9.2\n系统：Windows\n界面：安装版桌面窗口');
+assert.doesNotMatch(summary,/private|secret|student/);assert.match(environmentSummary({version:'<script>',navigatorInfo:{platform:'MacIntel'}}),/未知构建\n系统：macOS/);
+let copied='',toast='';
+const ui=createFeedbackUI({getVersion:()=>environment.version,getMode:()=>environment.mode,toast:value=>{toast=value},clipboard:{writeText:async value=>{copied=value}}});
+assert.equal(copied,'');await ui.click('feedback-copy');assert.equal(copied.split('\n').length,3);assert.match(toast,/已复制/);
+const fallback=createFeedbackUI({getVersion:()=>environment.version,getMode:()=>environment.mode,toast:()=>{},clipboard:null});await fallback.click('feedback-copy');assert.match(fallback.card(),/手动复制/);
+console.log('PASS environment allowlist, explicit copy and clipboard fallback');

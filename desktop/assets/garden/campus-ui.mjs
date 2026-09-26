@@ -10,7 +10,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
  const loadRooms=createRoomsLoader(api);
  const booking=createBookingUI({api,loadRooms});
  const venueRules=createVenueRulesUI({api,loadRooms});
- const notices=createNoticesUI({api});
+ const notices=createNoticesUI({api,getSource:()=>getState()?.preferences?.noticeSource,setSource:async noticeSource=>{const state=getState();await commit({...state,preferences:{...state.preferences,noticeSource}},undefined,()=>{})}});
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const link=(url,label,cls='button')=>`<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label} ↗</a>`;
  const itemIcons={'reminder-ics':'i-calendar',feed:'i-bell','session-save':'i-chest','session-check':'i-shield','session-clear':'i-key','online-score':'i-medal',preview:'i-scroll',template:'i-scroll',import:'i-chest'};
@@ -21,12 +21,14 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
  let gradeText='',gradeLevel='undergrad',preview=null,filterLevel='',filterTerm='';
  // 学校系统（ehall）在线读取相关状态。会话本身不放在这里，只由后端保管。
  let sessionSaved=false,sessionDesc='',sessionErr='',sessionBusy=false,onlineScore=null,onlineErr='',onlineBusy=false,onlineLevel='undergrad';
+ let preferredLevel;
+ function syncStudentLevel(){const next=getState()?.preferences?.studentLevel||'undergrad';if(preferredLevel===undefined){preferredLevel=next;if(next==='graduate'){onlineLevel=next;gradeLevel=next}}else if(next!==preferredLevel){preferredLevel=next;onlineLevel=next;gradeLevel=next;preview=null;onlineScore=null;onlineErr=''}}
  // 统一身份认证（本科）应用内登录的状态。与上面粘 Cookie 是两条独立入口，
  // 后端优先用 CAS 会话，没有才回落到 Cookie。
  let casLogged=false,casErr='',casBusy=false,casChallenge='',casImage='',casNeedCaptcha=false;
  const formatTime=n=>new Date(n).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
  function download(text,name,type){const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
- function services(){const reminders=getState().reminders||[];return `${safeCard('学习空间 · 预约与空位',()=>booking.card())}
+ function services(section='all'){const reminders=getState().reminders||[];const spaces=()=>`${safeCard('学习空间 · 预约与空位',()=>booking.card())}
  ${safeCard('场地与琴房规则速查',()=>venueRules.card())}
  <section class="card campus-booking"><div class="card-head"><h2 class="icon-heading tone-info">${pixelIcon('i-mug','heading-icon')}图书馆与自习提醒</h2><span class="badge" data-tone="info">官方入口</span></div>
  <div class="actions">${link('https://webvpn.szu.edu.cn/','登录 WebVPN')}${link('https://www.lib.szu.edu.cn/space-and-facilities/discussion-room','图书馆研讨间')}</div>
@@ -34,13 +36,14 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
  <details><summary>添加自习提醒</summary><p class="muted">在官方系统确认预约后，可手动登记时间并导出日历。此处保存的是提醒，不会向学校提交预约。</p>
  <form id="campus-reminder-form" class="grid three"><div><label for="reminder-place">自习地点</label><input id="reminder-place" name="place" maxlength="80" placeholder="填写已预约的场地 / 房间" required></div><div><label for="reminder-start">开始时间</label><input id="reminder-start" name="start" type="datetime-local" required></div><div><label for="reminder-end">结束时间</label><input id="reminder-end" name="end" type="datetime-local" required></div><button>${pixelIcon('i-bell')}保存本机提醒</button></form></details>
  ${reminders.length?`<h3>自习提醒 · 手动登记</h3><ul class="campus-reminders">${[...reminders].sort((a,b)=>a.start-b.start).map(x=>`<li><div><strong>${esc(x.place)}</strong><p>${formatTime(x.start)} — ${formatTime(x.end)}${x.end<Date.now()?' · 已结束':''}</p></div><div class="actions">${button('导出日历','reminder-ics',`data-id="${esc(x.id)}"`)}${button('移除提醒','reminder-delete',`data-id="${esc(x.id)}"`)}</div></li>`).join('')}</ul><small>导入系统日历后可在开始前 15 分钟提醒；是否提醒由日历软件设置决定。</small>`:''}</section>
- ${safeCard('校园通知',()=>notices.card())}
- <section class="card campus-phone"><div class="card-head"><h2 class="icon-heading tone-magic">${pixelIcon('i-mail','heading-icon')}常用联系与入口</h2><span class="badge">公开信息</span></div>
+ `;
+ const directory=()=>`<section class="card campus-phone"><div class="card-head"><h2 class="icon-heading tone-magic">${pixelIcon('i-mail','heading-icon')}常用联系与入口</h2><span class="badge">公开信息</span></div>
  <p>${esc(PHONE_NOTE)}</p>
  <ul class="campus-phones">${PHONE_BOOK.map(x=>`<li><span>${esc(x.name)}</span>${x.tel?`<a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>`:`<a href="mailto:${esc(x.mail)}">${esc(x.mail)}</a>`}${link(x.source,'来源','')}</li>`).join('')}</ul>
  <h3>其他部门 · 官方入口</h3>
  <div class="actions">${PHONE_FALLBACK.map(x=>link(x.url,x.name)).join('')}</div>
- <small>这些部门没有查到官方公开号码，因此只给入口：请在官方页面核对最新联系方式。</small></section>`}
+ <small>这些部门没有查到官方公开号码，因此只给入口：请在官方页面核对最新联系方式。</small></section>`;
+ if(section==='spaces')return spaces();if(section==='notices')return safeCard('校园通知',()=>notices.card());if(section==='directory')return directory();return spaces()+safeCard('校园通知',()=>notices.card())+directory()}
  function sessionHTML(){
   if(sessionBusy)return '<p role="status">正在验证登录状态…</p>';
   if(sessionErr)return `<p role="status" class="notice error">${esc(sessionErr)}</p>`;
@@ -86,9 +89,10 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   <p class="notice">这是从学校系统读到的原始记录，没有替你换算或补全。要并入上面的绩点统计，请用「批量导入成绩表」。</p>`;
  }
  function grades(){
+  syncStudentLevel();
   const courses=getState().courses,terms=[...new Set(courses.map(x=>x.term||'').filter(Boolean))].sort();
   const selected=courses.filter(x=>(!filterLevel||x.level===filterLevel)&&(!filterTerm||x.term===filterTerm)),result=gpa(selected);
-  return `<section class="card span"><div class="card-head"><h2 class="icon-heading tone-magic">${pixelIcon('i-medal','heading-icon')}成绩与绩点</h2><span class="badge" data-tone="magic">计入 <b>${result.credits}</b> 学分 · 加权绩点 <b>${result.value.toFixed(2)}</b></span></div>
+  return `<section class="card span"><div class="card-head"><h2 class="icon-heading tone-magic">${pixelIcon('i-medal','heading-icon')}成绩与绩点</h2><span class="badge" data-tone="magic">${result.credits>0?`计入 <b>${result.credits}</b> 学分 · 加权绩点 <b>${result.value.toFixed(2)}</b>`:`${courses.length?'暂无计入课程':'尚未录入'} · 加权绩点 <b>—</b>`}</span></div>
   <p>本科和研究生分开记录，批量导入课程后按学分加权。这里的结果用于个人核对，官方平均绩点以学校系统为准。</p>
   <div class="actions">${link('https://ehall.szu.edu.cn/','学校办事大厅')}${link('https://cjzm.szu.edu.cn/gztcyUI/','本科成绩证明')}${link('https://gra.szu.edu.cn/info/1092/3484.htm','研究生成绩单指南')}</div>
   <details open><summary>从学校系统直接读取（可选）${unverifiedBadge()}</summary>
@@ -123,7 +127,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   <div class="actions">${button('预览导入','preview','class="primary"')}${button('下载空白表头','template')}</div>
   <p class="notice">本科可识别 A+、A、B+、B、C+、C、D、F 等级，按${link(GRADE_RULE_URL,'学校规则','')}换算；已有官方绩点时优先使用。研究生只读取表中的官方绩点，不套用本科规则。重修、免修及不计绩点课程请核对后选择是否计入。</p>
   <div id="grade-preview" aria-live="polite">${previewHTML()}</div></details>
-  <details><summary>补充一门课程</summary><form id="course-form" class="grid three"><div><label for="course-name">课程名称</label><input id="course-name" name="name" maxlength="100" required></div><div><label for="credit">学分</label><input id="credit" name="credit" type="number" min="0.1" max="100" step="0.1" required></div><div><label for="point">官方课程绩点</label><input id="point" name="point" type="number" min="0" max="5" step="0.01" required></div><div><label for="course-level">培养层次</label><select id="course-level" name="level"><option value="undergrad">本科</option><option value="graduate">研究生</option></select></div><div><label for="course-term">学期（可选）</label><input id="course-term" name="term" maxlength="40"></div><button>加入计算</button></form></details>
+  <details><summary>补充一门课程</summary><form id="course-form" class="grid three"><div><label for="course-name">课程名称</label><input id="course-name" name="name" maxlength="100" required></div><div><label for="credit">学分</label><input id="credit" name="credit" type="number" min="0.1" max="100" step="0.1" required></div><div><label for="point">官方课程绩点</label><input id="point" name="point" type="number" min="0" max="5" step="0.01" required></div><div><label for="course-level">培养层次</label><select id="course-level" name="level"><option value="undergrad" ${preferredLevel==='undergrad'?'selected':''}>本科</option><option value="graduate" ${preferredLevel==='graduate'?'selected':''}>研究生</option></select></div><div><label for="course-term">学期（可选）</label><input id="course-term" name="term" maxlength="40"></div><button>加入计算</button></form></details>
   <div class="actions"><label for="grade-filter-level">统计范围</label><select id="grade-filter-level"><option value="">全部层次</option><option value="undergrad" ${filterLevel==='undergrad'?'selected':''}>本科</option><option value="graduate" ${filterLevel==='graduate'?'selected':''}>研究生</option></select><label for="grade-filter-term">学期</label><select id="grade-filter-term"><option value="">全部学期</option>${terms.map(t=>`<option ${filterTerm===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
   <div class="table-wrap"><table><thead><tr><th>课程 / 来源</th><th>层次 / 学期</th><th>学分</th><th>绩点</th><th>计入</th><th>操作</th></tr></thead><tbody>${courses.map((c,i)=>({c,i})).filter(({c})=>selected.includes(c)).map(({c,i})=>`<tr><td>${esc(c.name)}<small class="course-source">${esc(c.code||'')}${c.code?' · ':''}${esc(c.source||'手动录入')}</small></td><td>${c.level==='undergrad'?'本科':c.level==='graduate'?'研究生':'未分类'}<small class="course-source">${esc(c.term||'未填学期')}</small></td><td>${c.credit}</td><td>${c.point}</td><td>${button(c.included===false?'未计入':'已计入','course-toggle',`data-index="${i}" aria-pressed="${c.included!==false}"`)}</td><td><button class="quiet" data-action="courseDelete" data-index="${i}">移除</button></td></tr>`).join('')}</tbody></table></div>${!selected.length?'<p class="empty">这个范围内还没有课程。导入后会保存在本机。</p>':''}</section>`;
  }

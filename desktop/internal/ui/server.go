@@ -294,6 +294,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/instance", protectAPI(s.handleInstance, http.MethodPost))
 	mux.HandleFunc("/api/health", protectAPI(s.handleHealth, http.MethodGet))
 	mux.HandleFunc("/api/status", protectAPI(s.handleStatus, http.MethodGet))
+	mux.HandleFunc("/api/releases", protectAPI(s.handleReleases, http.MethodGet))
 	mux.HandleFunc("/api/login", protectAPI(s.handleLogin, http.MethodPost))
 	mux.HandleFunc("/api/logout", protectAPI(s.handleLogout, http.MethodPost))
 	mux.HandleFunc("/api/diag", protectAPI(s.handleDiag, http.MethodGet))

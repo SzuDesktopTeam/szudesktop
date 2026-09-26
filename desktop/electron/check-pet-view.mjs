@@ -8,10 +8,19 @@ const html = read('pet.html');
 const render = read('pet-render.mjs');
 const preload = read('pet-preload.cjs');
 const gardenHTML = read('../index.html');
-for (const id of ['libao','cat-normal','cat-happy','cat-sleep','cat-sad','egret','turtle']) {
+for (const id of ['libao','libao-normal','libao-happy','libao-sleep','libao-sad','cat-normal','cat-happy','cat-sleep','cat-sad','egret','turtle',...['egret','turtle'].flatMap(s=>['normal','happy','sad','sleep'].map(state=>`${s}-${state}`))]) {
   const definition = new RegExp(`<symbol id="${id}"[\\s\\S]*?<\\/symbol>`);
   assert.ok(definition.test(html),`桌宠缺少 ${id}`);
   assert.equal(html.match(definition)?.[0],gardenHTML.match(definition)?.[0],`庭院与桌宠的 ${id} 立绘必须一致`);
+}
+for(const species of ['egret','turtle']){
+ const states=['normal','happy','sad','sleep'].map(state=>`${species}-${state}`);
+ const frames=states.map(id=>html.match(new RegExp(`<symbol id="${id}"[^>]*>([\\s\\S]*?)<\\/symbol>`))[1]);
+ assert.equal(new Set(frames).size,4,`${species} 四帧必须各有形态`);
+ for(const [index,id] of states.entries()){
+  assert.doesNotMatch(frames[index],/<use\b/,`${id} 应可独立导出明信片`);
+  assert.ok(render.includes(`'${id}': '0 0 32 32'`),`${id} 缺少桌宠 viewBox`);
+ }
 }
 
 // 每个动作都要有对应的 CSS 规则，否则状态机会推出看不见的动作。

@@ -3,12 +3,22 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {readPetSettings} from './pet-settings.mjs';
+import {readDesktopSettings} from './desktop-settings.mjs';
 import {petWindowBounds} from './pet-policy.mjs';
 
 async function until(read, message) {
   const end=Date.now()+6000;
   while(Date.now()<end){if(await read())return;await new Promise(r=>setTimeout(r,50));}
   throw Error(message);
+}
+
+// Migration adds only these defaults to old personal records. Keep every old
+// field in the comparison so accepting new fields cannot hide lost user data.
+function personalAfterMigration(data){
+  return {...data,
+    preferences:{noticeSource:'undergrad',studentLevel:'undergrad',...data.preferences},
+    todos:data.todos.map(todo=>({date:'',createdAt:0,completedAt:0,archived:false,...todo})),
+  };
 }
 
 // Exercise the same download, file input and confirmation used by users. This
@@ -19,7 +29,7 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   const seed=await snapshot();
   const original=structuredClone(seed.data);
   seed.data.profile.name='备份验收';
-  seed.data.todos=[{id:'backup-task',text:'验收后恢复学习记录',done:false,rewarded:false}];
+  seed.data.todos=[{id:'backup-task',text:'验收后恢复学习记录',done:false,rewarded:false,date:'',createdAt:0,completedAt:0,archived:false}];
   seed.data.courses=[{code:'backup-course',name:'合成课程',credit:2,point:3.5}];
   const saved=await fetch(baseUrl+'/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
   assert.ok(saved.ok,'synthetic backup fixture saved');
@@ -42,7 +52,8 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   assert.equal(backup.todos[0].id,'backup-task');
   assert.equal(backup.courses[0].code,'backup-course');
   assert.equal(backup.game.pets.length,4);
-  for(const key of ['profile','preferences','todos','reminders','semester'])assert.deepEqual(backup[key],seed.data[key],'export preserves '+key);
+  const expectedSeed=personalAfterMigration(seed.data);
+  for(const key of ['profile','preferences','todos','reminders','semester'])assert.deepEqual(backup[key],expectedSeed[key],'export preserves '+key);
   for(const key of ['coins','food','seeds','stock','plots','stats'])assert.deepEqual(backup.game[key],seed.data.game[key],'export preserves garden '+key);
   assert.equal(backup.password,undefined);
   assert.equal(backup.account,undefined);
@@ -76,7 +87,8 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   await until(async()=>(await snapshot()).revision>beforeReset.revision,'original upgrade fixture not restored');
   await ready();
   const reset=(await snapshot()).data;
-  for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],original[key],'original '+key+' retained');
+  const expectedOriginal=personalAfterMigration(original);
+  for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],expectedOriginal[key],'original '+key+' retained');
 }
 
 export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,screen,initialScale,userData,evidenceDir,baseUrl}){
@@ -139,10 +151,10 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
   assert.deepEqual(companions.map(p=>p.species),['libao','chestnut','egret','turtle'],'four base companions are available');
-  for(const [index,sprite] of [[2,'egret'],[3,'turtle'],[0,'libao']]){
+  for(const [index,sprite] of [[2,'egret'],[3,'turtle'],[1,'cat'],[0,'libao']]){
     getPetMenu().getMenuItemById(`switchPet:${index}`).click();
     await until(async()=>(await game()).active===index,'menu choice did not persist');
-    await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')==='#${sprite}'`),'desktop sprite did not follow the choice');
+    await until(()=>pet(`/^#${sprite}-(normal|happy|sad|sleep)$/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop sprite did not follow the choice');
     assert.equal(mainWin.isVisible(),false,'switching companions need not open the main window');
     await pet('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
     writeFileSync(path.join(evidenceDir,`companion-${sprite}.png`),(await petWin.webContents.capturePage()).toPNG());
@@ -152,7 +164,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await main("document.querySelector('.companion-choice[data-index=\"1\"]').click()");
   await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#cat-')"),'garden selection did not update desktop immediately');
   await main("document.querySelector('.companion-choice[data-index=\"0\"]').click()");
-  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href')==='#libao'"),'garden cannot select libao');
+  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#libao-')"),'garden cannot select libao');
   await main("document.querySelector('.companion-picker').scrollIntoView({block:'center'})");
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
   writeFileSync(path.join(evidenceDir,'companion-picker.png'),(await mainWin.webContents.capturePage()).toPNG());
@@ -178,8 +190,17 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   assert.ok(mainWin.isVisible(),'tray opens main');
   menu('隐藏宠物').click();
   assert.equal(petWin.isVisible(),false);
+  assert.equal(readDesktopSettings(userData).petVisible,false,'tray hide survives restart');
   menu('显示宠物').click();
   assert.equal(petWin.isVisible(),true);
+  assert.equal(readDesktopSettings(userData).petVisible,true,'tray show persists the choice');
+  const initialDesktop=await main('window.szuDesktop.desktopSettings()');
+  await main('window.szuDesktop.setDesktopSettings({petAlwaysOnTop:false,doNotDisturb:true,focusNotifications:false})');
+  assert.equal(petWin.isAlwaysOnTop(),false,'always-on-top can be disabled');
+  const quiet=readDesktopSettings(userData);
+  assert.equal(quiet.petAlwaysOnTop,false);assert.equal(quiet.doNotDisturb,true);assert.equal(quiet.focusNotifications,false);
+  await main(`window.szuDesktop.setDesktopSettings(${JSON.stringify({petAlwaysOnTop:initialDesktop.petAlwaysOnTop,doNotDisturb:initialDesktop.doNotDisturb,focusNotifications:initialDesktop.focusNotifications})})`);
+  assert.equal(petWin.isAlwaysOnTop(),initialDesktop.petAlwaysOnTop,'restore the chosen window level');
 
   for(const scale of [0.6,1,1.5]){
     sizeItems().find(item=>item.label.includes(`${scale*100}%`)).click();
@@ -204,6 +225,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   }
   writeFileSync(path.join(evidenceDir,'pet-settings.png'),(await mainWin.webContents.capturePage()).toPNG());
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"study\"]').click()");
+  await main("document.querySelector('[data-action=\"studyTab\"][data-tab=\"timetable\"]').click()");
   assert.ok(await main("Boolean(document.querySelector('#official-account [data-action=\"official-open\"]'))"),'school login entry rendered');
   assert.equal(await main("Boolean(document.querySelector('#session-cookie'))"),false,'installed UI does not ask for cookies');
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');

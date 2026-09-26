@@ -21,10 +21,10 @@ export const PET_SAY_MAX = 60;
 
 // 宠物名册镜像 engine.mjs 的 PETS：states=true 表示按睡眠/心情切换四帧。
 const PET_SPECIES = {
-  libao: {sprite: 'libao', states: false},
+  libao: {sprite: 'libao', states: true},
   chestnut: {sprite: 'cat', states: true},
-  egret: {sprite: 'egret', states: false},
-  turtle: {sprite: 'turtle', states: false},
+  egret: {sprite: 'egret', states: true},
+  turtle: {sprite: 'turtle', states: true},
 };
 const DEFAULT_SPECIES = 'libao';
 
@@ -86,11 +86,12 @@ export function petSay(text) {
   return String(text).slice(0, PET_SAY_MAX);
 }
 
-// 镜像 engine.mjs 的 petSprite()：荔宝单帧；栗栗按 sleeping/mood 四帧切换。
+// 镜像 engine.mjs 的 petSprite()：四位伙伴按 sleeping/mood 四帧切换。
 export function petSpriteFor(pet) {
   const spec = PET_SPECIES[pet?.species] || PET_SPECIES[DEFAULT_SPECIES];
   if (!spec.states) return spec.sprite;
-  return pet.sleeping ? 'cat-sleep' : pet.mood < 35 ? 'cat-sad' : pet.mood > 65 ? 'cat-happy' : 'cat-normal';
+  const state=pet?.sleeping?'sleep':pet?.mood<35?'sad':pet?.mood>65?'happy':'normal';
+  return `${spec.sprite}-${state}`;
 }
 
 // 从存档 game 段取当前伙伴，镜像 engine.mjs 的 activePet()。读不到就返回 null，

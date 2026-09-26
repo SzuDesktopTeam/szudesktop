@@ -10,7 +10,7 @@ const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {
 function fixture(){
  const results=[],toasts=[],writes=[],controls=[{disabled:false,isConnected:true}];
  const context=vm.createContext({
-  state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',
+  state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',studyTab:'focus',
   act,activePet,normalize,render(){},clocks(){},schoolUI:{sync(){}},
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
   navigate:page=>{context.page=page},
@@ -66,7 +66,7 @@ await check('busy, startup, and shutdown reject commands explicitly',async()=>{
 await check('navigation selects the requested real page and the correct garden section',async()=>{
  const f=fixture();await f.command('farm');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'farm');
  await f.command('garden');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'pet');
- await f.command('study');assert.equal(f.context.page,'study');await f.command('home');assert.equal(f.context.page,'home');
+ f.context.studyTab='grades';await f.command('study');assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'focus','专注通知与托盘学习入口必须回到专注分区');await f.command('home');assert.equal(f.context.page,'home');
  assert.equal(f.writes.length,0);assert.equal(f.results.length,4);assert.ok(f.results.every(r=>r.ok));
 });
 await check('pet selection saves the active companion and refuses invalid or stale choices',async()=>{
@@ -134,6 +134,17 @@ await check('care keeps the original form node, latest draft, focus, and selecti
   assert.deepEqual([input.selectionStart,input.selectionEnd,input.selectionDirection],[3,5,'backward']);
   assert.equal(focusOptions.preventScroll,true);assert.equal(f.results[0].ok,!conflict);
   assert.ok(f.writes.every(body=>!JSON.stringify(body).includes('等待时又写了几字')));
+ }
+});
+await check('care preserves the expanded snack panel after saving or refreshing a conflict',async()=>{
+ assert.match(source,/<details id="pet-care-details" class="care-details">/);
+ for(const open of [true,false])for(const conflict of [false,true]){
+  const f=fixture();f.context.page='garden';let panel={open};
+  f.context.document.getElementById=id=>id==='pet-care-details'?panel:null;
+  f.context.render=()=>{panel={open:false}};
+  if(conflict)f.context.api=async(_path,body)=>{if(body)throw Object.assign(Error('conflict'),{code:409});return {revision:5,data:createState()}};
+  await f.command('feed');
+  assert.equal(panel.open,open);assert.equal(f.results[0].ok,!conflict);
  }
 });
 await check('shell size updates change existing controls without saving back',()=>{

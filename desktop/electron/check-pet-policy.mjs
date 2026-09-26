@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {petSprite} from '../assets/garden/engine.mjs';
 import {petWindowOptions,petWindowBounds,petScaleClamp,petSay,petSpriteFor,activePetOf,isPetSender,PET_WIDTH,PET_HEIGHT,PET_MARGIN,PET_SAY_MAX,PET_SCALE_MIN,PET_SCALE_MAX,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_ACTIONS,petBaseAction,petActionFor,petIdleWeights,petIdleAction,petPresetFor} from './pet-policy.mjs';
 
 // 窗口选项：spec §7 的每一项都要钉死。
@@ -30,10 +31,17 @@ assert.equal(petSay('荔'.repeat(61)),'荔'.repeat(60));
 assert.equal(petSay('b'.repeat(120)).length,60);
 assert.equal(petSay(2026),'2026');
 
-// 立绘映射：默认荔宝；栗栗按 sleeping/mood 四帧。
-assert.equal(petSpriteFor({species:'libao',mood:5,sleeping:true}),'libao');
-assert.equal(petSpriteFor({species:'egret',mood:85,sleeping:false}),'egret');
-assert.equal(petSpriteFor({species:'turtle',mood:5,sleeping:true}),'turtle');
+// 立绘映射：荔宝与栗栗都按 sleeping/mood 四帧。
+assert.equal(petSpriteFor({species:'libao',mood:5,sleeping:true}),'libao-sleep');
+assert.equal(petSpriteFor({species:'libao',mood:34}),'libao-sad');
+assert.equal(petSpriteFor({species:'libao',mood:35}),'libao-normal');
+assert.equal(petSpriteFor({species:'libao',mood:65}),'libao-normal');
+assert.equal(petSpriteFor({species:'libao',mood:66}),'libao-happy');
+for(const species of ['egret','turtle'])for(const [mood,sleeping,state] of [[34,false,'sad'],[35,false,'normal'],[65,false,'normal'],[66,false,'happy'],[90,true,'sleep']]){
+  const pet={species,mood,sleeping};
+  assert.equal(petSpriteFor(pet),`${species}-${state}`);
+  assert.equal(petSpriteFor(pet),petSprite(pet),'庭院和桌面伙伴状态必须一致');
+}
 assert.equal(petSpriteFor({species:'chestnut',sleeping:true,mood:90}),'cat-sleep');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:34}),'cat-sad');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:35}),'cat-normal');
@@ -41,8 +49,8 @@ assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:50}),'cat-norm
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:65}),'cat-normal');
 assert.equal(petSpriteFor({species:'chestnut',sleeping:false,mood:66}),'cat-happy');
 // 未知/缺失种类回退默认荔宝（与 engine 的 PETS[DEFAULT_PET] 兜底一致）。
-assert.equal(petSpriteFor({species:'unknown',sleeping:false,mood:90}),'libao');
-assert.equal(petSpriteFor({}),'libao');
+assert.equal(petSpriteFor({species:'unknown',sleeping:false,mood:90}),'libao-happy');
+assert.equal(petSpriteFor({}),'libao-normal');
 
 // activePet：镜像 engine.mjs 的 activePet()，读不到返回 null 不伪造。
 const pets=[{species:'libao'},{species:'chestnut',mood:90,sleeping:false}];

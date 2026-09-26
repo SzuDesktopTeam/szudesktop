@@ -12,6 +12,8 @@ files:
   - preload.cjs
   - pet-policy.mjs
   - pet-settings.mjs
+  - desktop-settings.mjs
+  - focus-notifications.mjs
   - smoke-pet.mjs
   - school-window.mjs
   - school-policy.mjs
@@ -27,6 +29,12 @@ extraResources:
   # 托盘图标：打包后 main.mjs 从 process.resourcesPath 解析。
   - from: ../assets/szudesktop.ico
     to: szudesktop.ico
+  - from: ../../LICENSE
+    to: licenses/LICENSE
+  - from: ../../THIRD_PARTY_NOTICES.md
+    to: licenses/THIRD_PARTY_NOTICES.md
+  - from: ../assets/fonts/LICENSE-OFL.txt
+    to: licenses/FONT-LICENSE-OFL.txt
 win:
   target: nsis
   icon: ../assets/szudesktop.ico

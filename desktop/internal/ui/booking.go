@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -17,10 +18,24 @@ import (
 
 const bookingPublic = "http://swzx.szu.edu.cn/venue-api"
 
-// 公开空位查询不需要登录。被重定向或拿到 401 说明这张网根本到不了学校的公开接口，
-// 不能显示成「没有空位」。
-var errBookingUnreachable = errors.New("学校预约服务没有返回公开数据。公开空位查询需要在校园网内，结果请到官方页面核对")
+// Redirects and 401s identify a response boundary, not the user's network location.
+var errBookingUnreachable = errors.New("学校预约服务要求登录或重定向，本次没有取得公开数据。即使已在校园网，也请在官方 WebVPN 预约页核对；这不代表没有空位")
 var errBookingFormat = errors.New("学校预约数据格式变化，本次未显示为成功，请到官方页面核对")
+
+func bookingConnectionError(err error) error {
+	var dnsErr *net.DNSError
+	var networkErr net.Error
+	message := "学校预约服务连接中断或未能建立连接"
+	switch {
+	case errors.As(err, &dnsErr):
+		message = "学校预约服务名称解析失败（DNS）"
+	case errors.Is(err, context.DeadlineExceeded), errors.As(err, &networkErr) && networkErr.Timeout():
+		message = "学校预约服务连接或读取超时"
+	case errors.Is(err, io.EOF), errors.Is(err, io.ErrUnexpectedEOF):
+		message = "学校预约服务返回空响应，连接在收到完整数据前结束"
+	}
+	return errors.New(message + "。无法据此判断是否在校园网；若已在校内，请检查代理、TUN 或 DNS 是否接管学校域名，也可打开官方 WebVPN 预约页核对")
+}
 
 // bookingService 只做只读查询。办理预约在学校官方页面完成，
 // 这里不留任何写操作通路，也不保存用户粘贴的 Cookie（STATUS.md F23）。
@@ -150,7 +165,7 @@ func (b *bookingService) request(ctx context.Context, path string, query url.Val
 	req.Header.Set("User-Agent", ehallUserAgent)
 	res, err := b.client.Do(req)
 	if err != nil {
-		return errors.New("无法连接学校预约服务；公开空位查询需要校园网")
+		return bookingConnectionError(err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 401 || (res.StatusCode >= 300 && res.StatusCode < 400) {
@@ -163,7 +178,13 @@ func (b *bookingService) request(ctx context.Context, path string, query url.Val
 		return fmt.Errorf("学校预约服务返回 HTTP %d", res.StatusCode)
 	}
 	data, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))
-	if err != nil || len(data) > ehallMaxBody {
+	if err != nil {
+		return bookingConnectionError(err)
+	}
+	if len(data) == 0 {
+		return bookingConnectionError(io.EOF)
+	}
+	if len(data) > ehallMaxBody {
 		return errBookingFormat
 	}
 	var envelope struct {

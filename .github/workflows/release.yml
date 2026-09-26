@@ -23,6 +23,10 @@ jobs:
         run: python desktop/sync-assets.py
       - name: 庭院规则回归
         run: node desktop/check-ui.mjs
+      - name: 庭院奖励回归
+        run: |
+          node desktop/check-rewards.mjs
+          node desktop/check-garden-progress.mjs
       - name: 校园服务与成绩导入回归
         run: node desktop/check-campus.mjs
       - name: College notices regression
@@ -38,16 +42,23 @@ jobs:
         run: |
           node desktop/check-network-ui.mjs
           node desktop/check-workspace-ui.mjs
+          node desktop/check-productivity.mjs
           node desktop/check-interactions.mjs
           node desktop/check-pet-commands.mjs
       - name: Settings autostart UI regression
         run: node desktop/check-autostart-ui.mjs
+      - name: Release check and feedback regression
+        run: |
+          node desktop/check-release-ui.mjs
+          node desktop/check-feedback.mjs
+          python desktop/check_licenses.py
       - name: Electron sidecar 回归
         run: |
           node desktop/electron/check-sidecar.mjs
           node desktop/electron/check-window-policy.mjs
           node desktop/electron/check-pet-policy.mjs
           node desktop/electron/check-pet-settings.mjs
+          node desktop/electron/check-desktop-settings.mjs
           node desktop/electron/check-pet-view.mjs
           node desktop/electron/check-school-policy.mjs
       - name: 琴房预约回归
@@ -171,6 +182,11 @@ jobs:
         run: python desktop/smoke_windows.py
       - name: 生成发布包
         run: python desktop/make_release.py
+      - name: 检查便携包许可文件
+        shell: pwsh
+        run: |
+          $version = (Get-Content internal/version/VERSION -Raw).Trim()
+          python desktop/check_licenses.py --portable "dist/szudesktop-$version-windows-amd64.zip"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: szudesktop-windows-amd64
@@ -205,6 +221,8 @@ jobs:
       - name: 打 Windows 安装包
         run: node build.mjs --skip-sidecar
         working-directory: desktop/electron
+      - name: 检查安装包资源中的许可文件
+        run: python desktop/check_licenses.py --electron desktop/electron/release/win-unpacked
       - name: 下载固定的公开旧版用于升级验收
         env:
           GH_TOKEN: ${{ github.token }}

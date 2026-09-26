@@ -6,6 +6,14 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   // 大小来自主进程统一设置；滑杆、菜单和滚轮共享同一数值。
   petScale: () => ipcRenderer.invoke('szu:pet-scale-get'),
   setPetScale: (value) => ipcRenderer.invoke('szu:pet-scale-set', value),
+  desktopSettings: () => ipcRenderer.invoke('szu:desktop-settings-get'),
+  setDesktopSettings: (patch) => ipcRenderer.invoke('szu:desktop-settings-set', patch),
+  onDesktopSettings: (callback) => {
+    if (typeof callback !== 'function') return () => {};
+    const listener = (_event, settings) => callback(settings);
+    ipcRenderer.on('szu:desktop-settings', listener);
+    return () => ipcRenderer.removeListener('szu:desktop-settings', listener);
+  },
   onPetScale: (callback) => {
     if (typeof callback !== 'function') return () => {};
     const listener = (_event, scale) => {

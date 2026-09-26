@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain, Menu, screen, shell, Tray} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, Menu, Notification, screen, shell, Tray} from 'electron';
 import {writeFileSync, mkdirSync, renameSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
@@ -9,6 +9,8 @@ import {petWindowOptions,petWindowBounds,petScaleClamp,petPresetFor,petActionFor
 import {readPetSettings,writePetSettings} from './pet-settings.mjs';
 import {createSchoolWindows} from './school-window.mjs';
 import {isSchoolURL} from './school-policy.mjs';
+import {DESKTOP_DEFAULTS,readDesktopSettings,writeDesktopSettings,validateDesktopPatch,createLoginItemControl,isQuietStartup} from './desktop-settings.mjs';
+import {createFocusNotifier} from './focus-notifications.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 // 菜单与主界面共用同一份庭院规则，包含离线成长；打包时直接复制源模块。
@@ -30,7 +32,56 @@ let handle=null,mainWin=null,quitting=false,quitReady=false,shutdownPromise=null
 let petWin=null,tray=null,trayMenu=null,petTimer=null,petGreeted=false,petHtmlUrl=null,petScale=PET_SCALE_DEFAULT;
 let petMenu=null,petGame=null,petPosition=null,petDrag=null;
 let startup=null,schoolWindows=null;
+let desktopPreferences={...DESKTOP_DEFAULTS},loginItems=null,focusNotifier=null,focusTimer=null,focusNotification=null;
 const smokeErrors=[];
+
+function desktopSettingsSnapshot(){
+  const {lastNotifiedFocus,...preferences}=desktopPreferences;
+  return {...preferences,launchAtLogin:loginItems?.get()||false,launchAtLoginSupported:Boolean(loginItems?.supported),notificationsSupported:Notification.isSupported()};
+}
+function saveDesktopPreferences(value){
+  desktopPreferences=writeDesktopSettings(app.getPath('userData'),value);
+}
+function applyDesktopSettings(value){
+  const patch=validateDesktopPatch(value),{launchAtLogin,...preferences}=patch;
+  if(Object.hasOwn(patch,'launchAtLogin'))loginItems.set(launchAtLogin);
+  if(Object.keys(preferences).length)saveDesktopPreferences({...desktopPreferences,...preferences});
+  if(petWin&&!petWin.isDestroyed()){
+    petWin.setAlwaysOnTop(desktopPreferences.petAlwaysOnTop,'screen-saver');
+    if(desktopPreferences.petVisible)petWin.showInactive();else petWin.hide();
+  }else if(desktopPreferences.petVisible&&!quitting)void createPetWindow().then(refreshTrayMenu).catch(()=>{});
+  if((!desktopPreferences.focusNotifications||desktopPreferences.doNotDisturb)&&focusNotification)focusNotification.close();
+  refreshTrayMenu();
+  const result=desktopSettingsSnapshot();
+  if(mainWin&&!mainWin.isDestroyed())mainWin.webContents.send('szu:desktop-settings',result);
+  return result;
+}
+function changeDesktopSettings(patch){
+  try{applyDesktopSettings(patch);}catch(error){refreshTrayMenu();dialog.showErrorBox('桌面设置未能保存',error.message);}
+}
+function startFocusNotifications(){
+  focusNotifier=createFocusNotifier({
+    loadWorkspace:async()=>{
+      const response=await fetch(handle.baseUrl+'/api/workspace',{signal:AbortSignal.timeout(5000)});
+      if(!response.ok)throw Error('专注存档暂时不可读');
+      return response.json();
+    },
+    readSettings:()=>desktopPreferences,saveSettings:saveDesktopPreferences,
+    isSupported:()=>!smoke&&Notification.isSupported(),
+    notify:({duration})=>{
+      focusNotification?.close();
+      const notification=new Notification({title:'这一段专注完成了',body:`你设定的 ${duration} 分钟已经结束。点这里回到学习工具领取奖励。`,icon:petIconPath()});
+      focusNotification=notification;
+      notification.on('click',()=>dispatchPetCommand('study'));
+      notification.on('close',()=>{if(focusNotification===notification)focusNotification=null;});
+      notification.on('failed',()=>{if(focusNotification===notification)focusNotification=null;});
+      notification.show();
+    },
+  });
+  void focusNotifier.check();
+  focusTimer=setInterval(()=>void focusNotifier.check(),2000);
+  focusTimer.unref();
+}
 
 // 宠物窗要显示的图标；开发/打包路径解析方式与 sidecarCommand() 保持一致。
 function petIconPath(){
@@ -72,7 +123,7 @@ async function createPetWindow(){
   if(quitting)return;
   const {workArea}=petPosition?screen.getDisplayNearestPoint(petPosition):screen.getPrimaryDisplay();
   petHtmlUrl=pathToFileURL(path.join(here,'pet.html')).href;
-  petWin=new BrowserWindow({...petWindowOptions(workArea,petScale,petPosition),
+  petWin=new BrowserWindow({...petWindowOptions(workArea,petScale,petPosition),alwaysOnTop:desktopPreferences.petAlwaysOnTop,
     webPreferences:{preload:path.join(here,'pet-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   petWin.setMenuBarVisibility(false);
   const pwc=petWin.webContents;
@@ -87,8 +138,8 @@ async function createPetWindow(){
   petWin.on('closed',()=>{petWin=null;});
   await petWin.loadFile(path.join(here,'pet.html'));
   if(quitting||!petWin||petWin.isDestroyed())return;
-  petWin.setAlwaysOnTop(true,'screen-saver');
-  petWin.show();
+  petWin.setAlwaysOnTop(desktopPreferences.petAlwaysOnTop,'screen-saver');
+  if(desktopPreferences.petVisible)petWin.showInactive();
   syncPetGeometry();
   // 首帧推送：立绘 + 招呼台词，随后每 ~30s 刷新一次。
   await pushPetState();
@@ -162,7 +213,8 @@ async function openPetMenu(){
     ]},
     {type:'separator'},
     {id:'home',label:'打开主窗口',click:()=>dispatchPetCommand('home')},
-    {label:'隐藏宠物',click:()=>{petWin?.hide();refreshTrayMenu();}},
+    {label:'宠物置顶',type:'checkbox',checked:desktopPreferences.petAlwaysOnTop,click:()=>changeDesktopSettings({petAlwaysOnTop:!desktopPreferences.petAlwaysOnTop})},
+    {label:'隐藏宠物',click:()=>changeDesktopSettings({petVisible:false})},
     {label:'退出应用',click:()=>app.quit()},
   ]);
   petWin.setFocusable(true);
@@ -181,14 +233,10 @@ function refreshTrayMenu(){
   if(!tray)return;
   const visible=Boolean(petWin&&!petWin.isDestroyed()&&petWin.isVisible());
   trayMenu=Menu.buildFromTemplate([
-    {label:visible?'隐藏宠物':'显示宠物',click:()=>{
-      if(petWin&&!petWin.isDestroyed()){
-        if(petWin.isVisible())petWin.hide();
-        else{petWin.show();petWin.setAlwaysOnTop(true,'screen-saver');}
-        refreshTrayMenu();
-      }else void createPetWindow().then(refreshTrayMenu).catch(()=>{});
-    }},
+    {label:visible?'隐藏宠物':'显示宠物',click:()=>changeDesktopSettings({petVisible:!visible})},
+    {label:'宠物置顶',type:'checkbox',checked:desktopPreferences.petAlwaysOnTop,click:()=>changeDesktopSettings({petAlwaysOnTop:!desktopPreferences.petAlwaysOnTop})},
     {label:'宠物大小',submenu:petSizeMenu()},
+    {label:'勿扰（暂停专注提醒）',type:'checkbox',checked:desktopPreferences.doNotDisturb,click:()=>changeDesktopSettings({doNotDisturb:!desktopPreferences.doNotDisturb})},
     {label:'打开主窗口',click:showMainWindow},
     {type:'separator'},
     {label:'退出',click:()=>app.quit()},
@@ -267,6 +315,9 @@ async function recordSmoke(){
   if(process.env.SZU_SMOKE_QUIT_AFTER_REPORT==='1')app.quit();
 }
 async function boot(){
+  if(process.platform==='win32')app.setAppUserModelId('com.szudesktop.app');
+  desktopPreferences=readDesktopSettings(app.getPath('userData'));
+  loginItems=createLoginItemControl(app);
   handle=await startSidecar(sidecarCommand());
   if(quitting)return;
   schoolWindows=createSchoolWindows(()=>handle.baseUrl);
@@ -309,10 +360,13 @@ async function boot(){
   });
   mainWin.on('closed',()=>{mainWin=null;});
   await mainWin.loadURL(handle.baseUrl);
-  mainWin.show();
+  if(!isQuietStartup(process.argv))mainWin.show();
   const petSettings=readPetSettings(app.getPath('userData'));
   petScale=petSettings.scale;petPosition=petSettings.position||null;
   if(!quitting)await startPet();
+  // Quiet login still needs an accessible way back if the system tray failed.
+  if(!quitting&&!tray)mainWin.show();
+  if(!quitting)startFocusNotifications();
   await recordSmoke();
 }
 
@@ -332,6 +386,14 @@ else{
   ipcMain.handle('szu:pet-scale-set',(event,value)=>{
     if(!isTrustedSender(event,mainWin,handle?.baseUrl))throw Error('请求来源不匹配');
     return applyPetScale(value);
+  });
+  ipcMain.handle('szu:desktop-settings-get',event=>{
+    if(!isTrustedSender(event,mainWin,handle?.baseUrl))throw Error('请求来源不匹配');
+    return desktopSettingsSnapshot();
+  });
+  ipcMain.handle('szu:desktop-settings-set',(event,value)=>{
+    if(!isTrustedSender(event,mainWin,handle?.baseUrl))throw Error('请求来源不匹配');
+    return applyDesktopSettings(value);
   });
   for(const [channel,method] of [['szu:school-open','open'],['szu:school-sync','sync'],['szu:school-clear','clear']]){
     ipcMain.handle(channel,(event,value)=>{
@@ -366,7 +428,7 @@ else{
       petDrag=null;
     }
   });
-  app.on('second-instance',showMainWindow);
+  app.on('second-instance',(_event,argv)=>{if(!isQuietStartup(argv))showMainWindow();});
   app.whenReady().then(()=>{
     const reposition=()=>{
       if(petWin&&!petWin.isDestroyed()){
@@ -403,6 +465,7 @@ else{
     quitting=true;
     clearInterval(healthTimer);
     clearInterval(petTimer);petTimer=null;
+    clearInterval(focusTimer);focusTimer=null;focusNotifier?.stop();focusNotification?.close();
     if(!shutdownPromise)shutdownPromise=(async()=>{
       try{await startup;}catch{}
       // Close our renderer first so its event stream cannot delay Go's graceful shutdown.

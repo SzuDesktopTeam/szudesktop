@@ -53,7 +53,11 @@ func protectAPI(next http.HandlerFunc, methods ...string) http.HandlerFunc {
 				return
 			}
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		limit := int64(1 << 20)
+		if r.URL.Path == "/api/workspace" {
+			limit = workspaceMaxBytes
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, limit)
 		next(w, r)
 	}
 }

@@ -2,60 +2,66 @@
 
 # szuDesktop · Lychee Garden
 
-A small green corner for everyday life at Shenzhen University: the campus network,
-school services, study tools, and a little garden that keeps growing even offline.
+A little piece of Shenzhen University, on your desktop.
+
+Choose a pixel companion, spend a little time focusing, and come back to a harvest.
+Your everyday campus tools live here too.
 
 <p>
-  <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-4a6fa5?style=flat-square">
-  <img alt="go" src="https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=flat-square&logo=go&logoColor=white">
+  <img alt="desktop platform" src="https://img.shields.io/badge/desktop-Windows-4a6fa5?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-2f7d32?style=flat-square">
   <img alt="release" src="https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=c9a227">
-  <img alt="runtime" src="https://img.shields.io/badge/runtime-no%20dependencies-6b7280?style=flat-square">
 </p>
 
 [简体中文](../README.md) · **English**
 
 Unofficial · Built by a student · Not affiliated with Shenzhen University
 
-[Download](#download) · [Features](#features) · [Command line](#command-line-szunet) · [FAQ](#faq) · [Privacy](#privacy-and-security) · [Development status](STATUS.md)
+**[Download for Windows · beta0.9.2](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.2/szuDesktop-Setup-0.9.2.exe)**
+
+[Other downloads and release details](#download) · [Features](#features) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues) · [FAQ](#faq) · [Development status](STATUS.md)
 
 </div>
 
 ---
 
-## Preview
+## Source preview: preparing for beta0.9.3
 
-| Main window | Lychee Garden | Network sign-in |
-| :---------: | :-----------: | :-------------: |
-| ![Main window](screenshot-desktop.png) | ![Lychee Garden](screenshot-garden.png) | ![Network sign-in](screenshot-login.png) |
+**These changes are not publicly released. The download above is still beta0.9.2; local beta0.9.3 installer and portable candidates have been built.** The home, farm, companion room and study screenshots below come from the same candidate with a separate test save. Key browser workflows and build contents have been checked; actual installation, upgrades, system notifications and launch at login still need validation.
 
----
+![Unreleased home page preview from the current source](screenshot-home-preview.png)
 
-## What it solves
+An original pixel-art lakeside scene now surrounds six working plots. Select a plot, then choose seeds, plant, water or harvest from one tool panel. The companion room brings care, growth and daily goals together. Reward messages show actual gains, and the crop collection only lights up after a real harvest.
 
-The campus network at Shenzhen University is split into **two zones that do not
-work with each other**, each using a completely different sign-in method:
+![Unreleased lakeside farm preview using a separate test save](screenshot-farm-preview.png)
 
-| Zone | System | How it works |
-| :--- | :----- | :----------- |
-| Teaching / office / library areas | SRun (深澜) | Rolled out in early 2025. Password goes through HMAC-MD5, user data through XXTEA with a custom Base64, plus a SHA1 checksum |
-| Dormitory / staff areas | Dr.COM (ePortal) | A single GET request is enough |
+[Companion room](screenshot-garden-preview.png) · [Study and weekly review](screenshot-study-preview.png) · [An actual exported garden postcard](screenshot-share-preview.png). Existing local saves remain compatible, with revised progression rules. Crops do not wither, and daily goals require no streak. The original garden backdrop was generated with the built-in image tool and is bundled with the app.
 
-That creates two headaches:
+Implemented in the current source:
 
-1. **Every tutorial and script written before 2024 fails in the teaching area** —
-   they were all built for the old Dr.COM.
-2. **Nobody explains the error messages** — `ldap auth error`, `Rad:userid error1`,
-   `登陆失败[05]`, `Unknow ac-type`… so people just guess and retry.
+- **A clearer study workflow.** Separate focus, timetable and grades views; editable todos with dates, completion records, archives and restoration. Focus accepts 1–120 minutes and an optional todo, with completed sessions in a seven-day review. It does not automatically mark the todo complete.
+- **Fairer progression.** Each completed and claimed focus minute gives one garden coin and one growth point. Switching companions no longer removes crop unlocks; longer crops give more per harvest. Each companion's first three pats per day give growth, with further interaction still available.
+- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. All four companions have normal, happy, low-mood and sleeping states, and the four companions share 56 distinct care lines. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
+- **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. Actual candidate installer behavior still needs verification.
+- **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
 
-szuDesktop handles both: **one button to sign in, one button to tell you where it got stuck.**
+All 25 relevant check scripts and the Go checks passed. Real browser workflows covered focus, todo editing and archiving, planting, watering, harvesting, restored preferences, release lookup and PNG preview/save. The final farm scrolls fully without horizontal overflow at 420px; candidate files, build resources and license materials were checked. Full art consistency, native installation behavior, school services and longer-term balance still need their respective validation or trials. Implementation, checksums and evidence stay in [STATUS section 55](STATUS.md#55-产品体验实施与候选版准备2026-09-27源码未发布).
 
-It does not decide the zone by "can I reach the portal". It looks at the **protocol
-fingerprint** — the handshake behaviour that only that protocol has (SRun: whether
-`get_challenge` succeeds; Dr.COM: whether the ePortal login endpoint exists). The reason is
-practical: the dorm portal also returns HTTP 200 on machines in the teaching area, so a
-plain reachability test mis-detects the zone while offline and then fires the Dr.COM
-protocol at an endpoint that isn't there.
+The product review, current UX01–UX26 status and proposed seven-day trial are tracked in [STATUS section 54](STATUS.md#54-面向真实用户的完整产品审查2026-09-27分析与提案). Source improvements are not yet part of the downloadable installer. Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
+
+## What you can do today
+
+The following describes the downloadable **beta0.9.2** release.
+
+- **Keep a companion on your desktop.** Choose Libao, Chestnut, Xiaobai or A-Qing to accompany your work. Click to care for them, drag them into place and scroll to resize. Their names and growth stay in your local save.
+- **Give focus a small reward.** Write a todo, start a 5, 25 or 45-minute focus session, then claim companion growth and garden coins. Grow crops, water them and decorate your room; crops keep growing while you are away.
+- **Find campus tools in one place.** Read public college notices and the official calendar, open common school services and run diagnostics when the campus network will not connect.
+
+The garden, todos and focus timer work offline without a school account. The floating desktop companion is included in the Windows installer; macOS and Linux currently have command-line tools.
+
+**Personal school services are still being tested:** undergraduate/graduate timetables and grades, installer login handoff, in-app booking and college piano access are not all verified, so complete functionality is not yet guaranteed. See the [feature table](#features) for current support.
+
+[Tell us what was awkward or what you would like to use next](https://github.com/SzuDesktopTeam/szudesktop/issues). Describe what you were trying to do and where you got stuck. Please leave out passwords, cookies and personal grades.
 
 ---
 
@@ -71,7 +77,7 @@ The current installer is **[szuDesktop-Setup-0.9.2.exe](https://github.com/SzuDe
 | Current version | `beta0.9.2` · Released; four companions, cross-version upgrade and backup restoration checked |
 | Saved data | Both Windows editions use the same local garden and study records; export a backup from Settings before updating |
 
-The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. Installer autostart is still not implemented.
+The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. The published beta0.9.2 installer cannot enable launch at login; the local beta0.9.3 candidate adds this option, with actual launch-at-login behavior still awaiting validation.
 
 Released on 2026-09-26: [PR #17](https://github.com/SzuDesktopTeam/szudesktop/pull/17) is merged and the [beta0.9.2 release checks](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36242237913) passed. Upgrading from the published beta0.9.1 installer preserved garden and study records, encrypted account data and pet settings, removed obsolete program resources, and passed backup export/restoration, reopening and uninstall checks. These checks use synthetic data; live school-account boundaries remain in [STATUS](STATUS.md).
 
@@ -96,15 +102,19 @@ Export a backup from Settings before upgrading. A clean Windows environment pass
 
 The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Four companions are released and this cross-version upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Gaps stay in [STATUS section 50.2](STATUS.md#502-10-剩余任务暂不部署后端). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
 
-### First run
+### First run (released beta0.9.2)
 
-1. Open the app and go to **Campus network**
-2. Enter your campus card number and unified identity password; tick "remember" if you
-   don't want to type it every time
-3. Press **Sign in** — it detects whether you're in the teaching or dorm area and uses
-   the matching protocol
-4. If it fails, press **Diagnostics** — it lists the zone decision, portal reachability,
-   protocol fingerprint and what that means
+1. Open **Lychee Garden → Companion room** and choose a companion. The installer edition also switches the floating desktop pet.
+2. Visit **My farm** to see your first radishes already planted; they are ready in about a minute. Or write a todo and try a 5-minute focus session. No school account is needed.
+3. Open notices, the calendar or official school links when you need them.
+
+To connect to the campus network, open **Campus network**, enter your campus card number and unified identity password, then sign in. Tick **Remember** if you want credentials saved after a successful sign-in. Run **Diagnostics** if the connection fails. Campus network authentication and school business login are separate.
+
+### Your first session in the source preview
+
+A new save starts with 40 garden coins, three pet snacks, four radish seeds, two strawberry seeds and one already planted radish plot. Choose a companion, write a small todo and try five minutes of focus; completing and claiming it gives five coins and five growth points. Radishes take about one minute, or about 45 seconds if watered immediately, and yield two radishes plus one growth point. No school account is needed.
+
+The story progresses over seven different visiting days without resetting when you miss a day. Records stay local. Missing dates and focus history are not invented for old saves; existing totals, companion growth and claimed medals are preserved.
 
 ### Opening and exiting
 
@@ -115,7 +125,7 @@ The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment 
   (meant for headless / sidecar use — the Electron shell starts the Go engine the same way)
 - A short, skippable guide appears on first launch; it explains where your data lives,
   how to quit, and what to try first
-- The installer edition can disable an existing autostart entry but does not create one in this release. Portable and CLI autostart remain available; unreadable status is reported explicitly
+- The published beta0.9.2 installer can disable an existing autostart entry but does not create one. Portable and CLI autostart remain available; unreadable status is reported explicitly. The source preview's new opt-in control is described above and is not enabled on the user's behalf
 
 ### Where my data lives
 
@@ -156,6 +166,8 @@ These entries describe beta0.9.2. Verified desktop features and queries are dist
 
 **Current limitations:** actual score fields and pagination still need live validation; balance is not integrated. Graduate alternative login and the current timetable have live evidence. The undergraduate page returned 403 for the test account, the official graduate scores page did not render its list, and the college piano service could not be reached. The official browser allowed slot selection and opened the booking confirmation form; no reservation was submitted. Installer room details and subsequent browser connectivity still have unresolved acceptance gaps. Full booking and business-session handoff require validation. See [STATUS.md](STATUS.md).
 
+On 2026-09-27, the user confirmed being on the campus network without an undergraduate-authorized test account. The official graduate page was reachable but its session had expired; a new login is pending. Local room queries still encountered access failures. Source error handling now distinguishes those failures instead of always reporting a campus-network requirement. This is not a new successful school-service acceptance test.
+
 **College notice filtering:** selecting a college automatically reads its public column. Unsupported units have an official-site link; authenticated internal notices are not included. This update is included in beta0.6.1.
 
 **Booking flow:** the installer opens a separate official school window for WebVPN, verification, selecting a slot, submitting and viewing results. Its isolated login state lasts only until full application exit. The Go service only reads public rooms and availability; it has no reservation write endpoints and does not confirm reservations automatically. The portable edition continues to use the system browser.
@@ -173,6 +185,37 @@ A real graduate account passed alternative login and displayed the school's curr
 The official calendar is checked daily. Windows OCR prefers Simplified Chinese; failed refreshes preserve the cache and report the cause. Teaching weeks support manual overrides. College piano rooms use a separate campus system with read-only queries; its current HTTP service should only be used on a trusted campus network with its own credentials.
 
 ---
+
+## How campus network authentication works
+
+<details>
+<summary>Why teaching and dormitory areas need different sign-in methods</summary>
+
+The campus network at Shenzhen University is split into **two zones that do not
+work with each other**, each using a completely different sign-in method:
+
+| Zone | System | How it works |
+| :--- | :----- | :----------- |
+| Teaching / office / library areas | SRun (深澜) | Rolled out in early 2025. Password goes through HMAC-MD5, user data through XXTEA with a custom Base64, plus a SHA1 checksum |
+| Dormitory / staff areas | Dr.COM (ePortal) | A single GET request is enough |
+
+That creates two headaches:
+
+1. **Every tutorial and script written before 2024 fails in the teaching area** —
+   they were all built for the old Dr.COM.
+2. **Nobody explains the error messages** — `ldap auth error`, `Rad:userid error1`,
+   `登陆失败[05]`, `Unknow ac-type`… so people just guess and retry.
+
+szuDesktop handles both: **one button to sign in, one button to tell you where it got stuck.**
+
+It does not decide the zone by "can I reach the portal". It looks at the **protocol
+fingerprint** — the handshake behaviour that only that protocol has (SRun: whether
+`get_challenge` succeeds; Dr.COM: whether the ePortal login endpoint exists). The reason is
+practical: the dorm portal also returns HTTP 200 on machines in the teaching area, so a
+plain reachability test mis-detects the zone while offline and then fires the Dr.COM
+protocol at an endpoint that isn't there.
+
+</details>
 
 ## Command line szunet
 
@@ -307,6 +350,8 @@ You need Go (see `go.mod`), Python 3 and Node.js.
 ```text
 python desktop/sync-assets.py      # sync interface assets
 node   desktop/check-ui.mjs        # the regressions below all run in CI
+node   desktop/check-rewards.mjs
+node   desktop/check-garden-progress.mjs
 node   desktop/check-campus.mjs
 node   desktop/check-notices.mjs
 node   desktop/check-session-ui.mjs
@@ -315,11 +360,16 @@ node   desktop/check-school.mjs
 node   desktop/check-booking.mjs
 node   desktop/check-network-ui.mjs
 node   desktop/check-workspace-ui.mjs
+node   desktop/check-productivity.mjs
 node   desktop/check-autostart-ui.mjs
+node   desktop/check-release-ui.mjs
+node   desktop/check-feedback.mjs
+python desktop/check_licenses.py
 node   desktop/electron/check-sidecar.mjs # Electron startup, shutdown and reuse regression
 node   desktop/electron/check-window-policy.mjs
 node   desktop/electron/check-pet-policy.mjs
 node   desktop/electron/check-pet-settings.mjs
+node   desktop/electron/check-desktop-settings.mjs
 node   desktop/electron/check-pet-view.mjs
 node   desktop/electron/check-school-policy.mjs
 node   desktop/check-interactions.mjs

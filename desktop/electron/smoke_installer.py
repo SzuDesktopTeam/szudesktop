@@ -242,8 +242,16 @@ def seed_upgrade_data(base_url):
 def assert_user_data(data, expected):
     # The UI smoke intentionally feeds/switches pets. Compare personal records
     # and progression, not time-decaying hunger or the last interaction message.
-    for key in ("profile", "preferences", "todos", "courses", "semester", "reminders"):
+    for key in ("profile", "courses", "semester", "reminders"):
         check("upgrade preserves " + key, data[key] == expected[key])
+    # The baseline fixture remains a real old-format save. Only documented new
+    # defaults may be added; every original field and its value must survive.
+    expected_preferences = {"noticeSource": "undergrad", "studentLevel": "undergrad",
+                            **expected["preferences"]}
+    expected_todos = [{"date": "", "createdAt": 0, "completedAt": 0, "archived": False, **todo}
+                      for todo in expected["todos"]]
+    check("upgrade preserves preferences and adds explicit defaults", data["preferences"] == expected_preferences)
+    check("upgrade preserves todos without inventing dates", data["todos"] == expected_todos)
     for key in ("coins", "seeds", "stock", "plots", "stats"):
         check("upgrade preserves garden " + key, data["game"][key] == expected["game"][key])
     for index, pet in enumerate(expected["game"]["pets"]):

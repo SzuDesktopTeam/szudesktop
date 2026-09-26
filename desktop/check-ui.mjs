@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createState,act,settle,normalize,gpa,activePet,petSprite,PETS} from './assets/garden/engine.mjs';
 let checks=0;function test(name,fn){fn();checks++;console.log('PASS',name)}
 const now=new Date('2026-09-18T10:00:00').getTime();
-test('one harvest cannot be claimed twice; inventory can be sold',()=>{let s=createState(now);assert.throws(()=>act(s,{type:'harvest',index:0},now));s=act(s,{type:'water',index:0},now+1000);const due=s.game.plots[0].ready;assert.equal(due,now+45250);assert.throws(()=>act(s,{type:'water',index:0},now+2000));s=act(s,{type:'harvest',index:0},due);assert.equal(s.game.stock.radish,2);assert.throws(()=>act(s,{type:'harvest',index:0},due));s=act(s,{type:'sell',crop:'radish'},due);assert.equal(s.game.coins,52);assert.equal(s.game.stock.radish,0)});
+test('one harvest cannot be claimed twice; inventory can be sold',()=>{let s=createState(now);assert.throws(()=>act(s,{type:'harvest',index:0},now));s=act(s,{type:'water',index:0},now+1000);const due=s.game.plots[0].ready;assert.equal(due,now+45250);assert.throws(()=>act(s,{type:'water',index:0},now+2000));s=act(s,{type:'harvest',index:0},due);assert.equal(s.game.stock.radish,2);assert.throws(()=>act(s,{type:'harvest',index:0},due));s=act(s,{type:'sell',crop:'radish'},due);assert.equal(s.game.coins,46);assert.equal(s.game.stock.radish,0)});
 test('seed spending, locked plots and level requirements',()=>{let s=createState(now);const before=structuredClone(s);assert.throws(()=>act(s,{type:'plant',index:3,crop:'radish'},now));assert.deepEqual(s,before);s=act(s,{type:'plant',index:1,crop:'radish'},now);assert.equal(s.game.seeds.radish,3);assert.throws(()=>act(s,{type:'plant',index:1,crop:'radish'},now));assert.throws(()=>act(s,{type:'buySeed',crop:'lychee'},now));s=act(s,{type:'gift'},now);s=act(s,{type:'unlock',index:3},now);assert.equal(s.game.coins,0);assert.equal(s.game.plots[3],null)});
 test('daily gifts and quest rewards are one-time, clock rollback cannot reset',()=>{let s=act(createState(now),{type:'gift'},now);assert.throws(()=>act(s,{type:'gift'},now));s=act(s,{type:'plant',index:1,crop:'radish'},now);s=act(s,{type:'quest',id:'plant'},now);assert.throws(()=>act(s,{type:'quest',id:'plant'},now));assert.throws(()=>act(s,{type:'gift'},now-86400000));s=act(s,{type:'gift'},now+86400000);assert.equal(s.game.daily.gift,true)});
 test('focus survives reload, early/duplicate claims fail',()=>{let s=act(createState(now),{type:'focusStart',minutes:5},now);s=normalize(JSON.parse(JSON.stringify(s)),now+120000);assert.throws(()=>act(s,{type:'focusClaim'},now+120000));s=act(s,{type:'focusClaim'},now+300000);assert.equal(s.game.stats.minutes,5);assert.equal(s.game.coins,45);assert.throws(()=>act(s,{type:'focusClaim'},now+300000))});
@@ -12,7 +12,7 @@ test('pets: all four companions are available with libao as the default',()=>{
  const s=createState(now);
  assert.deepEqual(s.game.pets.map(p=>p.species),['libao','chestnut','egret','turtle']);
  assert.equal(activePet(s.game).name,'荔宝');
- assert.deepEqual(s.game.pets.map(p=>petSprite(p)),['libao','cat-happy','egret','turtle']);
+ assert.deepEqual(s.game.pets.map(p=>petSprite(p)),['libao-happy','cat-happy','egret-happy','turtle-happy']);
  for(const p of s.game.pets)assert.ok(PETS[p.species].description);
 });
 test('pets: switching companions keeps growth, bond and care cooldowns independent',()=>{

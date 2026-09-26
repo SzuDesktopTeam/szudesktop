@@ -98,7 +98,7 @@ export function createBookingUI({api,loadRooms}){
  <div class="actions">${officialLink('登录并预约')}${button(pixelIcon('i-compass')+'查看场地空位','rooms',busy)}</div>
  <p class="muted">点击「登录并预约」会在浏览器打开学校页面，按学校提示完成登录即可。图书馆使用独立预约系统。</p>
  ${rooms.length?`<h3>空位速览</h3><p>这里可以先查空位；具体预约资格与最终结果以学校系统为准。</p><div class="grid"><div><label for="booking-room">场地 · ${rooms.length} 处</label><select id="booking-room">${rooms.map(x=>`<option value="${esc(x.id)}" ${String(x.id)===room?'selected':''}>${esc(x.campus)} · ${esc(x.name)}${x.status?'':'（停用）'}</option>`).join('')}</select></div><div><label for="booking-date">使用日期</label><input id="booking-date" type="date" value="${esc(date)}" min="${esc(today)}"></div></div><div class="actions">${button('查询空位','query',busy)}</div>`:''}
- <div role="status" aria-live="polite" class="notice" data-tone="${error?'error':'info'}">${esc(error||message||'校园网内可在这里直接查看场地空位，无需先登录。')}</div>
+ <div role="status" aria-live="polite" class="notice" data-tone="${error?'error':'info'}">${esc(error||message||'校园网内可在这里直接查看场地空位，无需先登录。')}</div>${error?`<div class="actions">${officialLink('打开官方 WebVPN 预约页','button quiet')}</div>`:''}
  ${rooms.length?bookingSlotsHTML(day):''}`}
  function card(){return `<section class="card campus-booking" id="booking-panel">${content()}</section>`}
  function paint(){const el=document.getElementById('booking-panel');if(el)el.innerHTML=content()}
