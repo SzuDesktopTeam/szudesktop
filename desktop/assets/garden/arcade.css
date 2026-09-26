@@ -1,4 +1,4 @@
-/* A small wooden game table: numbers stay primary, garden details stay at the edges. */
+/* A wooden garden table: shared crop artwork with clear numeric value badges. */
 .garden-arcade { min-width:0; color:#57472e; }
 .arcade-heading { display:flex; align-items:end; justify-content:space-between; gap:20px; margin:6px 0 20px; }
 .arcade-heading .eyebrow { margin:0 0 6px; color:#788458; font:12px/1.5 var(--body); }
@@ -17,25 +17,42 @@
 .arcade-grid { position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
 .arcade-row { display:contents; }
 .arcade-cell { aspect-ratio:1; min-width:0; background:#a57d54; box-shadow:inset 0 2px #835c3c38; }
-.arcade-tile { --tile-bg:#f0e3c5; --tile-fg:#756044; display:flex; align-items:center; justify-content:center; position:relative; width:100%; height:100%; background:var(--tile-bg); color:var(--tile-fg); box-shadow:inset 0 2px #fff7,0 2px #65462640; }
-.arcade-tile strong { position:relative; z-index:1; font:clamp(24px,3vw,37px)/1 var(--pixel); font-variant-numeric:tabular-nums; letter-spacing:-1px; }
-.arcade-tile[data-value="0"] { background:transparent; box-shadow:none; }
-.arcade-tile[data-value="4"] { --tile-bg:#ead6aa; --tile-fg:#6a5739; }
-.arcade-tile[data-value="8"] { --tile-bg:#d9c680; --tile-fg:#5f562d; }
-.arcade-tile[data-value="16"] { --tile-bg:#b8c984; --tile-fg:#3f542f; }
-.arcade-tile[data-value="32"] { --tile-bg:#88ac70; --tile-fg:#fff9e5; }
-.arcade-tile[data-value="64"] { --tile-bg:#648760; --tile-fg:#fff8df; }
-.arcade-tile[data-value="128"] { --tile-bg:#ca8171; --tile-fg:#fff8e8; }
-.arcade-tile[data-value="256"] { --tile-bg:#b9605a; --tile-fg:#fff8e8; }
-.arcade-tile[data-value="512"] { --tile-bg:#847798; --tile-fg:#fff9ee; }
-.arcade-tile[data-value="1024"] { --tile-bg:#655a7f; --tile-fg:#fff9ee; }
-.arcade-tile[data-value="2048"] { --tile-bg:#d3a349; --tile-fg:#fffbed; box-shadow:inset 0 0 0 3px #f3d182,0 2px #65462640; }
-.arcade-tile[data-value="4096"],.arcade-tile[data-value="8192"],.arcade-tile[data-value="16384"],.arcade-tile[data-value="32768"],.arcade-tile[data-value="65536"],.arcade-tile[data-value="131072"] { --tile-bg:#514b41; --tile-fg:#fff2d0; }
-.arcade-tile[data-value="128"] strong,.arcade-tile[data-value="256"] strong,.arcade-tile[data-value="512"] strong { font-size:clamp(22px,2.6vw,32px); }
-.arcade-tile[data-value="1024"] strong,.arcade-tile[data-value="2048"] strong,.arcade-tile[data-value="4096"] strong,.arcade-tile[data-value="8192"] strong { font-size:clamp(19px,2.3vw,27px); }
-.arcade-tile[data-value="16384"] strong,.arcade-tile[data-value="32768"] strong,.arcade-tile[data-value="65536"] strong,.arcade-tile[data-value="131072"] strong { font-size:clamp(14px,1.8vw,20px); }
-.arcade-sprout { position:absolute; width:4px; height:4px; right:8px; bottom:8px; opacity:.55; background:currentColor; box-shadow:-4px -4px currentColor,4px -4px currentColor; }
-.arcade-tile[data-value="2"] .arcade-sprout,.arcade-tile[data-value="4"] .arcade-sprout { display:none; }
+/* The same garden artwork is used in the board, flying tiles and recipe guide. */
+.arcade-board { container-type:inline-size; }
+.arcade-tile { --tile-bg:#f1e5c9; --tile-edge:#d3bc91; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; position:relative; box-sizing:border-box; width:100%; height:100%; padding:3% 3% 5%; background:var(--tile-bg); border:1px solid var(--tile-edge); color:#513c29; box-shadow:inset 0 2px #fff9,0 2px #65462640; }
+.arcade-tile-art { display:block; width:40px; height:40px; flex-shrink:0; shape-rendering:crispEdges; image-rendering:pixelated; pointer-events:none; }
+.arcade-tile > .arcade-tile-art { position:absolute; top:2%; left:15%; width:70%; height:70%; }
+.arcade-tile strong { position:relative; z-index:1; max-width:94%; padding:1px 4px; border:1px solid #7b5b3329; background:#fff4dbe8; font:clamp(13px,4.9cqw,25px)/1 var(--pixel); font-variant-numeric:tabular-nums; letter-spacing:0; overflow-wrap:anywhere; text-align:center; }
+.arcade-tile[data-digits="4"] strong { font-size:clamp(12px,4.4cqw,22px); }
+.arcade-tile[data-digits="5"] strong,.arcade-tile[data-digits="6"] strong { font-size:clamp(10px,3.3cqw,17px); }
+.arcade-tile:not([data-digits="1"]):not([data-digits="2"]):not([data-digits="3"]):not([data-digits="4"]):not([data-digits="5"]):not([data-digits="6"]) strong { font-size:clamp(8px,2.7cqw,14px); line-height:1.1; }
+.arcade-tile[data-value="0"] { background:transparent; border-color:transparent; box-shadow:none; }
+.arcade-tile[data-value="4"] { --tile-bg:#dce7bb; --tile-edge:#b6ca91; }
+.arcade-tile[data-value="8"] { --tile-bg:#f0d2b6; --tile-edge:#dab28b; }
+.arcade-tile[data-value="16"] { --tile-bg:#f0c4c4; --tile-edge:#d5a1a5; }
+.arcade-tile[data-value="32"] { --tile-bg:#d4d7eb; --tile-edge:#b1b7d4; }
+.arcade-tile[data-value="64"] { --tile-bg:#e7c0ca; --tile-edge:#c994a4; }
+.arcade-tile[data-value="128"] { --tile-bg:#dfba83; --tile-edge:#c59656; }
+.arcade-tile[data-value="256"] { --tile-bg:#d89b89; --tile-edge:#bd7b69; }
+.arcade-tile[data-value="512"] { --tile-bg:#aaa6cc; --tile-edge:#8986b1; }
+.arcade-tile[data-value="1024"] { --tile-bg:#c18b9a; --tile-edge:#a7687c; }
+.arcade-tile[data-kind="celebration"] { --tile-bg:#e7c474; --tile-edge:#b88b37; box-shadow:inset 0 0 0 2px #f8df9e,0 2px #65462640; }
+.arcade-harvest-trail { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 0; margin-top:12px; border-bottom:1px dashed #d7c7a5; }
+.arcade-trail-current,.arcade-trail-next { display:flex; align-items:center; gap:7px; min-width:0; }
+.arcade-harvest-trail small { display:block; font-size:11px; line-height:1.6; color:#887552; }
+.arcade-harvest-trail strong { display:block; font-size:12px; line-height:1.6; color:#536844; }
+.arcade-harvest-trail b { color:#8b6738; font-size:11px; font-weight:500; }
+.arcade-trail-arrow { color:#9d875b; font-size:18px; }
+.arcade-trail-finish { color:#84633a; font-size:12px; line-height:1.7; text-align:right; }
+.arcade-tile-guide { margin-top:20px; color:#796344; font-size:12px; line-height:1.7; }
+.arcade-tile-guide summary { cursor:pointer; }
+.arcade-tile-guide ol { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; padding:0; margin:14px 0; list-style:none; }
+.arcade-tile-guide li { display:flex; flex-direction:column; align-items:center; min-width:0; padding:8px 2px; border:1px solid #d8c49c; background:#f3e9d0; text-align:center; }
+.arcade-tile-guide .arcade-tile-art { width:40px; height:40px; }
+.arcade-tile-guide b,.arcade-tile-guide small { display:block; font-weight:500; }
+.arcade-tile-guide b { font:17px/1.6 var(--pixel); color:#60492f; }
+.arcade-tile-guide small { font-size:11px; }
+.arcade-tile-guide p { color:#887557; }
 .arcade-flight-layer { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .arcade-flight { position:absolute; }
 .arcade-tile.is-arriving { visibility:hidden; }
@@ -147,6 +164,20 @@
 [data-theme=night] .order-materials .short,[data-theme=night] .order-note-top { color:#e0b680; }
 [data-theme=night] .order-keepsakes li { background:#3b382d; border-color:#75674d; }
 @media(max-width:1050px){.arcade-layout{grid-template-columns:minmax(0,1fr) 235px;gap:16px}.arcade-table{padding:15px}.arcade-side .card{padding:15px}.arcade-stickers{grid-template-columns:repeat(2,minmax(0,1fr))}.arcade-partner{gap:10px}.arcade-partner-portrait{width:54px;height:64px}.arcade-partner-portrait>.sprite{width:39px;height:49px}.orders-notes{gap:10px}.order-note{padding:14px 11px}.order-keepsakes ul{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:780px){.arcade-layout{grid-template-columns:minmax(0,1fr)}.arcade-table{max-width:530px;width:100%;justify-self:center;box-sizing:border-box}.arcade-side{grid-template-columns:1fr 1fr}.arcade-partner{grid-column:1/-1}.arcade-stickers{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-heading{align-items:start}.arcade-heading h2{font-size:30px}.arcade-scores>div{min-width:72px;padding:8px 10px}.arcade-scores strong{font-size:22px}.arcade-tile strong{font-size:36px}.arcade-tile[data-value="128"] strong,.arcade-tile[data-value="256"] strong,.arcade-tile[data-value="512"] strong{font-size:31px}.arcade-tile[data-value="1024"] strong,.arcade-tile[data-value="2048"] strong,.arcade-tile[data-value="4096"] strong,.arcade-tile[data-value="8192"] strong{font-size:26px}.orders-notes{grid-template-columns:1fr}.order-note>p{min-height:0}.order-materials{display:flex;gap:18px;flex-wrap:wrap}.order-materials li{flex:1;min-width:140px}.order-note>button{width:auto;min-width:150px;align-self:flex-end}.orders-footer{align-items:start;flex-direction:column;gap:8px}}
-@media(max-width:480px){.arcade-heading{flex-direction:column;gap:13px}.arcade-scores{width:100%}.arcade-scores>div{flex:1;min-width:0}.arcade-side{grid-template-columns:1fr}.arcade-partner{grid-column:auto}.arcade-table{padding:11px}.arcade-board{padding:6px;border-width:3px}.arcade-grid{gap:6px}.arcade-tile strong{font-size:30px}.arcade-tile[data-value="128"] strong,.arcade-tile[data-value="256"] strong,.arcade-tile[data-value="512"] strong{font-size:25px}.arcade-tile[data-value="1024"] strong,.arcade-tile[data-value="2048"] strong,.arcade-tile[data-value="4096"] strong,.arcade-tile[data-value="8192"] strong{font-size:21px}.arcade-sprout{width:3px;height:3px;right:6px;bottom:6px;box-shadow:-3px -3px currentColor,3px -3px currentColor}.arcade-controls{gap:10px}.arcade-directions button{width:35px;min-height:36px}.arcade-tools button{padding:6px 8px;font-size:12px}.orders-heading{align-items:start;gap:10px}.orders-heading h2{font-size:24px}.orders-tally{padding:5px 7px}.order-keepsakes ul{grid-template-columns:1fr 1fr;gap:8px}.order-keepsakes li{padding:7px;gap:7px}}
+@media(max-width:780px){.arcade-layout{grid-template-columns:minmax(0,1fr)}.arcade-table{max-width:530px;width:100%;justify-self:center;box-sizing:border-box}.arcade-side{grid-template-columns:1fr 1fr}.arcade-partner{grid-column:1/-1}.arcade-stickers{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-heading{align-items:start}.arcade-heading h2{font-size:30px}.arcade-scores>div{min-width:72px;padding:8px 10px}.arcade-scores strong{font-size:22px}.orders-notes{grid-template-columns:1fr}.order-note>p{min-height:0}.order-materials{display:flex;gap:18px;flex-wrap:wrap}.order-materials li{flex:1;min-width:140px}.order-note>button{width:auto;min-width:150px;align-self:flex-end}.orders-footer{align-items:start;flex-direction:column;gap:8px}}
+@media(max-width:480px){.arcade-heading{flex-direction:column;gap:13px}.arcade-scores{width:100%}.arcade-scores>div{flex:1;min-width:0}.arcade-side{grid-template-columns:1fr}.arcade-partner{grid-column:auto}.arcade-table{padding:11px}.arcade-board{padding:6px;border-width:3px}.arcade-grid{gap:6px}.arcade-controls{gap:10px}.arcade-directions button{width:35px;min-height:36px}.arcade-tools button{padding:6px 8px;font-size:12px}.orders-heading{align-items:start;gap:10px}.orders-heading h2{font-size:24px}.orders-tally{padding:5px 7px}.order-keepsakes ul{grid-template-columns:1fr 1fr;gap:8px}.order-keepsakes li{padding:7px;gap:7px}}
 @media(prefers-reduced-motion:reduce){.garden-arcade *{animation:none!important;transition:none!important}}
+
+[data-theme=night] .arcade-harvest-trail { border-color:#75654a; }
+[data-theme=night] .arcade-harvest-trail small,[data-theme=night] .arcade-harvest-trail b,[data-theme=night] .arcade-tile-guide,[data-theme=night] .arcade-tile-guide p,[data-theme=night] .arcade-trail-finish { color:#dac5a0; }
+[data-theme=night] .arcade-harvest-trail strong { color:#dce3b4; }
+[data-theme=night] .arcade-tile-guide li { background:#454034; border-color:#807052; }
+[data-theme=night] .arcade-tile-guide b { color:#f2d794; }
+[data-theme=night] .arcade-heading h2 { color:#436144; }
+[data-theme=night] .arcade-heading>div>p:last-child { color:#766344; }
+[data-theme=night] .arcade-side .card { background:#383329; border-color:#78674d; }
+[data-theme=night] .arcade-table button { background:#e8d6ae; color:#513c29; border-color:#b99a64; }
+[data-theme=night] .arcade-tile-guide summary { color:#dac5a0; }
+[data-theme=night] .arcade-reward-value>strong { color:#ebc877; }
+[data-theme=night] .arcade-reward-value>span { color:#e4b8a6; }
+@media(max-width:480px){.arcade-harvest-trail{gap:4px}.arcade-harvest-trail .arcade-tile-art{width:31px;height:31px}.arcade-trail-current,.arcade-trail-next{gap:4px}.arcade-harvest-trail strong{font-size:11px}.arcade-harvest-trail small,.arcade-harvest-trail b{font-size:10px}.arcade-tile-guide ol{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-tile strong{padding:1px 2px}}

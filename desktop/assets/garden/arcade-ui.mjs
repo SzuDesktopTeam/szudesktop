@@ -1,6 +1,7 @@
 import {PETS} from './pet-catalog.mjs';
 import {orderKeepsakes,ORDER_KEEPSAKES} from './garden-orders.mjs';
 import {puzzleSupply} from './garden-loop.mjs';
+import {TILE_LEVELS,tileIdentity,tileArtwork} from './arcade-art.mjs';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const milestones=[128,256,512,1024,2048];
@@ -9,8 +10,8 @@ const milestoneCrops=['radish','strawberry','blueberry','lychee','lychee'];
 const cropNames={radish:'小萝卜',strawberry:'草莓',blueberry:'蓝莓',lychee:'荔枝'};
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const graphic=(crop,cropIcon)=>cropIcon?cropIcon(crop):'';
-const tile=value=>`<span class="arcade-tile" data-value="${value}" ${value?'':'aria-hidden="true"'}>${value?`<strong>${value}</strong><i class="arcade-sprout" aria-hidden="true"></i>`:''}</span>`;
-const cells=board=>Array.from({length:4},(_,row)=>`<div class="arcade-row" role="row">${board.slice(row*4,row*4+4).map((value,col)=>`<div class="arcade-cell" role="gridcell" data-cell="${row*4+col}" aria-label="第 ${row+1} 行第 ${col+1} 列，${value||'空格'}">${tile(value)}</div>`).join('')}</div>`).join('');
+const tile=value=>`<span class="arcade-tile" data-value="${value}" data-kind="${tileIdentity(value).kind}" data-digits="${String(value).length}" ${value?`title="${tileIdentity(value).name} · ${value}"`:'aria-hidden="true"'}>${value?`${tileArtwork(value)}<strong>${value}</strong>`:''}</span>`;
+const cells=board=>Array.from({length:4},(_,row)=>`<div class="arcade-row" role="row">${board.slice(row*4,row*4+4).map((value,col)=>`<div class="arcade-cell" role="gridcell" data-cell="${row*4+col}" aria-label="第 ${row+1} 行第 ${col+1} 列，${value?value+'，'+tileIdentity(value).name:'空格'}">${tile(value)}</div>`).join('')}</div>`).join('');
 const reduced=value=>value||globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const flights=new WeakMap();
 
@@ -22,8 +23,13 @@ function dailyReward(game,cropIcon,day=today()){
 }
 export function stickerItems(game){return milestones.map((value,i)=>({id:'puzzle-'+value,value,name:milestoneNames[i],crop:milestoneCrops[i],owned:game.puzzle.milestones.includes(value)}));}
 export function stickerShelfHTML(game,{cropIcon,ownedOnly=false}={}){return stickerItems(game).filter(item=>!ownedOnly||item.owned).map(item=>`<li class="arcade-sticker ${item.owned?'is-earned':''}" aria-label="${item.name}，合出 ${item.value}，${item.owned?'已收藏':'尚未收藏'}"><span>${graphic(item.crop,cropIcon)}<b>${item.value}</b></span><strong>${item.name}</strong><small>${item.owned?'已收藏':'合出 '+item.value}</small></li>`).join('');}
-function boardMessage(p){return p.over?'这局没有可移动的方向了。可以悔棋，或重新开一局。':p.won?'已经合出 2048！可以继续挑战更大的数字，也可以停在这里。':'用方向键 / WASD，或在棋盘上滑动。相同数字碰在一起会合并。';}
+function boardMessage(p){return p.over?'这局小桌放满了，也没有能合并的一对。可以悔一步，或重新开一局。':p.won?'荔宝丰收礼合成啦！已经达到 2048，还可以继续挑战自己的纪录。':'方向键 / WASD 或滑动棋盘。把两份相同图案与数字，合成下一阶收获。';}
 function nextMilestone(p){const next=milestones.find(value=>!p.milestones.includes(value));return next?`下一张收藏贴纸 · 合出 ${next}`:'五张合成贴纸已集齐 · 继续挑战自己的纪录';}
+function harvestTrail(p){
+ const best=Math.max(2,...p.board),next=TILE_LEVELS.find(level=>level.value>best);
+ return `<span class="arcade-trail-current">${tileArtwork(best)}<span><small>这局合到了</small><strong>${tileIdentity(best).name} <b>${best}</b></strong></span></span>${next?`<span class="arcade-trail-arrow" aria-hidden="true">→</span><span class="arcade-trail-next">${tileArtwork(next.value)}<span><small>再往前一步</small><strong>${next.name} <b>${next.value}</b></strong></span></span>`:'<span class="arcade-trail-finish">荔宝来庆祝啦<br>继续合并，刷新纪录</span>'}`;
+}
+function tileGuide(){return `<details class="arcade-tile-guide"><summary>看看会合出什么 · 从种子到丰收礼</summary><ol>${TILE_LEVELS.map(level=>`<li>${tileArtwork(level.value)}<span><b>${level.value}</b><small>${level.name}</small></span></li>`).join('')}</ol><p>图案来自我们的庭院。棋盘上的收成用来合并；今天合出 128 后，领取种植补给，就能带回农田。</p></details>`;}
 
 /** game is the already-normalized garden game; all writes belong to the caller. */
 export function arcadeView(game,{petHTML='',cropIcon}={}){
@@ -31,10 +37,11 @@ export function arcadeView(game,{petHTML='',cropIcon}={}){
  return `<section class="garden-arcade" aria-labelledby="arcade-title">
   <div class="arcade-heading"><div><p class="eyebrow">熟悉的 2048 · 伙伴小桌</p><h2 id="arcade-title">一起备种</h2><p>陪伙伴玩一局，把种子带回农田。</p></div><div class="arcade-scores" aria-label="游戏分数"><div><small>本局得分</small><strong data-arcade-score>${p.score}</strong></div><div><small>最高纪录</small><strong data-arcade-best>${p.best}</strong></div></div></div>
   <div class="arcade-layout"><div class="arcade-table"><div class="arcade-board-top"><span data-arcade-next>${nextMilestone(p)}</span><span><b data-arcade-moves>${p.moves}</b> 步</span></div>
-   <div class="arcade-board" tabindex="0" role="group" aria-label="2048 棋盘，点击后用方向键或 WASD 移动" aria-describedby="arcade-instructions"><div class="arcade-grid" role="grid" aria-label="四行四列数字棋盘">${cells(p.board)}</div></div>
+   <div class="arcade-board" tabindex="0" role="group" aria-label="2048 棋盘，点击后用方向键或 WASD 移动" aria-describedby="arcade-instructions"><div class="arcade-grid" role="grid" aria-label="四行四列庭院合成棋盘">${cells(p.board)}</div></div>
+   <div class="arcade-harvest-trail" data-arcade-trail>${harvestTrail(p)}</div>
    <p class="arcade-feedback ${p.over?'is-over':p.won?'is-won':''}" id="arcade-instructions" role="status" aria-live="polite">${boardMessage(p)}</p>
    <div class="arcade-controls"><div class="arcade-directions" role="group" aria-label="移动数字"><button type="button" class="arcade-move" data-dir="left" aria-label="向左移动">←</button><button type="button" class="arcade-move" data-dir="up" aria-label="向上移动">↑</button><button type="button" class="arcade-move" data-dir="down" aria-label="向下移动">↓</button><button type="button" class="arcade-move" data-dir="right" aria-label="向右移动">→</button></div><div class="arcade-tools"><button type="button" class="arcade-undo" ${p.undo?'':'disabled'}>悔一步</button><button type="button" class="arcade-restart quiet">重新开局</button></div></div>
-   <details class="arcade-rules"><summary>怎么玩 · 一分钟就能懂</summary><p>每次移动会把整排数字推向同一方向；相邻的相同数字合成两倍，每块每步只合并一次。移动后会出现一个新的 2 或 4，合并的数字计入得分。</p><p>合出 2048 后还能继续；格子填满且没有可合并的邻居时结束。可以悔一步，但已领取的奖励和贴纸不会退回，也不能重复领取。</p></details>
+   ${tileGuide()}<details class="arcade-rules"><summary>怎么玩 · 一分钟就能懂</summary><p>每次移动会把整排棋子推向同一方向；相邻的相同数字合成两倍，每块每步只合并一次。移动成功后会添一份种子袋（2）或嫩芽（4），合并的数字计入得分。图案与数字一一对应，仍然是熟悉的 2048 规则。</p><p>合出荔宝丰收礼（2048）后还能继续；格子填满且没有可合并的邻居时结束。可以悔一步，但已领取的奖励和贴纸不会退回，也不能重复领取。</p></details>
   </div><aside class="arcade-side"><section class="card arcade-partner">${petHTML?`<div class="arcade-partner-portrait" aria-hidden="true">${petHTML}</div>`:''}<div><small>这一局的搭档</small><h3>${esc(pet.name)}</h3><p>${esc(PETS[pet.species].personality.identity)}</p></div><p class="arcade-partner-say" data-arcade-say role="status">${esc(pet.say||PETS[pet.species].greeting)}</p></section><section class="card arcade-daily">${dailyReward(game,cropIcon)}</section><details class="card arcade-collection"><summary>一起收集的贴纸 <span data-arcade-sticker-count>${p.milestones.length} / 5</span></summary><p>第一次合出对应数字，就会带回小屋收藏。</p><ul class="arcade-stickers">${stickerShelfHTML(game,{cropIcon})}</ul><button type="button" class="quiet" data-action="gardenRoute" data-tab="pet">回小屋看看 →</button></details></aside></div>
  </section>`;
 }
@@ -93,9 +100,10 @@ export function paintArcade(root,game,{result,reducedMotion=false}={}){
  shell.querySelector('.arcade-grid').innerHTML=cells(p.board);
  shell.querySelector('[data-arcade-score]').textContent=p.score;shell.querySelector('[data-arcade-best]').textContent=p.best;shell.querySelector('[data-arcade-moves]').textContent=p.moves;
  shell.querySelector('[data-arcade-next]').textContent=nextMilestone(p);
+ shell.querySelector('[data-arcade-trail]').innerHTML=harvestTrail(p);
  const pet=game.pets[game.active];shell.querySelector('[data-arcade-say]').textContent=pet.say||PETS[pet.species].greeting;
  const feedback=shell.querySelector('.arcade-feedback');feedback.textContent=boardMessage(p);feedback.classList.toggle('is-over',p.over);feedback.classList.toggle('is-won',p.won&&!p.over);
- if(result?.changed&&!p.over&&!p.won){const gained=result.merges.reduce((sum,merge)=>sum+merge.value,0);feedback.textContent=result.newMilestones.length?`新贴纸收入收藏：${result.newMilestones.join('、')}！` :gained?`合并成功，本步 ＋${gained} 分。`:'位置移好了，继续寻找相同的数字。';}
+ if(result?.changed&&!p.over&&!p.won){const gained=result.merges.reduce((sum,merge)=>sum+merge.value,0),highest=Math.max(0,...result.merges.map(merge=>merge.value));feedback.textContent=result.newMilestones.length?`合出${result.newMilestones.map(value=>tileIdentity(value).name+'（'+value+'）').join('、')}，新贴纸收入收藏！` :gained?`合出${tileIdentity(highest).name}（${highest}），本步 ＋${gained} 分。`:'小桌整理好了，继续找两份相同的图案。';}
  shell.querySelector('.arcade-undo').disabled=!p.undo;shell.querySelector('.arcade-daily').innerHTML=dailyReward(game,crop=>cropIcons.get(crop)||'');shell.querySelector('[data-arcade-sticker-count]').textContent=`${p.milestones.length} / 5`;shell.querySelector('.arcade-stickers').innerHTML=stickerShelfHTML(game,{cropIcon:crop=>cropIcons.get(crop)||''});
  shell.dataset.reducedMotion=String(!!reduced(reducedMotion));
  if(result?.changed&&result.moves.length&&!reduced(reducedMotion)&&typeof board.animate==='function')animateMove(board,result);

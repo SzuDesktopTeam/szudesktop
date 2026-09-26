@@ -27,9 +27,17 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration redraws Pingu and gives each companion more garden actions, a signature gesture and replies connected to what is happening. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). **All 36 local check groups and [nine CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36268378124) passed. The running UI and its 420px layout were reviewed, and Windows candidate packages were rebuilt.** The feature commit is `f4cb9cd`. Progress is recorded in [STATUS section 59](STATUS.md#59-pingu-形象与伙伴生活反应2026-09-27源码未发布).
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The companion table's 2048 now uses the garden's own seeds, crops, baskets and Libao harvest gift. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). This iteration passed **71 checks across six focused local groups**. Artwork, real merging and undo evidence is recorded in [STATUS section 60](STATUS.md#60-2048-换上庭院素材2026-09-27源码未发布), where candidate-package and remote-CI results will also be recorded.
 
-The previous garden-loop commit `c355360` passed 35 local check groups and [all nine CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147), and the running UI completed the seed, planting, harvest, delivery and construction path. Those historical results and package hashes remain in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布); they do not establish acceptance of this iteration's additions.
+### Bring the harvest to the companion table
+
+The 2048 tiles now belong to the same garden: **2 seed bag → 4 sprout → 8 radish → 16 strawberry → 32 blueberry → 64 lychee → 128 radish basket → 256 strawberry basket → 512 blueberry basket → 1024 lychee basket → 2048 Libao harvest gift**. At 4096 and beyond, celebration decorations appear while the complete number remains visible.
+
+The farm and board share crop artwork, and moving tiles use the same drawings as settled tiles. A small trail shows the current harvest and the next tier; the full illustrated guide stays collapsed until opened. Merge rules, scoring, saves, undo and the daily seed gift are unchanged. Board illustrations do not directly become stored produce: claiming the existing gift still connects a game to planting.
+
+![Garden-themed 2048 artwork on a preset high-tier board in an isolated test save](screenshot-arcade-garden-preview.png)
+
+This screenshot uses a preset board to inspect all 11 designs. It is not a completed run from a fresh game or evidence of a naturally earned score.
 
 ### Companions with their own movement and personality
 
