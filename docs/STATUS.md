@@ -2628,6 +2628,14 @@ Pingu 的角色参考来自[官方介绍](https://www.pingu.jp/biz/about/)和[�
 
 ### 60.3 候选包与远端证据
 
-本轮 Windows 候选包、资源一致性、远端 CI 与提交编号待构建和验收后补充。第 59 节的文件校验值仍只对应上一轮，不沿用到本轮。
+功能提交 `868556a` 已推送草稿 PR #19。Windows Go、便携 ZIP 和 Electron NSIS 候选包均已按最终源码重建，包含暮色配色与搭档点击修复；远端 CI 正在运行，结果随后补充。第 59 节的文件校验值仍只对应上一轮，不沿用到本轮。
+
+全部 **132** 个内嵌资源与 Go EXE 中的原始字节一致；新素材模块、界面、样式和点击修复均已纳入。Electron sidecar 与 ZIP 内 EXE 均和该 Go EXE 逐字节相同，两类包的许可证与 `.sha256` 文件核对通过。本机未运行安装程序。
+
+| 本地候选文件 | 字节数 | SHA-256 |
+|---|---:|---|
+| `dist/szudesktop-windows-amd64.exe` | 13342720 | `f55bf82fdd943b2d6a48331993ac15099fd5b42c032b7d17b62a6c69f8a6288b` |
+| `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 7945994 | `501da40b08c2eb90944ad3a1d57608ffc80611f9e9a116d773fd0481f6405028` |
+| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118437775 | `59056852cb3b186ce2ea0073944206e12fbc1868761ad00210a35b7b4e2f3196` |
 
 本轮不合并 PR、不打发布标签、不替换公开下载；没有增加学校真实业务验收。中英文 README 同步素材更新、截图用途和未发布边界，所有进度仍集中在此文件。

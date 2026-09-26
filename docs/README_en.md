@@ -27,7 +27,7 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The companion table's 2048 now uses the garden's own seeds, crops, baskets and Libao harvest gift. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). This iteration passed **71 checks across six focused local groups**. Artwork, real merging and undo evidence is recorded in [STATUS section 60](STATUS.md#60-2048-换上庭院素材2026-09-27源码未发布), where candidate-package and remote-CI results will also be recorded.
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** The companion table's 2048 now uses the garden's own seeds, crops, baskets and Libao harvest gift. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). This iteration passed **71 checks across six focused local groups**. Artwork, real merging and undo evidence is recorded in [STATUS section 60](STATUS.md#60-2048-换上庭院素材2026-09-27源码未发布). Windows installer and portable candidates have been rebuilt, with all 132 embedded assets, sidecars and licenses verified; current checksums are recorded there. [CI](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36269898263) for feature commit `868556a` is running.
 
 ### Bring the harvest to the companion table
 
