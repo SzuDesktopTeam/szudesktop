@@ -155,18 +155,27 @@ export function buildCampusScene(THREE, scene, skin = 'lake') {
     animations.push(time=>{pivot.rotation.z=Math.sin(time*.8)*.055;pivot.rotation.x=Math.sin(time*.53)*.025;});
   };
 
-  // Distant crowns are quiet painted silhouettes: small overlapping smooth
-  // lobes, no lighting facets, shadow casting or shadow reception.
+  // A continuous wooded rise meets the ground at both edges. Detached pale
+  // crown meshes produced floating ink rings; one smooth surface keeps only
+  // the quiet, irregular skyline and lets the host's fog soften its distance.
   const distantTrees=(colors,x0,z0,count,spacing=5.7)=>{
-    const geo=geometry('distant-crown',()=>new THREE.SphereGeometry(1,9,6));
-    for(let i=0;i<count;i++){
-      const x=x0+i*spacing,z=z0-(i%3)*2.1,base=2.1+(i%4)*.36;
-      for(let k=0;k<7;k++){
-        const angle=k*2.399,spread=k?1.45:0;
-        const px=x+Math.cos(angle)*spread,pz=z+Math.sin(angle)*spread*.66;
-        const y=base+(k%3)*.67,sz=1.24+(k%3)*.2;
-        put(geo,colors[(i+k)%colors.length],[px,y,pz],[sz,sz*.95,sz*.82],[0,0,0],{cast:false,receive:false,material:{unlit:true}});
+    const width=(count-1)*spacing+13, nx=100, nz=18;
+    for(let layer=1;layer>=0;layer--){
+      const positions=[],indices=[];
+      for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
+        const t=j/nz,x=x0-6.5+i/nx*width;
+        const envelope=Math.sin(Math.PI*t);
+        const height=3.05+Math.sin(x*.2+layer)*.75+Math.sin(x*.55)*.36+Math.cos(x*1.07)*.14;
+        const edge=Math.min(1,i/4,(nx-i)/4);
+        const y=-.06+height*Math.pow(Math.max(0,envelope),1.3)*edge;
+        positions.push(x,y,z0+7-layer*7-t*18);
+        if(j<nz&&i<nx){const n=j*(nx+1)+i;indices.push(n,n+1,n+nx+1,n+1,n+nx+2,n+nx+1);}
       }
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+      geo.setIndex(indices);geo.computeVertexNormals();
+      const color=new THREE.Color(colors[layer]).multiplyScalar(layer ? .69 : .53).getHex();
+      put(geo,color,[0,0,0],[1,1,1],[0,0,0],{cast:false,receive:false,material:{unlit:true}});
     }
   };
 
@@ -227,9 +236,12 @@ export function buildCampusScene(THREE, scene, skin = 'lake') {
     box(0xadbab4,0,-.23,0,400,.4,400);
     box(0x99aeb0,0,-.008,13,80,.02,15);
     box(0xc2c7bd,0,.1,1,30,.22,9);
-    for(let i=0;i<14;i++)for(let j=0;j<6;j++){
-      const x=-13+i*1.8,z=-2.5+j*1.28;
-      box((i+j)%4?0xc3c9bf:0xb4c2bc,x,.217,z,1.74,.016,1.21,0,{cast:false});
+    // Broad, flush paving stones: colour variation carries the joints instead
+    // of dozens of raised tile edges competing with the shopfront's ink lines.
+    const paving=geometry('paving-plane',()=>new THREE.PlaneGeometry(1,1));
+    for(let i=0;i<8;i++)for(let j=0;j<4;j++){
+      const x=-13.125+i*3.75,z=-2.375+j*2.25;
+      put(paving,(i+j)%4?0xc2c8bf:0xbdc6bd,[x,.212,z],[3.735,2.235,1],[-Math.PI/2,0,0],{cast:false});
     }
     // The open frontage is a 1.4 m deep recess, with real shelves behind it.
     box(0xc6cabb,0,1.68,-4.2,9.4,3.2,4.7);

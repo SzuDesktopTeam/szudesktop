@@ -18,6 +18,70 @@ function section(start,end){
 let checks=0;
 async function check(name,fn){await fn();checks++;console.log('PASS',name)}
 
+function sceneFixture(){
+ let current=null;
+ const mounts=[],nodes=new Map(),state=createState();state.preferences.homeSkin='lake';
+ const context=vm.createContext({
+  state,page:'home',revision:1,pages:{home:'今日',garden:'庭院'},pageIcons:{},Date,
+  sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},
+  document:{body:{dataset:{}},querySelector:()=>current},
+  api:async()=>({revision:2}),
+  loadSceneRenderer:async()=>({mountHomeScene(host,options){
+   const instance={host,options,destroyed:0,destroy(){this.destroyed++}};
+   host.canvas={};mounts.push(instance);return instance;
+  }}),
+ });
+ const main={set innerHTML(_html){
+  if(current)current.isConnected=false;
+  current=context.page==='home'&&context.state.preferences.homeSkin!=='pixel'?{
+   dataset:{homeScene:context.state.preferences.homeSkin},isConnected:true,
+   querySelector:()=>({textContent:''}),
+   replaceWith(host){this.isConnected=false;host.isConnected=true;current=host},
+  }:null;
+ }};
+ context.$=selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector);
+ context.mountGardenPlayers=()=>context.mountHomeScenery();
+ vm.runInContext(section('let homeScene=','function mountGardenPlayers(').replace("import('./home-scene-renderer.mjs')",'loadSceneRenderer()')+
+  section('async function commit(','function renderPetCare(')+section('function render(){','function pageHTML('),context);
+ return {context,mounts,host:()=>current,render(skin=context.state.preferences.homeSkin,page='home'){
+  context.state.preferences.homeSkin=skin;context.page=page;context.render();
+ }};
+}
+const sceneTick=()=>new Promise(resolve=>setImmediate(resolve));
+await check('home repaints and successful task saves keep the same scene and canvas',async()=>{
+ const f=sceneFixture();f.render();await sceneTick();const host=f.host(),canvas=host.canvas;
+ for(let i=0;i<3;i++)f.render();
+ assert.equal(f.host(),host);assert.equal(f.host().canvas,canvas);assert.equal(f.mounts.length,1);assert.equal(f.mounts[0].destroyed,0);
+ const next=structuredClone(f.context.state);next.todos.push({text:'读完这一章'});
+ let release;f.context.api=()=>new Promise(resolve=>{release=resolve});
+ const save=f.context.commit(next);assert.equal(f.context.state.todos.length,0);assert.equal(f.host(),host);
+ release({revision:2});await save;await sceneTick();
+ assert.equal(f.context.state.todos.length,1);assert.equal(f.host(),host);assert.equal(f.host().canvas,canvas);assert.equal(f.mounts.length,1);
+});
+await check('skin, motion and page changes release the old scene while returning mounts a fresh one',async()=>{
+ const f=sceneFixture();f.render();await sceneTick();const first=f.host();
+ f.render('bookshop');await sceneTick();assert.equal(f.mounts[0].destroyed,1);assert.notEqual(f.host(),first);assert.equal(f.mounts.length,2);
+ f.context.state.preferences.motion=false;f.render();await sceneTick();
+ assert.equal(f.mounts[1].destroyed,1);assert.equal(f.mounts[2].options.motion,false);
+ f.render('bookshop','garden');assert.equal(f.host(),null);assert.equal(f.mounts[2].destroyed,1);
+ f.render('bookshop');await sceneTick();assert.equal(f.mounts.length,4);
+ f.render('pixel');assert.equal(f.host(),null);assert.equal(f.mounts[3].destroyed,1);
+});
+await check('pending scene imports and late mounts cannot revive a replaced view',async()=>{
+ const f=sceneFixture(),imports=[];const loader=f.context.loadSceneRenderer;
+ f.context.loadSceneRenderer=()=>new Promise(resolve=>imports.push(resolve));
+ f.render('lake');f.render('bookshop');f.render('pixel');
+ for(const resolve of imports)resolve(await loader());await sceneTick();
+ assert.equal(f.mounts.length,0);assert.equal(f.host(),null);
+ let finish;const late={destroyed:0,destroy(){this.destroyed++}};
+ f.context.loadSceneRenderer=async()=>({mountHomeScene:()=>new Promise(resolve=>{finish=resolve})});
+ f.render('lake');await sceneTick();f.render('pixel');finish(late);await sceneTick();assert.equal(late.destroyed,1);
+ // A repaint while import is pending must reuse the connected host too.
+ let imported;f.context.loadSceneRenderer=()=>new Promise(resolve=>{imported=resolve});
+ f.render('lake');const waiting=f.host();f.render('lake');assert.equal(f.host(),waiting);
+ imported(await loader());await sceneTick();assert.equal(f.mounts.length,1);assert.equal(f.mounts[0].host,waiting);
+});
+
 function farmFixture(){
  let now=new Date(2026,8,27,12).getTime(),requests=0;const handlers={},nodes=new Map(),readyLabels=[];
  class Clock extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}

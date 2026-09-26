@@ -7,5 +7,6 @@ export const HOME_SKIN_DETAILS={
 };
 export function homeSkinDetails(id){return HOME_SKIN_DETAILS[id]||HOME_SKIN_DETAILS.pixel}
 export function homeSkinPicker(selected){
- return `<section class="home-skin-picker" aria-label="首页风景"><div class="skin-heading"><span>换一扇窗，看见另一种荔园。</span><small>你的伙伴和进度，都还在这里</small></div><div class="skin-choices">${Object.entries(HOME_SKIN_DETAILS).map(([id,skin])=>`<button type="button" data-action="homeSkin" data-skin="${id}" aria-pressed="${selected===id}"><span class="skin-swatch skin-swatch-${id}" aria-hidden="true"></span><span><strong>${skin.name}</strong><small>${skin.note}</small></span></button>`).join('')}</div></section>`;
+ const current=homeSkinDetails(selected);
+ return `<details class="home-skin-picker"><summary id="home-skin-summary"><span class="skin-current"><span class="skin-swatch skin-swatch-${selected}" aria-hidden="true"></span><span><small>首页风景</small><strong>${current.name}</strong></span></span><span class="skin-change">更换风景 <span aria-hidden="true">⌄</span></span></summary><p class="skin-heading">换一扇窗，看见另一种荔园。伙伴和进度都还在这里。</p><div class="skin-choices">${Object.entries(HOME_SKIN_DETAILS).map(([id,skin])=>`<button type="button" data-action="homeSkin" data-skin="${id}" aria-pressed="${selected===id}"><span class="skin-swatch skin-swatch-${id}" aria-hidden="true"></span><span><strong>${skin.name}</strong><small>${skin.note}</small></span></button>`).join('')}</div></details>`;
 }

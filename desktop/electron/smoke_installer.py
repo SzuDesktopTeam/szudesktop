@@ -257,7 +257,7 @@ def assert_user_data(data, expected):
         check("upgrade preserves " + key, data[key] == expected[key])
     # The baseline fixture remains a real old-format save. Only documented new
     # defaults may be added; every original field and its value must survive.
-    expected_preferences = {"noticeSource": "undergrad", "studentLevel": "undergrad",
+    expected_preferences = {"noticeSource": "undergrad", "studentLevel": "undergrad", "homeSkin": "pixel",
                             **expected["preferences"]}
     expected_todos = [{"date": "", "createdAt": 0, "completedAt": 0, "archived": False, **todo}
                       for todo in expected["todos"]]

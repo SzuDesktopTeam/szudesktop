@@ -47,15 +47,23 @@ let studyTab='focus',serviceTab='spaces',todoFilter='open';
 const sprite=(id,cls='')=>`<svg class="sprite ${cls}" ${PET_SPRITES[id]?`viewBox="${PET_SPRITES[id]}"`:''} aria-hidden="true"><use href="#${id}"></use></svg>`;
 const cat=g=>{const p=activePet(g);return sprite(petSprite(p)).replace('<svg ','<svg data-animated-pet ')};
 let petPlayer=null,arcadeCleanup=null;
-let homeScene=null,homeSceneEpoch=0;
+let homeScene=null,homeSceneHost=null,homeSceneMotion=null,homeSceneEpoch=0;
 function mountHomeScenery(){
+ const container=document.querySelector('[data-home-scene]');
+ const motion=state.preferences.motion;
+ // Pet care and task saves repaint the page, but the same view keeps its canvas,
+ // GPU resources and animation phase. Reattach before observer callbacks run.
+ if(container&&homeSceneHost&&container.dataset.homeScene===homeSceneHost.dataset.homeScene&&motion===homeSceneMotion){
+  if(container!==homeSceneHost)container.replaceWith(homeSceneHost);
+  return;
+ }
  const epoch=++homeSceneEpoch;
  homeScene?.destroy();homeScene=null;
- const container=document.querySelector('[data-home-scene]');
+ homeSceneHost=container;homeSceneMotion=motion;
  if(!container)return;
  import('./home-scene-renderer.mjs').then(module=>{
   if(epoch!==homeSceneEpoch||!container.isConnected)return;
-  return module.mountHomeScene(container,{skin:container.dataset.homeScene,motion:state.preferences.motion});
+  return module.mountHomeScene(container,{skin:container.dataset.homeScene,motion});
  }).then(instance=>{
   if(!instance)return;
   if(epoch!==homeSceneEpoch||!container.isConnected){instance.destroy();return}
@@ -177,7 +185,7 @@ function home(){
  const greeting=state.profile.name?esc(state.profile.name)+'，今天过得怎么样？':'你的校园小据点，随时欢迎回来';
  return `${homeSkinPicker(skin)}<section class="campus-home ${skin!=='pixel'?'is-scenic':''} ${state.preferences.onboarded?'returning-home':''}" aria-labelledby="home-title">
   <div class="home-letter"><p class="eyebrow">${greeting}</p><h1 id="home-title">${g.focus?'这一段时间，<br>留给眼前的小事。':state.preferences.onboarded?'欢迎回到，<br>你的小庭院。':'在荔园，<br>过好每一天。'}</h1><p class="home-description">记一件小事，专注一会儿。<br>和${esc(pet.name)}一起，让小庭院慢慢长大。</p><div class="actions">${g.focus?btn('继续我的专注 →','navigate','data-page="study" data-tab="focus"','primary'):btn('安排一段专注 →','navigate','data-page="study" data-tab="focus"','primary')}</div><p class="home-local">${sprite('i-satchel','item-icon')}不用登录，也能拥有自己的庭院</p></div>
-  <div class="home-landscape">${skin!=='pixel'?`<div class="home-scene" data-home-scene="${skin}" role="img" aria-label="${scenery.description}"><p class="scene-loading" role="status">正在展开校园小景…</p></div>`:''}${projectScene(g,{surface:'home'})}<div class="landscape-caption">${scenery.caption}</div><div class="home-pet-note"><strong>${esc(pet.name)}</strong><span>${pet.sleeping?'正在休息，陪你安静待一会儿':pet.say&&Date.now()-pet.saidAt<10000?esc(pet.say):'点点我，今天也一起加油。'}</span></div><button class="home-pet" data-action="pat" aria-label="摸摸${esc(pet.name)}">${cat(g)}</button><button class="home-harvest" data-action="navigate" data-page="garden" data-tab="farm">${cropIcon('radish')}<span><strong id="home-harvest-label">${ready?ready+' 块田可以收获':'去看看我的农田'}</strong><small>离线也会生长</small></span><span aria-hidden="true">→</span></button></div>
+  <div class="home-landscape">${skin!=='pixel'?`<div class="home-scene" data-home-scene="${skin}" role="img" aria-label="${scenery.description}"><p class="scene-loading" role="status">正在展开校园小景…</p></div>`:''}${projectScene(g,{surface:'home'})}<div class="landscape-caption">${scenery.caption}</div><div class="home-pet-note"><strong>${esc(pet.name)}</strong><span>${pet.sleeping?'正在休息，陪你安静待一会儿':pet.say&&Date.now()-pet.saidAt<10000?esc(pet.say):skin==='pixel'?'点点我，今天也一起加油。':'点点我 · 摸摸头'}</span></div><button class="home-pet" data-action="pat" aria-label="摸摸${esc(pet.name)}">${cat(g)}</button><button class="home-harvest" data-action="navigate" data-page="garden" data-tab="farm">${cropIcon('radish')}<span><strong id="home-harvest-label">${ready?ready+' 块田可以收获':'去看看我的农田'}</strong><small>离线也会生长</small></span><span aria-hidden="true">→</span></button></div>
  </section>
  ${nextStepHTML({...state,game:g})}
  <details class="home-companions" ${state.preferences.onboarded?'':'open'}><summary>今天谁陪你？ <span>${esc(pet.name)}在你身边</span></summary><div class="companions-heading"><span>今天，谁陪你？</span><small>${g.pets.length} 位伙伴 · 各自成长</small></div>${companionRoster(g,true)}</details>
@@ -277,6 +285,14 @@ function clocks(){if(!state||exiting)return;
  refreshDay();
  if(!busy&&(page==='home'||page==='garden'))paintGardenPath(false);
  const focus=state.game.focus,bar=$('#activity-bar');bar.hidden=!focus;
+ if(page==='home'){
+  const note=document.querySelector('.home-pet-note');
+  if(note){const pet=activePet(state.game),recent=pet.say&&Date.now()-pet.saidAt<10000;
+   note.classList.toggle('is-quiet',!pet.sleeping&&!recent);
+   const text=pet.sleeping?'正在休息，陪你安静待一会儿':recent?pet.say:state.preferences.homeSkin==='pixel'?'点点我，今天也一起加油。':'点点我 · 摸摸头';
+   const line=note.querySelector('span');if(line.textContent!==text)line.textContent=text;
+  }
+ }
  const harvest=$('#home-harvest-label');if(harvest){const ready=state.game.plots.filter(p=>p&&p!=='locked'&&p.ready<=Date.now()).length;harvest.textContent=ready?ready+' 块田可以收获':'去看看我的农田';}
  if(focus){const done=Date.now()>=focus.end;$('#activity-text').textContent=done?'本次专注已完成，可以领取奖励':'专注中 · '+countdown(focus.end);document.title=(done?'专注完成':countdown(focus.end))+' · szuDesktop';if(done&&notifiedFocus!==focus.end){notifiedFocus=focus.end;toast('专注完成啦，回到学习工具领取奖励吧。')}}else{document.title='szuDesktop · 荔枝庭院'}
  if(!busy&&page==='garden'&&gardenTab==='pet'){
@@ -344,7 +360,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-action]:no
  if(await schoolUI.click(a,b))return;
  if(await campusUI.click(a,b))return;
  if(await pianoUI.click(a,b))return;
- if(a==='homeSkin'){if(!['pixel','lake','bookshop','terrace'].includes(b.dataset.skin)||b.dataset.skin===state.preferences.homeSkin)return;const next=structuredClone(state);next.preferences.homeSkin=b.dataset.skin;await commit(next,undefined,renderPetCare);return}
+ if(a==='homeSkin'){if(!['pixel','lake','bookshop','terrace'].includes(b.dataset.skin)||b.dataset.skin===state.preferences.homeSkin)return;const next=structuredClone(state);next.preferences.homeSkin=b.dataset.skin;await commit(next,undefined,()=>{renderPetCare();document.getElementById('home-skin-summary')?.focus({preventScroll:true})});return}
  if(a==='calendar-refresh'){await academicUI.load(true);return}
  if(a==='calendar-auto'){const next=structuredClone(state);next.semester='';await commit(next);await academicUI.load();toast('已恢复官方校历');return}
  if(a==='refresh'){if(probing){toast('正在刷新网络状态，请稍候');return}toast(await refresh()?'网络状态已刷新':'网络状态刷新失败，请稍后重试');return}

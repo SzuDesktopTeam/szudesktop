@@ -27,11 +27,11 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** The beta0.9.3 source candidate adds three selectable cel-shaded home scenes in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Integration and verification are recorded in [STATUS section 61](STATUS.md#61-三渲二首页风景2026-09-27源码候选). Candidate installers and CI evidence in section 60 belong to the earlier 2048 artwork version.
+**These changes are not publicly released; the download above remains beta0.9.2.** The beta0.9.3 source adds three selectable cel-shaded home scenes in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Integration and final verification are recorded in [STATUS sections 61–62](STATUS.md#62-首页收尾与合并验收2026-09-27). Local candidate installers in section 60 belong to the earlier 2048 artwork version.
 
 ### A different window onto campus
 
-Choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace** at the top of the home page, or return to the original **Pixel Courtyard**. The selection is saved locally and survives reopening; companions, crops and tasks keep their existing progress.
+Open **Change scenery** at the top of the home page to choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace**, or return to the original **Pixel Courtyard**. The selection is saved locally and survives reopening; companions, crops and tasks keep their existing progress. The picker folds away after a selection, leaving room for the view.
 
 | Scene | Outside the window |
 |---|---|
@@ -46,6 +46,8 @@ Choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace** at the to
 These campus-inspired scenes use real 3D geometry. The stepped lighting, tinted shadows, depth ink, sky and colour pipeline are adapted from MIT-licensed [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing), with Three.js 0.180.0 bundled locally. Scene geometry is new work for this project; attribution and adaptations are recorded in [Third-party notices](../THIRD_PARTY_NOTICES.md).
 
 Scenes render only while the home view is visible and release their resources when leaving it. The animation setting covers companions and home scenery, supports a still frame and respects system reduced motion. If 3D rendering is unavailable, the pixel campus and normal controls remain accessible.
+
+Pet care and task saves reuse the same canvas, keeping background animation continuous. A small nameplate replaces the idle companion bubble; replies expand briefly and fold away again. Dusk text contrast, distant greenery and bookshop paving have also been refined.
 
 The bottom hint bar now follows the active companion, keeping its portrait and name consistent after switching, renaming, navigation and reopening. This fix is available in source and the local preview, but not in a public installer yet; see STATUS section 60.4 for verification.
 

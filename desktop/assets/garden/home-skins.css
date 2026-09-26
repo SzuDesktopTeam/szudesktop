@@ -1,8 +1,17 @@
 /* A scene is the view out of the window; the useful desk remains ordinary HTML. */
-.home-skin-picker { margin:0 0 18px; }
-.skin-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; margin:0 0 10px; }
-.skin-heading > span { font:17px/1.5 var(--pixel); color:#52624b; }
-.skin-heading > small { font-size:11px; color:#756c5b; }
+.home-skin-picker { margin:0 0 14px; color:#405548; }
+.home-skin-picker > summary { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:44px; padding:0 0 10px; cursor:pointer; list-style:none; border-bottom:1px solid #a99f8250; }
+.home-skin-picker > summary::-webkit-details-marker { display:none; }
+.home-skin-picker > summary:focus-visible { outline:3px solid #5b8063; outline-offset:3px; }
+.skin-current { display:flex; align-items:center; gap:10px; min-width:0; }
+.skin-current > span:last-child { display:flex; align-items:baseline; gap:12px; }
+.skin-current small { font:12px/1.5 var(--body); color:#72634f; }
+.skin-current strong { font:17px/1.5 var(--pixel); color:#405548; }
+.skin-current .skin-swatch { width:24px; height:28px; flex-basis:24px; }
+.skin-change { display:flex; align-items:center; gap:9px; font:12px/1.5 var(--body); color:#52624b; }
+.skin-change > span { display:inline-block; font-size:18px; }
+.home-skin-picker[open] .skin-change > span { transform:rotate(180deg); }
+.skin-heading { margin:12px 0 10px; font:12px/1.7 var(--body); color:#72634f; }
 .skin-choices { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
 .skin-choices button { min-width:0; justify-content:flex-start; text-align:left; padding:9px 12px; background:#fffcf1; border:1px solid #c5baa2; box-shadow:0 2px #81745422; gap:10px; }
 .skin-choices button > span:last-child { min-width:0; }
@@ -36,6 +45,10 @@
 .is-scenic .home-pet-note::after { border-width:1px; right:43px; bottom:-7px; }
 .is-scenic .home-pet-note strong { font-size:15px; margin-bottom:2px; }
 .is-scenic .home-pet-note span { font-size:11px; }
+.is-scenic .home-pet-note.is-quiet { width:auto; max-width:150px; min-width:76px; right:28px; bottom:138px; padding:5px 10px; border:0; background:#fffdf0ed; box-shadow:0 2px 4px #25393720; text-align:center; }
+.is-scenic .home-pet-note.is-quiet strong { margin:0; }
+.is-scenic .home-pet-note.is-quiet span { font-size:10px; color:#6a6856; }
+.is-scenic .home-pet-note.is-quiet::after { display:none; }
 .is-scenic .home-harvest { bottom:22px; left:22px; min-height:58px; border-width:1px; max-width:calc(100% - 150px); }
 .is-scenic .garden-built-scene--home { left:280px; right:160px; bottom:22px; max-width:none; justify-content:center; }
 body[data-page=home]:not([data-home-skin=pixel]) { background:#d9e5dc; }
@@ -48,17 +61,19 @@ body[data-home-skin=bookshop] .is-scenic .home-letter { background:#f4f0e3; }
 body[data-home-skin=bookshop] .is-scenic .home-letter h1 { color:#405e57; }
 body[data-home-skin=terrace] .is-scenic .home-letter { background:#f4e9df; }
 body[data-home-skin=terrace] .is-scenic .home-letter h1 { color:#545771; }
-body[data-theme=night] .skin-heading > span { color:#d7dbb7; }
-body[data-theme=night] .skin-heading > small { color:#c7bda3; }
 @media(max-width:700px) {
  .skin-choices { grid-template-columns:repeat(2,minmax(0,1fr)); }
- .skin-heading > small { display:none; }
+ .skin-current > span:last-child { gap:8px; }
+ .skin-current strong { font-size:15px; }
+ .skin-current small { font-size:10px; }
+ .skin-change { font-size:11px; gap:4px; }
  .is-scenic .home-landscape { min-height:350px; }
  .is-scenic .home-letter { display:block; padding:20px; }
  .is-scenic .home-letter h1 { font-size:26px; }
  .is-scenic .home-letter .actions { margin-top:15px; }
  .is-scenic .landscape-caption { left:12px; top:12px; max-width:calc(100% - 24px); font-size:11px; padding:7px 9px; }
  .is-scenic .home-pet-note { right:10px; bottom:125px; width:145px; }
+ .is-scenic .home-pet-note.is-quiet { right:14px; bottom:112px; max-width:120px; }
  .is-scenic .home-pet { right:13px; bottom:15px; width:82px; height:95px; }
  .is-scenic .home-pet .sprite { width:72px; height:84px; }
  .is-scenic .home-harvest { left:12px; bottom:15px; max-width:calc(100% - 105px); padding:8px; gap:6px; }
