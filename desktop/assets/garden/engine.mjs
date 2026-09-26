@@ -1,4 +1,6 @@
 // Original local-only garden rules. No accounts, passwords, or remote services.
+import {PETS,AVAILABLE_PETS,PET_LIMIT,petDefinition} from './pet-catalog.mjs';
+export {PETS,DEFAULT_PET,AVAILABLE_PETS,petSprite,petViewBox} from './pet-catalog.mjs';
 export const CROPS={
  radish:{name:'小萝卜',icon:'radish',time:60000,price:4,sell:3,yield:2,level:1,xp:1},
  strawberry:{name:'草莓',icon:'strawberry',time:300000,price:12,sell:12,yield:2,level:1,xp:5},
@@ -6,41 +8,18 @@ export const CROPS={
  lychee:{name:'荔枝',icon:'lychee',time:3600000,price:40,sell:70,yield:3,level:3,xp:60},
 };
 export const DECOR={flower:{name:'窗边小花',price:35},scarf:{name:'猫咪围巾',price:60},lantern:{name:'暖光灯笼',price:90}};
-// 宠物名册：sprite 对应 index.html 里的 symbol id；states=true 表示按心情切换
-// 对应种类的 normal / happy / sad / sleep 四帧，false 表示只有单帧立绘。
-// 荔宝是新存档的默认伙伴；旧存档补齐名册时保留已有伙伴及其名字和成长。
-export const PETS={
- libao:{name:'荔宝',sprite:'libao',states:true,description:'荔枝庭院的老朋友，热情又爱笑。'},
- chestnut:{name:'栗栗',sprite:'cat',states:true,description:'爱晒太阳的栗色小猫，心情都写在脸上。'},
- egret:{name:'小白',sprite:'egret',states:true,description:'湖边散步的白鹭，喜欢安静地陪你。'},
- turtle:{name:'阿青',sprite:'turtle',states:true,description:'慢慢悠悠的小龟，最擅长陪你专注。'},
-};
-export const DEFAULT_PET='libao';
-const PET_GREETINGS={libao:'嗨，我是荔宝！今天也一起加油。',chestnut:'喵，我在这儿呢。',egret:'湖边的风很舒服，陪你坐一会儿。',turtle:'不着急，我们一步一步来。'};
-const PET_LINES={
- libao:{pat:['嘿嘿，叶子都被你摸歪啦。','今天也收到你的摸摸头了，开心！'],feed:['甜甜的！这一口留在好心情里。','吃饱啦，我可以陪你再做一件小事。'],play:['接住！这次换我把开心传给你。','我们绕庭院跑一小圈吧！'],sleep:['给我留一点晚风，梦里见。','叶子收好啦，我先睡一会儿。'],wake:['我醒啦！今天有什么新鲜事？','伸个懒腰，重新出发！'],focus:['这一段认真，我陪你一起收好了。','完成啦！要不要站起来喝口水？'],harvest:['满满一小篮！留一点给伙伴吧。','你看，认真照顾的种子真的长大了。']},
- chestnut:{pat:['呼噜……就是这里，再靠近一点。','耳朵被摸到了，先眯一会儿。'],feed:['喵，吃完就去窗边晒太阳。','盘子空啦。谢谢你记得我的点心。'],play:['那团影子跑哪儿了？我来找找。','抓到啦！这一局算我赢，好不好？'],sleep:['窗边这块刚刚好，呼噜……','尾巴收起来，留半个坐垫给你。'],wake:['喵——睡了一个暖暖的午觉。','我把爪子伸直啦，你也伸伸肩膀吧。'],focus:['你读你的，我在旁边安静打呼噜。','这一段结束啦，陪我看一眼窗外吧。'],harvest:['篮子我检查过了，没有小虫子。','这些叶子会晃耶……我只看，不扑。']},
- egret:{pat:['风碰过羽毛，你的手也很轻。','别急，我就在湖边等你。'],feed:['谢谢。吃完再去水边走一走。','这一小份刚好，剩下的慢慢来。'],play:['跟着我的影子，走过这一小段。','抬头看看，有一片云像我们的庭院。'],sleep:['湖面安静下来了，我也歇一会儿。','翅膀收好，等下一阵风。'],wake:['风换了方向，我们也活动一下吧。','我醒了。湖边还是一样安静。'],focus:['安静的一段时间，已经留下了痕迹。','辛苦了，望一望远处再继续吧。'],harvest:['种子等过风和阳光，现在轮到收获了。','把小篮子放稳，我们一份一份收好。']},
- turtle:{pat:['嗯……我有感觉到，谢谢你。','慢慢摸就好，我不赶时间。'],feed:['让我慢慢嚼，这一口很好吃。','肚子暖了，今天又多一点力气。'],play:['走慢一点也算比赛，我来啦。','这一步，再下一步。到了！'],sleep:['先把脑袋缩回去，待会儿见。','今天走过的路，睡醒再接着走。'],wake:['醒了醒了，我把四只脚都伸出来。','休息够啦，下一件事从小小的一步开始。'],focus:['一步一步的，你已经走完这一段了。','不用马上开始下一段，先歇一下。'],harvest:['等它长大，再慢慢收下，刚刚好。','不是长得最快的种子，收成也很好。']},
-};
 function companionLine(g,p,action){
- const lines=(PET_LINES[p.species]||PET_LINES[DEFAULT_PET])[action];
+ const lines=petDefinition(p.species).lines[action];
  const day=Number(g.daily.day.replaceAll('-',''));
  return lines[(day+g.daily.care+g.stats.harvest+g.stats.focus)%lines.length];
 }
 function createPet(species,now){
- return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PET_GREETINGS[species],saidAt:now};
+ return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PETS[species].greeting,saidAt:now};
 }
 // 每只宠物的字段。新增字段必须同时加进 createState / normalize 的迁移与白名单，
 // 否则旧存档读进来会是 undefined。
 const PET_FIELDS=['species','name','xp','bond','hunger','energy','mood','sleeping','lastPat','lastPlay','say','saidAt'];
 export const activePet=g=>g.pets[g.active]||g.pets[0];
-// 四位伙伴共用心情阈值，睡眠优先于心情。
-export function petSprite(p){
- const spec=Object.hasOwn(PETS,p.species)?PETS[p.species]:PETS[DEFAULT_PET];
- if(!spec.states)return spec.sprite;
- return spec.sprite+'-'+(p.sleeping?'sleep':p.mood<35?'sad':p.mood>65?'happy':'normal');
-}
 // 宠物说的话。saidAt 只用于界面判断是否新鲜，不影响逻辑。
 export function say(p,text,now){p.say=String(text).slice(0,60);p.saidAt=now}
 export const QUESTS={care:{name:'陪伴伙伴 3 次',target:3,reward:15},plant:{name:'种下一颗种子',target:1,reward:10},harvest:{name:'收获一块农田',target:1,reward:15},focus:{name:'完成一次专注',target:1,reward:25}};
@@ -58,7 +37,7 @@ export const JOURNEY=[
  {id:'hello',visit:1,title:'给你留了一盏灯',story:'荔宝把小屋门前的灯拨亮了一点：“不用先做完所有事，来坐坐也很好。”你们给这片小庭院留了一个位置。',keepsake:'初见小灯'},
  {id:'lake',visit:2,title:'文山湖边的慢半拍',story:'小白在湖边停下来，等一圈水纹慢慢散开。今天没有急着赶路，你们记住了风吹过树叶的声音。',keepsake:'湖边羽签'},
  {id:'shade',visit:3,title:'栗栗的午后座位',story:'栗栗把窗边晒暖的那一角让出来一点。你翻了几页书，它换了个舒服的姿势。一段安静的时间，也可以一起度过。',keepsake:'暖阳坐垫'},
- {id:'rain',visit:4,title:'等雨停的十分钟',story:'雨落在屋檐上，阿青说不必把每一分钟都填满。你们把湿伞放在门边，等杯里的热气慢慢变淡。',keepsake:'雨天小伞'},
+ {id:'rain',visit:4,title:'等雨停的十分钟',story:'雨落在屋檐上，Pingu 把一条干毛巾推到你手边，轻轻 Noot 了一声。你们把湿伞放在门边，等杯里的热气慢慢变淡。',keepsake:'雨天小伞'},
  {id:'books',visit:5,title:'夹在书页里的话',story:'桌上的书多了一张小纸条：“今天做过的那一点，已经算数。”荔宝画了一个歪歪的小太阳，让你下次翻到这里还能看见。',keepsake:'荔园书签'},
  {id:'basket',visit:6,title:'分一半给朋友',story:'伙伴们把收获篮摆到窗边，各自挑了一小份。没有比较谁攒得更多，剩下的可以留到下一次相聚。',keepsake:'分享小篮'},
  {id:'home',visit:7,title:'这儿已经有你的样子',story:'灯、书签和坐垫都留在原来的地方。你不必连续每天来；每次回来，伙伴都认得你。这片庭院，已经有了你的日常。',keepsake:'七次相遇相框'},
@@ -71,7 +50,7 @@ export function createState(now=Date.now()){
  return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:{radish:4,strawberry:2,blueberry:0,lychee:0},stock:{radish:0,strawberry:0,blueberry:0,lychee:0},
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
- pets:Object.keys(PETS).map(species=>createPet(species,now)),active:0,
+ pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,
  daily:dailyState(now),stats:{harvest:0,focus:0,minutes:0,planted:1,tasks:0},discovered:[],decor:[],equipped:[],achievements:[],gardenLevel:1,focus:null,focusHistory:[],journey:{days:[dayKey(now)],claimed:[]},log:[{time:now,text:'欢迎来到荔枝庭院。第一块萝卜地已经种好，记得来收获。'}]}};
 }
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -102,12 +81,12 @@ export function normalize(input,now=Date.now()){
  g.focusHistory=(Array.isArray(g.focusHistory)?g.focusHistory:[]).filter(f=>f&&Number.isInteger(f.minutes)&&f.minutes>=1&&f.minutes<=120&&Number.isFinite(f.startedAt)&&Number.isFinite(f.endedAt)&&f.startedAt>=0&&f.endedAt>=f.startedAt).slice(0,365).map(f=>({startedAt:f.startedAt,endedAt:f.endedAt,minutes:f.minutes,todoId:String(f.todoId||'').slice(0,60),task:String(f.task||'').slice(0,120)}));
  g.journey={days:[...new Set((Array.isArray(g.journey?.days)?g.journey.days:[]).filter(validDate))].sort().slice(0,7),claimed:[...new Set((Array.isArray(g.journey?.claimed)?g.journey.claimed:[]).filter(id=>JOURNEY.some(c=>c.id===id)))]};
  g.journey.claimed=g.journey.claimed.filter(id=>JOURNEY.find(c=>c.id===id).visit<=g.journey.days.length);
- g.daily={day:g.daily.day,gift:!!g.daily.gift,...Object.fromEntries(Object.keys(QUESTS).map(k=>[k,g.daily[k]])),claimed:g.daily.claimed.filter(k=>Object.hasOwn(QUESTS,k)),pats:(Array.isArray(g.daily.pats)?g.daily.pats:[]).slice(0,8).map(n=>Number.isInteger(n)?clamp(n,0,PAT_REWARD_LIMIT):0),todoRewards:Number.isInteger(g.daily.todoRewards)?clamp(g.daily.todoRewards,0,TODO_REWARD_LIMIT):0};
+ g.daily={day:g.daily.day,gift:!!g.daily.gift,...Object.fromEntries(Object.keys(QUESTS).map(k=>[k,g.daily[k]])),claimed:g.daily.claimed.filter(k=>Object.hasOwn(QUESTS,k)),pats:(Array.isArray(g.daily.pats)?g.daily.pats:[]).slice(0,PET_LIMIT).map(n=>Number.isInteger(n)?clamp(n,0,PAT_REWARD_LIMIT):0),todoRewards:Number.isInteger(g.daily.todoRewards)?clamp(g.daily.todoRewards,0,TODO_REWARD_LIMIT):0};
  check(Number.isFinite(g.last)&&g.last>0&&g.last<=now+86400000,'存档时间异常');
 
  // —— 宠物：单只（schema 2）迁移成数组，并逐只校验 ——
  if(Array.isArray(g.pets)){
-  check(g.pets.length>=1&&g.pets.length<=8,'伙伴数量不对');
+  check(g.pets.length>=1&&g.pets.length<=PET_LIMIT,'伙伴数量不对');
  }else{
   check(g.pet&&typeof g.pet==='object','伙伴存档格式错误');
   g.pets=[{...g.pet,species:'chestnut'}];
@@ -138,9 +117,9 @@ export function normalize(input,now=Date.now()){
  for(const k of Object.keys(createState(now).game))clean.game[k]=g[k];
  clean.game.pets=g.pets;clean.game.active=g.active;
  const settled=settle(clean,now);
- // 先结算原有伙伴，再迎接新伙伴；已有记录不覆盖、不重排，满 8 只时不挤掉旧伙伴。
- for(const species of Object.keys(PETS)){
-  if(settled.game.pets.length>=8)break;
+ // 先结算原有伙伴，再补齐上架伙伴；已有记录不覆盖、不重排，满额时不挤掉旧伙伴。
+ for(const species of AVAILABLE_PETS){
+  if(settled.game.pets.length>=PET_LIMIT)break;
   if(!settled.game.pets.some(p=>p.species===species))settled.game.pets.push(createPet(species,now));
  }
  settled.game.gardenLevel=gardenLevel(settled.game);
@@ -183,7 +162,7 @@ export function act(state,a,now=Date.now()){
   check(Number.isInteger(a.index)&&a.index>=0&&a.index<g.pets.length,'没有这个伙伴');
   check(a.index!==g.active,'它已经在这里陪你啦');
   g.active=a.index;const q=activePet(g);
-  say(q, q.sleeping?'（睡着的 '+q.name+' 翻了个身）':'嘿，轮到我了！',now);
+  say(q, q.sleeping?'（睡着的 '+q.name+' 翻了个身）':petDefinition(q.species).greeting,now);
   note(g,'切换伙伴：现在陪着你的是 '+q.name+'。',now);break;}
  case 'plant':{
   const c=CROPS[a.crop];check(Number.isInteger(a.index)&&a.index>=0&&a.index<6&&g.plots[a.index]===null,'请选择空地');check(c&&gardenLevel(g)>=c.level,'庭院还没有解锁这种作物');check(g.seeds[a.crop]>0,'这种种子用完了，去集市补充吧');g.seeds[a.crop]--;g.plots[a.index]={crop:a.crop,planted:now,ready:now+c.time,watered:false};g.stats.planted++;g.daily.plant++;note(g,'种下了'+c.name+'，离线时也会继续生长。',now);break;}

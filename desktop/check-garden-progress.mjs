@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {act,createState,normalize,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite} from './assets/garden/engine.mjs';
+import {act,createState,normalize,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite,AVAILABLE_PETS} from './assets/garden/engine.mjs';
 import {actionReward} from './assets/garden/rewards.mjs';
 
 const now=new Date(2026,8,27,12).getTime();
@@ -167,7 +167,7 @@ test('libao has distinct mood and sleep sprites without changing the original co
 test('each companion responds in its own voice for every care and progress action',()=>{
  for(const type of ['pat','feed','play','sleep','wake','focusClaim','harvest']){
   const voices=[];
-  for(let index=0;index<4;index++){
+  for(let index=0;index<AVAILABLE_PETS.length;index++){
    let before=createState(now);before.game.active=index;
    const action={type:type==='wake'?'sleep':type,index:0};
    let time=now;
@@ -179,7 +179,7 @@ test('each companion responds in its own voice for every care and progress actio
    assert.ok(line&&line.length<=60);assert.equal(after.game.pets[index].saidAt,time);
    assert.equal(replayed.game.pets[index].say,line,'reload does not reroll the response');voices.push(line);
   }
-  assert.equal(new Set(voices).size,4,type+' should have a distinct voice for each species');
+  assert.equal(new Set(voices).size,AVAILABLE_PETS.length,type+' should have a distinct voice for each species');
  }
  let s=createState(now);s=act(s,{type:'pat'},now);const first=s.game.pets[0].say;
  s=act(s,{type:'pat'},now+10000);assert.notEqual(s.game.pets[0].say,first);

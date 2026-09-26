@@ -16,6 +16,10 @@ Electron 来源：https://github.com/electron/electron ，采用 MIT License。�
 
 Chromium 及其第三方组件的版权和许可随 Electron 运行时提供，见安装目录内 `LICENSES.chromium.html`。便携版不捆绑 Electron 或 Chromium，使用用户已有浏览器。
 
+## Pingu 与 Skipper 像素形象
+
+候选 beta0.9.3 的 Pingu 与《马达加斯加》企鹅 Skipper 是项目自行绘制的粉丝像素形象，没有提取动画、电影或游戏的原始美术资源。角色及相关标识的权利属于各自原权利人；本项目的 MIT 许可不授予这些角色 IP 的使用权，也不表示获得官方授权或背书。
+
 ## 协议参考与美术
 
 - xEncode 实现改写自 MIT 项目 Sleepstars/SZU-login（https://github.com/Sleepstars/SZU-login），其上游为 vidar-team/srun-login；原始版权声明保留在 `LICENSE`。

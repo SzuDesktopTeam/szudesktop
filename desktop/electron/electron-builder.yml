@@ -11,6 +11,11 @@ files:
   - window-policy.mjs
   - preload.cjs
   - pet-policy.mjs
+  - from: ../assets/garden
+    to: .
+    filter:
+      - pet-catalog.mjs
+      - pet-art.mjs
   - pet-settings.mjs
   - desktop-settings.mjs
   - focus-notifications.mjs
@@ -24,6 +29,8 @@ files:
 extraResources:
   - from: ../assets/garden/engine.mjs
     to: garden-engine.mjs
+  - from: ../assets/garden/pet-catalog.mjs
+    to: pet-catalog.mjs
   - from: ../../dist/szudesktop-windows-amd64.exe
     to: szudesktop-windows-amd64.exe
   # 托盘图标：打包后 main.mjs 从 process.resourcesPath 解析。

@@ -3,27 +3,10 @@
 // 动画本身全部由 CSS keyframes 播放，本文件只负责「选哪个状态」。
 import {PET_ACTIONS, petIdleAction} from './pet-policy.mjs';
 
-const VIEW_BOX = {
-  libao: '0 0 52 56',
-  'libao-normal': '0 0 52 56',
-  'libao-happy': '0 0 52 56',
-  'libao-sleep': '0 0 52 56',
-  'libao-sad': '0 0 52 56',
-  egret: '0 0 32 32',
-  'egret-normal': '0 0 32 32',
-  'egret-happy': '0 0 32 32',
-  'egret-sleep': '0 0 32 32',
-  'egret-sad': '0 0 32 32',
-  turtle: '0 0 32 32',
-  'turtle-normal': '0 0 32 32',
-  'turtle-happy': '0 0 32 32',
-  'turtle-sleep': '0 0 32 32',
-  'turtle-sad': '0 0 32 32',
-  'cat-normal': '0 0 20 22',
-  'cat-happy': '0 0 20 22',
-  'cat-sleep': '0 0 20 22',
-  'cat-sad': '0 0 20 22',
-};
+import {PET_SPRITES as VIEW_BOX} from './pet-catalog.mjs';
+import {PET_SYMBOLS} from './pet-art.mjs';
+document.getElementById('pet-sprites').innerHTML=PET_SYMBOLS;
+
 const SAY_SHOW_MS = 8000;
 const IDLE_MIN_MS = 3500;
 const IDLE_MAX_MS = 8000;

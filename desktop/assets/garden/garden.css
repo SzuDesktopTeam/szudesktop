@@ -17,7 +17,9 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .pet-living .petroom > .sprite { width:138px; height:155px; margin-bottom:27px; }
 .pet-living .window { width:128px; height:116px; left:22px; top:24px; border-width:6px; background-image:url(courtyard.png); background-size:360px; background-position:50% 15%; }
 .pet-living .pet-name { right:14px; top:24px; padding:5px 8px; font-size:12px; max-width:48%; }
-.pet-living .pet-say { top:157px; left:14px; max-width:45%; font-size:12px; padding:7px 9px; }
+/* Dialogue gets its own row so long penguin lines never cover the face. */
+.pet-living > .pet-say { position:relative; inset:auto; max-width:none; min-height:48px; margin:-4px 0 16px; padding:10px 12px; border:1px solid #cbb183; border-radius:0; background:#f8efda; color:#6b5538; font-size:12px; line-height:1.6; }
+.pet-living > .pet-say::after { display:none; }
 .room-shelf { position:absolute; right:23px; top:101px; display:flex; align-items:flex-end; gap:9px; height:52px; width:100px; justify-content:center; border-bottom:8px solid #99723e; box-shadow:0 3px #69442f; }
 .room-shelf .sprite { width:31px; height:31px; margin-bottom:4px; }
 .pet-living .lantern { top:71px; right:36px; z-index:2; }
@@ -64,7 +66,7 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .pet-roster-card .card-head { padding:0; border:0; margin-bottom:16px; }
 .pet-roster-card h2 { font-size:22px; color:#6b5c46; }
 .pet-roster-card .card-head small { font-size:12px; }
-.pet-roster-card .companion-roster { grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:0; }
+.pet-roster-card .companion-roster { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:0; }
 .pet-roster-card .companion-choice { grid-template-columns:44px minmax(0,1fr); gap:4px 10px; padding:12px; border-width:1px; box-shadow:0 2px #bfa87d33; }
 .pet-roster-card .companion-portrait { width:44px; height:52px; border:0; background:transparent; }
 .pet-roster-card .companion-portrait .sprite { width:40px; height:46px; }
@@ -164,7 +166,7 @@ body[data-theme=night] .farm-landscape { background-color:#6f8574; background-bl
 }
 @media(max-width:900px) {
  .pet-layout,.farm-layout,.journal-layout { grid-template-columns:1fr; }.pet-sidebar { grid-template-columns:1fr 1fr; align-items:start; }.farm-sidebar { grid-template-columns:1fr 1fr; align-items:start; }.farm-main { grid-row:auto; }
- .pet-living .petroom { height:330px; }.pet-living .petroom > .sprite { width:150px; height:170px; }.pet-living .window { width:150px; height:125px; }.pet-living .pet-say { top:170px; }
+ .pet-living .petroom { height:330px; }.pet-living .petroom > .sprite { width:150px; height:170px; }.pet-living .window { width:150px; height:125px; }
  .care-actions { grid-template-columns:repeat(4,minmax(0,1fr)); }
  .farm-landscape { min-height:530px; padding:125px 32px 24px; }.farm-landscape .plots { gap:24px 15px; }.farm-sidebar .daily-check { display:flex; }
  .farm-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:24px; }.farm-controls .eyebrow,.farm-controls h2,#farm-plot-details { grid-column:1; }.farm-controls .seed-picker { grid-column:2; grid-row:1/4; align-self:center; margin:0; border:0; padding:0; }.farm-controls .actions { grid-column:2; margin-top:0; }.farm-controls #farm-plot-details { grid-row:3/5; }
@@ -173,7 +175,7 @@ body[data-theme=night] .farm-landscape { background-color:#6f8574; background-bl
 @media(max-width:650px) {
  body[data-page=garden] .pagehead h1 { font-size:28px; }body[data-page=garden] .subnav button { font-size:15px; padding:8px; }
  .pet-sidebar,.farm-sidebar { grid-template-columns:1fr; }.pet-roster-card .companion-roster { grid-template-columns:repeat(2,minmax(0,1fr)); }
- .pet-living .petroom { height:290px; }.pet-living .window { width:104px; height:105px; left:15px; top:20px; }.room-shelf { right:16px; width:80px; top:96px; }.pet-living .pet-name { font-size:10px; max-width:48%; right:10px; top:20px; }.pet-living .pet-say { font-size:11px; top:135px; left:10px; max-width:47%; }.pet-living .petroom > .sprite { width:124px; height:142px; margin-bottom:25px; }
+ .pet-living .petroom { height:290px; }.pet-living .window { width:104px; height:105px; left:15px; top:20px; }.room-shelf { right:16px; width:80px; top:96px; }.pet-living .pet-name { font-size:10px; max-width:48%; right:10px; top:20px; }.pet-living .petroom > .sprite { width:124px; height:142px; margin-bottom:25px; }
  .care-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }.care-actions button { min-height:40px; }.garden-diary summary { flex-wrap:wrap; font-size:16px; }.garden-diary summary span { flex-basis:100%; order:1; }
  .farm-toolbar { padding:15px; }.farm-toolbar h2 { font-size:24px; }
  .farm-landscape { padding:120px 12px 20px; min-height:0; background-position:44% 50%; }.farm-landscape .plots { grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px 6px; }.farm-landscape .plot { padding:4px; }.farm-landscape .soil { height:82px; }.farm-landscape .soil .sprite { width:47px; height:47px; }.farm-landscape .plot > strong { font-size:15px; }.farm-landscape .plot > small { font-size:10px; }.farm-kind { font-size:11px; }.farm-location { top:18px; right:12px; font-size:11px; }

@@ -75,8 +75,29 @@ await check('pet selection saves the active companion and refuses invalid or sta
  assert.equal(f.context.state.game.active,1);assert.equal(f.results[0].ok,true);
  assert.equal(f.context.state.game.pets[0].xp,before.xp);assert.equal(f.writes.length,1);
  assert.match(f.results[0].message,/来陪你/);
- for(const command of ['switchPet:1','switchPet:7','switchPet:8','switchPet:-1','switchPet:0.5','switchPet:constructor'])await f.command(command);
+ for(const command of ['switchPet:1','switchPet:7','switchPet:8','switchPet:12','switchPet:-1','switchPet:0.5','switchPet:01','switchPet:1e1','switchPet:1\n','switchPet:constructor'])await f.command(command);
  assert.equal(f.writes.length,1);assert.ok(f.results.slice(1).every(result=>!result.ok));
+ assert.equal(f.results[3].message,'没有这个伙伴','well-formed index 8 must reach the engine length check');
+ assert.equal(f.results[4].message,'没有这个伙伴','multi-digit indexes must reach the engine length check');
+});
+await check('the preload bridge supports future indexes beyond seven but only existing pets can be selected',async()=>{
+ const f=fixture();let bridge,listener,pending;
+ const context=vm.createContext({require:()=>({
+  contextBridge:{exposeInMainWorld:(_key,value)=>{bridge=value}},
+  ipcRenderer:{on:(_channel,fn)=>{listener=fn},removeListener(){},send(){}},
+ })});
+ vm.runInContext(readFileSync(new URL('./electron/preload.cjs',import.meta.url),'utf8'),context);
+ bridge.onPetCommand(command=>{pending=f.command(command)});
+ // Simulate a future catalog with eleven records without altering today's registry.
+ while(f.context.state.game.pets.length<11)f.context.state.game.pets.push({...f.context.state.game.pets[0],name:'未来伙伴'+f.context.state.game.pets.length});
+ for(const index of [8,10]){
+  listener({sender:'private'},'switchPet:'+index);await pending;
+  assert.equal(f.context.state.game.active,index);assert.equal(f.results.at(-1).ok,true);
+ }
+ assert.equal(f.writes.length,2);
+ listener({sender:'private'},'switchPet:11');await pending;
+ assert.equal(f.results.at(-1).ok,false);assert.equal(f.results.at(-1).message,'没有这个伙伴');
+ assert.equal(f.writes.length,2);assert.equal(f.context.state.game.active,10);
 });
 await check('pet selection refreshes the name field instead of keeping the previous companion draft',async()=>{
  const f=fixture();let replaced=false;
@@ -167,8 +188,9 @@ await check('preload strips IPC events, filters command names, and restricts res
  })});
  vm.runInContext(readFileSync(new URL('./electron/preload.cjs',import.meta.url),'utf8'),context);
  const calls=[],unsubscribe=bridge.onPetCommand((...args)=>calls.push(args));
- for(const command of ['pat','feed','play','sleep','garden','farm','study','home','switchPet:0','switchPet:7','switchPet:8','switchPet:-1','switchPet:0.5','switchPet:__proto__','quit',{}])listener({sender:'private'},command);
- assert.equal(calls.length,10);assert.ok(calls.every(args=>args.length===1));
+ const allowed=['pat','feed','play','sleep','garden','farm','study','home','switchPet:0','switchPet:7','switchPet:8','switchPet:10'];
+ for(const command of [...allowed,'switchPet:-1','switchPet:0.5','switchPet:01','switchPet:+1','switchPet:1e1','switchPet:1\n','switchPet:','switchPet:__proto__','quit',{}])listener({sender:'private'},command);
+ assert.deepEqual(calls.map(args=>args[0]),allowed);assert.ok(calls.every(args=>args.length===1));
  unsubscribe();assert.equal(removed[0],'szu:pet-command');assert.equal(removed[1],listener);
  bridge.petResult({ok:true,message:'好'.repeat(121),secret:'never forward'});
  bridge.petResult({ok:'true',message:'invalid'});bridge.petResult({ok:true,message:5});

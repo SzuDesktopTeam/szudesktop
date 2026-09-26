@@ -11,6 +11,7 @@ import {createSchoolWindows} from './school-window.mjs';
 import {isSchoolURL} from './school-policy.mjs';
 import {DESKTOP_DEFAULTS,readDesktopSettings,writeDesktopSettings,validateDesktopPatch,createLoginItemControl,isQuietStartup} from './desktop-settings.mjs';
 import {createFocusNotifier} from './focus-notifications.mjs';
+import {PETS} from './pet-catalog.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 // 菜单与主界面共用同一份庭院规则，包含离线成长；打包时直接复制源模块。
@@ -198,7 +199,7 @@ async function openPetMenu(){
     {type:'separator'},
     care('摸摸头','pat'),care(`喂食${petGame?`（剩余 ${petGame.food} 份）`:''}`,'feed'),care('陪它玩','play'),care(pet?.sleeping?'叫醒伙伴':'让它睡一会','sleep'),
     {label:'切换伙伴',enabled:Boolean(pet),submenu:(petGame?.pets||[]).map((companion,index)=>({
-      id:`switchPet:${index}`,label:companion.name,type:'radio',checked:index===petGame.active,
+      id:`switchPet:${index}`,label:companion.name+(PETS[companion.species]?.available?'':' · 老朋友'),type:'radio',checked:index===petGame.active,
       click:()=>{if(index!==petGame.active)dispatchPetCommand(`switchPet:${index}`);},
     }))},
     {type:'separator'},

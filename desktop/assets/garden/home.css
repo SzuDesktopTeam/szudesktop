@@ -38,7 +38,11 @@ body[data-page=home] main { padding:24px; }
 .companions-heading { flex:0 0 145px; padding-left:2px; }
 .companions-heading > span { display:block; font:19px/1.4 var(--pixel); color:#5e503e; }
 .companions-heading small { display:block; margin-top:5px; font-size:11px; }
-.home-roster { display:grid; flex:1; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+.home-roster { display:grid; flex:1; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:9px; }
+.legacy-companions { margin-top:16px; border-top:1px dashed #c9b994; padding-top:12px; }
+.legacy-companions > summary { cursor:pointer; color:#665d4c; font:17px/1.5 var(--pixel); margin-bottom:10px; }
+.legacy-companions > summary > span { font:11px/1.6 var(--body); color:#83775f; margin-left:8px; }
+.legacy-companions .companion-roster,.legacy-companions .home-roster { max-width:360px; }
 .home-companion { display:grid; grid-template-columns:44px 1fr; grid-template-rows:auto auto; text-align:left; gap:0 9px; padding:8px 10px; min-width:0; background:#fffaeb; border:1px solid #c5b693; box-shadow:0 2px #a5906430; }
 .home-companion > .sprite { grid-row:1/3; width:38px; height:44px; justify-self:center; }
 .home-companion > span { color:#5c513d; font:17px/1.4 var(--pixel); overflow-wrap:anywhere; }

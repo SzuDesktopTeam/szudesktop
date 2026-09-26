@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {PET_ACTIONS} from './pet-policy.mjs';
+import {PETS,PET_MOODS,PET_SPRITES} from '../assets/garden/pet-catalog.mjs';
+import {PET_SYMBOLS} from '../assets/garden/pet-art.mjs';
 
 const here = new URL('.', import.meta.url);
 const read = name => readFileSync(new URL(name, here), 'utf8');
@@ -8,20 +10,28 @@ const html = read('pet.html');
 const render = read('pet-render.mjs');
 const preload = read('pet-preload.cjs');
 const gardenHTML = read('../index.html');
-for (const id of ['libao','libao-normal','libao-happy','libao-sleep','libao-sad','cat-normal','cat-happy','cat-sleep','cat-sad','egret','turtle',...['egret','turtle'].flatMap(s=>['normal','happy','sad','sleep'].map(state=>`${s}-${state}`))]) {
-  const definition = new RegExp(`<symbol id="${id}"[\\s\\S]*?<\\/symbol>`);
-  assert.ok(definition.test(html),`桌宠缺少 ${id}`);
-  assert.equal(html.match(definition)?.[0],gardenHTML.match(definition)?.[0],`庭院与桌宠的 ${id} 立绘必须一致`);
+const frames=new Map([...PET_SYMBOLS.matchAll(/<symbol\b([^>]*)>([\s\S]*?)<\/symbol>/g)].map(([,attrs,body])=>[
+ attrs.match(/\bid="([^"]+)"/)?.[1],{attrs,body},
+]));
+assert.equal(frames.size,[...PET_SYMBOLS.matchAll(/<symbol\b/g)].length,'立绘 ID 不得重复');
+assert.deepEqual([...frames.keys()].sort(),Object.keys(PET_SPRITES).sort(),'名册与画稿必须一一对应');
+for (const [id,viewBox] of Object.entries(PET_SPRITES)) {
+  const frame=frames.get(id);
+  assert.equal(frame?.attrs.match(/\bviewBox="([^"]+)"/)?.[1],viewBox,`${id} 的画布必须匹配名册`);
+  assert.doesNotMatch(frame.body,/<use\b/,`${id} 应可独立导出明信片`);
+  const definition = new RegExp(`<symbol\\b[^>]*\\bid="${id}"`);
+  assert.doesNotMatch(html,definition,`桌宠不应重复维护 ${id}`);
+  assert.doesNotMatch(gardenHTML,definition,`庭院不应重复维护 ${id}`);
 }
-for(const species of ['egret','turtle']){
- const states=['normal','happy','sad','sleep'].map(state=>`${species}-${state}`);
- const frames=states.map(id=>html.match(new RegExp(`<symbol id="${id}"[^>]*>([\\s\\S]*?)<\\/symbol>`))[1]);
- assert.equal(new Set(frames).size,4,`${species} 四帧必须各有形态`);
- for(const [index,id] of states.entries()){
-  assert.doesNotMatch(frames[index],/<use\b/,`${id} 应可独立导出明信片`);
-  assert.ok(render.includes(`'${id}': '0 0 32 32'`),`${id} 缺少桌宠 viewBox`);
- }
+for(const [species,spec] of Object.entries(PETS)){
+ if(!spec.states)continue;
+ const states=PET_MOODS.map(state=>frames.get(`${spec.sprite}-${state}`).body);
+ assert.equal(new Set(states).size,PET_MOODS.length,`${species} 四帧必须各有形态`);
 }
+for(const page of [html,gardenHTML])assert.match(page,/<defs\b[^>]*\bid="pet-sprites"/,'两处界面都需共享立绘挂载点');
+assert.match(render,/from ['"]\.\/pet-art\.mjs['"]/,'桌宠必须加载共享画稿');
+assert.match(render,/from ['"]\.\/pet-catalog\.mjs['"]/,'桌宠必须加载共享名册');
+assert.match(render,/PET_SPRITES/,'桌宠视框必须来自名册');
 
 // 每个动作都要有对应的 CSS 规则，否则状态机会推出看不见的动作。
 for (const id of Object.keys(PET_ACTIONS)) {
@@ -61,6 +71,11 @@ assert.match(html,/aria-haspopup="menu"/);
 
 // 设置页滑杆必须被 electron 门禁，浏览器模式下不得出现。
 const app=read('../assets/garden/app.mjs');
+assert.match(app,/from ['"]\.\/pet-art\.mjs['"]/,'庭院必须加载相同画稿');
+for(const renderer of [app,render]){
+ assert.match(renderer,/['"]pet-sprites['"]/,'渲染层需使用共享立绘挂载点');
+ assert.match(renderer,/\.innerHTML\s*=\s*PET_SYMBOLS/,'共享立绘必须实际挂载到页面');
+}
 const settings=app.slice(app.indexOf('function settings(){'),app.indexOf('function render(){'));
 assert.match(settings,/globalThis\.szuDesktop\?\.shell==='electron'/,'滑杆必须只在安装版渲染');
 assert.ok(settings.includes('id="pet-scale"'),'设置页缺少宠物大小滑杆');

@@ -5,6 +5,7 @@ import path from 'node:path';
 import {readPetSettings} from './pet-settings.mjs';
 import {readDesktopSettings} from './desktop-settings.mjs';
 import {petWindowBounds} from './pet-policy.mjs';
+import {PETS,AVAILABLE_PETS,DEFAULT_PET,PET_SPRITES} from './pet-catalog.mjs';
 
 async function until(read, message) {
   const end=Date.now()+6000;
@@ -51,7 +52,7 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   assert.equal(backup.profile.name,'备份验收');
   assert.equal(backup.todos[0].id,'backup-task');
   assert.equal(backup.courses[0].code,'backup-course');
-  assert.equal(backup.game.pets.length,4);
+  assert.deepEqual(backup.game.pets.map(p=>p.species),seed.data.game.pets.map(p=>p.species),'backup preserves the whole companion roster');
   const expectedSeed=personalAfterMigration(seed.data);
   for(const key of ['profile','preferences','todos','reminders','semester'])assert.deepEqual(backup[key],expectedSeed[key],'export preserves '+key);
   for(const key of ['coins','food','seeds','stock','plots','stats'])assert.deepEqual(backup.game[key],seed.data.game[key],'export preserves garden '+key);
@@ -150,21 +151,30 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   assert.equal((await game()).food,beforeFeed.food-(canFeed?1:0),'food changes only after a valid meal');
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
-  assert.deepEqual(companions.map(p=>p.species),['libao','chestnut','egret','turtle'],'four base companions are available');
-  for(const [index,sprite] of [[2,'egret'],[3,'turtle'],[1,'cat'],[0,'libao']]){
+  const companionSpecies=companions.map(p=>p.species);
+  assert.ok(AVAILABLE_PETS.every(id=>companionSpecies.includes(id)),'every default companion is available');
+  assert.ok(companionSpecies.every(id=>Object.hasOwn(PETS,id)),'old companions still have registered artwork');
+  for(const [index,companion] of [...companions.entries()].reverse()){
+    const sprite=PETS[companion.species].sprite;
     getPetMenu().getMenuItemById(`switchPet:${index}`).click();
     await until(async()=>(await game()).active===index,'menu choice did not persist');
     await until(()=>pet(`/^#${sprite}-(normal|happy|sad|sleep)$/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop sprite did not follow the choice');
+    const rendered=await pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {sprite:use.getAttribute('href').slice(1),viewBox:svg.getAttribute('viewBox'),width:box.width,height:box.height}})()");
+    assert.equal(rendered.viewBox,PET_SPRITES[rendered.sprite],'desktop uses the catalog viewBox');
+    assert.ok(rendered.width>0&&rendered.height>0,'selected companion resolves to visible SVG artwork');
     assert.equal(mainWin.isVisible(),false,'switching companions need not open the main window');
     await pet('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
     writeFileSync(path.join(evidenceDir,`companion-${sprite}.png`),(await petWin.webContents.capturePage()).toPNG());
   }
   getPetMenu().getMenuItemById('garden').click();
-  await until(()=>main("document.querySelectorAll('.companion-choice').length===4"),'companion picker did not render four choices');
-  await main("document.querySelector('.companion-choice[data-index=\"1\"]').click()");
-  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#cat-')"),'garden selection did not update desktop immediately');
-  await main("document.querySelector('.companion-choice[data-index=\"0\"]').click()");
-  await until(()=>pet("document.querySelector('#pet-use').getAttribute('href').startsWith('#libao-')"),'garden cannot select libao');
+  await until(()=>main(`document.querySelectorAll('.companion-choice').length===${companions.length}`),'companion picker did not render the saved roster');
+  for(const species of ['pingu','skipper','chestnut',DEFAULT_PET]){
+    const index=companionSpecies.indexOf(species),sprite=PETS[species].sprite;
+    assert.ok(index>=0,'garden includes '+species);
+    await main(`document.querySelector('.companion-choice[data-index="${index}"]').click()`);
+    await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href').startsWith('#${sprite}-')`),'garden selection did not update desktop: '+species);
+    assert.equal((await game()).active,index,'garden selection persists '+species);
+  }
   await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'})");
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
   writeFileSync(path.join(evidenceDir,'companion-picker.png'),(await mainWin.webContents.capturePage()).toPNG());
@@ -234,5 +244,5 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await checkBackup(mainWin,baseUrl,evidenceDir);
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
   return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
 }

@@ -40,6 +40,14 @@ def check(label, condition):
     print("PASS", label, flush=True)
 
 
+def default_companions():
+    """Use the source catalog, so adding a pet does not require a second roster."""
+    catalog = (ROOT / "desktop" / "assets" / "garden" / "pet-catalog.mjs").as_uri()
+    source = "import {AVAILABLE_PETS} from " + json.dumps(catalog) + ";console.log(JSON.stringify(AVAILABLE_PETS));"
+    return json.loads(subprocess.check_output(["node", "--input-type=module", "--eval", source],
+                                             text=True, encoding="utf-8"))
+
+
 def reg_values(hive, key, view):
     import winreg
     try:
@@ -144,7 +152,10 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             check(label + ": scale through settings and tray", pet["settingsAndPresets"] and pet["finalScale"] == 1.7)
             check(label + ": scale survives restart or upgrade", pet["initialScale"] == initial_scale)
             if version != BASELINE_VERSION:
-                check(label + ": four-companion selection", pet.get("petSelection") is True and pet.get("petSelectionSync") is True)
+                check(label + ": catalog companion selection", pet.get("petSelection") is True and pet.get("petSelectionSync") is True)
+                check(label + ": packaged roster matches source catalog", pet.get("defaultCompanions") == default_companions())
+                check(label + ": both penguins render and switch", pet.get("penguinSelection") is True
+                      and all(species in pet.get("companionSpecies", []) for species in ("pingu", "skipper")))
                 check(label + ": backup export and restore", pet.get("backupRestore") is True)
             check(label + ": normal window exit", proc.wait(timeout=25) == 0)
             if owned:
@@ -258,8 +269,10 @@ def assert_user_data(data, expected):
         current = data["game"]["pets"][index]
         check("upgrade keeps original companion and progression", current["species"] == pet["species"]
               and current["name"] == pet["name"] and current["xp"] >= pet["xp"])
-    check("upgrade adds new companions without removing old ones",
-          [pet["species"] for pet in data["game"]["pets"]] == ["libao", "chestnut", "egret", "turtle"])
+    original_species = [pet["species"] for pet in expected["game"]["pets"]]
+    upgraded_species = original_species + [species for species in default_companions() if species not in original_species]
+    check("upgrade appends catalog defaults without removing or reordering old companions",
+          [pet["species"] for pet in data["game"]["pets"]] == upgraded_species)
 
 
 def main():
@@ -339,6 +352,8 @@ def main():
                 "synthetic_account_decrypts_after_upgrade": True, "original_companion_progress_preserved": True,
                 "backup_restore": first["pet"]["backupRestore"],
                 "pet_and_tray": True, "pet_scale_persists": True,
+                "companion_species": first["pet"]["companionSpecies"],
+                "penguins_render_and_switch": first["pet"]["penguinSelection"],
             }, ensure_ascii=False, indent=2), encoding="utf-8")
         finally:
             if installed:

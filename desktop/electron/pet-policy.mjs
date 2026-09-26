@@ -1,5 +1,6 @@
 // 宠物窗的纯策略模块：不 import electron，便于像 window-policy.mjs 一样单测。
-// 立绘与台词规则镜像 desktop/assets/garden/engine.mjs 的 petSprite()/say()。
+// 立绘选择与庭院共用名册；桌面窗口只负责窗口和动作策略。
+import {petSprite} from './pet-catalog.mjs';
 
 // 窗口尺寸与右下角停靠留白（像素）。气泡在立绘上方展开，所以窗口偏高一点。
 export const PET_WIDTH = 260;
@@ -18,15 +19,6 @@ export const PET_SCALE_PRESETS = [
 
 // 台词上限与 engine.mjs 的 say() 一致：60 字。
 export const PET_SAY_MAX = 60;
-
-// 宠物名册镜像 engine.mjs 的 PETS：states=true 表示按睡眠/心情切换四帧。
-const PET_SPECIES = {
-  libao: {sprite: 'libao', states: true},
-  chestnut: {sprite: 'cat', states: true},
-  egret: {sprite: 'egret', states: true},
-  turtle: {sprite: 'turtle', states: true},
-};
-const DEFAULT_SPECIES = 'libao';
 
 // 归一化缩放值：非有限数回落默认值，越界夹紧，四舍五入到 2 位。
 export function petScaleClamp(value) {
@@ -86,13 +78,8 @@ export function petSay(text) {
   return String(text).slice(0, PET_SAY_MAX);
 }
 
-// 镜像 engine.mjs 的 petSprite()：四位伙伴按 sleeping/mood 四帧切换。
-export function petSpriteFor(pet) {
-  const spec = PET_SPECIES[pet?.species] || PET_SPECIES[DEFAULT_SPECIES];
-  if (!spec.states) return spec.sprite;
-  const state=pet?.sleeping?'sleep':pet?.mood<35?'sad':pet?.mood>65?'happy':'normal';
-  return `${spec.sprite}-${state}`;
-}
+// 与庭院使用同一个状态选择函数，新增伙伴不需要再维护桌面名单。
+export const petSpriteFor=petSprite;
 
 // 从存档 game 段取当前伙伴，镜像 engine.mjs 的 activePet()。读不到就返回 null，
 // 由调用方决定不推送（状态读不到时如实未知，不伪造）。

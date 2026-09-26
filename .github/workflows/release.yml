@@ -45,6 +45,7 @@ jobs:
           node desktop/check-productivity.mjs
           node desktop/check-interactions.mjs
           node desktop/check-pet-commands.mjs
+          node desktop/check-pet-catalog.mjs
       - name: Settings autostart UI regression
         run: node desktop/check-autostart-ui.mjs
       - name: Release check and feedback regression

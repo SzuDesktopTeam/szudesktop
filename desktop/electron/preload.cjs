@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   onPetCommand: (callback) => {
     if (typeof callback !== 'function') return () => {};
     const listener = (_event, command) => {
-      if (petCommands.has(command) || (typeof command === 'string' && /^switchPet:[0-7]$/.test(command))) callback(command);
+      if (petCommands.has(command) || (typeof command === 'string' && /^switchPet:(?:0|[1-9]\d*)$/.test(command))) callback(command);
     };
     ipcRenderer.on('szu:pet-command', listener);
     return () => ipcRenderer.removeListener('szu:pet-command', listener);
