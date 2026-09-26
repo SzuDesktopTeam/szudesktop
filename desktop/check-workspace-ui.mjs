@@ -26,9 +26,9 @@ function farmFixture(){
  const plots=state.game.plots.map((p,i)=>{const classes=new Set(),el={dataset:{farmPlot:String(i),growth:''},attrs:{},disabled:false,isConnected:true,html:'',ready:{dataset:{},textContent:''},soil:{classList:{add:value=>classes.add(value),remove:value=>classes.delete(value),contains:value=>classes.has(value)}},setAttribute(name,value){this.attrs[name]=value},querySelector(){return this.soil},set innerHTML(value){this.html=value;classes.clear();for(const c of /class="soil ([^"]+)"/.exec(value)?.[1].split(' ')||[])classes.add(c);const due=/data-ready="(\d+)"/.exec(value);this.ready.dataset.ready=due?due[1]:''},get innerHTML(){return this.html}};readyLabels.push(el.ready);return el});
  for(const [id,node] of Object.entries({'farm-selected-title':title,'farm-plot-details':details,'farm-plot-actions':actions,'seed-choice':seeds}))nodes.set(id,node);
  const money={outerHTML:''},basket={outerHTML:''},daily={outerHTML:''},activity={hidden:true};
- const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
+ const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,petPlayer:null,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
-  btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
+  btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cat:()=>'<svg data-animated-pet></svg>',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
   render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},paintGardenPath(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
   schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},
   api:async(path,data)=>{assert.equal(path,'/api/workspace');assert.ok(data?.data);requests++;return {revision:requests+1}},
@@ -260,7 +260,7 @@ await check('campus service sections do not mount unrelated forms or booking too
 });
 
 function formFixture(){
- const listeners={},nodes=new Map(),writes=[],messages=[];
+ const listeners={},nodes=new Map(),writes=[],messages=[],reactions=[];
  const draft={value:'还没添加的想法',isConnected:true,selectionStart:2,selectionEnd:5};
  const date={value:'2026-09-30'},todoForm={id:'todo-form',elements:{todo:draft,date}};
  const focusPanel={outerHTML:''},weekPanel={outerHTML:''};
@@ -268,7 +268,7 @@ function formFixture(){
  nodes.set('todo-form',todoForm);nodes.set('todo-text',draft);nodes.set('todo-date',date);nodes.set('focus-task',{value:''});
  const context=vm.createContext({
   state:createState(),revision:1,busy:false,page:'study',studyTab:'focus',gardenTab:'pet',act,activePet,normalize,structuredClone,
-  focusView,weeklyView,actionReward:()=>null,petActionMessage:()=>'',reactPet(){},confirm:async()=>true,
+  focusView,weeklyView,actionReward:()=>null,petActionMessage:()=>'',reactPet(action){reactions.push({action,revision:context.revision})},confirm:async()=>true,
   schoolUI:{click:async()=>false,submit:async()=>false},campusUI:{click:async()=>false,submit:async()=>false},officialUI:{click:async()=>false},pianoUI:{click:async()=>false},
   toast:message=>messages.push(message),
   document:{activeElement:draft,addEventListener:(name,callback)=>{listeners[name]=callback},getElementById:id=>nodes.get(id)||null,
@@ -281,7 +281,7 @@ function formFixture(){
  vm.runInContext(section('async function commit(','function renderPetCare('),context);
  vm.runInContext(section('function renderStudyProgress(){','function home(){'),context);
  vm.runInContext(section("document.addEventListener('click'","document.addEventListener('input'"),context);
- return {context,nodes,writes,messages,draft,date,todoForm,focusPanel,weekPanel,get fullRenders(){return fullRenders},
+ return {context,nodes,writes,messages,reactions,draft,date,todoForm,focusPanel,weekPanel,get fullRenders(){return fullRenders},
   click:(action,extra={})=>{listeners.click({target:{closest:()=>({dataset:{action,...extra}})},preventDefault(){}});return pending;},
   submit:form=>{listeners.submit({target:form,preventDefault(){}});return pending;},
  };
@@ -317,6 +317,7 @@ await check('focus start, custom start, claim and cancel preserve the adjacent t
   const pending=action==='customStart'?f.submit({id:'focus-form',elements:{minutes:{value:'7'}}}):f.click(action,{minutes:'5'});
   // The user keeps typing while the save is pending; preserve the latest draft.
   f.draft.value='等待时又补了一行';f.draft.selectionStart=4;f.draft.selectionEnd=7;
+  assert.equal(f.reactions.length,0,'pending saves do not notify the desktop pet');
   release();await pending;
   assert.equal(f.writes.length,1,action);assert.equal(f.fullRenders,0,action+' should update focus/history without repainting the todo form');
   assert.equal(f.nodes.get('todo-form'),f.todoForm);assert.equal(f.draft.value,'等待时又补了一行');assert.equal(f.date.value,'2026-09-30');
@@ -324,6 +325,7 @@ await check('focus start, custom start, claim and cancel preserve the adjacent t
   assert.ok(!JSON.stringify(f.writes).includes('等待时又补了一行'),'unsaved draft must not leak into the workspace save');
   assert.match(f.focusPanel.outerHTML,/focus-studio/);assert.match(f.weekPanel.outerHTML,/weekly-card/);
   assert.equal(Boolean(f.context.state.game.focus),action==='focusStart'||action==='customStart');
+  assert.deepEqual(f.reactions,[{action:action==='customStart'?'focusStart':action,revision:2}],'all focus paths notify the pet immediately after saving');
   if(action==='customStart')assert.equal(f.context.state.game.focus.duration,7);
  }
 });

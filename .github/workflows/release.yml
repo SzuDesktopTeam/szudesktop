@@ -36,6 +36,7 @@ jobs:
           node desktop/check-garden-path.mjs
           node desktop/check-garden-loop-ui.mjs
           node desktop/check-pet-dialogue.mjs
+          node desktop/check-pet-life.mjs
           node desktop/check-pet-animation.mjs
           node desktop/check-pet-player.mjs
       - name: 校园服务与成绩导入回归

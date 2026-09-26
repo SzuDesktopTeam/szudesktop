@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createState} from './assets/garden/engine.mjs';
 import {PROJECTS} from './assets/garden/garden-loop.mjs';
 import {projectView,projectStrip,projectScene} from './assets/garden/garden-loop-ui.mjs';
+import {PET_ACTIONS} from './assets/garden/pet-animation.mjs';
 import {petDetails} from './assets/garden/pet-details.mjs';
 
 let passed=0;const check=(name,fn)=>{fn();passed++;console.log('PASS',name);};
@@ -60,7 +61,7 @@ check('completed projects have a finished view and no empty preparation strip',(
 });
 check('pet actions remain playable while frame timing is tucked inside another disclosure',()=>{
  const pet=fresh().pets[0],html=petDetails(pet);
- assert.equal((html.match(/data-action="petPreview"/g)||[]).length,12);
+ assert.equal((html.match(/data-action="petPreview"/g)||[]).length,PET_ACTIONS.length);
  assert.match(html,/<details class="pet-frame-details"><summary>细看/);
  assert.doesNotMatch(html,/一起玩 2048/);
 });

@@ -27,26 +27,34 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects the companion table, planting, requests, construction and collections: bring back a useful seed after a game, share your harvest, and gradually furnish your corner of the lake. Feature commit `c355360` is in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), with [all nine CI jobs passing](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147), including an actual cross-version installation upgrade and desktop-pet checks. All 35 local check groups passed, and the running UI completed the seed, planting, harvest, delivery and construction path. Current screenshots, local candidate-package hashes and evidence are recorded in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布).
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration redraws Pingu and gives each companion more garden actions, a signature gesture and replies connected to what is happening. Work continues in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). **All 36 local check groups passed, the running UI and its 420px layout were reviewed, and Windows candidate packages were rebuilt. Remote CI awaits this push.** Progress is recorded in [STATUS section 59](STATUS.md#59-pingu-形象与伙伴生活反应2026-09-27源码未发布).
+
+The previous garden-loop commit `c355360` passed 35 local check groups and [all nine CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36266684147), and the running UI completed the seed, planting, harvest, delivery and construction path. Those historical results and package hashes remain in [STATUS section 58](STATUS.md#58-庭院玩法闭环与下一步导览2026-09-27源码未发布); they do not establish acceptance of this iteration's additions.
 
 ### Companions with their own movement and personality
 
-All six species, including A-Qing in older saves, have **12 actions with 6 frames each: 432 independently rendered pixel frames**. The actions cover idle, looking around, walking, patting, eating, playing, sleeping, stretching awake, celebrating, accompanying focus, low mood and greeting. Eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player, with individual idle pacing and reactions to sleep, focus and care. The room's action book lets you play each action and inspect every frame. Another 30 static portraits remain available for reduced motion and postcard export. With motion disabled, care reactions resolve immediately so later sleep or focus changes are not blocked by an unfinished gesture.
+All six species, including A-Qing in older saves, have **18 actions with 6 frames each: 648 independently rendered pixel frames**. The existing daily actions gain **watering, carrying a harvest, offering a gift, building, pondering and a signature gesture**. Watering cans, baskets, gift boxes and hammers have preparation, action and settling poses, while eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player. The action book groups daily, interaction and garden actions, with playback and an expandable view of every frame. Another 30 static portraits remain available for reduced motion and postcard export.
 
-Saving the animation setting now immediately synchronizes the desktop pet; a failed save does not change it early. The installation smoke passed: it first confirmed static behavior under system reduced motion, then emulated permission to animate only in the isolated renderer and captured two different rendered frames. Upgrade, reopen and shared-sidecar paths passed, with media conditions and preferences restored. No Windows preferences were changed.
+**Pingu has been redrawn.** Small bead eyes on a black face, a round head and short neck, a broad white chest and belly, a projecting red beak and wide orange feet share one drawing across static and animated states. His beak opens into a trumpet for Noot. Skipper retains his own upright stance, white face and low brows.
 
-**576 Chinese lines cover 16 contexts**, with six alternatives per species and context. Each companion's rotation progress is saved. “Chat a little” responds to sleep, hunger, tiredness and time of day; care, harvests, focus, todos and game outcomes have their own replies.
+Saving the animation setting immediately synchronizes the desktop pet; a failed save does not change it early. Sleep and focus take priority, signature previews do not interrupt them, and reduced motion uses static art. The previous `c355360` installation smoke confirmed static behavior under system reduced motion, then captured two real frames with animation permitted only in the isolated renderer. Upgrade, reopen and shared-sidecar paths restored media conditions and preferences without changing Windows settings. Full installation acceptance of the new actions is still pending.
 
-| Companion | Personality |
-| :-- | :-- |
-| Libao | Warm, eager to organize things and slightly clumsy; always ready to help |
-| Chestnut | A serious cardboard-box supervisor convinced everything is under control; chunky abstract artwork, completely unaware of its own odd charm |
-| Xiaobai | A quiet campus egret who notices small changes |
-| Pingu | Curious and childlike, eager to try things; an occasional happy Noot |
-| Skipper | A tactical penguin captain who schedules snacks and rest as seriously as missions |
-| A-Qing | Patient and practical, taking its own steady steps; retained under “Old friends” in existing saves |
+**1,656 Chinese lines cover 23 contexts**, with 12 alternatives per species and context. Each companion's rotation progress is saved. New replies cover planting, watering, request delivery, construction, seed supplies, starting focus and signature gestures. Chestnut remains an entirely self-assured cardboard-box supervisor; Pingu is curious about little objects, while Skipper treats even rest as logistics. Dialogue follows events rather than continually interrupting you.
 
-![Companion personality and frame-by-frame action book in the running app](screenshot-pet-animation-preview.png)
+The active companion now appears beside the farm, so planting, watering and harvests can show its reaction where the action happens. Signature gestures are free: they spend no resources and grant no growth or bond. Crop, request and minigame reward rules are unchanged in this iteration.
+
+| Companion | Personality | Signature gesture |
+| :-- | :-- | :-- |
+| Libao | Warm, eager to organize things and slightly clumsy; always ready to help | Raises a little cheering sign |
+| Chestnut | A serious cardboard-box supervisor convinced everything is under control; chunky abstract artwork, completely unaware of its own odd charm | Inspects and sits in a box |
+| Xiaobai | A quiet campus egret who notices small changes | Preens its feathers |
+| Pingu | Curious and childlike, eager to try things; an occasional happy Noot | Opens his red beak for a trumpet Noot |
+| Skipper | A tactical penguin captain who schedules snacks and rest as seriously as missions | Surveys the garden through a telescope |
+| A-Qing | Patient and practical, taking its own steady steps; retained under “Old friends” in existing saves | Lifts a small leaf umbrella |
+
+![Redrawn Pingu and signature interaction in the running app](screenshot-pingu-refined-preview.png)
+
+[View all six Noot frames](screenshot-pet-signatures-preview.png) · [View the farm companion and its replies](screenshot-pet-farm-preview.png)
 
 ### From a single seed to a new corner of the garden
 
@@ -72,7 +80,7 @@ The original daily supply remains 20 coins, one food item and two radish seeds, 
 
 The 2048 rules are adapted from Gabriele Cirulli's [MIT-licensed original at a pinned revision](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc), with its [complete license retained](../desktop/assets/garden/licenses/2048-MIT.txt). Garden design takes inspiration from [Stardew Valley's farming and character relationships](https://www.stardewvalley.net/about/) and [Animal Crossing's material gathering and everyday goals](https://animalcrossing.nintendo.com/new-horizons/create/), linking harvests, companion requests and keepsakes. The request rules and writing are our own; no commercial-game artwork or code was copied for those mechanics.
 
-To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 16 dialogue contexts and 12 animation actions, plus the relevant checks. See [STATUS section 57.4](STATUS.md#574-继续添加伙伴的统一契约) for field names, exported APIs and packaging dependencies.
+To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 23 dialogue contexts with 12 lines each, and 18 animation actions with 6 frames each, plus the relevant checks. This iteration’s extension requirements are in [STATUS section 59.3](STATUS.md#593-扩展契约与兼容); [section 57.4](STATUS.md#574-继续添加伙伴的统一契约) retains the base field names, exported APIs and packaging dependencies.
 
 This garden iteration does not close unverified school-account workflows or deploy a backend, Docker, cloud sync or hot updates.
 
@@ -102,7 +110,7 @@ Implemented in the current source:
 
 - **A clearer study workflow.** Separate focus, timetable and grades views; editable todos with dates, completion records, archives and restoration. Focus accepts 1–120 minutes and an optional todo, with completed sessions in a seven-day review. It does not automatically mark the todo complete.
 - **Fairer progression.** Each completed and claimed focus minute gives one garden coin and one growth point. Switching companions no longer removes crop unlocks; longer crops give more per harvest. Each companion's first three pats per day give growth, with further interaction still available.
-- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. The four static states remain, with dialogue and motion expanded to the 576 lines and 432 frames above. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
+- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. The four static states remain, with dialogue and motion expanded to the 1,656 lines and 648 frames above. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
 - **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
 - **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
 

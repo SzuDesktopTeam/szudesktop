@@ -156,7 +156,7 @@ test('order thanks and growth go to the named recipient without switching the ac
  assert.equal(state.game.active,before.active);
  assert.equal(state.game.pets[recipientIndex].xp,before.pets[recipientIndex].xp+5);
  assert.equal(state.game.pets[recipientIndex].bond,before.pets[recipientIndex].bond+3);
- assert.equal(state.game.pets[recipientIndex].dialogue.harvest,1);
+ assert.equal(state.game.pets[recipientIndex].dialogue.order,1);
  assert.deepEqual(state.game.pets[state.game.active],before.pets[before.active]);
  assert.deepEqual(roundTrip(state).game.pets,state.game.pets);
  assert.throws(()=>act(state,{type:'orderDeliver',id:order.id},now),/已经交付/);

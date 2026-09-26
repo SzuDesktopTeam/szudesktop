@@ -241,3 +241,12 @@ body[data-theme=night] .focus-garden-note { color:#d8dfc7; background:#343f32; }
  .farm-landscape .plot > small,.farm-kind,.farm-location { font-size:12px; }
 }
 @media(prefers-reduced-motion:reduce) { .farm-landscape .soil.ready::after { animation:none; } }
+.farm-companion{position:absolute;top:47px;left:22px;right:22px;display:flex;align-items:center;gap:11px;pointer-events:none;z-index:2;max-width:530px}
+.farm-companion>.sprite{flex:none;width:51px;height:65px;image-rendering:pixelated;filter:drop-shadow(0 2px #243d3866)}
+.farm-companion>div{background:#fff8e8ed;border:1px solid #a89265;padding:7px 11px;max-width:385px;box-shadow:2px 2px #52634433}
+.farm-companion strong{display:block;font-size:12px;color:#775b35;margin-bottom:2px}
+.farm-companion p{font-size:12px;line-height:1.65;color:#4f543b;margin:0}
+body[data-theme=night] .farm-companion>div{background:#393b32ef;border-color:#a49b75}
+body[data-theme=night] .farm-companion strong{color:#edc994}
+body[data-theme=night] .farm-companion p{color:#ece7cc}
+@media(max-width:600px){.farm-companion{left:12px;right:12px;top:44px;gap:7px}.farm-companion>.sprite{width:39px;height:50px}.farm-companion>div{padding:5px 8px}.farm-companion p{font-size:11px;line-height:1.5}.farm-landscape:has(.farm-companion){padding-top:149px}}

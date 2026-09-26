@@ -21,7 +21,7 @@ export function createPetPlayer(svg,{pet,focus=false,motion=true,document:doc=sv
   const clip=animationClip(current?.species,action),elapsed=Math.max(0,now()-started);
   if(!reduced()&&once&&elapsed>=clip.duration){begin(base());return}
   // Quiet personalities have longer frame timings; only the active portrait moves.
-  if(!once&&action==='idle'&&elapsed>=clip.duration*2){const next=idleAction(current?.species,++cycle);begin(next,next!=='idle');return}
+  if(!doc.hidden&&!reduced()&&!once&&action==='idle'&&elapsed>=clip.duration*2){const next=idleAction(current?.species,++cycle);begin(next,next!=='idle');return}
   const frame=animationFrame(current?.species,action,elapsed,{reducedMotion:reduced()});
   use.setAttribute('href','#'+frame.id);svg.setAttribute('viewBox',frame.viewBox);svg.dataset.action=action;svg.dataset.frame=String(frame.index);svg.dataset.species=current?.species||'libao';
   if(doc.hidden||reduced())return;
@@ -34,18 +34,21 @@ export function createPetPlayer(svg,{pet,focus=false,motion=true,document:doc=sv
  install();reset();
  return {
   setPet(next,{focus:nextFocus=focused,motion:nextMotion=enabled}={}){
+   if(destroyed)return;
    const previousBase=base(),changed=next?.species!==current?.species;
    current=next;focused=nextFocus;enabled=nextMotion;
    // Polls update care values without cutting off a confirmed interaction.
+   // A real sleep/focus transition takes priority over any ongoing gesture.
    if(changed)install();
-   if(changed||!once&&previousBase!==base())reset();else paint();
+   const nextBase=base(),priorityChange=['sleep','focus'].includes(previousBase)||['sleep','focus'].includes(nextBase);
+   if(changed||previousBase!==nextBase&&(!once||priorityChange))reset();else paint();
   },
-  play(id){if(current?.sleeping&&!['sleep','wake','greet'].includes(id))return;begin(id,true)},
+  play(id){if(destroyed||current?.sleeping&&id!=='sleep'||focused&&id!=='focus')return;begin(id,true)},
   destroy(){destroyed=true;cancel(timer);doc.removeEventListener('visibilitychange',visibility);media?.removeEventListener?.('change',reset)},
  };
 }
 
 export function petReaction(action,pet){
  if(action==='sleep')return pet?.sleeping?'sleep':'wake';
- return ({pat:'pat',feed:'eat',play:'play',chat:'look',switchPet:'greet',focusStart:'focus',focusClaim:'celebrate',harvest:'celebrate',quest:'celebrate',achievement:'celebrate',todoToggle:'celebrate',orderDeliver:'celebrate',puzzleClaim:'celebrate'})[action];
+ return ({pat:'pat',feed:'eat',play:'play',chat:'ponder',petSignature:'signature',switchPet:'greet',focusStart:'focus',focusClaim:'celebrate',water:'water',harvest:'harvest',plant:'celebrate',decor:'build',quest:'celebrate',achievement:'celebrate',todoToggle:'celebrate',orderDeliver:'gift',puzzleClaim:'gift',gift:'gift'})[action];
 }

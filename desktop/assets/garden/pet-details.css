@@ -11,7 +11,9 @@
 .pet-traits>span{font-size:12px;color:#496544;border:1px solid #b2bc82;background:#eef0cf;padding:3px 8px}
 .pet-action-book{margin-top:18px;border-top:1px dashed #c8a56f;padding-top:12px}
 .pet-action-book summary{cursor:pointer;font-weight:bold;color:#73532a}
-.pet-action-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}
+.pet-action-group{min-width:0;border:0;border-top:1px solid #e0cba4;padding:8px 0 0;margin:14px 0 0}
+.pet-action-group legend{padding:0 9px 0 0;font-size:12px;color:#775a36;letter-spacing:.08em}
+.pet-action-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:0}
 .pet-action-tabs button{font-size:12px;padding:4px 7px;min-height:30px}
 .pet-action-tabs button[aria-pressed=true]{background:#e4b963;color:#382817;border-color:#795428}
 .pet-frame-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
@@ -25,5 +27,7 @@
 [data-theme=night] .pet-personality{background:linear-gradient(120deg,#372b28,#2e2927)}
 [data-theme=night] .pet-traits>span{background:#354536;color:#d3d8af;border-color:#758266}
 [data-theme=night] .pet-action-book summary{color:#d7ba85}
+[data-theme=night] .pet-action-group{border-color:#69543f}
+[data-theme=night] .pet-action-group legend{color:#c6b18b}
 [data-theme=night] .pet-frame-strip figure{background:#39302b;border-color:#69543f}
 [data-theme=night] .pet-frame-strip figcaption,[data-theme=night] .pet-frame-strip small{color:#d7bd90}

@@ -229,69 +229,64 @@ const CAT_ART = {
   `,
 };
 
-// Pingu: a soft pear silhouette, red trumpet bill and big red-orange feet.
-const PINGU_FEET = `
-  <path fill="#9D382C" d="M8 33h6v3h-1v2H3v-3h5zM18 33h6v2h4v3H18z"/>
-  <path fill="#E75B36" d="M9 34h4v2h-2v1H4v-1h5zM19 34h4v2h4v1h-8z"/>
-  <path fill="#FF9856" d="M5 36h6v1H5zM19 35h3v1h-3z"/>
-`;
-const PINGU_BODY = `
-  <path fill="#202A30" d="M12 2h8v2h4v3h2v8h-1v4h2v4h1v8h-2v3h-4v2H10v-2H6v-3H4v-8h2v-4h1v-4H6V8h2V5h4z"/>
-  <path fill="#39454B" d="M12 4h8v1h-7v2h-3v7H8V8h2V6h2zM6 24h2v7H6z"/>
-  <path fill="#FFF9E9" d="M12 16h8v3h3v4h2v8h-3v3H10v-2H8v-9h2v-4h2z"/>
-  <path fill="#D9E3DC" d="M22 24h3v7h-3v3H10v-2h10v-2h2z"/>
-  <path fill="#FFFFFF" d="M12 21h3v8h-3z"/>
-`;
-const PINGU_BILL = `
-  <path fill="#A63B32" d="M12 14h10v-1h3v2h2v4h-2v2h-4v-1h-7v-1h-2z"/>
-  <path fill="#EB5B42" d="M13 15h10v-1h1v2h2v2h-2v2h-2v-1h-8v-1h-1z"/>
-  <path fill="#FF9366" d="M14 15h8v1h-8zM23 15h1v2h-1z"/>
-  <path fill="#BF3F34" d="M23 17h3v1h-3z"/>
-`;
-const PINGU_ART = {
-  normal: PINGU_FEET + `
-    <path fill="#202A30" d="M6 17h3v10H6v3H4v-4H2v-6h2v-2h2zM25 17h2v3h2v6h-2v4h-2V27h-2v-8h2z"/>
-    <path fill="#39454B" d="M4 20h2v6H4zM26 20h1v5h-1z"/>
-  ` + PINGU_BODY + `
-    <path fill="#FFF9E9" d="M10 9h4v5h-4zM18 9h4v5h-4z"/>
-    <path fill="#202A30" d="M12 10h2v3h-2zM20 10h2v3h-2z"/>
-  ` + PINGU_BILL,
-  happy: PINGU_FEET + `
-    <path fill="#202A30" d="M6 18H4v-3H2v-3H0V7h2v2h2v3h2v3h3v8H6zM24 18h2v-3h2v-3h2V8h2v9h-2v4h-3v3h-3z"/>
-    <path fill="#39454B" d="M2 11h1v3h2v3h2v3H5v-3H3v-3H2zM28 15h2v4h-2z"/>
-  ` + PINGU_BODY + `
-    <path fill="#FFF9E9" d="M10 9h4v5h-4zM18 9h4v5h-4z"/>
-    <path fill="#202A30" d="M10 12h1v-2h2v1h1v2h-1v-1h-2v1h-1zM18 12h1v-2h2v1h1v2h-1v-1h-2v1h-1z"/>
-    <path fill="#A63B32" d="M12 14h10v-2h5v2h2v6h-2v2h-5v-2H12z"/>
-    <path fill="#EB5B42" d="M13 15h10v-2h3v2h2v4h-2v2h-3v-2H13z"/>
-    <path fill="#FF9366" d="M14 15h8v1h-8zM24 14h2v1h-2z"/>
-    <path fill="#792D2C" d="M24 16h4v3h-4z"/>
-    <path fill="#D49B4C" d="M29 2h2v3h-2zM26 0h1v3h-1z"/>
-  `,
-  sad: PINGU_FEET + `
-    <path fill="#202A30" d="M6 20h3v10H7v3H5v-7H3v-4h3zM24 20h3v2h2v5h-2v6h-2v-3h-2z"/>
-  ` + PINGU_BODY + `
-    <path fill="#FFF9E9" d="M10 10h4v4h-4zM18 10h4v4h-4z"/>
-    <path fill="#202A30" d="M10 9h2v1h2v1h-4zM18 10h2V9h2v2h-4zM12 12h2v2h-2zM18 12h2v2h-2z"/>
-    <path fill="#A63B32" d="M12 15h11v2h3v5h-3v-2h-9v-1h-2z"/>
-    <path fill="#EB5B42" d="M13 16h9v2h3v2h-2v-1h-9v-1h-1z"/>
-    <path fill="#FF9366" d="M14 16h7v1h-7z"/>
-    <path fill="#8BB6BF" d="M9 13h1v3H9z"/>
-  `,
-  sleep: `
-    <path fill="#9D382C" d="M5 33h8v4H3v-2h2zM19 33h7v2h3v2H19z"/>
-    <path fill="#E75B36" d="M5 34h7v2H4v-1h1zM20 34h5v2h3v-1h-8z"/>
-    <path fill="#202A30" d="M12 11h9v2h4v4h1v4h2v4h1v7h-3v3H7v-3H4v-7h2v-5h1v-4h2v-3h3z"/>
-    <path fill="#39454B" d="M12 13h7v1h-7v2h-2v5H8v-4h2v-2h2z"/>
-    <path fill="#FFF9E9" d="M11 23h11v2h3v7h-3v1H9v-2H7v-5h4z"/>
-    <path fill="#D9E3DC" d="M23 26h2v6h-3v1H9v-2h12v-2h2z"/>
-    <path fill="#FFF9E9" d="M10 18h5v4h-5zM18 18h5v4h-5z"/>
-    <path fill="#202A30" d="M10 20h5v1h-5zM18 20h5v1h-5z"/>
-    <path fill="#A63B32" d="M12 23h12v2h3v3h-4v-1H12z"/>
-    <path fill="#EB5B42" d="M13 24h10v2h3v1h-3v-1H13z"/>
-    <path fill="#202A30" d="M5 27h4v2h4v3H9v-1H5zM23 27h4v4h-5v1h-4v-3h5z"/>
-    <path fill="#7EABC0" d="M25 3h6v1h-1v1h-1v1h-1v1h3v1h-6V7h1V6h1V5h1V4h-3z"/>
-  `,
+// Pingu's black face, round chest and red trumpet distinguish him from Skipper.
+// Static moods and every animated pose use the same native 32 × 40 pixel drawing.
+export function drawPinguFrame(q={}){
+  const {h=0,b=0,x=0,l=0,r=0,f=0,e='open',m=0,action='idle',p=0}=q;
+  const parts=[],ink='#17191B',light='#363B3E',white='#FFF9ED';
+  const rect=(x,y,w,h,c)=>parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`);
+  const poly=(pts,c)=>parts.push(`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="${c}"/>`);
+  const drop=Math.max(-1,Math.min(5,h)),crouch=Math.min(3,b),head=3+drop,dx=x<0?-1:x>0?1:0;
+  const stride=f*2;
+  // The wide orange webbed feet rock separately under a short, heavy body.
+  poly([[7+stride,33],[13+stride,33],[13+stride,36],[12+stride,38],[3+stride,38],[3+stride,36],[5+stride,36],[5+stride,34],[7+stride,34]],'#AD4B21');
+  poly([[19-stride,33],[24-stride,33],[24-stride,35],[27-stride,35],[27-stride,36],[29-stride,36],[29-stride,38],[19-stride,38]],'#AD4B21');
+  rect(5+stride,35,7,2,'#EB7D28');rect(4+stride,37,8,1,'#EB7D28');rect(20-stride,35,5,2,'#EB7D28');rect(20-stride,37,8,1,'#EB7D28');
+  rect(6+stride,35,4,1,'#FFA942');rect(21-stride,35,3,1,'#FFA942');
+  function flipper(side,gesture){
+    if(gesture===3)return;
+    if(side<0){
+      if(gesture===2)poly([[7,21],[4,19],[2,15],[1,15],[1,9],[3,9],[3,13],[5,15],[8,18]],ink);
+      else if(gesture===1)poly([[8,20],[4,18],[2,19],[1,21],[1,23],[3,24],[7,25]],ink);
+      else poly([[8,19],[5,20],[3,24],[3,28],[4,30],[6,29],[8,25]],ink);
+    }else{
+      if(gesture===2)poly([[24,21],[27,19],[29,15],[31,15],[31,9],[29,9],[29,13],[27,15],[23,18]],ink);
+      else if(gesture===1)poly([[24,20],[28,18],[30,19],[31,21],[31,23],[29,24],[25,25]],ink);
+      else poly([[24,19],[27,20],[29,24],[29,28],[28,30],[26,29],[24,25]],ink);
+    }
+  }
+  flipper(-1,l);flipper(1,r);
+  // Two overlapping stepped ovals make a soft head and low rounded belly.
+  poly([[10,head],[20,head],[20,head+1],[23,head+1],[23,head+3],[25,head+3],[25,head+6],[26,head+6],[26,head+11],[25,head+11],[25,head+14],[23,head+14],[23,20+crouch],[26,20+crouch],[26,23],[28,23],[28,30],[26,30],[26,33],[23,33],[23,35],[9,35],[9,34],[6,34],[6,31],[4,31],[4,24],[6,24],[6,21+crouch],[8,21+crouch],[8,head+14],[6,head+14],[6,head+5],[7,head+5],[7,head+2],[10,head+2]],ink);
+  rect(10,head+2,6,1,light);rect(8,head+4,2,3,'#292E31');
+  const chest=16+Math.min(4,drop);
+  poly([[11,chest],[20,chest],[20,chest+2],[23,chest+2],[23,23],[25,23],[25,30],[23,30],[23,32],[20,32],[20,34],[11,34],[11,33],[8,33],[8,30],[7,30],[7,24],[8,24],[8,chest+3],[11,chest+3]],white);
+  rect(11,21+crouch,5,8-crouch,'#FFFFFF');rect(23,25,2,5,'#E0E3DA');rect(20,31,3,2,'#E0E3DA');rect(11,33,9,1,'#E0E3DA');
+  // Tiny bead eyes sit directly on the black face, never in white eye patches.
+  const ey=head+7;
+  for(const ex of [11+dx,19+dx]){
+    if(e==='closed'||e==='half')rect(ex,ey+(e==='closed'?1:0),3,1,'#858A87');
+    else if(e==='smile'){rect(ex,ey+1,1,1,'#858A87');rect(ex+1,ey,1,1,'#858A87');rect(ex+2,ey+1,1,1,'#858A87')}
+    else{rect(ex,ey,2,e==='wide'?3:2,'#737B7A');rect(ex+1,ey+1,1,1,'#080B0D');rect(ex,ey,1,1,'#C7CCC2')}
+  }
+  const by=head+11,noot=(action==='signature'&&(p===3||p===4))||m===1||(action==='greet'&&r===2);
+  if(noot){
+    // Anticipation becomes a real flared trumpet, with a dark open bell.
+    poly([[13,by],[22,by],[22,by-2],[27,by-2],[27,by-1],[29,by-1],[29,by+1],[30,by+1],[30,by+5],[29,by+5],[29,by+7],[26,by+7],[26,by+6],[22,by+6],[22,by+4],[13,by+4]],'#A52C2E');
+    rect(14,by,9,3,'#E94335');rect(23,by-1,4,6,'#ED4938');rect(27,by+1,2,4,'#EA4836');rect(14,by,7,1,'#FF7853');rect(25,by+1,3,3,'#67202C');
+  }else{
+    poly([[12,by],[21,by],[21,by+1],[25,by+1],[25,by+2],[27,by+2],[27,by+4],[24,by+4],[24,by+5],[17,by+5],[17,by+4],[13,by+4],[13,by+3],[12,by+3]],'#A52C2E');
+    rect(13,by,8,3,'#E94335');rect(20,by+1,5,3,'#E94335');rect(25,by+2,1,1,'#E94335');rect(14,by,6,1,'#FF7853');rect(19,by+3,6,1,'#BD3031');
+  }
+  if(l===3){poly([[6,24],[9,24],[9,26],[15,26],[15,29],[10,29],[10,28],[6,28]],ink);rect(9,26,4,1,light)}
+  if(r===3){poly([[25,24],[27,24],[27,28],[23,28],[23,29],[17,29],[17,26],[23,26],[23,24]],ink);rect(19,26,4,1,light)}
+  return parts.join('');
+}
+const PINGU_ART={
+  normal:drawPinguFrame(),
+  happy:drawPinguFrame({l:2,r:2,e:'smile',action:'signature',p:3}),
+  sad:drawPinguFrame({h:2,b:1,e:'half',l:0,r:0}),
+  sleep:drawPinguFrame({h:5,b:3,e:'closed',l:3,r:3})+`<path fill="#7EABC0" d="M26 2h5v1h-1v1h-1v1h-1v1h3v1h-5V6h1V5h1V4h1V3h-3z"/>`,
 };
 
 // Skipper: a tall, squared commander stance, low brows and angular orange bill.
