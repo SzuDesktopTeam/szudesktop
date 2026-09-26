@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {petReaction} from './assets/garden/pet-player.mjs';
 import {act,activePet,createState,normalize} from './assets/garden/engine.mjs';
 
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
@@ -11,7 +12,7 @@ function fixture(){
  const results=[],toasts=[],writes=[],controls=[{disabled:false,isConnected:true}];
  const context=vm.createContext({
   state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',studyTab:'focus',
-  act,activePet,normalize,render(){},clocks(){},schoolUI:{sync(){}},
+  act,activePet,normalize,petReaction,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
   navigate:page=>{context.page=page},
   szuDesktop:{petResult:result=>results.push({...result})},
@@ -31,12 +32,12 @@ await check('care commands save through the shared engine before reporting succe
  assert.equal(f.context.state.game.food,initial.game.food-1);
  assert.ok(activePet(f.context.state.game).hunger>activePet(initial.game).hunger);
  assert.equal(f.writes[0].revision,1);assert.equal(f.context.revision,2);
- assert.deepEqual(f.results,[{ok:true,message:'吃饱啦，谢谢你'}]);
+ assert.deepEqual(f.results,[{ok:true,message:activePet(f.context.state.game).say,action:'eat'}]);
  assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);
  for(const command of ['pat','play','sleep','sleep'])await f.command(command);
  assert.equal(f.writes.length,5);assert.ok(f.results.every(r=>r.ok));
  assert.equal(activePet(f.context.state.game).sleeping,false);
- assert.match(f.results.at(-2).message,/晚安/);assert.match(f.results.at(-1).message,/醒来/);
+ assert.equal(f.results.at(-2).action,'sleep');assert.equal(f.results.at(-1).action,'wake');
 });
 await check('cooldown and unavailable food are real failures without extra writes',async()=>{
  const f=fixture();await f.command('pat');await f.command('pat');
@@ -74,7 +75,7 @@ await check('pet selection saves the active companion and refuses invalid or sta
  await f.command('switchPet:1');
  assert.equal(f.context.state.game.active,1);assert.equal(f.results[0].ok,true);
  assert.equal(f.context.state.game.pets[0].xp,before.xp);assert.equal(f.writes.length,1);
- assert.match(f.results[0].message,/来陪你/);
+ assert.equal(f.results[0].action,'greet');assert.equal(f.results[0].message,activePet(f.context.state.game).say);
  for(const command of ['switchPet:1','switchPet:7','switchPet:8','switchPet:12','switchPet:-1','switchPet:0.5','switchPet:01','switchPet:1e1','switchPet:1\n','switchPet:constructor'])await f.command(command);
  assert.equal(f.writes.length,1);assert.ok(f.results.slice(1).every(result=>!result.ok));
  assert.equal(f.results[3].message,'没有这个伙伴','well-formed index 8 must reach the engine length check');

@@ -1,66 +1,38 @@
-// 宠物窗渲染逻辑：只消费主进程经 preload 推来的 pet:state / pet:say / pet:action /
-// pet:scale，自己不发任何网络请求（宠物窗是纯本地 file:// 页面）。
-// 动画本身全部由 CSS keyframes 播放，本文件只负责「选哪个状态」。
-import {PET_ACTIONS, petIdleAction} from './pet-policy.mjs';
-
-import {PET_SPRITES as VIEW_BOX} from './pet-catalog.mjs';
+// 宠物窗只接收本地 IPC，逐帧播放器与庭院共用同一套画稿、时序和角色动作。
+import {PETS,PET_SPRITES as VIEW_BOX} from './pet-catalog.mjs';
 import {PET_SYMBOLS} from './pet-art.mjs';
+import {createPetPlayer,petReaction} from './pet-player.mjs';
 document.getElementById('pet-sprites').innerHTML=PET_SYMBOLS;
 
 const SAY_SHOW_MS = 8000;
-const IDLE_MIN_MS = 3500;
-const IDLE_MAX_MS = 8000;
 
 const pet = document.getElementById('pet');
 const use = document.getElementById('pet-use');
 const bubble = document.getElementById('bubble');
 let hideTimer = null;
-let idleTimer = null;
-let tick = 0;
 let currentPet = null;
-let oneShotUntil = 0;
-let baseAction = 'idle';
+let player = null;
+let motion = true;
 
 // 未知状态保持原样，不伪造立绘（spec §11：读不到就如实未知）。
 function setSprite(key) {
-  if (!Object.hasOwn(VIEW_BOX, key)) return;
+  // Static IPC remains a first-paint fallback; 30-second polls never replace a playing frame.
+  if (player || !Object.hasOwn(VIEW_BOX, key)) return;
   use.setAttribute('href', '#' + key);
   pet.setAttribute('viewBox', VIEW_BOX[key]);
 }
 
-function applyAction(id) {
-  if (!Object.hasOwn(PET_ACTIONS, id)) return;
-  pet.setAttribute('data-action', id);
-}
-
-// 主进程每 30s 推来的基础动作。正在播放一次性动作时丢弃，避免轮询把动画打断。
 function setBaseAction(view) {
-  const id = view?.id;
-  if (!Object.hasOwn(PET_ACTIONS, id)) return;
-  currentPet = {energy: view.energy, sleeping: view.sleeping};
-  baseAction = id;
-  if (Date.now() < oneShotUntil) return;
-  applyAction(id);
+  if (!Object.hasOwn(PETS,view?.species)) return;
+  motion=view.motion!==false;
+  currentPet = {species:view.species,mood:view.mood,energy:view.energy,sleeping:view.sleeping};
+  const options={focus:view.focus,motion:view.motion};
+  if(player)player.setPet(currentPet,options);
+  else player=createPetPlayer(pet,{pet:currentPet,...options});
 }
-
-// 本地触发的一次性动作：用户点击、随机待机。播完自动排下一次待机。
 function playOnce(id) {
-  const spec = PET_ACTIONS[id];
-  if (!spec || spec.kind !== 'once') return;
-  oneShotUntil = Date.now() + spec.duration;
-  applyAction(id);
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {applyAction(baseAction);scheduleIdle();}, spec.duration);
-}
-
-function scheduleIdle() {
-  clearTimeout(idleTimer);
-  const wait = IDLE_MIN_MS + Math.floor(Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS));
-  idleTimer = setTimeout(() => {
-    const pick = currentPet?.sleeping ? null : petIdleAction(tick++, currentPet);
-    if (pick) playOnce(pick);
-    else scheduleIdle();
-  }, wait);
+  const reaction=petReaction(id,currentPet)||id;
+  if(reaction)player?.play(reaction);
 }
 
 function setScale(value) {
@@ -69,7 +41,7 @@ function setScale(value) {
   document.documentElement.style.setProperty('--pet-scale', String(n));
 }
 
-const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotion = () => !motion||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // 镜像庭院 say() 语义：主进程已截到 60 字，这里再兜底一次；
 // prefers-reduced-motion 下不加 .pop 弹出动画，直接显示。
@@ -92,7 +64,8 @@ window.szuPet?.onState(setSprite);
 window.szuPet?.onSay(say);
 window.szuPet?.onAction(setBaseAction);
 window.szuPet?.onScale(setScale);
-window.szuPet?.onReaction(() => playOnce('react'));
+window.szuPet?.onReaction(playOnce);
+window.addEventListener('beforeunload',()=>{player?.destroy();clearTimeout(hideTimer)});
 
 // 单击/右键打开菜单；拖动超过阈值时只移动，不误触菜单。
 let pointer = null;
@@ -119,7 +92,7 @@ function endPointer(event) {
   pet.classList.remove('dragging');
   if (pet.hasPointerCapture(event.pointerId)) pet.releasePointerCapture(event.pointerId);
   window.szuPet?.drag('end', {x:event.screenX, y:event.screenY});
-  if (open) {playOnce('react');window.szuPet?.openMenu();}
+  if (open) {playOnce('look');window.szuPet?.openMenu();}
 }
 pet.addEventListener('pointerup', endPointer);
 pet.addEventListener('pointercancel', endPointer);
@@ -138,7 +111,3 @@ pet.addEventListener('wheel', (event) => {
 pet.addEventListener('lostpointercapture', (event) => {
   if (pointer) endPointer(event);
 });
-
-// 立绘就位后才开始随机待机，避免首帧就在动。
-applyAction('idle');
-scheduleIdle();

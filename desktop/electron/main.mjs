@@ -5,7 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {startSidecar} from './sidecar.mjs';
 import {isSafeExternalUrl} from './external-url.mjs';
 import {contentSecurityPolicy,isAppUrl,isTrustedSender} from './window-policy.mjs';
-import {petWindowOptions,petWindowBounds,petScaleClamp,petPresetFor,petActionFor,petSay,petSpriteFor,activePetOf,isPetSender,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_WIDTH,PET_HEIGHT} from './pet-policy.mjs';
+import {petWindowOptions,petWindowBounds,petScaleClamp,petPresetFor,petSay,petSpriteFor,activePetOf,isPetSender,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_WIDTH,PET_HEIGHT} from './pet-policy.mjs';
 import {readPetSettings,writePetSettings} from './pet-settings.mjs';
 import {createSchoolWindows} from './school-window.mjs';
 import {isSchoolURL} from './school-policy.mjs';
@@ -107,12 +107,12 @@ async function pushPetState(){
     const snapshot=await response.json();
     if(!snapshot.data)return;
     const {settle,normalize}=await gardenEngine;
-    const game=settle(normalize(snapshot.data)).game;
+    const workspace=settle(normalize(snapshot.data)),game=workspace.game;
     const pet=activePetOf(game);
     if(!pet)return;
     petGame=game;
     sendPet('pet:state',petSpriteFor(pet));
-    sendPet('pet:action',{id:petActionFor(pet,null),energy:Number(pet.energy),sleeping:Boolean(pet.sleeping)});
+    sendPet('pet:action',{species:pet.species,mood:Number(pet.mood),energy:Number(pet.energy),sleeping:Boolean(pet.sleeping),focus:Boolean(game.focus&&game.focus.end>Date.now()),motion:workspace.preferences.motion!==false});
     if(!petGreeted){
       petGreeted=true;
       const name=pet.name||'伙伴';
@@ -197,7 +197,7 @@ async function openPetMenu(){
     {label:pet?`${pet.name} · Lv.${Math.min(20,1+Math.floor(pet.xp/50))}`:'伙伴状态读取中',enabled:false},
     ...(pet?[{label:`饱腹 ${Math.round(pet.hunger)} · 心情 ${Math.round(pet.mood)} · 精力 ${Math.round(pet.energy)}`,enabled:false}]:[]),
     {type:'separator'},
-    care('摸摸头','pat'),care(`喂食${petGame?`（剩余 ${petGame.food} 份）`:''}`,'feed'),care('陪它玩','play'),care(pet?.sleeping?'叫醒伙伴':'让它睡一会','sleep'),
+    care('聊两句','chat'),care('摸摸头','pat'),care(`喂食${petGame?`（剩余 ${petGame.food} 份）`:''}`,'feed'),care('陪它玩','play'),care(pet?.sleeping?'叫醒伙伴':'让它睡一会','sleep'),
     {label:'切换伙伴',enabled:Boolean(pet),submenu:(petGame?.pets||[]).map((companion,index)=>({
       id:`switchPet:${index}`,label:companion.name+(PETS[companion.species]?.available?'':' · 老朋友'),type:'radio',checked:index===petGame.active,
       click:()=>{if(index!==petGame.active)dispatchPetCommand(`switchPet:${index}`);},
@@ -406,7 +406,7 @@ else{
     if(!isTrustedSender(event,mainWin,handle?.baseUrl)||typeof result?.ok!=='boolean'||typeof result.message!=='string')return;
     await pushPetState();
     sendPet('pet:say',petSay(result.message));
-    if(result.ok)sendPet('pet:react');
+    if(result.ok&&typeof result.action==='string')sendPet('pet:react',result.action);
   });
   ipcMain.on('pet:menu',(event)=>{
     if(!petHtmlUrl||!isPetSender(event,petWin,petHtmlUrl))return;

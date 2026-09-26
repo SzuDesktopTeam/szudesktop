@@ -27,6 +27,14 @@ jobs:
         run: |
           node desktop/check-rewards.mjs
           node desktop/check-garden-progress.mjs
+      - name: Garden arcade and companion regression
+        run: |
+          node desktop/check-arcade.mjs
+          node desktop/check-garden-arcade.mjs
+          node desktop/check-arcade-ui.mjs
+          node desktop/check-pet-dialogue.mjs
+          node desktop/check-pet-animation.mjs
+          node desktop/check-pet-player.mjs
       - name: 校园服务与成绩导入回归
         run: node desktop/check-campus.mjs
       - name: College notices regression

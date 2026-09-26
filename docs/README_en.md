@@ -27,6 +27,40 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
+**This is still an unpublished beta0.9.3 candidate; the download above remains beta0.9.2.** This iteration connects frame-by-frame companions, personalities and garden games with saved progression. All 32 UI and desktop check groups, real browser playthroughs and local builds passed. Remote CI results for the new installer are recorded in [STATUS section 57](STATUS.md#57-逐帧伙伴与庭院小游戏2026-09-27源码未发布). The older screenshots below belong to earlier candidates and do not establish acceptance for the new animations.
+
+### Companions with their own movement and personality
+
+All six species, including A-Qing in older saves, have **12 actions with 6 frames each: 432 independently rendered pixel frames**. The actions cover idle, looking around, walking, patting, eating, playing, sleeping, stretching awake, celebrating, accompanying focus, low mood and greeting. Eyes, mouths, limbs, tails and leaves change separately. The main window and floating pet share one player, with individual idle pacing and reactions to sleep, focus and care. The room's action book lets you play each action and inspect every frame. Another 30 static portraits remain available for reduced motion and postcard export.
+
+**576 Chinese lines cover 16 contexts**, with six alternatives per species and context. Each companion's rotation progress is saved. “Chat a little” responds to sleep, hunger, tiredness and time of day; care, harvests, focus, todos and game outcomes have their own replies.
+
+| Companion | Personality |
+| :-- | :-- |
+| Libao | Warm, eager to organize things and slightly clumsy; always ready to help |
+| Chestnut | A serious cardboard-box supervisor convinced everything is under control; chunky abstract artwork, completely unaware of its own odd charm |
+| Xiaobai | A quiet campus egret who notices small changes |
+| Pingu | Curious and childlike, eager to try things; an occasional happy Noot |
+| Skipper | A tactical penguin captain who schedules snacks and rest as seriously as missions |
+| A-Qing | Patient and practical, taking its own steady steps; retained under “Old friends” in existing saves |
+
+![Companion personality and frame-by-frame action book in the running app](screenshot-pet-animation-preview.png)
+
+### A familiar game and two garden goals
+
+- **Lychee Garden → Game corner: Merge Garden.** Complete 2048 rules, arrow keys, WASD, swipes and directional buttons, with short movement, merge and spawn animations. The board saves automatically, supports one-step undo and restart, and continues beyond 2048. Current and best scores are separate. First reaching 128 / 256 / 512 / 1024 / 2048 unlocks permanent stickers. Actually merging 128 or above today qualifies for one daily gift of **8 coins and 2 bond points**; keeping an old large tile does not grant a new day's reward.
+- **Lychee Garden → Market: companion harvest requests.** Three fixed daily requests consume existing produce. Payment equals the produce's regular sale value plus a **3 / 3 / 4-coin** bonus, totaling 10 extra coins daily. Completing 1 / 3 / 8 / 15 requests unlocks keepsakes. Missing materials and completed deliveries are explicit; no duplicate turn-ins, streak requirement or missed-day penalty.
+
+![2048 Merge Garden in the running app](screenshot-arcade-preview.png)
+
+The 2048 rules are adapted from Gabriele Cirulli's [MIT-licensed original at a pinned revision](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc), with its [complete license retained](../desktop/assets/garden/licenses/2048-MIT.txt). Garden design takes inspiration from [Stardew Valley's farming and character relationships](https://www.stardewvalley.net/about/) and [Animal Crossing's material gathering and everyday goals](https://animalcrossing.nintendo.com/new-horizons/create/), linking harvests, companion requests and keepsakes. The request rules and writing are our own; no commercial-game artwork or code was copied for those mechanics.
+
+To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 16 dialogue contexts and 12 animation actions, plus the relevant checks. See [STATUS section 57.4](STATUS.md#574-继续添加伙伴的统一契约) for field names, exported APIs and packaging dependencies.
+
+This garden iteration does not close unverified school-account workflows or deploy a backend, Docker, cloud sync or hot updates.
+
+### Earlier candidate interfaces and verification
+
 The earlier baseline `09c2240` is in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). [All 9 CI jobs passed](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980), including an actual beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those results do not cover the new penguins or shared catalog changes below. The PR is not merged, and public downloads remain beta0.9.2.
 
 **These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
@@ -51,7 +85,7 @@ Implemented in the current source:
 
 - **A clearer study workflow.** Separate focus, timetable and grades views; editable todos with dates, completion records, archives and restoration. Focus accepts 1–120 minutes and an optional todo, with completed sessions in a seven-day review. It does not automatically mark the todo complete.
 - **Fairer progression.** Each completed and claimed focus minute gives one garden coin and one growth point. Switching companions no longer removes crop unlocks; longer crops give more per harvest. Each companion's first three pats per day give growth, with further interaction still available.
-- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. All five default companions have normal, happy, low-mood and sleeping states, with 70 distinct interaction lines; A-Qing retains 14 legacy lines. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
+- **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. The four static states remain, with dialogue and motion expanded to the 576 lines and 432 frames above. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
 - **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
 - **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
 

@@ -97,69 +97,6 @@ export function isPetSender(event, petWin, petUrl) {
     && event.senderFrame?.url === petUrl);
 }
 
-// 动作表：kind=once 表示播放一次后回落基础动作，不是无限循环。
-// 动画全部由 pet.html 的 CSS keyframes 播放，这里的 duration 只用于渲染层排程。
-export const PET_ACTIONS = {
-  idle:  {label: '待机',   kind: 'loop', duration: 3200},
-  happy: {label: '开心',   kind: 'loop', duration: 1200},
-  sad:   {label: '难过',   kind: 'loop', duration: 2600},
-  sleep: {label: '睡觉',   kind: 'loop', duration: 3600},
-  blink: {label: '轻晃',   kind: 'once', duration: 260},
-  yawn:  {label: '伸懒腰', kind: 'once', duration: 900},
-  walk:  {label: '走动',   kind: 'once', duration: 1100},
-  react: {label: '回应',   kind: 'once', duration: 700},
-};
-
-// 基础动作：完全由庭院存档的 sleeping/mood 推导，判断与 engine.mjs 的 petSprite() 一致。
-// 读不到就回落 idle，不伪造。
-export function petBaseAction(pet) {
-  if (!pet) return 'idle';
-  if (pet.sleeping) return 'sleep';
-  const mood = Number(pet.mood);
-  if (Number.isFinite(mood) && mood > 65) return 'happy';
-  if (Number.isFinite(mood) && mood < 35) return 'sad';
-  return 'idle';
-}
-
-// 一次性覆盖优先于基础动作；oneShot 不在动作表内时忽略。
-export function petActionFor(pet, oneShot) {
-  if (oneShot && Object.hasOwn(PET_ACTIONS, oneShot)) return oneShot;
-  return petBaseAction(pet);
-}
-
-// 随机待机的候选池与权重。把「加权随机」变成 tick 的确定性函数，因此可在 Node 下单测。
-const IDLE_POOL = ['blink', 'yawn', 'walk'];
-export function petIdleWeights(pet) {
-  const energy = Number(pet?.energy);
-  return {
-    blink: 5,
-    yawn: Number.isFinite(energy) && energy < 30 ? 6 : 2,
-    walk: pet?.sleeping ? 0 : 3,
-    none: 6,
-  };
-}
-
-// MurmurHash3 尾混合：保证连续 tick 在取模后仍均匀分布。
-function mix32(n) {
-  let h = (Number(n) | 0) + 0x9e3779b9;
-  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
-  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
-  return (h ^ (h >>> 16)) >>> 0;
-}
-
-// 返回三个一次性动作之一，或 null（这次不做动作，继续待机）。
-export function petIdleAction(tick, pet) {
-  const w = petIdleWeights(pet);
-  const total = w.blink + w.yawn + w.walk + w.none;
-  if (total <= 0) return null;
-  let r = mix32(tick) % total;
-  for (const id of IDLE_POOL) {
-    if (r < w[id]) return id;
-    r -= w[id];
-  }
-  return null;
-}
-
 // 缩放值命中哪个预设档位；自定义值与非有限值返回 null（托盘菜单据此决定要不要打勾）。
 export function petPresetFor(scale) {
   const n = Number(scale);

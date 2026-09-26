@@ -16,6 +16,12 @@ Electron 来源：https://github.com/electron/electron ，采用 MIT License。�
 
 Chromium 及其第三方组件的版权和许可随 Electron 运行时提供，见安装目录内 `LICENSES.chromium.html`。便携版不捆绑 Electron 或 Chromium，使用用户已有浏览器。
 
+## 2048 游戏规则
+
+庭院 2048 的移动和合并规则参考并改编自 Gabriele Cirulli 的 [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc)，固定版本为 `478b6ec346e3787f589e4af751378d06ded4cbbc`，对应 `js/game_manager.js`、`js/grid.js`、`js/tile.js`。本项目将其改写为独立的数据模块，使用自己的界面，并加入存档、单步撤销和庭院奖励。
+
+Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款保留在源码 `desktop/assets/garden/licenses/2048-MIT.txt`，并随安装版和便携版分发为 `2048-MIT.txt`。伙伴委托规则和文案由本项目编写。
+
 ## Pingu 与 Skipper 像素形象
 
 候选 beta0.9.3 的 Pingu 与《马达加斯加》企鹅 Skipper 是项目自行绘制的粉丝像素形象，没有提取动画、电影或游戏的原始美术资源。角色及相关标识的权利属于各自原权利人；本项目的 MIT 许可不授予这些角色 IP 的使用权，也不表示获得官方授权或背书。
@@ -29,4 +35,4 @@ Chromium 及其第三方组件的版权和许可随 Electron 运行时提供，�
 
 这是学生制作的非官方项目，与深圳大学及上述项目或游戏的权利人没有隶属或背书关系。
 
-安装版的本项目与字体许可位于 `resources/licenses/`；便携 ZIP 将其放在解压目录。Electron 自身许可保留在安装目录。
+安装版的本项目、字体和 2048 许可位于 `resources/licenses/`；便携 ZIP 将其放在解压目录。Electron 自身许可保留在安装目录。

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {PET_ACTIONS} from './pet-policy.mjs';
+import vm from 'node:vm';
+import {PET_ACTIONS,PET_CLIPS} from '../assets/garden/pet-animation.mjs';
 import {PETS,PET_MOODS,PET_SPRITES} from '../assets/garden/pet-catalog.mjs';
 import {PET_SYMBOLS} from '../assets/garden/pet-art.mjs';
 
@@ -33,11 +34,12 @@ assert.match(render,/from ['"]\.\/pet-art\.mjs['"]/,'桌宠必须加载共享画
 assert.match(render,/from ['"]\.\/pet-catalog\.mjs['"]/,'桌宠必须加载共享名册');
 assert.match(render,/PET_SPRITES/,'桌宠视框必须来自名册');
 
-// 每个动作都要有对应的 CSS 规则，否则状态机会推出看不见的动作。
-for (const id of Object.keys(PET_ACTIONS)) {
-  assert.ok(html.includes(`#pet[data-action="${id}"]`), `pet.html 缺少动作 ${id} 的 CSS 规则`);
-  assert.ok(html.includes(`@keyframes pet-${id} `), `pet.html 缺少动作 ${id} 的 keyframes`);
-}
+// 两个窗口使用真实逐帧画稿，旧的整图缩放/晃动动画不得叠在新动画上。
+assert.doesNotMatch(html,/@keyframes pet-|animation:\s*pet-/);
+assert.match(render,/from ['"]\.\/pet-player\.mjs['"]/);
+assert.match(render,/createPetPlayer\(pet,\{pet:currentPet/);
+assert.match(render,/player\.setPet\(currentPet,options\)/);
+for(const species of Object.keys(PETS))for(const action of PET_ACTIONS)assert.ok(PET_CLIPS[species][action].frames.length>=4);
 
 // 缩放必须经由 CSS 变量，且默认值为 1。
 assert.match(html,/:root\s*\{\s*--pet-scale:\s*1;/);
@@ -49,16 +51,16 @@ assert.match(html,/default-src 'none'/);
 assert.match(html,/script-src 'self'/);
 assert.doesNotMatch(html,/onclick=/);
 
-// 减少动态效果时必须连动作一起关掉。
-assert.match(html,/#pet, #pet\[data-action\] \{ animation: none; \}/);
+// 减少动态效果时气泡不弹出；角色帧由共享播放器降为静态。
+assert.match(html,/@media \(prefers-reduced-motion: reduce\)/);
+assert.match(html,/#bubble\.pop \{ animation: none; \}/);
 
-// 渲染层只选状态，不自己发请求；并从纯策略模块 import。
-assert.ok(render.includes("from './pet-policy.mjs'"), '渲染层必须复用纯策略模块');
-assert.ok(render.includes("setAttribute('data-action'"), '渲染层必须把状态写进 data-action');
+// 渲染层只选状态，不自己发请求。
 assert.doesNotMatch(render, /\bfetch\s*\(/, '宠物窗渲染层不得发网络请求');
 
 // 一次性动作播放期间不得被主进程轮询打断。
-assert.match(render,/if \(Date\.now\(\) < oneShotUntil\) return;/);
+assert.match(render,/if \(player \|\| !Object\.hasOwn\(VIEW_BOX, key\)\) return;/);
+assert.match(render,/window\.szuPet\?\.onReaction\(playOnce\)/);
 
 // preload 不暴露任意设置值或 IPC；仅允许固定的缩放步进、拖动阶段和菜单请求。
 assert.match(preload,/onScale: \(cb\) =>/);
@@ -82,9 +84,13 @@ assert.ok(settings.includes('id="pet-scale"'),'设置页缺少宠物大小滑杆
 assert.ok(settings.includes('id="pet-scale-value"'),'设置页缺少百分比显示');
 assert.ok(settings.includes('min="0.4"')&&settings.includes('max="2"'),'滑杆范围必须与 PET_SCALE_MIN/MAX 一致');
 
-// 主进程必须把动作与精力/睡眠一起推给渲染层，否则加权待机永远用默认权重。
+// 主进程推物种和上下文，具体动作/时序由两个窗口共享的播放器决定。
 const main=read('main.mjs');
-assert.match(main,/sendPet\('pet:action',\{id:petActionFor\(pet,null\)/,'主进程必须推送动作载荷');
+assert.match(main,/sendPet\('pet:action',\{species:pet\.species,mood:Number\(pet\.mood\)/,'主进程必须推送真实伙伴和心情');
+assert.match(main,/motion:workspace\.preferences\.motion!==false/);
+assert.match(main,/focus:Boolean\(game\.focus&&game\.focus\.end>Date\.now\(\)\)/);
+assert.match(main,/care\('聊两句','chat'\)/);
+assert.match(main,/sendPet\('pet:react',result\.action\)/);
 assert.match(main,/sendPet\('pet:scale',Math\.min\(petScale/,'主进程必须推送适合当前屏幕的缩放');
 assert.match(main,/ipcMain\.handle\('szu:pet-scale-get'/);
 assert.match(main,/ipcMain\.handle\('szu:pet-scale-set'/);
@@ -98,4 +104,18 @@ const mainPreload=read('preload.cjs');
 assert.match(mainPreload,/petScale: \(\) =>/);
 assert.match(mainPreload,/setPetScale: \(value\) =>/);
 
-console.log('Pet view: action CSS, scale variables, renderer wiring and preload surface checks passed');
+// The bridge drops Electron events and extra data, but keeps the action/species
+// required for animation. A failed or malformed result must not become a gesture.
+let bridge;const listeners=new Map();
+vm.runInNewContext(preload,{require:()=>({contextBridge:{exposeInMainWorld:(_name,value)=>{bridge=value}},ipcRenderer:{on:(channel,fn)=>listeners.set(channel,fn),send(){}}})});
+const states=[],reactions=[];bridge.onAction(value=>states.push(value));bridge.onReaction(value=>reactions.push(value));
+listeners.get('pet:action')({private:true},{species:'pingu',mood:88,energy:70,sleeping:false,focus:true,motion:false,secret:'excluded'});
+assert.deepEqual(JSON.parse(JSON.stringify(states)),[{species:'pingu',mood:88,energy:70,sleeping:false,focus:true,motion:false}]);
+for(const action of ['eat','celebrate','wake',{},'../secret',''])listeners.get('pet:react')({private:true},action);
+assert.deepEqual(reactions,['eat','celebrate','wake']);
+
+const packaging=read('electron-builder.yml');
+for(const name of ['pet-player.mjs','pet-animation.mjs','pet-animation-art.mjs','pet-dialogue.mjs'])assert.ok(packaging.includes('      - '+name),'renderer package needs '+name);
+for(const name of ['pet-dialogue.mjs','puzzle2048.mjs','garden-orders.mjs'])assert.ok(packaging.includes('    to: '+name),'engine package needs '+name);
+assert.ok(packaging.includes('to: licenses/2048-MIT.txt'),'the adapted game license ships in the installer');
+console.log('Pet view: shared frame player, scale variables, IPC reactions and packaged dependencies passed');

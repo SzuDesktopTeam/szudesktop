@@ -1,5 +1,8 @@
 // Original local-only garden rules. No accounts, passwords, or remote services.
 import {PETS,AVAILABLE_PETS,PET_LIMIT,petDefinition} from './pet-catalog.mjs';
+import {PET_CONTEXTS,pickPetDialogue} from './pet-dialogue.mjs';
+import {createPuzzle,normalizePuzzle,movePuzzle,restartPuzzle,undoPuzzle} from './puzzle2048.mjs';
+import {createOrders,normalizeOrders,dailyOrders,deliverOrder} from './garden-orders.mjs';
 export {PETS,DEFAULT_PET,AVAILABLE_PETS,petSprite,petViewBox} from './pet-catalog.mjs';
 export const CROPS={
  radish:{name:'小萝卜',icon:'radish',time:60000,price:4,sell:3,yield:2,level:1,xp:1},
@@ -9,16 +12,17 @@ export const CROPS={
 };
 export const DECOR={flower:{name:'窗边小花',price:35},scarf:{name:'猫咪围巾',price:60},lantern:{name:'暖光灯笼',price:90}};
 function companionLine(g,p,action){
- const lines=petDefinition(p.species).lines[action];
- const day=Number(g.daily.day.replaceAll('-',''));
- return lines[(day+g.daily.care+g.stats.harvest+g.stats.focus)%lines.length];
+ p.dialogue??={};
+ const line=pickPetDialogue(p.species,action,{cursor:p.dialogue[action]||0,last:p.say,seed:g.created});
+ p.dialogue[line.context]=line.cursor;
+ return line.text;
 }
 function createPet(species,now){
- return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PETS[species].greeting,saidAt:now};
+ return {species,name:PETS[species].name,xp:0,bond:10,hunger:80,energy:85,mood:85,sleeping:false,lastPat:0,lastPlay:0,say:PETS[species].greeting,saidAt:now,dialogue:{}};
 }
 // 每只宠物的字段。新增字段必须同时加进 createState / normalize 的迁移与白名单，
 // 否则旧存档读进来会是 undefined。
-const PET_FIELDS=['species','name','xp','bond','hunger','energy','mood','sleeping','lastPat','lastPlay','say','saidAt'];
+const PET_FIELDS=['species','name','xp','bond','hunger','energy','mood','sleeping','lastPat','lastPlay','say','saidAt','dialogue'];
 export const activePet=g=>g.pets[g.active]||g.pets[0];
 // 宠物说的话。saidAt 只用于界面判断是否新鲜，不影响逻辑。
 export function say(p,text,now){p.say=String(text).slice(0,60);p.saidAt=now}
@@ -50,7 +54,7 @@ export function createState(now=Date.now()){
  return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:{radish:4,strawberry:2,blueberry:0,lychee:0},stock:{radish:0,strawberry:0,blueberry:0,lychee:0},
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
- pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,
+ pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,puzzle:createPuzzle(now),orders:createOrders(),
  daily:dailyState(now),stats:{harvest:0,focus:0,minutes:0,planted:1,tasks:0},discovered:[],decor:[],equipped:[],achievements:[],gardenLevel:1,focus:null,focusHistory:[],journey:{days:[dayKey(now)],claimed:[]},log:[{time:now,text:'欢迎来到荔枝庭院。第一块萝卜地已经种好，记得来收获。'}]}};
 }
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -81,6 +85,8 @@ export function normalize(input,now=Date.now()){
  g.focusHistory=(Array.isArray(g.focusHistory)?g.focusHistory:[]).filter(f=>f&&Number.isInteger(f.minutes)&&f.minutes>=1&&f.minutes<=120&&Number.isFinite(f.startedAt)&&Number.isFinite(f.endedAt)&&f.startedAt>=0&&f.endedAt>=f.startedAt).slice(0,365).map(f=>({startedAt:f.startedAt,endedAt:f.endedAt,minutes:f.minutes,todoId:String(f.todoId||'').slice(0,60),task:String(f.task||'').slice(0,120)}));
  g.journey={days:[...new Set((Array.isArray(g.journey?.days)?g.journey.days:[]).filter(validDate))].sort().slice(0,7),claimed:[...new Set((Array.isArray(g.journey?.claimed)?g.journey.claimed:[]).filter(id=>JOURNEY.some(c=>c.id===id)))]};
  g.journey.claimed=g.journey.claimed.filter(id=>JOURNEY.find(c=>c.id===id).visit<=g.journey.days.length);
+ g.puzzle=normalizePuzzle(g.puzzle,g.created);
+ g.orders=normalizeOrders(g.orders,CROPS);
  g.daily={day:g.daily.day,gift:!!g.daily.gift,...Object.fromEntries(Object.keys(QUESTS).map(k=>[k,g.daily[k]])),claimed:g.daily.claimed.filter(k=>Object.hasOwn(QUESTS,k)),pats:(Array.isArray(g.daily.pats)?g.daily.pats:[]).slice(0,PET_LIMIT).map(n=>Number.isInteger(n)?clamp(n,0,PAT_REWARD_LIMIT):0),todoRewards:Number.isInteger(g.daily.todoRewards)?clamp(g.daily.todoRewards,0,TODO_REWARD_LIMIT):0};
  check(Number.isFinite(g.last)&&g.last>0&&g.last<=now+86400000,'存档时间异常');
 
@@ -103,6 +109,7 @@ export function normalize(input,now=Date.now()){
   out.sleeping=!!p.sleeping;
   for(const k of ['lastPat','lastPlay','saidAt'])out[k]=Number.isFinite(p[k])&&p[k]>=0?p[k]:0;
   out.say=String(p.say||'').slice(0,60);
+  out.dialogue=Object.fromEntries(PET_CONTEXTS.filter(k=>Number.isSafeInteger(p.dialogue?.[k])&&p.dialogue[k]>=0).map(k=>[k,p.dialogue[k]]));
   return out;
  });
  g.active=Number.isInteger(g.active)&&g.active>=0&&g.active<g.pets.length?g.active:0;
@@ -136,6 +143,7 @@ export function settle(state,now=Date.now()){
  g.last=now;
  const day=dayKey(now);
  if(day>g.daily.day)g.daily=dailyState(now);
+ dailyOrders(g,day,CROPS,gardenLevel(g));
  return s;
 }
 export function achievementList(g){return [
@@ -150,6 +158,20 @@ export function act(state,a,now=Date.now()){
  const s=settle(state,now),g=s.game,p=activePet(g);now=g.last;
  const care=()=>{g.daily.care++;p.bond=clamp(p.bond+3,0,100)};
  switch(a.type){
+ case 'chat':{
+  const hour=new Date(now).getHours();
+  const context=p.sleeping?'sleep':p.hunger<40?'hungry':p.energy<35?'tired':hour<10?'morning':hour>=21?'night':'idle';
+  say(p,companionLine(g,p,context),now);break;}
+ case 'puzzleMove':{
+  const result=movePuzzle(g.puzzle,a.direction);g.puzzle=result.state;
+  if(result.changed&&result.merges.some(m=>m.value>=128))g.puzzle.qualifiedDay=dayKey(now);
+  if(result.newMilestones.length)say(p,companionLine(g,p,'gameWin'),now);
+  else if(result.changed&&result.over)say(p,companionLine(g,p,'gameLose'),now);
+  break;}
+ case 'puzzleUndo':g.puzzle=undoPuzzle(g.puzzle);break;
+ case 'puzzleRestart':g.puzzle=restartPuzzle(g.puzzle,now);break;
+ case 'puzzleClaim':check(g.puzzle.qualifiedDay===dayKey(now),'今天合成一次 128 或更大的数字，就能领取小礼物');check(g.puzzle.earnedDay!==dayKey(now),'今天的小游戏礼物已经领取');g.puzzle.earnedDay=dayKey(now);g.coins+=8;p.bond=clamp(p.bond+2,0,100);say(p,companionLine(g,p,'gameWin'),now);note(g,'小游戏小礼物：8 荔枝币、2 点亲密度。',now);break;
+ case 'orderDeliver':{const result=deliverOrder(g,a.id,dayKey(now),CROPS,gardenLevel(g));say(p,companionLine(g,p,'harvest'),now);note(g,'完成伙伴委托「'+result.order.title+'」，收下 '+result.order.coins+' 荔枝币。',now);break;}
  case 'gift':check(!g.daily.gift,'今天的补给已经领过啦');g.daily.gift=true;g.coins+=20;g.food++;g.seeds.radish+=2;say(p,'补给到手！今天也请多指教。',now);note(g,'领取每日补给：20 荔枝币、1 份食物、2 颗萝卜种子。',now);break;
  case 'pat':check(now-p.lastPat>=10000,'让它享受一下，稍等 10 秒再摸摸');p.lastPat=now;if((g.daily.pats[g.active]||0)<PAT_REWARD_LIMIT){g.daily.pats[g.active]=(g.daily.pats[g.active]||0)+1;p.xp+=2;care();}else g.daily.care++;p.mood=clamp(p.mood+5,0,100);say(p,companionLine(g,p,'pat'),now);note(g,'摸摸头，'+p.name+'舒服地眯起了眼。',now);break;
  case 'feed':check(!p.sleeping,'先唤醒伙伴再喂食');check(p.hunger<98,'它已经吃饱了，留着下次吧');
@@ -162,7 +184,7 @@ export function act(state,a,now=Date.now()){
   check(Number.isInteger(a.index)&&a.index>=0&&a.index<g.pets.length,'没有这个伙伴');
   check(a.index!==g.active,'它已经在这里陪你啦');
   g.active=a.index;const q=activePet(g);
-  say(q, q.sleeping?'（睡着的 '+q.name+' 翻了个身）':petDefinition(q.species).greeting,now);
+  say(q,q.sleeping?companionLine(g,q,'sleep'):companionLine(g,q,'greet'),now);
   note(g,'切换伙伴：现在陪着你的是 '+q.name+'。',now);break;}
  case 'plant':{
   const c=CROPS[a.crop];check(Number.isInteger(a.index)&&a.index>=0&&a.index<6&&g.plots[a.index]===null,'请选择空地');check(c&&gardenLevel(g)>=c.level,'庭院还没有解锁这种作物');check(g.seeds[a.crop]>0,'这种种子用完了，去集市补充吧');g.seeds[a.crop]--;g.plots[a.index]={crop:a.crop,planted:now,ready:now+c.time,watered:false};g.stats.planted++;g.daily.plant++;note(g,'种下了'+c.name+'，离线时也会继续生长。',now);break;}
@@ -175,12 +197,12 @@ export function act(state,a,now=Date.now()){
  case 'decor':{const d=DECOR[a.id];check(d,'没有这件装饰');if(!g.decor.includes(a.id)){check(g.coins>=d.price,'荔枝币不够');g.coins-=d.price;g.decor.push(a.id);}g.equipped=g.equipped.includes(a.id)?g.equipped.filter(x=>x!==a.id):[...g.equipped,a.id];break;}
  case 'quest':{const q=QUESTS[a.id];check(q&&g.daily[a.id]>=q.target,'目标还没有完成');check(!g.daily.claimed.includes(a.id),'奖励已领取');g.daily.claimed.push(a.id);g.coins+=q.reward;note(g,'完成每日目标：'+q.name+'。',now);break;}
  case 'achievement':{const x=achievementList(g).find(x=>x.id===a.id);check(x?.done,'成就还没有完成');check(!g.achievements.includes(a.id),'奖励已领取');g.achievements.push(a.id);g.coins+=30;note(g,'获得纪念章：'+x.name+'。',now);break;}
- case 'focusStart':{check(!g.focus,'请先完成或取消当前专注');check(Number.isInteger(a.minutes)&&a.minutes>=1&&a.minutes<=120,'专注时长请输入 1–120 的整数分钟');const todo=a.todoId?s.todos.find(t=>t.id===a.todoId):null;check(!a.todoId||(todo&&!todo.done&&!todo.archived),'请选择一件未完成的事项');g.focus={startedAt:now,end:now+a.minutes*60000,duration:a.minutes,todoId:todo?.id||'',task:todo?.text||''};break;}
+ case 'focusStart':{check(!g.focus,'请先完成或取消当前专注');check(Number.isInteger(a.minutes)&&a.minutes>=1&&a.minutes<=120,'专注时长请输入 1–120 的整数分钟');const todo=a.todoId?s.todos.find(t=>t.id===a.todoId):null;check(!a.todoId||(todo&&!todo.done&&!todo.archived),'请选择一件未完成的事项');g.focus={startedAt:now,end:now+a.minutes*60000,duration:a.minutes,todoId:todo?.id||'',task:todo?.text||''};say(p,({libao:'我把小椅子搬好了。这一段安静陪你。',chestnut:'你忙你的。我在这个位置值班。',egret:'我就在这里，陪你安静一会儿。',pingu:'我先把玩具放好，小小声陪着你。',skipper:'进入专注行动。队长负责保持安静。',turtle:'这一段路，我们慢慢走。'})[p.species],now);break;}
  case 'focusCancel':g.focus=null;break;
  case 'focusClaim':check(g.focus&&now>=g.focus.end,'专注还没结束');g.stats.minutes+=g.focus.duration;g.stats.focus++;g.daily.focus++;g.coins+=g.focus.duration;p.xp+=g.focus.duration;p.mood=clamp(p.mood+10,0,100);g.focusHistory.unshift({startedAt:g.focus.startedAt,endedAt:g.focus.end,minutes:g.focus.duration,todoId:g.focus.todoId,task:g.focus.task});g.focusHistory=g.focusHistory.slice(0,365);say(p,companionLine(g,p,'focus'),now);note(g,'完成 '+g.focus.duration+' 分钟专注，获得等量荔枝币与成长。',now);g.focus=null;break;
  case 'todoAdd':{const text=String(a.text||'').trim(),id=String(a.id||'').slice(0,60);check(text,'先写下一件小事');check(id&&!s.todos.some(t=>t.id===id),'事项标识重复，请重新添加');check(s.todos.filter(t=>!t.archived).length<100&&s.todos.length<500,'清单已满，请先归档或清理已完成事项');s.todos.push({id,text:text.slice(0,120),done:false,rewarded:false,date:todoDate(a.date===undefined?dayKey(now):a.date),createdAt:now,completedAt:0,archived:false});break;}
  case 'todoEdit':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');if(a.text!==undefined){const text=String(a.text).trim();check(text,'事项不能留空');t.text=text.slice(0,120)}if(a.date!==undefined)t.date=todoDate(a.date);break;}
- case 'todoToggle':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');check(!t.archived,'请先从归档中恢复事项');t.done=!t.done;t.completedAt=t.done?now:0;if(t.done&&!t.rewarded){t.rewarded=true;g.stats.tasks++;if(g.daily.todoRewards<TODO_REWARD_LIMIT){g.daily.todoRewards++;p.xp+=2;}}break;}
+ case 'todoToggle':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');check(!t.archived,'请先从归档中恢复事项');t.done=!t.done;t.completedAt=t.done?now:0;if(t.done&&!t.rewarded){t.rewarded=true;g.stats.tasks++;if(g.daily.todoRewards<TODO_REWARD_LIMIT){g.daily.todoRewards++;p.xp+=2;}}if(t.done)say(p,companionLine(g,p,'task'),now);break;}
  case 'todoArchive':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');const archive=a.archived!==false;check(!archive||t.done,'完成后再归档这件小事');check(archive||!t.archived||s.todos.filter(x=>!x.archived).length<100,'未归档事项已满，请先整理');t.archived=archive;break;}
  case 'todoArchiveDone':for(const t of s.todos)if(t.done)t.archived=true;break;
  case 'todoDelete':s.todos=s.todos.filter(x=>x.id!==a.id);break;

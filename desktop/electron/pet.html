@@ -47,34 +47,15 @@
     width: calc(150px * var(--pet-scale)); height: calc(162px * var(--pet-scale)); cursor: pointer;
     image-rendering: pixelated;
     filter: drop-shadow(0 6px 6px rgba(40, 20, 10, .25));
-    animation: pet-idle 3200ms ease-in-out infinite;
     touch-action: none;
   }
-  #pet.dragging[data-action] { cursor: grabbing; animation: none; }
+  #pet.dragging[data-action] { cursor: grabbing; }
   #pet:focus-visible { outline: 2px solid #6e1f35; outline-offset: 4px; }
-  /* 动作全部由 CSS 播放；kind=once 的动作不写 infinite，播一次即停。
-     荔宝暂无部件级分组，blink/yawn 用全身近似，已在设置页与文档中如实标注。 */
-  #pet[data-action="idle"]  { animation: pet-idle 3200ms ease-in-out infinite; }
-  #pet[data-action="happy"] { animation: pet-happy 1200ms ease-in-out infinite; }
-  #pet[data-action="sad"]   { animation: pet-sad 2600ms ease-in-out infinite; }
-  #pet[data-action="sleep"] { animation: pet-sleep 3600ms ease-in-out infinite; }
-  #pet[data-action="blink"] { animation: pet-blink 260ms steps(1); }
-  #pet[data-action="yawn"]  { animation: pet-yawn 900ms ease-in-out; }
-  #pet[data-action="walk"]  { animation: pet-walk 1100ms ease-in-out; }
-  #pet[data-action="react"] { animation: pet-react 700ms cubic-bezier(.34, 1.56, .64, 1); }
-  @keyframes pet-idle  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-  @keyframes pet-happy { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-10px) scale(1.04, .96); } 70% { transform: translateY(0) scale(.98, 1.03); } }
-  @keyframes pet-sad   { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(3px) rotate(-2deg); } }
-  @keyframes pet-sleep { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(2px) scale(1.02, .97); } }
-  @keyframes pet-blink { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1px) scale(1.03, .96); } }
-  @keyframes pet-yawn  { 0%, 100% { transform: scale(1, 1); } 45% { transform: scale(1.06, .9) translateY(3px); } 70% { transform: scale(.97, 1.05); } }
-  @keyframes pet-walk  { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-3px) rotate(-2.5deg); } 75% { transform: translateY(-3px) rotate(2.5deg); } }
-  @keyframes pet-react { 0% { transform: scale(1, 1); } 35% { transform: scale(1.12, .88); } 65% { transform: scale(.94, 1.08); } 100% { transform: scale(1, 1); } }
+  /* 身体动作来自共享 SVG 逐帧画稿；这里只保留气泡的界面过渡。 */
   /* 系统要求减少动态效果时：不做弹出动画，也不做任何动作动画。 */
   @media (prefers-reduced-motion: reduce) {
     #bubble { transition: none; }
     #bubble.pop { animation: none; }
-    #pet, #pet[data-action] { animation: none; }
   }
 </style>
 </head>

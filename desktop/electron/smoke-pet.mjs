@@ -5,7 +5,8 @@ import path from 'node:path';
 import {readPetSettings} from './pet-settings.mjs';
 import {readDesktopSettings} from './desktop-settings.mjs';
 import {petWindowBounds} from './pet-policy.mjs';
-import {PETS,AVAILABLE_PETS,DEFAULT_PET,PET_SPRITES} from './pet-catalog.mjs';
+import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
+import {PET_CLIPS} from './pet-animation.mjs';
 
 async function until(read, message) {
   const end=Date.now()+6000;
@@ -142,12 +143,16 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     const before=active(await game()).sleeping;
     getPetMenu().getMenuItemById('sleep').click();
     await until(async()=>active(await game()).sleeping!==before,'pet sleep menu did not save');
-    await until(()=>pet(`document.querySelector('#bubble-text').textContent.includes('${before?'醒来':'晚安'}')`),'saved action did not reach the pet bubble');
+    const savedPet=active(await game());
+    await until(()=>pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(savedPet.say.slice(0,60))}`),'saved personality dialogue did not reach the pet bubble');
   }
   const beforeFeed=await game(),canFeed=!active(beforeFeed).sleeping&&active(beforeFeed).hunger<98&&beforeFeed.food>0;
   trace('feed');
   getPetMenu().getMenuItemById('feed').click();
-  await until(()=>pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)"),'feed result was not shown');
+  await until(async()=>{
+    if(canFeed)return pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(active(await game()).say.slice(0,60))}`);
+    return pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)");
+  },'feed result was not shown');
   assert.equal((await game()).food,beforeFeed.food-(canFeed?1:0),'food changes only after a valid meal');
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
@@ -158,9 +163,10 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     const sprite=PETS[companion.species].sprite;
     getPetMenu().getMenuItemById(`switchPet:${index}`).click();
     await until(async()=>(await game()).active===index,'menu choice did not persist');
-    await until(()=>pet(`/^#${sprite}-(normal|happy|sad|sleep)$/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop sprite did not follow the choice');
-    const rendered=await pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {sprite:use.getAttribute('href').slice(1),viewBox:svg.getAttribute('viewBox'),width:box.width,height:box.height}})()");
-    assert.equal(rendered.viewBox,PET_SPRITES[rendered.sprite],'desktop uses the catalog viewBox');
+    await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(companion.species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop frame did not follow the choice');
+    const rendered=await pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {sprite:use.getAttribute('href').slice(1),action:svg.dataset.action,viewBox:svg.getAttribute('viewBox'),width:box.width,height:box.height}})()");
+    assert.equal(rendered.viewBox,PETS[companion.species].viewBox,'desktop uses the catalog viewBox');
+    if(rendered.sprite.startsWith('petanim-'))assert.ok(PET_CLIPS[companion.species][rendered.action].frames.some(f=>f.id===rendered.sprite),'desktop renders a registered frame');
     assert.ok(rendered.width>0&&rendered.height>0,'selected companion resolves to visible SVG artwork');
     assert.equal(mainWin.isVisible(),false,'switching companions need not open the main window');
     await pet('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
@@ -172,7 +178,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     const index=companionSpecies.indexOf(species),sprite=PETS[species].sprite;
     assert.ok(index>=0,'garden includes '+species);
     await main(`document.querySelector('.companion-choice[data-index="${index}"]').click()`);
-    await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href').startsWith('#${sprite}-')`),'garden selection did not update desktop: '+species);
+    await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'garden selection did not update desktop: '+species);
     assert.equal((await game()).active,index,'garden selection persists '+species);
   }
   await main("document.querySelector('.pet-roster-card').scrollIntoView({block:'center'})");
@@ -194,7 +200,9 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   getPetMenu().getMenuItemById('home').click();
   await until(()=>main("location.hash==='#home'"),'main menu did not restore home');
   await until(()=>mainWin.isVisible(),'pet menu cannot restore main window');
-  await until(async()=>['idle','happy','sad','sleep'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
+  await until(async()=>['idle','sad','sleep','focus'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
+  const motion=await pet("!matchMedia('(prefers-reduced-motion: reduce)').matches && document.querySelector('#pet-use').getAttribute('href').startsWith('#petanim-')");
+  if(motion){const previous=await pet("document.querySelector('#pet-use').getAttribute('href')");await until(()=>pet(`document.querySelector('#pet-use').getAttribute('href')!==${JSON.stringify(previous)}`),'desktop frame clock did not advance');}
   mainWin.close();
   menu('打开主窗口').click();
   assert.ok(mainWin.isVisible(),'tray opens main');

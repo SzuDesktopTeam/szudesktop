@@ -8,6 +8,7 @@ EXPECTED = {
     "LICENSE": ROOT / "LICENSE",
     "THIRD_PARTY_NOTICES.md": ROOT / "THIRD_PARTY_NOTICES.md",
     "FONT-LICENSE-OFL.txt": ROOT / "desktop/assets/fonts/LICENSE-OFL.txt",
+    "2048-MIT.txt": ROOT / "desktop/assets/garden/licenses/2048-MIT.txt",
 }
 
 

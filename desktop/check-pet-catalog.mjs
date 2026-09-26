@@ -64,17 +64,17 @@ test('both penguins earn their own care and keep progress through switching and 
  assert.equal(state.game.pets[0].xp,0);
 });
 
-test('switching to an awake companion uses its catalog greeting while sleeping companions stay asleep',()=>{
+test('switching to an awake companion uses its greeting library while sleeping companions stay asleep',()=>{
  let state=createState(now);
  for(let index=1;index<state.game.pets.length;index++){
   state=act(state,{type:'switchPet',index},now);
   const pet=activePet(state.game);
-  assert.equal(pet.say,PETS[pet.species].greeting);assert.equal(pet.saidAt,now);
+  assert.ok(PETS[pet.species].lines.greet.includes(pet.say));assert.equal(pet.saidAt,now);
  }
  state.game.pets[0].sleeping=true;
  state=act(state,{type:'switchPet',index:0},now);
  assert.equal(activePet(state.game).sleeping,true);
- assert.equal(activePet(state.game).say,'（睡着的 '+activePet(state.game).name+' 翻了个身）');
+ assert.ok(PETS[activePet(state.game).species].lines.sleep.includes(activePet(state.game).say));
 });
 
 test('catalog entries supply complete short dialogue for all care and reward actions',()=>{
@@ -82,9 +82,9 @@ test('catalog entries supply complete short dialogue for all care and reward act
   assert.ok(spec.name&&spec.description&&spec.greeting,species);
   for(const action of ['pat','feed','play','sleep','wake','focus','harvest']){
    const lines=spec.lines[action];
-   assert.equal(lines.length,2,species+' '+action);
+   assert.ok(lines.length>=6,species+' '+action);
    assert.ok(lines.every(line=>typeof line==='string'&&line.length>0&&line.length<=60),species+' '+action);
-   assert.equal(new Set(lines).size,2,species+' '+action);
+   assert.equal(new Set(lines).size,lines.length,species+' '+action);
   }
  }
 });

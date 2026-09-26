@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {CROPS,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet} from './assets/garden/engine.mjs';
 import {todoView,focusView,weeklyView} from './assets/garden/productivity.mjs';
+import {ordersView} from './assets/garden/arcade-ui.mjs';
 
 // Exercise the actual page handlers with an isolated DOM and workspace API.
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
@@ -25,7 +26,7 @@ function farmFixture(){
  const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,selectedCrop:'radish',selectedPlot:0,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
-  render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},toast(){},petActionMessage:()=>'',actionReward:()=>null,
+  render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
   schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},
   api:async(path,data)=>{assert.equal(path,'/api/workspace');assert.ok(data?.data);requests++;return {revision:requests+1}},
  });
@@ -183,6 +184,36 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  assert.match(source,/addEventListener\('visibilitychange',[^]*?if\(!document\.hidden\)clocks\(\)/);
 });
 
+await check('midnight replaces yesterday orders and paints the new arcade day without remounting its board',()=>{
+ const before=new Date(2026,8,27,23,59).getTime(),now=new Date(2026,8,28,0,1).getTime();
+ class Clock extends Date {constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
+ for(const tab of ['market','arcade']){
+  const current=settle(createState(before),before);current.preferences.motion=false;
+  current.game.puzzle.qualifiedDay='2026-09-27';current.game.puzzle.earnedDay='2026-09-27';
+  current.game.orders.completed=[current.game.orders.offers[0].id];current.game.orders.total=1;
+  const orderCard={outerHTML:ordersView(current.game,{crops:CROPS})},board={id:'existing-board',listeners:{keydown:()=>{}}},paints=[];
+  const main={board,set innerHTML(_value){assert.fail('跨日不得重挂整个游戏角或棋盘')}};
+  const context=vm.createContext({state:current,busy:false,workspaceReady:false,visitAttemptDay:'',page:'garden',gardenTab:tab,todoFilter:'open',Date:Clock,settle,dayKey,CROPS,ordersView,cropIcon:()=>'',
+   document:{activeElement:board,getElementById:id=>id==='main'?main:null,querySelector:selector=>selector==='.garden-orders'?orderCard:null,querySelectorAll:()=>[]},
+   paintArcade:(root,game,options)=>paints.push({root,game,options}),
+   render(){assert.fail('跨日不能重建整个页面')},mountGardenPlayers(){assert.fail('跨日不能重新绑定棋盘')},
+  });
+  vm.runInContext(section('function paintDay(','function countdown('),context);
+  context.refreshDay();
+  assert.equal(context.state.game.daily.day,'2026-09-28');assert.equal(context.state.game.orders.day,'2026-09-28');
+  if(tab==='market'){
+   assert.match(orderCard.outerHTML,/data-id="2026-09-28:0"/);assert.doesNotMatch(orderCard.outerHTML,/data-id="2026-09-27:/);
+   assert.match(orderCard.outerHTML,/今日 <b>0 \/ 3<\/b>/);assert.equal(paints.length,0);
+  }else{
+   assert.equal(paints.length,1);assert.equal(paints[0].root,main);assert.equal(paints[0].game.daily.day,'2026-09-28');
+   assert.equal(paints[0].game.puzzle.earnedDay,'2026-09-27','旧领奖日期不能被改成今天，画面需按新的一天重新判断');
+   assert.equal(paints[0].options.reducedMotion,true);assert.equal(main.board,board);assert.equal(context.document.activeElement,board);
+   assert.equal(typeof board.listeners.keydown,'function');assert.match(orderCard.outerHTML,/data-id="2026-09-27:0"/,'未展示的集市无需重画');
+  }
+  context.refreshDay();assert.equal(paints.length,tab==='arcade'?1:0,'当天的秒级时钟不得重复重画棋盘');
+ }
+});
+
 await check('study sections display only their requested tools and honor student level',()=>{
  const context=vm.createContext({state:createState(),studyTab:'focus',head:()=>'',sectionNav:()=>'',focusView:()=>'<section id="focus-only"></section>',
   todoHTML:()=>'<form id="todo-only"></form>',weeklyView:()=>'<section id="week-only"></section>',
@@ -222,7 +253,7 @@ function formFixture(){
  nodes.set('todo-form',todoForm);nodes.set('todo-text',draft);nodes.set('todo-date',date);nodes.set('focus-task',{value:''});
  const context=vm.createContext({
   state:createState(),revision:1,busy:false,page:'study',studyTab:'focus',gardenTab:'pet',act,activePet,normalize,structuredClone,
-  focusView,weeklyView,actionReward:()=>null,petActionMessage:()=>'',confirm:async()=>true,
+  focusView,weeklyView,actionReward:()=>null,petActionMessage:()=>'',reactPet(){},confirm:async()=>true,
   schoolUI:{click:async()=>false,submit:async()=>false},campusUI:{click:async()=>false,submit:async()=>false},officialUI:{click:async()=>false},pianoUI:{click:async()=>false},
   toast:message=>messages.push(message),
   document:{activeElement:draft,addEventListener:(name,callback)=>{listeners[name]=callback},getElementById:id=>nodes.get(id)||null,

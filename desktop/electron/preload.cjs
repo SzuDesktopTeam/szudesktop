@@ -1,5 +1,5 @@
 const {contextBridge, ipcRenderer} = require('electron');
-const petCommands = new Set(['pat', 'feed', 'play', 'sleep', 'garden', 'farm', 'study', 'home']);
+const petCommands = new Set(['pat', 'feed', 'play', 'chat', 'sleep', 'garden', 'farm', 'study', 'home']);
 contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   shell: 'electron',
   quit: () => ipcRenderer.invoke('szu:quit'),
@@ -32,7 +32,10 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   },
   petResult: (result) => {
     if (!result || typeof result.ok !== 'boolean' || typeof result.message !== 'string') return;
-    ipcRenderer.send('szu:pet-result', {ok: result.ok, message: result.message.slice(0, 120)});
+    const payload={ok:result.ok,message:result.message.slice(0,120)};
+    // An action only selects local animation; it cannot invoke a game command.
+    if(typeof result.action==='string'&&/^[a-zA-Z]{1,32}$/.test(result.action))payload.action=result.action;
+    ipcRenderer.send('szu:pet-result',payload);
   },
   openSchool: (target) => ipcRenderer.invoke('szu:school-open', target),
   syncSchool: (business) => ipcRenderer.invoke('szu:school-sync', business),

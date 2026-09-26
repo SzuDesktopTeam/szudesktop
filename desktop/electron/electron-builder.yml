@@ -16,6 +16,10 @@ files:
     filter:
       - pet-catalog.mjs
       - pet-art.mjs
+      - pet-animation.mjs
+      - pet-animation-art.mjs
+      - pet-player.mjs
+      - pet-dialogue.mjs
   - pet-settings.mjs
   - desktop-settings.mjs
   - focus-notifications.mjs
@@ -31,6 +35,12 @@ extraResources:
     to: garden-engine.mjs
   - from: ../assets/garden/pet-catalog.mjs
     to: pet-catalog.mjs
+  - from: ../assets/garden/pet-dialogue.mjs
+    to: pet-dialogue.mjs
+  - from: ../assets/garden/puzzle2048.mjs
+    to: puzzle2048.mjs
+  - from: ../assets/garden/garden-orders.mjs
+    to: garden-orders.mjs
   - from: ../../dist/szudesktop-windows-amd64.exe
     to: szudesktop-windows-amd64.exe
   # 托盘图标：打包后 main.mjs 从 process.resourcesPath 解析。
@@ -42,6 +52,8 @@ extraResources:
     to: licenses/THIRD_PARTY_NOTICES.md
   - from: ../assets/fonts/LICENSE-OFL.txt
     to: licenses/FONT-LICENSE-OFL.txt
+  - from: ../assets/garden/licenses/2048-MIT.txt
+    to: licenses/2048-MIT.txt
 win:
   target: nsis
   icon: ../assets/szudesktop.ico
