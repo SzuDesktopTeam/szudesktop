@@ -97,7 +97,7 @@ async function boot(){
   if(!quit.isQuitting()&&!tray.get())mainWin.show();
   if(!quit.isQuitting())focus.start();
   await smoke.writeReport({app,mainWin:mainWindow.get(),handle,petRuntime:()=>({petWin:pet.window(),tray:tray.get(),getMenu:tray.menu,screen,
-    getPetMenu:pet.menu,getPetMouse:pet.mouse,initialScale:pet.scale(),userData:userData()})});
+    getPetMenu:pet.menu,getPetMouse:pet.mouse,getPetHitLog:pet.hitLog,initialScale:pet.scale(),userData:userData()})});
 }
 
 const gotLock=app.requestSingleInstanceLock();

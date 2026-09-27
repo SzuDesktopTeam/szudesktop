@@ -181,7 +181,9 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     screen.on('display-added',reposition);
   }
   // 立绘报告指针是否在自己身上（参数已由 ipc-routes 校验为布尔值）。
-  function setHit(inside){petHit=inside;syncPetMouse();}
+  // 记下最近的进出及当时是否仍忽略鼠标：真实光标的转发事件会紧跟着改写瞬时状态，检查只看发生过什么。
+  let petHitLog=[];
+  function setHit(inside){petHit=inside;syncPetMouse();petHitLog=[...petHitLog.slice(-19),{inside,ignoring:petIgnoring}];}
   function drag(phase,point){
     if(phase==='start'){petDrag={cursor:point,bounds:petWin.getBounds(),moved:false};syncPetMouse();}
     else if(phase==='move'&&petDrag){
@@ -212,6 +214,6 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     restore:({scale,position})=>{petScale=scale;petPosition=position||null;},
     isSender:event=>Boolean(petHtmlUrl)&&isPetSender(event,petWin,petHtmlUrl),
     isVisible:()=>Boolean(petWin&&!petWin.isDestroyed()&&petWin.isVisible()),
-    scale:()=>petScale,window:()=>petWin,menu:()=>petMenu,mouse:()=>({hit:petHit,ignoring:petIgnoring}),
+    scale:()=>petScale,window:()=>petWin,menu:()=>petMenu,mouse:()=>({hit:petHit,ignoring:petIgnoring}),hitLog:()=>petHitLog,
   };
 }

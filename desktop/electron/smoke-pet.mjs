@@ -120,7 +120,7 @@ async function checkBackup(mainWin,baseUrl,token,evidenceDir){
   for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],expectedOriginal[key],'original '+key+' retained');
 }
 
-export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,getPetMouse,screen,initialScale,userData,evidenceDir,baseUrl,token}){
+export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,getPetMouse,getPetHitLog,screen,initialScale,userData,evidenceDir,baseUrl,token}){
   const api=localApi(baseUrl,token);
   const trace=stage=>writeFileSync(path.join(evidenceDir,'pet-progress.json'),JSON.stringify({stage,bounds:petWin?.getBounds(),visible:petWin?.isVisible()}));
   trace('start');
@@ -150,10 +150,13 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   let clickThrough=null;
   if(process.platform==='win32'){
     assert.equal(getPetMouse().ignoring,true,'transparent pet area lets clicks through by default');
+    // CI 桌面上真实光标的位置也会经 forward 转发进来，可能紧跟着触发 pointerleave；所以检查进出记录，而不是轮询瞬时状态。
+    const seen=getPetHitLog().length;
     petWin.webContents.sendInputEvent({type:'mouseMove',...target});
-    await until(()=>getPetMouse().hit&&getPetMouse().ignoring===false,'pointer over the companion did not make it clickable');
+    await until(()=>getPetHitLog().slice(seen).some(e=>e.inside&&e.ignoring===false),'pointer over the companion did not make it clickable');
+    const entered=getPetHitLog().length;
     petWin.webContents.sendInputEvent({type:'mouseMove',x:2,y:2});
-    await until(()=>!getPetMouse().hit&&getPetMouse().ignoring===true,'leaving the companion did not restore click-through');
+    await until(()=>getPetHitLog().slice(entered-1).some(e=>!e.inside&&e.ignoring===true)&&getPetMouse().ignoring===true,'leaving the companion did not restore click-through');
     clickThrough=true;
   }
   trace('click-through');
