@@ -62,6 +62,37 @@ await check('switching from notes to another study tool also waits before replac
  assert.equal(f.context.studyTab,'notes');assert.equal(f.events.includes('render'),false);
  f.gate.resolve();assert.equal(await pending,true);assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'grades');assert.equal(f.events.filter(x=>x==='render').length,1);
 });
+await check('continue latest note waits for selection and save before navigating to notes',async()=>{
+ const f=fixture(),pending=deferred(),events=[];f.context.page='home';
+ f.context.notebookUI.resumeLatest=async()=>{events.push('resume');await pending.promise;events.push('ready')};
+ f.context.navigate=async(page,tab)=>{events.push('navigate');assert.equal(page,'study');assert.equal(tab,'notes');f.context.page=page};
+ f.click('notebookResume');await tick();
+ assert.deepEqual(events,['resume']);assert.equal(f.context.page,'home');assert.equal(f.context.busy,true);assert.equal(f.controls[0].disabled,true);
+ pending.resolve();await tick();
+ assert.deepEqual(events,['resume','ready','navigate']);assert.equal(f.context.page,'study');assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);
+});
+await check('continue latest note reports load or save errors without leaving the original page',async()=>{
+ const f=fixture();f.context.page='home';let navigations=0;
+ f.context.notebookUI.resumeLatest=async()=>{throw Error('笔记暂时无法保存，请保留草稿')};
+ f.context.navigate=()=>{navigations++};f.click('notebookResume');await tick();
+ assert.equal(navigations,0);assert.equal(f.context.page,'home');assert.deepEqual(f.toasts,['笔记暂时无法保存，请保留草稿']);
+ assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);
+});
+await check('settings notebook backup waits for the export and stays on settings',async()=>{
+ const f=fixture(),pending=deferred();let backups=0,navigations=0;f.context.page='settings';
+ f.context.campusUI.click=async()=>false;
+ f.context.notebookUI.backup=async()=>{backups++;await pending.promise};f.context.navigate=()=>{navigations++};
+ f.click('notebookBackup');await tick();
+ assert.equal(backups,1);assert.equal(navigations,0);assert.equal(f.context.page,'settings');assert.equal(f.context.busy,true);
+ pending.resolve();await tick();assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);assert.equal(navigations,0);assert.deepEqual(f.toasts,[]);
+});
+await check('settings notebook backup exposes export errors and leaves settings available',async()=>{
+ const f=fixture();let navigations=0;f.context.page='settings';f.context.campusUI.click=async()=>false;
+ f.context.notebookUI.backup=async()=>{throw Error('笔记本还未读取，暂时无法导出')};f.context.navigate=()=>{navigations++};
+ f.click('notebookBackup');await tick();
+ assert.equal(navigations,0);assert.equal(f.context.page,'settings');assert.deepEqual(f.toasts,['笔记本还未读取，暂时无法导出']);
+ assert.equal(f.context.busy,false);assert.equal(f.controls[0].disabled,false);
+});
 await check('a pending public venue query allows navigation and a separate write',async()=>{
  const f=fixture(),pending=deferred();f.jobs.set('booking-rooms',pending);
  f.click('booking-rooms');await tick();

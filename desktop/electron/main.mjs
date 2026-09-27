@@ -1,5 +1,5 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, Notification, screen, shell, Tray} from 'electron';
-import {writeFileSync, mkdirSync, renameSync} from 'node:fs';
+import {readFileSync, writeFileSync, mkdirSync, renameSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {startSidecar} from './sidecar.mjs';
@@ -29,7 +29,10 @@ if(smoke) app.setPath('userData',path.join(process.env.SZUNET_CONFIG_DIR,'electr
 function sidecarCommand(){
   const exe=process.platform==='win32'?'szudesktop-windows-amd64.exe':'szudesktop';
   const command=app.isPackaged?path.join(process.resourcesPath,exe):path.resolve(here,'..','..','dist',exe);
-  return {command,args:['--no-open',...(smoke?['--no-auto-login']:[])]};
+  const expectedVersion=app.isPackaged?JSON.parse(readFileSync(path.join(here,'package.json'),'utf8')).szuVersion
+    :readFileSync(path.resolve(here,'..','..','internal','version','VERSION'),'utf8').trim();
+  if(typeof expectedVersion!=='string'||!/^(?:beta|v)?\d+\.\d+\.\d+$/.test(expectedVersion))throw Error('应用版本信息缺失，请重新安装当前版本');
+  return {command,args:['--no-open',...(smoke?['--no-auto-login']:[])],expectedVersion};
 }
 let handle=null,mainWin=null,quitting=false,quitReady=false,shutdownPromise=null,healthTimer=null,failureShown=false;
 let petWin=null,tray=null,trayMenu=null,petTimer=null,petGreeted=false,petHtmlUrl=null,petScale=PET_SCALE_DEFAULT;

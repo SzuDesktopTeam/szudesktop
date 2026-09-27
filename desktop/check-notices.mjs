@@ -40,4 +40,35 @@ await check('source changes await preference saving but release the caller befor
  feedFinished(response('college-law'));await nextTurn();
  assert.match(isolated.card(),/法学院 · 读取于/);
 });
+await check('first visit reads the saved college once, with no background read before entering',async()=>{
+ const requests=[];
+ const first=createNoticesUI({getSource:()=> 'college-law',api:async path=>{requests.push(path);return path.endsWith('/notice-sources')?{sources}:response('college-law')}});
+ await first.load();assert.equal(requests.length,1);
+ await first.enter();assert.match(first.card(),/法学院 · 读取于/);
+ assert.match(requests[1],/source=college-law/);
+ await first.enter();await first.enter();assert.equal(requests.length,2,'rerendering and returning to notices must not poll');
+ assert.match(first.card(),/刷新公告/);
+});
+await check('entering while catalog is loading shares that request and waits to read its saved source',async()=>{
+ let finishCatalog,finishFeed;const requests=[];
+ const first=createNoticesUI({getSource:()=> 'college-fe',api:path=>{requests.push(path);return new Promise(resolve=>{if(path.endsWith('/notice-sources'))finishCatalog=resolve;else finishFeed=resolve})}});
+ const loading=first.load();await first.enter();await first.enter();assert.equal(requests.length,1);
+ finishCatalog({sources});await nextTurn();
+ assert.equal(requests.length,2);assert.match(requests[1],/source=college-fe/);
+ await first.enter();assert.equal(requests.length,2,'an in-flight feed must not duplicate on rerender');
+ finishFeed(response('college-fe'));await loading;assert.match(first.card(),/教育学部 · 读取于/);
+});
+await check('a failed first read remains explicit until a user retries',async()=>{
+ let failed=true,reads=0;
+ const first=createNoticesUI({api:async path=>{if(path.endsWith('/notice-sources'))return {sources};reads++;if(failed)throw Error('学校网站暂时无法读取');return response('undergrad')}});
+ await first.enter();assert.match(first.card(),/学校网站暂时无法读取/);
+ await first.enter();assert.equal(reads,1,'rendering an error cannot start a retry loop');
+ failed=false;await first.click('notice-read');assert.equal(reads,2);assert.match(first.card(),/教务部 · 读取于/);
+});
+await check('a saved unsupported college stays an official link without an automatic feed request',async()=>{
+ const requests=[];
+ const first=createNoticesUI({getSource:()=> 'college-csse',api:async path=>{requests.push(path);return {sources}}});
+ await first.enter();assert.equal(requests.length,1);assert.match(first.card(),/打开学院官网/);
+ assert.doesNotMatch(first.card(),/data-action="notice-read"/);
+});
 console.log(`${count} notice checks passed`);

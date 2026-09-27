@@ -22,7 +22,7 @@ function sceneFixture(){
  let current=null;
  const mounts=[],nodes=new Map(),state=createState();state.preferences.homeSkin='lake';
  const context=vm.createContext({
-  state,page:'home',studyTab:'focus',revision:1,pages:{home:'今日',garden:'庭院',study:'学习',services:'校园服务'},pageIcons:{},Date,
+  state,page:'home',studyTab:'focus',serviceTab:'spaces',revision:1,pages:{home:'今日',garden:'庭院',study:'学习',services:'校园服务'},pageIcons:{},Date,
   sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},
   document:{body:{dataset:{}},activeElement:null,querySelector:selector=>selector==='[data-home-scene]'?current:null},
   api:async()=>({revision:2}),
@@ -59,7 +59,7 @@ await check('page repaints reattach the actual notebook editor with draft, selec
   visibleNotebook.isConnected=false;context.document.activeElement=body;
   visibleNotebook={isConnected:true,contains:()=>false,replaceWith(original){this.isConnected=false;original.isConnected=true;visibleNotebook=original}};
  }};
- const context=vm.createContext({state,page:'study',studyTab:'notes',pages:{study:'学习书屋'},pageIcons:{},Date,
+ const context=vm.createContext({state,page:'study',studyTab:'notes',serviceTab:'spaces',pages:{study:'学习书屋'},pageIcons:{},Date,
   sprite:()=>'',pageHTML:()=>'<section data-notebook>new placeholder</section>',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},
   notebookUI:{mount(root){assert.equal(root,main);mounts.push(visibleNotebook)}},
   document:{body,activeElement:editor,querySelector:selector=>selector==='[data-notebook]'?visibleNotebook:null,getElementById:id=>id==='main'?main:null},
@@ -82,6 +82,13 @@ await check('home repaints and successful task saves keep the same scene and can
  const save=f.context.commit(next);assert.equal(f.context.state.todos.length,0);assert.equal(f.host(),host);
  release({revision:2});await save;await sceneTick();
  assert.equal(f.context.state.todos.length,1);assert.equal(f.host(),host);assert.equal(f.host().canvas,canvas);assert.equal(f.mounts.length,1);
+});
+await check('room rendering enters notices only when the notice tab is visible',()=>{
+ const f=sceneFixture();let entered=0;f.context.campusUI={enterNotices(){entered++}};
+ f.render('pixel','services');assert.equal(entered,0);
+ f.context.serviceTab='notices';f.render('pixel','services');assert.equal(entered,1);
+ f.render('pixel','home');assert.equal(entered,1);
+ f.context.serviceTab='spaces';f.render('pixel','services');assert.equal(entered,1);
 });
 await check('moving between rooms reuses the campus canvas; skin, motion and pixel changes release it',async()=>{
  const f=sceneFixture();f.render();await sceneTick();const first=f.host();
@@ -346,7 +353,7 @@ await check('campus service sections do not mount unrelated forms or booking too
  for(const selected of ['spaces','notices','directory','piano']){
   context.serviceTab=selected;const html=context.servicesPage();assert.ok(html.includes(`id="${selected}-only"`));
   for(const other of ['spaces','notices','directory','piano'].filter(x=>x!==selected))assert.ok(!html.includes(`id="${other}-only"`));
-  if(selected==='spaces')assert.match(html,/official-only/);else assert.doesNotMatch(html,/official-only/);
+  assert.doesNotMatch(html,/official-only/,'学校登录入口已整合进对应业务，不再重复挂通用卡片');
   if(selected==='directory'){assert.match(html,/directory-links-only/);assert.match(html,/directory-phones-only/)}else assert.doesNotMatch(html,/directory-links-only|directory-phones-only/);
  }
 });

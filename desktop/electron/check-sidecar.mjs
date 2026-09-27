@@ -82,17 +82,32 @@ for(const mode of ['unhealthy','hanging','hanging-body','wrong-app'])test('start
   });
 });
 
-test('startSidecar: 已有服务通过明确复用行接管，停止不杀已有引擎',async()=>{
-  const server=http.createServer((req,res)=>res.end(JSON.stringify({ok:true,app:'szuDesktop',app_version:'test'})));
+test('startSidecar: 版本匹配的已有服务可复用，停止不杀已有引擎',async()=>{
+  const server=http.createServer((req,res)=>res.end(JSON.stringify({ok:true,app:'szuDesktop',app_version:'beta0.9.3'})));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const baseUrl='http://127.0.0.1:'+server.address().port;
   try{
-    const handle=await startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl]});
+    const handle=await startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:'beta0.9.3'});
     assert.equal(handle.owned,false);
     assert.equal(handle.baseUrl,baseUrl);
     assert.equal(handle.child.exitCode,0);
     await handle.stop();
     assert.equal((await fetch(baseUrl+'/api/status')).status,200);
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
+
+for(const version of ['beta0.9.1',undefined])test('startSidecar: '+(version||'缺失版本')+' 共享引擎拒绝复用且保持存活',async()=>{
+  const requests=[];
+  const server=http.createServer((req,res)=>{
+    requests.push(req.url);
+    res.end(JSON.stringify({ok:true,app:'szuDesktop',app_version:version}));
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const baseUrl='http://127.0.0.1:'+server.address().port;
+  try{
+    await assert.rejects(startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:'beta0.9.3'}),/请先退出旧版.*便携版/);
+    assert.equal((await fetch(baseUrl+'/api/health')).status,200);
+    assert.ok(!requests.includes('/api/shutdown'),'不得关闭不属于当前外壳的服务');
   }finally{await new Promise(resolve=>server.close(resolve));}
 });
 

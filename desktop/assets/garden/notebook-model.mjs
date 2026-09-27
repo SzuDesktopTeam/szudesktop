@@ -14,15 +14,28 @@ export function normalizeNotebook(input){
  return data;
 }
 export function wordCount(text){return (String(text).match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]|[\p{L}\p{N}]+/gu)||[]).length}
+export function latestNotebookNote(data){return data.notes.filter(note=>!note.deletedAt).reduce((latest,note)=>!latest||note.updatedAt>latest.updatedAt?note:latest,null)}
+// Preserve the original character offsets so outline jumps work with CRLF imports too.
+export function noteHeadings(source){
+ const headings=[];let inCode=false;
+ for(const match of String(source).matchAll(/[^\r\n]*(?:\r\n|\r|\n|$)/g)){
+  if(!match[0])break;const line=match[0].replace(/[\r\n]+$/,'');
+  if(inCode){if(/^```\s*$/.test(line))inCode=false;continue}
+  if(/^```/.test(line)){inCode=true;continue}
+  const heading=/^(#{1,6})\s+(.+)$/.exec(line);if(!heading)continue;
+  headings.push({id:'note-section-'+(headings.length+1),level:heading[1].length,text:heading[2].replace(/[`*_]/g,''),start:match.index,end:match.index+line.length});
+ }
+ return headings;
+}
 function inline(text){
  const tokens=/(`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*|!?\[[^\]\n]+\]\([^\s)]+\))/g;let out='',last=0;
  for(const m of text.matchAll(tokens)){out+=escapeNote(text.slice(last,m.index));const raw=m[0];if(raw.startsWith('`'))out+='<code>'+escapeNote(raw.slice(1,-1))+'</code>';else if(raw.startsWith('**'))out+='<strong>'+escapeNote(raw.slice(2,-2))+'</strong>';else if(raw.startsWith('*'))out+='<em>'+escapeNote(raw.slice(1,-1))+'</em>';else{const link=/^!?\[([^\]]+)\]\(([^)]+)\)$/.exec(raw),url=safeNoteURL(link[2]);out+=url?`<a href="${escapeNote(url)}" target="_blank" rel="noopener noreferrer">${escapeNote(link[1])}${raw[0]==='!'?'（图片）':''} ↗</a>`:escapeNote(raw)}last=m.index+raw.length}return out+escapeNote(text.slice(last));
 }
 // Deliberately small Markdown reader: raw HTML is always text, remote images are links.
 export function markdownNote(source){
- const lines=String(source).replace(/\r\n?/g,'\n').split('\n');let html='',paragraph=[],list='',code=null;
+ const lines=String(source).replace(/\r\n?/g,'\n').split('\n');let html='',paragraph=[],list='',code=null,headingIndex=0;
  const flush=()=>{if(paragraph.length){html+='<p>'+paragraph.map(inline).join('<br>')+'</p>';paragraph=[]}if(list){html+='</'+list+'>';list=''}};
- for(const line of lines){if(code!==null){if(/^```\s*$/.test(line)){html+='<pre><code>'+escapeNote(code.join('\n'))+'</code></pre>';code=null}else code.push(line);continue}if(/^```/.test(line)){flush();code=[];continue}if(!line.trim()){flush();continue}const h=/^(#{1,6})\s+(.+)$/.exec(line),item=/^\s*(?:[-*+]\s+|\d+\.\s+)(.*)$/.exec(line);if(h){flush();const n=Math.min(6,h[1].length+1);html+=`<h${n}>${inline(h[2])}</h${n}>`}else if(item){if(paragraph.length)flush();const kind=/^\s*\d+\./.test(line)?'ol':'ul';if(list!==kind){if(list)html+='</'+list+'>';list=kind;html+='<'+kind+'>'}const task=/^\[([ xX])\]\s*(.*)$/.exec(item[1]);html+='<li>'+ (task?`<span class="note-check" aria-label="${task[1]===' '?'未完成':'已完成'}">${task[1]===' '?'□':'☑'}</span> `+inline(task[2]):inline(item[1]))+'</li>'}else if(/^>\s?/.test(line)){flush();html+='<blockquote>'+inline(line.replace(/^>\s?/,''))+'</blockquote>'}else if(/^\s*(---+|\*\*\*+)\s*$/.test(line)){flush();html+='<hr>'}else{if(list){html+='</'+list+'>';list=''}paragraph.push(line)}}flush();if(code!==null)html+='<pre><code>'+escapeNote(code.join('\n'))+'</code></pre>';return html||'<p class="note-placeholder">写下第一句话，内容会显示在这里。</p>';
+ for(const line of lines){if(code!==null){if(/^```\s*$/.test(line)){html+='<pre><code>'+escapeNote(code.join('\n'))+'</code></pre>';code=null}else code.push(line);continue}if(/^```/.test(line)){flush();code=[];continue}if(!line.trim()){flush();continue}const h=/^(#{1,6})\s+(.+)$/.exec(line),item=/^\s*(?:[-*+]\s+|\d+\.\s+)(.*)$/.exec(line);if(h){flush();const n=Math.min(6,h[1].length+1);html+=`<h${n} id="note-section-${++headingIndex}" tabindex="-1">${inline(h[2])}</h${n}>`}else if(item){if(paragraph.length)flush();const kind=/^\s*\d+\./.test(line)?'ol':'ul';if(list!==kind){if(list)html+='</'+list+'>';list=kind;html+='<'+kind+'>'}const task=/^\[([ xX])\]\s*(.*)$/.exec(item[1]);html+='<li>'+ (task?`<span class="note-check" aria-label="${task[1]===' '?'未完成':'已完成'}">${task[1]===' '?'□':'☑'}</span> `+inline(task[2]):inline(item[1]))+'</li>'}else if(/^>\s?/.test(line)){flush();html+='<blockquote>'+inline(line.replace(/^>\s?/,''))+'</blockquote>'}else if(/^\s*(---+|\*\*\*+)\s*$/.test(line)){flush();html+='<hr>'}else{if(list){html+='</'+list+'>';list=''}paragraph.push(line)}}flush();if(code!==null)html+='<pre><code>'+escapeNote(code.join('\n'))+'</code></pre>';return html||'<p class="note-placeholder">写下第一句话，内容会显示在这里。</p>';
 }
 export const NOTE_TEMPLATES={blank:{name:'空白笔记',body:''},lecture:{name:'课堂记录',body:'## 今天的主题\n\n\n## 重点与例子\n\n- \n\n## 还没弄懂\n\n- [ ] \n\n## 课后要做\n\n- [ ] \n'},research:{name:'阅读 / 组会',body:'## 材料与来源\n\n\n## 核心问题\n\n\n## 方法与证据\n\n\n## 我的理解\n\n\n## 下次讨论\n\n- [ ] \n'}};
 export function markdownExport(note){return '# '+(note.title.trim()||'未命名笔记')+'\n\n'+(feishuDocumentURL(note.sourceUrl)?'[导入来源]('+feishuDocumentURL(note.sourceUrl)+')\n\n':'')+note.body+'\n'}

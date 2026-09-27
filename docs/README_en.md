@@ -27,19 +27,31 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** The current changes are in [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20). Building on the scenes merged in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), the beta0.9.3 source now adds **course notes, Feishu course-document integration and a courtyard environment across the application**. Implementation, acceptance and remaining work are kept in [STATUS section 63](STATUS.md#63-课程笔记飞书共学与全局庭院2026-09-27源码未发布). Sections 61–62 preserve earlier scene verification. Candidate installers in section 60 belong to the earlier 2048 artwork version and do not contain this notebook.
+**These changes are not publicly released; the download above remains beta0.9.2.** [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20) has merged, delivering **course notes, Feishu course-document integration and a courtyard environment across the application**. [PR #21](https://github.com/SzuDesktopTeam/szudesktop/pull/21) further refines the beta0.9.3 home, notes and campus entry points; progress and verification are recorded in [STATUS section 64](STATUS.md#64-日常入口与书屋精修2026-09-27源码未发布). Frontend and Electron checks and the specified UI paths have passed; the final candidates have been rebuilt and checked, and the packaged program has passed actual startup and normal shutdown. Remote checks and merge history accompany this change's PR. The section 63 candidate predates these changes, and no new release tag is being published.
+
+### Pick up where you left off
+
+On wide windows, the study-desk entrance and courtyard landscape sit side by side; narrow windows stack them. The welcome area shows **unfinished tasks, accumulated focus minutes and harvest-ready plots** from local records. The latest note and next garden activity appear together, so returning to a page or taking care of something nearby takes fewer steps.
+
+This iteration was viewed at regular desktop width and 420px, in daylight and dusk, using Pixel Courtyard and After-rain Bookshop. Home and notes showed no horizontal overflow. Outline navigation, moving notes between courses and unfiled, continuing the latest page and exporting a backup from Settings were exercised with synthetic content. Build delivery remains tracked in STATUS section 64.2.
+
+![The study-desk entrance and courtyard in the running home view, using an isolated test profile](screenshot-home-daily-preview.png)
+
+The network page starts with connection status, refresh and diagnosis. When internet access is available, expand the login form only when connecting or changing accounts. Learning spaces now have one primary **Open school booking** action and a secondary availability lookup. Library links appear before the detailed, expandable rules. Entering the notices section automatically reads the remembered department once; failures remain visible and can be retried manually, without background polling.
+
+The installer also checks that its complete version matches the background engine. A mismatch asks the user to exit the older version and reopen the app; it does not terminate an existing portable engine. These are source changes, and the limits on verified school bookings and account permissions remain unchanged.
 
 ### From the courtyard to your study desk
 
 Choose **Write notes in the bookshop** on the home scene, or **Study bookshop → Course notes**. Create courses manually without a school login. Start with a blank page, lecture notes or a reading/meeting template; search titles and text, write and read Markdown, enter a focused writing view, and restore pages from the trash. Changes save locally with visible status. If another window saves first, the current draft remains available to export before loading the newer version. Normal application exit first saves the notebook; a failure defaults to returning to the app, with an explicit choice required to discard unsaved changes and exit. Clicking another action while a save is in progress explains why it must wait.
 
-Turn a selected sentence into a study task, or start **25 minutes of focus** from the writing toolbar. The home page offers a shortcut back to the latest page. Word counts and imported content do not directly earn garden rewards.
+Turn a selected sentence into a study task, or start **25 minutes of focus** from the writing toolbar. An expandable **page outline** jumps to headings while writing or reading, and the current page can be moved to another course. **Continue writing** on home selects the most recently edited non-deleted page and clears an old search or trash filter. Word counts and imported content do not directly earn garden rewards.
 
-Import Markdown/TXT, export an individual `.md`, or export and restore the whole notebook as JSON, including courses, notes, current drafts and trash. Notes live in `.szunet/notebook-v1.json` as **unencrypted local text**, separately from `workspace-v1.json`; back up both when moving computers. This is currently a text notebook: AI assistance, PDF/slide parsing, image attachments and cloud sync are not implemented.
+Import Markdown/TXT, export an individual `.md`, or export and restore the whole notebook as JSON, including courses, notes, current drafts and trash. **Back up course notes** in Settings now directly exports the whole notebook; the course shelf's backup control remains available. Notes live in `.szunet/notebook-v1.json` as **unencrypted local text**, separately from `workspace-v1.json`; back up both when moving computers. This is currently a text notebook: AI assistance, PDF/slide parsing, image attachments and cloud sync are not implemented.
 
 ![Course-note source preview using an isolated acceptance-test course and test content](screenshot-study-notes-preview.png)
 
-Local Go tests and static checks, all 30 desktop check scripts and 8 Electron check groups passed. An isolated profile was used to exercise creation, saving on navigation, recovery after an engine restart, reading and search, trash restoration, selection-to-task and focus. The 1280px and 420px pages had no horizontal overflow, and focused writing worked in the narrow view. The final packaged application also passed companion switching, care, scaling, backup restoration and normal-exit checks. The screenshot shows an **isolated acceptance-test course**, not a user's actual class materials. Evidence and remaining limits are in STATUS section 63.4.
+The previous PR #20 passed Go tests and static checks, 30 desktop check scripts and 8 Electron check groups. An isolated profile exercised creation, saving on navigation, engine-restart recovery, reading, search, trash restoration, selection-to-task and focus; that packaged application also passed its companion, backup and normal-exit checks. The image shows that **isolated acceptance-test course**, not a user's class materials, and predates the new outline controls. Its width and runtime evidence remain in STATUS section 63.4; UI, build and PR acceptance for the current changes are tracked in section 64.
 
 ### Shared course work in Feishu, personal notes on your machine
 
@@ -256,7 +268,7 @@ The story progresses over seven different visiting days without resetting when y
   writing a plain-text file (F24, fixed)
 - Garden saves are `workspace-v1.json`, plain JSON you can back up yourself; an export
   never contains your campus account or password
-- In the beta0.9.3 source preview, course notes are stored separately in **unencrypted** `notebook-v1.json`. Export the full notebook from the course shelf's import/backup menu; the garden backup in Settings does not include it
+- In the beta0.9.3 source preview, course notes are stored separately in **unencrypted** `notebook-v1.json`. Use **Back up course notes** in Settings or the course shelf's import/backup menu. The garden backup does not include notes
 - Before switching computers, export your save in Settings and import it on the new one
 
 ---
