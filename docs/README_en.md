@@ -39,7 +39,7 @@ Import Markdown/TXT, export an individual `.md`, or export and restore the whole
 
 ![Course-note source preview using an isolated acceptance-test course and test content](screenshot-study-notes-preview.png)
 
-Local Go tests and static checks, all 30 desktop check scripts and 8 Electron check groups passed. An isolated profile was used to exercise creation, saving on navigation, recovery after an engine restart, reading and search, trash restoration, selection-to-task and focus. The 1280px and 420px pages had no horizontal overflow, and focused writing worked in the narrow view. The screenshot shows an **isolated acceptance-test course**, not a user's actual class materials. Evidence and remaining limits are in STATUS section 63.4.
+Local Go tests and static checks, all 30 desktop check scripts and 8 Electron check groups passed. An isolated profile was used to exercise creation, saving on navigation, recovery after an engine restart, reading and search, trash restoration, selection-to-task and focus. The 1280px and 420px pages had no horizontal overflow, and focused writing worked in the narrow view. The final packaged application also passed companion switching, care, scaling, backup restoration and normal-exit checks. The screenshot shows an **isolated acceptance-test course**, not a user's actual class materials. Evidence and remaining limits are in STATUS section 63.4.
 
 ### Shared course work in Feishu, personal notes on your machine
 

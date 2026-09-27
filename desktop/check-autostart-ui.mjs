@@ -51,7 +51,7 @@ const click=app.slice(app.indexOf("document.addEventListener('click'"),app.index
 async function clickAutostart(initial,response,shell){
   const calls=[];let message='',painted=0;
   const ctx=vm.createContext({
-    probing:false,autostartState:initial,szuDesktop:shell,
+    busy:false,probing:false,autostartState:initial,szuDesktop:shell,
     officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},
     document:{addEventListener:(_,handler)=>{ctx.clickHandler=handler}},
     run:fn=>{ctx.work=fn()},toast:t=>{message=t},paintAutostart:()=>{painted++},

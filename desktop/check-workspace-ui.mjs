@@ -172,7 +172,7 @@ function exportFixture(api){
  let click,pending,blob;
  const local=createState();
  const context=vm.createContext({
-  state:local,revision:1,createState,normalize,Blob,Date,
+  state:local,revision:1,busy:false,createState,normalize,Blob,Date,
   api,toast:()=>{},setTimeout:()=>{},render:()=>{},
   officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},run:work=>{pending=work()},
   document:{addEventListener:(_,handler)=>{click=handler},createElement:()=>({click:()=>{}})},
