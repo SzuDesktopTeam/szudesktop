@@ -182,7 +182,9 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
         proc = subprocess.Popen([str(exe)], env=env, stdout=log, stderr=log,
                                 creationflags=subprocess.CREATE_NO_WINDOW)
         try:
-            deadline = time.monotonic() + 60
+            # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；共享 runner 上偶尔要 40 秒以上，
+            # 60 秒的旧上限会把慢启动误报成失败（PR #23 的 reuse-portable 就是这样）。真的卡死仍会超时报错。
+            deadline = time.monotonic() + 120
             while not report.exists() and time.monotonic() < deadline:
                 if proc.poll() is not None:
                     raise RuntimeError("installed application exited before its rendered-page report")
