@@ -71,16 +71,23 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
     if(quitAfterReport)app.quit();
   }
   // 启动失败：尽量带上页面现场，整份报告写盘前抹掉会话凭据（页面地址、loadURL 的报错都可能含有它）。
+  // 失败现场：先把原始错误写进报告，再尽量补充页面信息。隐藏的窗口上 executeJavaScript / capturePage
+  // 可能永远不返回（以前原始错误因此被吞掉，只剩“报告没出现”），所以补充信息每步限 5 秒。
   async function writeFailure(error,mainWin,token){
     const failure={error:error.message,consoleErrors:errors};
+    const save=()=>{mkdirSync(path.dirname(report),{recursive:true});writeFileSync(report+'.tmp',redactToken(JSON.stringify(failure,null,2),token));renameSync(report+'.tmp',report);};
+    save();
+    const within=(promise,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(label+' 5 秒未返回')),5000))]);
     try{
       if(mainWin&&!mainWin.isDestroyed()){
-        failure.page=await mainWin.webContents.executeJavaScript(`({url:location.href,shell:window.szuDesktop?.shell,navCount:document.querySelectorAll('#nav [data-action="navigate"]').length,mainText:document.querySelector('#main')?.innerText.slice(0,1500)})`);
-        failure.moduleType=await mainWin.webContents.executeJavaScript(`fetch('/assets/garden/app.mjs').then(r=>({status:r.status,type:r.headers.get('content-type')}))`);
-        if(wantsShot())writeFileSync(screenshot,(await mainWin.webContents.capturePage()).toPNG());
+        if(typeof mainWin.isVisible==='function')failure.mainVisible=mainWin.isVisible();
+        failure.page=await within(mainWin.webContents.executeJavaScript(`({url:location.href,shell:window.szuDesktop?.shell,navCount:document.querySelectorAll('#nav [data-action="navigate"]').length,mainText:document.querySelector('#main')?.innerText.slice(0,1500)})`),'读取主窗口页面');
+        failure.moduleType=await within(mainWin.webContents.executeJavaScript(`fetch('/assets/garden/app.mjs').then(r=>({status:r.status,type:r.headers.get('content-type')}))`),'读取页面模块');
+        if(wantsShot())writeFileSync(screenshot,(await within(mainWin.webContents.capturePage(),'主窗口截图')).toPNG());
       }
     }catch(snapshotError){failure.snapshotError=snapshotError.message;}
-    mkdirSync(path.dirname(report),{recursive:true});writeFileSync(report,redactToken(JSON.stringify(failure,null,2),token));
+    save();
   }
+
   return {enabled,profile,errors,record,watch,writeReport,writeFailure};
 }
