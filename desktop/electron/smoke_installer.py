@@ -41,12 +41,26 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.2"
+BASELINE_VERSION = "beta0.9.3"
 BASELINE_ELECTRON = "44.4.5"
-BASELINE_SHA256 = "454e92d6ef8b888fac3fb15363bce62845088494300d69959fd6da89c67b64e4"
+BASELINE_SHA256 = "581d6b99370ebe7c5ecb1ae33d078599a7d576d313425341fb6035da0c869a02"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
-# A fresh beta0.9.2 save carries exactly these companions, in this order.
-BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "turtle"]
+# A fresh beta0.9.3 save carries exactly these companions, in this order; the
+# turtle is retired to the "old friends" of saves that already had it.
+BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "pingu", "skipper"]
+# Engines since beta0.9.3 announce a per-run session token ("szuDesktop 会话")
+# and refuse /api/* calls without it; older engines print no such line and
+# ignore the header. Decide by version, not by "is this the baseline": the
+# baseline moved past beta0.9.3, so it needs the token as much as the candidate.
+API_TOKEN_SINCE = (0, 9, 3)
+
+
+def version_numbers(version):
+    return tuple(int(part) for part in re.sub(r"^(?:beta|v)", "", version).split("."))
+
+
+def has_api_token(version):
+    return version_numbers(version) >= API_TOKEN_SINCE
 
 
 def check(label, condition):
@@ -209,6 +223,9 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             check(label + ": pet visibility and actions", pet["hideAndShow"] and pet["actionsReturnToBase"])
             check(label + ": scale through settings and tray", pet["settingsAndPresets"] and pet["finalScale"] == 1.7)
             check(label + ": scale survives restart or upgrade", pet["initialScale"] == initial_scale)
+            # Candidate-only expectations: they compare the packaged app with the
+            # current source (catalog, penguins, click-through), which the published
+            # baseline may legitimately predate even though beta0.9.3 reports them too.
             if version != BASELINE_VERSION:
                 check(label + ": catalog companion selection", pet.get("petSelection") is True and pet.get("petSelectionSync") is True)
                 check(label + ": packaged roster matches source catalog", pet.get("defaultCompanions") == default_companions())
@@ -232,7 +249,7 @@ def assert_install_path(install_dir):
 
 
 def local_request(engine, endpoint, method="GET", data=None):
-    """engine is (base_url, token). The baseline beta0.9.2 engine has no token."""
+    """engine is (base_url, token). token is None for engines older than beta0.9.3."""
     base_url, token = engine
     parsed = urlsplit(base_url)
     check("probe only calls loopback", parsed.hostname == "127.0.0.1")
@@ -292,8 +309,9 @@ def relay_engine_output(stream, log, found):
 def running_engine(sidecar, cfg, version, label):
     """Own a no-auto-login engine with isolated state for local-only probes.
 
-    Yields ((base_url, token), proc). The published baseline predates the
-    per-run API token, so its token is None and requests carry no header.
+    Yields ((base_url, token), proc). Engines from beta0.9.3 on (the published
+    baseline included) must announce the per-run API token before they count as
+    ready; an older engine yields token None and requests carry no header.
     """
     log_path = EVIDENCE / (label + ".log")
     with log_path.open("wb") as log:
@@ -304,7 +322,7 @@ def running_engine(sidecar, cfg, version, label):
         relay = threading.Thread(target=relay_engine_output, args=(proc.stdout, log, found), daemon=True)
         relay.start()
         try:
-            needs_token = version != BASELINE_VERSION
+            needs_token = has_api_token(version)
             deadline = time.monotonic() + 25
             while time.monotonic() < deadline:
                 check("isolated portable engine remains alive", proc.poll() is None)
@@ -356,8 +374,13 @@ def seed_upgrade_data(engine):
     game["stats"].update({"focus": 3, "minutes": 75, "tasks": 1})
     game["pets"][0].update({"name": "留住荔宝", "xp": 125, "hunger": 100})
     game["pets"][1].update({"name": "留住栗栗", "xp": 75})
-    # The turtle is retired from new saves; an existing save must keep it intact.
-    game["pets"][3].update({"name": "留住阿青", "xp": 40})
+    # The turtle is retired from new saves (a fresh beta0.9.3 save has none), but
+    # saves from before beta0.9.3 still carry it under "old friends". Keep that
+    # path covered: add one shaped like the baseline's own pet records, and the
+    # upgrade must keep it intact, in place, with its name and progression.
+    turtle = json.loads(json.dumps(game["pets"][2]))
+    turtle.update({"species": "turtle", "name": "留住阿青", "xp": 40, "say": "", "saidAt": 0})
+    game["pets"].append(turtle)
     saved = local_request(engine, "/api/workspace", "POST", snapshot)
     # This deliberately invalid account is stored locally, never authenticated.
     fake = {"username": "installer-upgrade-fixture", "password": "synthetic-local-only-password"}
@@ -451,7 +474,8 @@ def main():
                 check("upgrade preserves " + file.name + " byte for byte before opening", file.read_bytes() == contents)
             check("installed Go engine matches final build", sidecar.read_bytes()
                   == (ROOT / "dist" / "szudesktop-windows-amd64.exe").read_bytes())
-            # The baseline shipped every Chromium locale; the upgrade must leave only these two.
+            # beta0.9.3 already ships only these two Chromium locales; the upgrade
+            # must keep the trimmed set and never bring the others back.
             locales = install_dir / "locales"
             check("only zh-CN and en-US Chromium locales installed", locales.is_dir()
                   and sorted(path.name for path in locales.iterdir()) == EXPECTED_LOCALES)

@@ -102,6 +102,9 @@ func TestShouldRestore(t *testing.T) {
 	}{
 		{"当前还是我们写的：还原", setting{Enabled: true, Server: applied}, stale, true},
 		{"过期备份、用户换了自己的代理：不能覆盖", setting{Enabled: true, Server: "127.0.0.1:7890"}, stale, false},
+		// 用户自己的代理工具也常是本机 SOCKS：备份记着我们写的端口时，只认那一个端口，不能按“socks= 指向本机”笼统放行。
+		{"过期备份、用户换成了自己的本机 SOCKS（别的端口）：不能覆盖", setting{Enabled: true, Server: "socks=127.0.0.1:1080"}, stale, false},
+		{"过期备份、用户换成了 localhost 的 SOCKS：不能覆盖", setting{Enabled: true, Server: "socks=localhost:7891"}, stale, false},
 		{"过期备份、用户把代理关了：不能又打开", setting{Enabled: false, Server: applied}, stale, false},
 		{"过期备份、用户清空了代理：不能覆盖", setting{}, stale, false},
 		{"老备份（没有 Applied）、当前是本机 SOCKS：还原", setting{Enabled: true, Server: "socks=127.0.0.1:7891"}, legacy, true},

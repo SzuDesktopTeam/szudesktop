@@ -32,6 +32,9 @@ writeDesktopSettings(profile,{...preferences,autoConnectCampus:false});
 assert.equal(readDesktopSettings(profile).autoConnectCampus,false,'turning it off survives restart');
 writeDesktopSettings(profile,{...preferences,autoConnectCampus:'yes'});
 assert.equal(readDesktopSettings(profile).autoConnectCampus,true,'malformed value falls back to the default (on)');
+// Only real booleans count: a "false" string, 0 or 1 are malformed and fall back to the defaults, never Boolean()-coerced.
+writeDesktopSettings(profile,{...preferences,autoConnectCampus:'false',petVisible:0,doNotDisturb:1,focusNotifications:null});
+assert.deepEqual(readDesktopSettings(profile),{...preferences,petVisible:true,doNotDisturb:false,focusNotifications:true,autoConnectCampus:true},'non-boolean values are not coerced');
 writeDesktopSettings(profile,preferences);
 assert.deepEqual(sidecarArgs(),['--no-open','--no-auto-login']);
 assert.deepEqual(sidecarArgs({autoConnectCampus:false}),['--no-open','--no-auto-login']);

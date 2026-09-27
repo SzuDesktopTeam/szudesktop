@@ -185,6 +185,8 @@ func TestAPIAcceptsTokenHeaderOrSessionCookie(t *testing.T) {
 		{"请求头错但 Cookie 对", "127.0.0.1:1234", "", "", func(r *http.Request) { r.Header.Set(apiTokenHeader, strings.Repeat("e", 64)); r.AddCookie(ours) }, 200},
 		{"localhost", "localhost:1234", "", "", func(r *http.Request) { r.Header.Set(apiTokenHeader, testAPIToken) }, 200},
 		// 有凭据也挡不住跨站和 DNS 重绑定。
+		// localhost 只认精确匹配：evil.localhost 这类子域名不是本机地址（Host 判定不能退化成后缀匹配）。
+		{"localhost 子域名带请求头", "evil.localhost:1234", "", "", func(r *http.Request) { r.Header.Set(apiTokenHeader, testAPIToken) }, 403},
 		{"跨域 Origin 带请求头", "127.0.0.1:1234", "https://example.com", "", func(r *http.Request) { r.Header.Set(apiTokenHeader, testAPIToken) }, 403},
 		{"本机别的端口带 Cookie", "127.0.0.1:1234", "http://127.0.0.1:5678", "same-site", func(r *http.Request) { r.AddCookie(ours) }, 403},
 		{"跨站 Sec-Fetch-Site 带 Cookie", "127.0.0.1:1234", "", "cross-site", func(r *http.Request) { r.AddCookie(ours) }, 403},

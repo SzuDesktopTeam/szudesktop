@@ -688,6 +688,36 @@ func TestCasSessionSurvivesMaintenancePage(t *testing.T) {
 	}
 }
 
+// 学校回的是业务 JSON、只是 msg 里提到“登录/超时”（errSessionInvalid，不是确认过的 errSessionExpired）时，
+// 说不准会话是否真的没了：要告诉用户登录状态可能失效（401），但不能把统一身份认证会话清掉——
+// 清掉就得重新输密码和验证码。只有被送回登录页（errSessionExpired）才复位，两种错误不能混同。
+func TestCasSessionSurvivesUncertainSessionHint(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	casTestBase, casTestEhall = "", ""
+	for _, body := range []string{
+		`{"code":"500","msg":"登录超时，请重新登录","datas":{}}`,
+		`{"code":"401","msg":"用户未认证","datas":{}}`,
+	} {
+		s := &Server{cas: newCasService(), session: &memSessionStore{value: credential.Session{Cookie: "kept-cookie"}}}
+		casSchoolAnswers(s, ehallTestTransport(func(r *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+		}))
+		w := httptest.NewRecorder()
+		s.handleScores(w, httptest.NewRequest(http.MethodGet, "/api/scores?level=undergrad", nil))
+		if w.Code != 401 {
+			t.Fatalf("%s: %d %s", body, w.Code, w.Body.String())
+		}
+		if !s.cas.authenticated || s.cas.client == nil {
+			t.Fatalf("%s: 没有确认过期的提示清掉了统一身份认证登录", body)
+		}
+		c, err := s.schoolClient()
+		if err != nil || !c.usesJar {
+			t.Fatalf("%s: 之后的读取应继续用统一身份认证会话：%+v %v", body, c, err)
+		}
+	}
+}
+
 // 会话跟着跳转回到 authserver 时，不管那一页长什么样，都是被送回了登录页：要复位。
 func TestCasSessionResetWhenRedirectedToAuthserver(t *testing.T) {
 	base, ehall := casTestBase, casTestEhall

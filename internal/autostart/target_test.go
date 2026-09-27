@@ -52,6 +52,14 @@ func TestPickTarget(t *testing.T) {
 			wantArgs: cliLoginArgs,
 		},
 		{
+			name:     "只有升级包和卸载程序：它们和安装包一样不算程序，命令行版登记自己",
+			self:     at("szunet.exe"),
+			declared: ProgramCLI,
+			siblings: []string{"szudesktop-update.exe", "szuDesktop-Update-0.9.4.exe", "szudesktop-installer.exe", "szunet.exe"},
+			want:     at("szunet.exe"),
+			wantArgs: cliLoginArgs,
+		},
+		{
 			name:     "命令行版被改名、没有界面版：按声明的身份给 login，不给 --no-open",
 			self:     at("校园网.exe"),
 			declared: ProgramCLI,
