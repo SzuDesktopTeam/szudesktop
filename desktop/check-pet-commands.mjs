@@ -21,7 +21,7 @@ function fixture(){
   act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},
   $:selector=>selector==='.companion-dialog'?dialog:selector==='#companion-tip'?footer.tip:null,
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
-  navigate:page=>{context.page=page},
+  navigate:async(page,tab)=>{context.page=page;if(page==='study'&&tab)context.studyTab=tab;return true},
   szuDesktop:{petResult:result=>results.push({...result})},
   api:async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:context.revision+1}},
  });
@@ -87,6 +87,20 @@ await check('navigation selects the requested real page and the correct garden s
  await f.command('garden');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'pet');
  f.context.studyTab='grades';await f.command('study');assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'focus','专注通知与托盘学习入口必须回到专注分区');await f.command('home');assert.equal(f.context.page,'home');
  assert.equal(f.writes.length,0);assert.equal(f.results.length,4);assert.ok(f.results.every(r=>r.ok));
+});
+await check('the pet study command waits for notebook navigation and does not change its tab early',async()=>{
+ const f=fixture(),gate=deferred(),requests=[];f.context.page='study';f.context.studyTab='notes';
+ f.context.navigate=async(page,tab)=>{requests.push({page,tab});await gate.promise;f.context.page=page;f.context.studyTab=tab;return true};
+ const pending=f.command('study');
+ assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes','the note editor must remain the active subtab while saving');
+ assert.equal(f.results.length,0,'cannot report that study opened while its save gate is pending');
+ assert.deepEqual(requests,[{page:'study',tab:'focus'}]);gate.resolve();await pending;
+ assert.equal(f.context.studyTab,'focus');assert.equal(f.results.length,1);assert.equal(f.results[0].ok,true);
+});
+await check('a blocked notebook navigation reports failure to the pet without changing the current tab',async()=>{
+ const f=fixture();f.context.page='study';f.context.studyTab='notes';f.context.navigate=async()=>false;
+ await f.command('study');assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');
+ assert.equal(f.results.length,1);assert.equal(f.results[0].ok,false);assert.equal(f.writes.length,0);
 });
 await check('pet selection saves the active companion and refuses invalid or stale choices',async()=>{
  const f=fixture(),before=f.context.state.game.pets[0],gate=deferred(),save=f.context.api;
@@ -211,7 +225,7 @@ await check('preload strips IPC events, filters command names, and restricts res
  let bridge,listener,removed;const sent=[];
  const context=vm.createContext({require:()=>({
   contextBridge:{exposeInMainWorld:(_key,value)=>{bridge=value}},
-  ipcRenderer:{on:(channel,fn)=>{assert.ok(['szu:pet-command','szu:pet-scale'].includes(channel));listener=fn},removeListener:(...args)=>{removed=args},send:(...args)=>sent.push(args)},
+  ipcRenderer:{on:(channel,fn)=>{assert.ok(['szu:pet-command','szu:pet-scale','szu:prepare-quit'].includes(channel));listener=fn},removeListener:(...args)=>{removed=args},send:(...args)=>sent.push(args)},
  })});
  vm.runInContext(readFileSync(new URL('./electron/preload.cjs',import.meta.url),'utf8'),context);
  const calls=[],unsubscribe=bridge.onPetCommand((...args)=>calls.push(args));

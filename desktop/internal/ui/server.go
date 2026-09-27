@@ -69,6 +69,8 @@ type Server struct {
 	probe         func() *portal.DetectResult
 	detect        func() *portal.DetectResult
 	workspace     *workspaceStore
+	notebook      *notebookStore
+	feishu        *feishuService
 	shutdown      func()
 	instance      *desktopInstance
 	windows       *windowSessions
@@ -94,7 +96,7 @@ func New(opts Options) *Server {
 		campus = &campusGateway{}
 	}
 	workspace := newWorkspaceStore()
-	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), probe: portal.Probe, detect: portal.Detect, workspace: workspace, windows: newWindowSessions()}
+	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), probe: portal.Probe, detect: portal.Detect, workspace: workspace, notebook: newNotebookStore(filepath.Dir(workspace.path)), feishu: newFeishuService(), windows: newWindowSessions()}
 }
 
 func parseZone(raw string) (portal.Zone, bool) {
@@ -288,6 +290,10 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	})
 
 	mux.HandleFunc("/api/workspace", protectAPI(s.handleWorkspace, http.MethodGet, http.MethodPost))
+	mux.HandleFunc("/api/notebook", protectAPI(s.handleNotebook, http.MethodGet, http.MethodPut))
+	mux.HandleFunc("/api/feishu/status", protectAPI(s.handleFeishuStatus, http.MethodGet))
+	mux.HandleFunc("/api/feishu/login", protectAPI(s.handleFeishuLogin, http.MethodPost))
+	mux.HandleFunc("/api/feishu/document", protectAPI(s.handleFeishuDocument, http.MethodPost))
 	mux.HandleFunc("/api/shutdown", protectAPI(s.handleShutdown, http.MethodPost))
 	mux.HandleFunc("/api/window", protectAPI(s.handleWindow, http.MethodPost))
 	mux.HandleFunc("/api/window-stream", protectAPI(s.handleWindowStream, http.MethodGet))

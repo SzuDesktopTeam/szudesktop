@@ -26,6 +26,8 @@ files:
   - smoke-pet.mjs
   - school-window.mjs
   - school-policy.mjs
+  - feishu-window.mjs
+  - feishu-policy.mjs
   - pet.html
   - pet-render.mjs
   - pet-preload.cjs

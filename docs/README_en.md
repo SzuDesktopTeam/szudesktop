@@ -27,11 +27,31 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** The beta0.9.3 source adds three selectable cel-shaded home scenes in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). Integration and final verification are recorded in [STATUS sections 61–62](STATUS.md#62-首页收尾与合并验收2026-09-27). Local candidate installers in section 60 belong to the earlier 2048 artwork version.
+**These changes are not publicly released; the download above remains beta0.9.2.** The current changes are in [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20). Building on the scenes merged in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), the beta0.9.3 source now adds **course notes, Feishu course-document integration and a courtyard environment across the application**. Implementation, acceptance and remaining work are kept in [STATUS section 63](STATUS.md#63-课程笔记飞书共学与全局庭院2026-09-27源码未发布). Sections 61–62 preserve earlier scene verification. Candidate installers in section 60 belong to the earlier 2048 artwork version and do not contain this notebook.
+
+### From the courtyard to your study desk
+
+Choose **Write notes in the bookshop** on the home scene, or **Study bookshop → Course notes**. Create courses manually without a school login. Start with a blank page, lecture notes or a reading/meeting template; search titles and text, write and read Markdown, enter a focused writing view, and restore pages from the trash. Changes save locally with visible status. If another window saves first, the current draft remains available to export before loading the newer version. Normal application exit first saves the notebook; a failure defaults to returning to the app, with an explicit choice required to discard unsaved changes and exit. Clicking another action while a save is in progress explains why it must wait.
+
+Turn a selected sentence into a study task, or start **25 minutes of focus** from the writing toolbar. The home page offers a shortcut back to the latest page. Word counts and imported content do not directly earn garden rewards.
+
+Import Markdown/TXT, export an individual `.md`, or export and restore the whole notebook as JSON, including courses, notes, current drafts and trash. Notes live in `.szunet/notebook-v1.json` as **unencrypted local text**, separately from `workspace-v1.json`; back up both when moving computers. This is currently a text notebook: AI assistance, PDF/slide parsing, image attachments and cloud sync are not implemented.
+
+![Course-note source preview using an isolated acceptance-test course and test content](screenshot-study-notes-preview.png)
+
+Local Go tests and static checks, all 30 desktop check scripts and 8 Electron check groups passed. An isolated profile was used to exercise creation, saving on navigation, recovery after an engine restart, reading and search, trash restoration, selection-to-task and focus. The 1280px and 420px pages had no horizontal overflow, and focused writing worked in the narrow view. The final packaged application also passed companion switching, care, scaling, backup restoration and normal-exit checks. The screenshot shows an **isolated acceptance-test course**, not a user's actual class materials. Evidence and remaining limits are in STATUS section 63.4.
+
+### Shared course work in Feishu, personal notes on your machine
+
+Each course can link to a Feishu Docx or Wiki document the user has permission to access. **Open shared document** opens the official Feishu page in a separate window in the Electron source build, or a browser in portable/browser mode. Feishu handles collaborative editing, comments and permissions.
+
+To import content, the app calls **the user's own installed and configured `lark-cli`**, uses that user's authorization, and creates a new local note with its source link. The connection control opens official read-only authorization. Without a configured CLI, the shared original can still be opened. **This is not two-way sync**: local edits are not written back, and the app does not substitute a shared developer account for the user.
+
+The official window's login and CLI read authorization are separate. The window retains its session only during the current application run; CLI credentials remain managed by the user's CLI. The installed CLI was detected on the actual machine, and its missing user authorization was reported correctly; authorization was not started and private documents were not imported. This update does not create an organization, invite members or change document permissions. A project-specific organization joining flow still needs configuration. Real Feishu login, permission-constrained document import and multi-user collaboration remain unverified; implementation alone is not evidence of those workflows passing.
 
 ### A different window onto campus
 
-Open **Change scenery** at the top of the home page to choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace**, or return to the original **Pixel Courtyard**. The selection is saved locally and survives reopening; companions, crops and tasks keep their existing progress. The picker folds away after a selection, leaving room for the view.
+Open **Change environment** at the top of the home page to choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace**, or return to the original **Pixel Courtyard**. The same environment extends across home, study, campus services, network, garden and settings: the bookshop, noticeboard, connection station and cottage share light, paper, navigation and window views. Ordinary text navigation remains available. The selection is saved locally; companions, crops and tasks keep their progress, and the picker folds away after selection.
 
 | Scene | Outside the window |
 |---|---|
@@ -45,7 +65,7 @@ Open **Change scenery** at the top of the home page to choose **Lakeside Dayligh
 
 These campus-inspired scenes use real 3D geometry. The stepped lighting, tinted shadows, depth ink, sky and colour pipeline are adapted from MIT-licensed [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing), with Three.js 0.180.0 bundled locally. Scene geometry is new work for this project; attribution and adaptations are recorded in [Third-party notices](../THIRD_PARTY_NOTICES.md).
 
-Scenes render only while the home view is visible and release their resources when leaving it. The animation setting covers companions and home scenery, supports a still frame and respects system reduced motion. If 3D rendering is unavailable, the pixel campus and normal controls remain accessible.
+The visible page uses one shared scene canvas: home has the full landscape, other rooms use compact windows, and the notebook has a smaller entrance to leave room for writing. Navigation reattaches the existing canvas while environment and motion settings match; changing either releases the old resources. Offscreen and background scenes pause. Disabling animation or using system reduced motion produces a still frame; if 3D is unavailable, the pixel campus and normal controls remain accessible.
 
 Pet care and task saves reuse the same canvas, keeping background animation continuous. A small nameplate replaces the idle companion bubble; replies expand briefly and fold away again. Dusk text contrast, distant greenery and bookshop paving have also been refined.
 
@@ -116,7 +136,7 @@ This garden iteration does not close unverified school-account workflows or depl
 
 ### Earlier candidate interfaces and verification
 
-The earlier baseline `09c2240` is in draft [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19). [All 9 CI jobs passed](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980), including an actual beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those results do not cover the new penguins or shared catalog changes below. The PR is not merged, and public downloads remain beta0.9.2.
+The earlier baseline `09c2240` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980) while [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19) was a draft, including a beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those historical results do not cover the later penguins, catalog changes or this notebook. PR #19 subsequently completed its final checks and merged, as recorded in STATUS section 62; public downloads remain beta0.9.2.
 
 **These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
 
@@ -236,6 +256,7 @@ The story progresses over seven different visiting days without resetting when y
   writing a plain-text file (F24, fixed)
 - Garden saves are `workspace-v1.json`, plain JSON you can back up yourself; an export
   never contains your campus account or password
+- In the beta0.9.3 source preview, course notes are stored separately in **unencrypted** `notebook-v1.json`. Export the full notebook from the course shelf's import/backup menu; the garden backup in Settings does not include it
 - Before switching computers, export your save in Settings and import it on the new one
 
 ---
@@ -421,7 +442,8 @@ a wrong password won't overwrite the stored one. You can clear it at any time wi
 
 ## Privacy and security
 
-- **No data collection**: no telemetry, no analytics. Everything stays on your machine
+- **No usage telemetry or analytics**: garden saves and personal notes stay local by default. Opening official school or Feishu pages uses those services. The source preview's Feishu importer requests only the selected document the user can access; personal drafts are not automatically uploaded
+- **Notes are not credentials**: `notebook-v1.json` and note exports are unencrypted. The Feishu window does not pass its login to the local notebook service; the user's CLI manages its own authorization
 - **Credentials encrypted locally**: Windows DPAPI, undecryptable on another machine or
   under another user account; macOS Keychain; Linux Secret Service. No plain-text fallback —
   saving fails with an explicit error when no system secure store is available

@@ -9,6 +9,8 @@ import {petWindowOptions,petWindowBounds,petScaleClamp,petPresetFor,petSay,petSp
 import {readPetSettings,writePetSettings} from './pet-settings.mjs';
 import {createSchoolWindows} from './school-window.mjs';
 import {isSchoolURL} from './school-policy.mjs';
+import {createFeishuWindow} from './feishu-window.mjs';
+import {isFeishuDocumentURL} from './feishu-policy.mjs';
 import {DESKTOP_DEFAULTS,readDesktopSettings,writeDesktopSettings,validateDesktopPatch,createLoginItemControl,isQuietStartup} from './desktop-settings.mjs';
 import {createFocusNotifier} from './focus-notifications.mjs';
 import {PETS} from './pet-catalog.mjs';
@@ -32,9 +34,22 @@ function sidecarCommand(){
 let handle=null,mainWin=null,quitting=false,quitReady=false,shutdownPromise=null,healthTimer=null,failureShown=false;
 let petWin=null,tray=null,trayMenu=null,petTimer=null,petGreeted=false,petHtmlUrl=null,petScale=PET_SCALE_DEFAULT;
 let petMenu=null,petGame=null,petPosition=null,petDrag=null;
-let startup=null,schoolWindows=null;
+let startup=null,schoolWindows=null,feishuWindow=null;
 let desktopPreferences={...DESKTOP_DEFAULTS},loginItems=null,focusNotifier=null,focusTimer=null,focusNotification=null;
 const smokeErrors=[];
+let quitRequest=0,pendingQuit=null,sessionEnding=false;
+
+function requestRendererSave(){
+  const wc=mainWin?.webContents;
+  if(sessionEnding||!wc||mainWin.isDestroyed()||wc.isDestroyed()||wc.isCrashed())return Promise.resolve({ok:true});
+  return new Promise(resolve=>{
+    const id=++quitRequest;
+    const finish=result=>{clearTimeout(timer);if(pendingQuit?.id===id)pendingQuit=null;resolve(result);};
+    const timer=setTimeout(()=>finish({ok:false,message:'等待笔记保存超时。请返回笔记检查保存状态或导出当前草稿。'}),5000);
+    pendingQuit={id,finish};
+    try{wc.send('szu:prepare-quit',id);}catch{finish({ok:false,message:'窗口暂时没有响应，未能确认笔记已经保存。'});}
+  });
+}
 
 function desktopSettingsSnapshot(){
   const {lastNotifiedFocus,...preferences}=desktopPreferences;
@@ -278,6 +293,10 @@ async function engineFailed(message){
   app.quit();
 }
 function openExternal(url){
+  if(feishuWindow&&isFeishuDocumentURL(url)){
+    void feishuWindow.open(url).catch(()=>dialog.showErrorBox('飞书页面暂时无法打开','请检查网络，或在系统浏览器打开课程文档。'));
+    return;
+  }
   if(schoolWindows&&isSchoolURL(url)){
     void schoolWindows.open(url).catch(()=>dialog.showErrorBox('学校页面暂时无法打开','请检查校园网或 WebVPN；可通过学校窗口菜单在系统浏览器中打开。'));
     return;
@@ -322,6 +341,7 @@ async function boot(){
   handle=await startSidecar(sidecarCommand());
   if(quitting)return;
   schoolWindows=createSchoolWindows(()=>handle.baseUrl);
+  feishuWindow=createFeishuWindow();
   mainWin=new BrowserWindow({width:1200,height:820,minWidth:380,minHeight:480,show:false,title:'szuDesktop',
     webPreferences:{preload:path.join(here,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   mainWin.setMenuBarVisibility(false);
@@ -360,6 +380,7 @@ async function boot(){
     else if(!quitting)app.quit();
   });
   mainWin.on('closed',()=>{mainWin=null;});
+  mainWin.on('session-end',()=>{sessionEnding=true;pendingQuit?.finish({ok:true});app.quit();});
   await mainWin.loadURL(handle.baseUrl);
   if(!isQuietStartup(process.argv))mainWin.show();
   const petSettings=readPetSettings(app.getPath('userData'));
@@ -378,6 +399,10 @@ else{
     if(!isTrustedSender(event,mainWin,handle?.baseUrl))throw Error('请求来源不匹配');
     setImmediate(()=>app.quit());
     return true;
+  });
+  ipcMain.on('szu:quit-prepared',(event,result)=>{
+    if(!isTrustedSender(event,mainWin,handle?.baseUrl)||!pendingQuit||result?.id!==pendingQuit.id||typeof result.ok!=='boolean')return;
+    pendingQuit.finish({ok:result.ok,message:typeof result.message==='string'?result.message.slice(0,240):'笔记尚未保存'});
   });
   // 主窗设置和宠物菜单共用缩放；所有 IPC 只接受对应本地窗口的主 frame。
   ipcMain.handle('szu:pet-scale-get',event=>{
@@ -402,6 +427,10 @@ else{
       return schoolWindows[method](value);
     });
   }
+  ipcMain.handle('szu:feishu-open',(event,url)=>{
+    if(!isTrustedSender(event,mainWin,handle?.baseUrl))throw Error('请求来源不匹配');
+    return feishuWindow.open(url);
+  });
   ipcMain.on('szu:pet-result',async(event,result)=>{
     if(!isTrustedSender(event,mainWin,handle?.baseUrl)||typeof result?.ok!=='boolean'||typeof result.message!=='string')return;
     await pushPetState();
@@ -463,16 +492,25 @@ else{
   app.on('before-quit',event=>{
     if(quitReady)return;
     event.preventDefault();
-    quitting=true;
-    clearInterval(healthTimer);
-    clearInterval(petTimer);petTimer=null;
-    clearInterval(focusTimer);focusTimer=null;focusNotifier?.stop();focusNotification?.close();
     if(!shutdownPromise)shutdownPromise=(async()=>{
       try{await startup;}catch{}
+      const saved=await requestRendererSave();
+      if(!saved.ok&&mainWin&&!mainWin.isDestroyed()){
+        showMainWindow();
+        const answer=await dialog.showMessageBox(mainWin,{type:'warning',title:'笔记尚未保存',message:'先保存笔记，再退出庭院',
+          detail:saved.message+' 返回后可重试保存或导出备份。直接退出会丢失尚未保存的修改。',
+          buttons:['返回处理','放弃未保存修改并退出'],defaultId:0,cancelId:0});
+        if(answer.response!==1){shutdownPromise=null;return;}
+      }
+      quitting=true;
+      clearInterval(healthTimer);
+      clearInterval(petTimer);petTimer=null;
+      clearInterval(focusTimer);focusTimer=null;focusNotifier?.stop();focusNotification?.close();
       // Close our renderer first so its event stream cannot delay Go's graceful shutdown.
       if(petWin&&!petWin.isDestroyed())petWin.destroy();
       try{await schoolWindows?.shutdown();}
       catch{if(handle&&!handle.owned&&!smoke)dialog.showErrorBox('学校登录未能清除','请在仍运行的便携版中清除学校登录，或退出该后台服务。');}
+      try{await feishuWindow?.shutdown();}catch{} // The session is memory-only and expires with Electron.
       if(tray){tray.destroy();tray=null;}
       if(mainWin&&!mainWin.isDestroyed())mainWin.destroy();
       try{if(handle)await handle.stop();}
