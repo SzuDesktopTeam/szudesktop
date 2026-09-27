@@ -1,11 +1,15 @@
 package ui
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
+	"github.com/SzuDesktopTeam/szudesktop/internal/credential"
 	"github.com/SzuDesktopTeam/szudesktop/internal/portal"
 )
 
@@ -22,6 +26,7 @@ import (
 // 修法：联网时不再直接放弃，而是看协议指纹指向哪个区，按那套协议真登录一次。
 // 这条用例保证：只要指纹认得出区，就必须真的发出认证请求。
 func TestLoginStillAuthenticatesWhenAlreadyOnline(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
 	var sawLogin bool
 	srun := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -41,7 +46,8 @@ func TestLoginStillAuthenticatesWhenAlreadyOnline(t *testing.T) {
 	s := New(Options{SrunHost: srun.URL, Zone: "auto"})
 
 	// 直接按"指纹认出了教学区"的路径验证：登录必须真的打出去。
-	res := s.loginWithProtocol(portal.ZoneTeaching, "123456", "not-real", "")
+	// 指定 ac_id，免得自动发现去访问外网的跳转探测地址。
+	res := s.loginWithProtocol(portal.ZoneTeaching, "123456", "not-real", "12")
 	if !res.OK || !sawLogin {
 		t.Fatalf("指纹认出教学区后必须真的走一次深澜认证: result=%+v sawLogin=%v", res, sawLogin)
 	}
@@ -52,6 +58,7 @@ func TestLoginStillAuthenticatesWhenAlreadyOnline(t *testing.T) {
 
 // TestLoginWithProtocolDormHitsEportal 确认宿舍区那条分支打的是 ePortal。
 func TestLoginWithProtocolDormHitsEportal(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
 	var sawLogin bool
 	drcom := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/eportal/portal/login" {
@@ -67,5 +74,102 @@ func TestLoginWithProtocolDormHitsEportal(t *testing.T) {
 	res := s.loginWithProtocol(portal.ZoneDorm, "123456", "not-real", "")
 	if !res.OK || !sawLogin {
 		t.Fatalf("宿舍区必须走 ePortal 认证: result=%+v sawLogin=%v", res, sawLogin)
+	}
+}
+
+// autoLoginPortal 是一个宿舍区假门户：rad_user_info 按 online 回答，登录按 loginBody 回答。
+func autoLoginPortal(t *testing.T, online bool, loginBody string, logins *int32) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/eportal/portal/rad_user_info":
+			if online {
+				_, _ = w.Write([]byte(`dr1003({"result":1})`))
+			} else {
+				_, _ = w.Write([]byte(`dr1003({"result":0})`))
+			}
+		case "/eportal/portal/login":
+			atomic.AddInt32(logins, 1)
+			_, _ = w.Write([]byte(loginBody))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+func autoLoginStatus(t *testing.T, s *Server) (map[string]json.RawMessage, *autoLoginResult) {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	s.handleStatus(rec, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(rec.Body.Bytes(), &raw); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(rec.Body.String(), "S3cretPass") {
+		t.Fatalf("status revealed the password: %s", rec.Body.String())
+	}
+	field, ok := raw["auto_login"]
+	if !ok {
+		return raw, nil
+	}
+	var result autoLoginResult
+	if err := json.Unmarshal(field, &result); err != nil {
+		t.Fatal(err)
+	}
+	return raw, &result
+}
+
+// 启动时自动连接校园网：本机已在线就跳过，失败要在 /api/status 里看得到，
+// 而且说明里不能带密码；没保存账号时不算尝试，字段省略。
+func TestAutoLoginOutcomesAreReportedInStatus(t *testing.T) {
+	saved := credential.Credentials{Username: "123456", Password: "S3cretPass"}
+	for _, tc := range []struct {
+		name      string
+		store     credential.Store
+		online    bool
+		zone      portal.Zone
+		loginBody string
+		result    string
+		message   string
+		logins    int32
+	}{
+		{"already online", &guardTestStore{value: saved}, true, portal.ZoneDorm, `dr1003({"result":1})`, autoLoginSkipped, "已在校园网在线", 0},
+		{"login ok", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":1,"msg":"认证成功"})`, autoLoginOK, "认证成功", 1},
+		{"login failed", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":0,"msg":"口令已过期"})`, autoLoginFailed, "已过期", 1},
+		{"portal echoes the password", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":0,"msg":"口令 S3cretPass 已过期"})`, autoLoginFailed, "隐去", 1},
+		{"off campus", &guardTestStore{value: saved}, false, portal.ZoneOutside, `dr1003({"result":1})`, autoLoginSkipped, "没有检测到校园网认证门户", 0},
+		{"nothing saved", &statusTestStore{err: credential.ErrNotFound}, false, portal.ZoneDorm, `dr1003({"result":1})`, "", "", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
+			var logins int32
+			fake := autoLoginPortal(t, tc.online, tc.loginBody, &logins)
+			s := New(Options{SrunHost: fake.URL, DrcomHost: fake.URL, AutoLogin: true})
+			s.store = tc.store
+			s.detect = func() *portal.DetectResult { return &portal.DetectResult{Zone: tc.zone} }
+			s.probe = func() *portal.DetectResult {
+				return &portal.DetectResult{Zone: tc.zone, Probed: true, DormUsable: tc.zone == portal.ZoneDorm}
+			}
+			before := time.Now().Unix()
+			s.runAutoLogin()
+			_, got := autoLoginStatus(t, s)
+			if n := atomic.LoadInt32(&logins); n != tc.logins {
+				t.Fatalf("login requests = %d, want %d", n, tc.logins)
+			}
+			if tc.result == "" {
+				if got != nil {
+					t.Fatalf("no saved account must not report an attempt: %+v", got)
+				}
+				return
+			}
+			if got != nil && strings.Contains(got.Message, "S3cretPass") {
+				t.Fatalf("auto_login message leaks the password: %q", got.Message)
+			}
+			if got == nil || got.Result != tc.result || !strings.Contains(got.Message, tc.message) || got.At < before {
+				t.Fatalf("auto_login = %+v, want %s containing %q", got, tc.result, tc.message)
+			}
+		})
 	}
 }

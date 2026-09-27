@@ -14,6 +14,9 @@ import "errors"
 
 func HasBackup() bool { return false }
 
+// RecoverStale 在这些平台上没有要善后的：Enable 从来不改系统设置。
+func RecoverStale() (bool, error) { return false, nil }
+
 func Query() State {
 	return State{
 		Supported: false,

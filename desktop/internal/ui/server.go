@@ -11,12 +11,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -68,16 +69,21 @@ type Server struct {
 	piano         *pianoService
 	probe         func() *portal.DetectResult
 	detect        func() *portal.DetectResult
+	diagnose      func(user, pass, srunHost, drcomHost string) *diagnose.Report // 测试注入；nil 时用 diagnose.Run
 	workspace     *workspaceStore
 	notebook      *notebookStore
 	feishu        *feishuService
 	shutdown      func()
 	instance      *desktopInstance
+	apiToken      string // 本次运行的调用方凭据，见 api_guard.go；不进任何接口的返回
 	windows       *windowSessions
+	netState      networkStateCache // /api/status 的网络探测短时缓存
+	releases      releaseChecker    // 检查更新的结果缓存
 
-	mu       sync.Mutex
-	lastErr  string
-	lastZone portal.Zone
+	mu        sync.Mutex
+	lastErr   string
+	lastZone  portal.Zone
+	autoLogin *autoLoginResult // 启动时自动连接校园网的结果；没尝试过为 nil
 }
 
 // New 创建一个还没开始监听的 Server。
@@ -96,7 +102,7 @@ func New(opts Options) *Server {
 		campus = &campusGateway{}
 	}
 	workspace := newWorkspaceStore()
-	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), probe: portal.Probe, detect: portal.Detect, workspace: workspace, notebook: newNotebookStore(filepath.Dir(workspace.path)), feishu: newFeishuService(), windows: newWindowSessions()}
+	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), probe: portal.Probe, detect: portal.Detect, workspace: workspace, notebook: newNotebookStore(filepath.Dir(workspace.path)), feishu: newFeishuService(), windows: newWindowSessions(), apiToken: newAPIToken()}
 }
 
 func parseZone(raw string) (portal.Zone, bool) {
@@ -160,11 +166,16 @@ func (s *Server) Run() error {
 		return err
 	}
 	if existing {
-		fmt.Printf("szuDesktop 已复用: %s\n", instance.URL)
+		// 复用启动器把正在运行那份服务的地址和凭据交给外壳；凭据来自已校验过的实例记录。
+		announce(startupOutput, "已复用", instance.URL, instance.Token)
 		return nil
 	}
 	s.instance = instance
+	s.apiToken = instance.Token
 	defer instance.close()
+	cleanStaleTemps(filepath.Dir(s.workspace.path), time.Now())
+	// 上次异常退出留下的系统代理，只有拿到单实例锁之后才能动。
+	s.vpn.recoverLeftover()
 
 	addr := s.opts.Addr
 	if addr == "" {
@@ -193,44 +204,118 @@ func (s *Server) Run() error {
 	if err := instance.publish(url); err != nil {
 		return err
 	}
-	fmt.Printf("szuDesktop 已启动: %s\n", url)
+	announce(startupOutput, "已启动", url, s.apiToken)
 
 	if s.opts.AutoLogin {
 		go func() {
 			time.Sleep(300 * time.Millisecond) // 先让服务起来，再打日志
-			res := s.doLogin("", "", "", "")
-			if res.OK {
-				fmt.Printf("[自动登录] %s\n", res.Message)
-			} else {
-				fmt.Printf("[自动登录失败] %s\n", res.Message)
-			}
+			s.runAutoLogin()
 		}()
 	}
 
 	if !s.opts.NoOpen {
 		go func() {
 			time.Sleep(200 * time.Millisecond)
-			if err := openBrowser(url); err != nil {
-				fmt.Printf("浏览器没打开，自己复制上面的地址: %v\n", err)
+			if err := openBrowser(s.launchURL(url)); err != nil {
+				// 不在这句错误里重复凭据：它只出现在上面那行协议行里。
+				fmt.Printf("浏览器没打开（%v）。请在浏览器打开 %s/?launch= 并接上上面「szuDesktop 会话」一行的值\n", err, url)
 			}
 		}()
 	}
 
-	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	// 请求的 context 都派生自 requests，Shutdown 一开始就取消它：
+	// 窗口心跳是长连接，不主动结束的话，排空会一直等到超时。
+	requests, cancelRequests := context.WithCancel(context.Background())
+	defer cancelRequests()
+	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second, BaseContext: func(net.Listener) context.Context { return requests }}
+	srv.RegisterOnShutdown(cancelRequests)
+	stopped := make(chan struct{})
+	var stopOnce sync.Once
 	s.shutdown = func() {
-		time.Sleep(150 * time.Millisecond)
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(ctx)
+		// /api/shutdown 和“窗口全关”可能同时触发，只关一次。
+		stopOnce.Do(func() {
+			defer close(stopped)
+			time.Sleep(150 * time.Millisecond) // 先让 /api/shutdown 的响应发出去
+			s.vpn.shutdown()
+			ctx, cancel := context.WithTimeout(context.Background(), shutdownDrain)
+			defer cancel()
+			_ = srv.Shutdown(ctx)
+		})
 	}
 	done := make(chan struct{})
 	defer close(done)
 	go s.watchWindows(done)
 	err = srv.Serve(ln)
 	if err == http.ErrServerClosed {
+		// Serve 在 Shutdown 刚开始时就返回了。必须等排空结束再退出，
+		// 否则正在写的存档、正在进行的登录会随进程退出被直接掐断。
+		<-stopped
 		return nil
 	}
 	return err
+}
+
+// startupOutput 是协议行的去处；测试替换它来检查 Run 交给外壳的内容。
+var startupOutput io.Writer = os.Stdout
+
+// announce 写出两行协议行：地址，以及本次运行的调用方凭据。
+//
+// Electron 外壳（listen-url.mjs）只认完整的行，两行都到齐才算就绪；凭据只经过这条
+// 父进程独占的标准输出管道，外壳读完只留在内存里，不写日志、不进错误框。
+// 便携版是 Windows GUI 程序，双击运行时没有控制台，这两行不会显示在任何地方。
+func announce(w io.Writer, verb, url, token string) {
+	// 一次写出两行，外壳不会读到地址之后迟迟等不到凭据。
+	_, _ = fmt.Fprintf(w, "szuDesktop %s: %s\nszuDesktop 会话: %s\n", verb, url, token)
+}
+
+// shutdownDrain 是退出时等待进行中请求的上限。
+// Electron 发出退出请求后只等 2 秒就强杀，要赶在那之前自己收尾（释放实例锁、删发现文件）。
+const shutdownDrain = 1500 * time.Millisecond
+
+// cleanStaleTemps 清掉异常退出时残留的存档、笔记临时文件。
+// 调用时已经拿到单实例锁，没有别的进程在写；仍只删一分钟以前的，留足余地。
+func cleanStaleTemps(dir string, now time.Time) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if !entry.Type().IsRegular() || !strings.HasSuffix(name, ".tmp") || !(strings.HasPrefix(name, ".workspace-") || strings.HasPrefix(name, ".notebook-")) {
+			continue
+		}
+		if info, err := entry.Info(); err == nil && now.Sub(info.ModTime()) > time.Minute {
+			_ = os.Remove(filepath.Join(dir, name))
+		}
+	}
+}
+
+// indexCSP 与 Electron 注入的策略（desktop/electron/window-policy.mjs）逐条一致，
+// 另加 frame-ancestors 'none'。便携版用浏览器打开本机页面时没有 Electron 兜底：
+// 页面既要有 script-src 'self' 这道防线，也不能被别的网站放进 iframe 诱导点击。
+// static_assets_test 会对照 window-policy.mjs，两边改一边另一边会报错。
+const indexCSP = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+	"img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; " +
+	"base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; frame-ancestors 'none'"
+
+// staticTypes 固定内嵌资源的 MIME，不查系统注册表。
+//
+// Go 的 mime 包在 Windows 上会用 HKCR\.<ext> 的 Content Type 覆盖内置表（只对 .js 例外）。
+// 某台机器把 .mjs 或 .css 注册成 text/plain 时，Chromium 会按严格 MIME 拒绝模块和样式表，
+// 整页白屏或没有样式，而且只在个别用户机器上出现，很难排查。
+var staticTypes = map[string]string{
+	".css":   "text/css; charset=utf-8",
+	".mjs":   "text/javascript; charset=utf-8",
+	".js":    "text/javascript; charset=utf-8",
+	".json":  "application/json",
+	".png":   "image/png",
+	".jpg":   "image/jpeg",
+	".jpeg":  "image/jpeg",
+	".webp":  "image/webp",
+	".svg":   "image/svg+xml",
+	".ico":   "image/x-icon",
+	".woff2": "font/woff2",
+	".txt":   "text/plain; charset=utf-8",
 }
 
 // routes 注册路由。
@@ -253,11 +338,10 @@ func (s *Server) Run() error {
 func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	staticFiles := http.FileServer(http.FS(static))
 	fileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Windows file associations may override .mjs to text/plain. Chromium
-		// rejects that type for ES modules, so embedded modules own their MIME.
-		if strings.HasSuffix(r.URL.Path, ".mjs") {
-			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+		if kind, ok := staticTypes[strings.ToLower(path.Ext(r.URL.Path))]; ok {
+			w.Header().Set("Content-Type", kind)
 		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 		staticFiles.ServeHTTP(w, r)
 	})
 
@@ -274,7 +358,14 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 		p := r.URL.Path
 		switch {
 		case p == "/" || p == "/index.html":
+			// 首页和静态资源本身不需要凭据；带 launch 参数的首次打开在这里换成会话 Cookie。
+			if r.Method == http.MethodGet && r.URL.Query().Has(launchParam) && s.acceptLaunch(w, r) {
+				return
+			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Content-Security-Policy", indexCSP)
+			w.Header().Set("X-Frame-Options", "DENY")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
 			data, err := fs.ReadFile(static, "index.html")
 			if err != nil {
 				http.Error(w, "页面没有嵌进来: "+err.Error(), 500)
@@ -289,56 +380,65 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 		fileServer.ServeHTTP(w, r)
 	})
 
-	mux.HandleFunc("/api/workspace", protectAPI(s.handleWorkspace, http.MethodGet, http.MethodPost))
-	mux.HandleFunc("/api/notebook", protectAPI(s.handleNotebook, http.MethodGet, http.MethodPut))
-	mux.HandleFunc("/api/feishu/status", protectAPI(s.handleFeishuStatus, http.MethodGet))
-	mux.HandleFunc("/api/feishu/login", protectAPI(s.handleFeishuLogin, http.MethodPost))
-	mux.HandleFunc("/api/feishu/document", protectAPI(s.handleFeishuDocument, http.MethodPost))
-	mux.HandleFunc("/api/shutdown", protectAPI(s.handleShutdown, http.MethodPost))
-	mux.HandleFunc("/api/window", protectAPI(s.handleWindow, http.MethodPost))
-	mux.HandleFunc("/api/window-stream", protectAPI(s.handleWindowStream, http.MethodGet))
-	mux.HandleFunc("/api/instance", protectAPI(s.handleInstance, http.MethodPost))
-	mux.HandleFunc("/api/health", protectAPI(s.handleHealth, http.MethodGet))
-	mux.HandleFunc("/api/status", protectAPI(s.handleStatus, http.MethodGet))
-	mux.HandleFunc("/api/releases", protectAPI(s.handleReleases, http.MethodGet))
-	mux.HandleFunc("/api/login", protectAPI(s.handleLogin, http.MethodPost))
-	mux.HandleFunc("/api/logout", protectAPI(s.handleLogout, http.MethodPost))
-	mux.HandleFunc("/api/diag", protectAPI(s.handleDiag, http.MethodGet))
-	mux.HandleFunc("/api/credential", protectAPI(s.handleCredential, http.MethodGet, http.MethodPost, http.MethodDelete))
-	mux.HandleFunc("/api/autostart", protectAPI(s.handleAutostart, http.MethodGet, http.MethodPost))
-	mux.HandleFunc("/api/vpn/status", protectAPI(s.handleVPNStatus, http.MethodGet))
-	mux.HandleFunc("/api/vpn/connect", protectAPI(s.handleVPNConnect, http.MethodPost))
-	mux.HandleFunc("/api/vpn/auth", protectAPI(s.handleVPNAuth, http.MethodPost))
-	mux.HandleFunc("/api/vpn/disconnect", protectAPI(s.handleVPNDisconnect, http.MethodPost))
-	mux.HandleFunc("/api/vpn/proxy", protectAPI(s.handleVPNProxy, http.MethodPost))
-	mux.HandleFunc("/api/campus/status", protectAPI(s.handleCampusStatus, http.MethodGet))
-	mux.HandleFunc("/api/campus/notice-sources", protectAPI(s.handleCampusNoticeSources, http.MethodGet))
-	mux.HandleFunc("/api/campus/notices", protectAPI(s.handleCampusNotices, http.MethodGet))
-	mux.HandleFunc("/api/campus/calendar", protectAPI(s.handleCalendar, http.MethodGet))
+	// 没注册的 /api 路径也回统一的 JSON 错误：页面和本地服务版本对不上时最常见，
+	// 否则会落进上面的静态文件服务，页面只拿到一句纯文本的 404。
+	// 同样先查凭据：没有凭据的调用方分不出哪些接口存在。
+	unknownAPI := s.protectAPI(func(w http.ResponseWriter, r *http.Request) {
+		writeAPIError(w, http.StatusNotFound, errors.New("本地服务没有这个接口，可能是页面与服务版本不一致，请重新打开应用"))
+	}, http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions)
+	mux.HandleFunc("/api", unknownAPI)
+	mux.HandleFunc("/api/", unknownAPI)
+	mux.HandleFunc("/api/workspace", s.protectAPI(s.handleWorkspace, http.MethodGet, http.MethodPost))
+	mux.HandleFunc("/api/notebook", s.protectAPI(s.handleNotebook, http.MethodGet, http.MethodPut))
+	mux.HandleFunc("/api/feishu/status", s.protectAPI(s.handleFeishuStatus, http.MethodGet))
+	mux.HandleFunc("/api/feishu/login", s.protectAPI(s.handleFeishuLogin, http.MethodPost))
+	mux.HandleFunc("/api/feishu/document", s.protectAPI(s.handleFeishuDocument, http.MethodPost))
+	mux.HandleFunc("/api/shutdown", s.protectAPI(s.handleShutdown, http.MethodPost))
+	mux.HandleFunc("/api/window", s.protectAPI(s.handleWindow, http.MethodPost))
+	mux.HandleFunc("/api/window-stream", s.protectAPI(s.handleWindowStream, http.MethodGet))
+	// 只有这两个接口不要求请求头或 Cookie 里的凭据，原因见 publicAPI。
+	mux.HandleFunc("/api/instance", publicAPI(s.handleInstance, http.MethodPost))
+	mux.HandleFunc("/api/health", publicAPI(s.handleHealth, http.MethodGet))
+	mux.HandleFunc("/api/status", s.protectAPI(s.handleStatus, http.MethodGet))
+	mux.HandleFunc("/api/releases", s.protectAPI(s.handleReleases, http.MethodGet))
+	mux.HandleFunc("/api/login", s.protectAPI(s.handleLogin, http.MethodPost))
+	mux.HandleFunc("/api/logout", s.protectAPI(s.handleLogout, http.MethodPost))
+	mux.HandleFunc("/api/diag", s.protectAPI(s.handleDiag, http.MethodGet))
+	mux.HandleFunc("/api/credential", s.protectAPI(s.handleCredential, http.MethodGet, http.MethodPost, http.MethodDelete))
+	mux.HandleFunc("/api/autostart", s.protectAPI(s.handleAutostart, http.MethodGet, http.MethodPost))
+	mux.HandleFunc("/api/vpn/status", s.protectAPI(s.handleVPNStatus, http.MethodGet))
+	mux.HandleFunc("/api/vpn/connect", s.protectAPI(s.handleVPNConnect, http.MethodPost))
+	mux.HandleFunc("/api/vpn/auth", s.protectAPI(s.handleVPNAuth, http.MethodPost))
+	mux.HandleFunc("/api/vpn/disconnect", s.protectAPI(s.handleVPNDisconnect, http.MethodPost))
+	mux.HandleFunc("/api/vpn/proxy", s.protectAPI(s.handleVPNProxy, http.MethodPost))
+	mux.HandleFunc("/api/campus/status", s.protectAPI(s.handleCampusStatus, http.MethodGet))
+	mux.HandleFunc("/api/campus/notice-sources", s.protectAPI(s.handleCampusNoticeSources, http.MethodGet))
+	mux.HandleFunc("/api/campus/notices", s.protectAPI(s.handleCampusNotices, http.MethodGet))
+	mux.HandleFunc("/api/campus/calendar", s.protectAPI(s.handleCalendar, http.MethodGet))
 	// 学校系统（ehall）会话与个人业务。
 	// 会话本身是敏感凭据，读写都走 POST/DELETE，状态查询只回报长度不回报内容。
-	mux.HandleFunc("/api/session", protectAPI(s.handleSession, http.MethodGet, http.MethodPost, http.MethodDelete))
-	mux.HandleFunc("/api/session/check", protectAPI(s.handleSessionCheck, http.MethodPost))
-	mux.HandleFunc("/api/scores", protectAPI(s.handleScores, http.MethodGet))
-	mux.HandleFunc("/api/academic/session", protectAPI(s.handleAcademicSession, http.MethodGet, http.MethodDelete))
-	mux.HandleFunc("/api/academic/browser-session", protectAPI(s.handleBrowserSession, http.MethodPost, http.MethodDelete))
-	mux.HandleFunc("/api/academic/challenge", protectAPI(s.handleAcademicChallenge, http.MethodPost))
-	mux.HandleFunc("/api/academic/captcha", protectAPI(s.handleAcademicCaptcha, http.MethodGet))
-	mux.HandleFunc("/api/academic/login", protectAPI(s.handleAcademicLogin, http.MethodPost))
-	mux.HandleFunc("/api/academic/timetable", protectAPI(s.handleTimetable, http.MethodGet))
-	mux.HandleFunc("/api/academic/undergrad/timetable", protectAPI(s.handleUndergradTimetable, http.MethodGet))
+	mux.HandleFunc("/api/session", s.protectAPI(s.handleSession, http.MethodGet, http.MethodPost, http.MethodDelete))
+	mux.HandleFunc("/api/session/check", s.protectAPI(s.handleSessionCheck, http.MethodPost))
+	mux.HandleFunc("/api/scores", s.protectAPI(s.handleScores, http.MethodGet))
+	mux.HandleFunc("/api/academic/session", s.protectAPI(s.handleAcademicSession, http.MethodGet, http.MethodDelete))
+	mux.HandleFunc("/api/academic/browser-session", s.protectAPI(s.handleBrowserSession, http.MethodPost, http.MethodDelete))
+	mux.HandleFunc("/api/academic/challenge", s.protectAPI(s.handleAcademicChallenge, http.MethodPost))
+	mux.HandleFunc("/api/academic/captcha", s.protectAPI(s.handleAcademicCaptcha, http.MethodGet))
+	mux.HandleFunc("/api/academic/login", s.protectAPI(s.handleAcademicLogin, http.MethodPost))
+	mux.HandleFunc("/api/academic/timetable", s.protectAPI(s.handleTimetable, http.MethodGet))
+	mux.HandleFunc("/api/academic/undergrad/timetable", s.protectAPI(s.handleUndergradTimetable, http.MethodGet))
 	// 统一身份认证（本科）应用内登录；与 /api/session 的粘 Cookie 是两套入口。
-	mux.HandleFunc("/api/cas/session", protectAPI(s.handleCasSession, http.MethodGet, http.MethodDelete))
-	mux.HandleFunc("/api/cas/challenge", protectAPI(s.handleCasChallenge, http.MethodPost))
-	mux.HandleFunc("/api/cas/captcha", protectAPI(s.handleCasCaptcha, http.MethodGet))
-	mux.HandleFunc("/api/cas/login", protectAPI(s.handleCasLogin, http.MethodPost))
-	mux.HandleFunc("/api/booking/rooms", protectAPI(s.handleBookingRooms, http.MethodGet))
-	mux.HandleFunc("/api/booking/availability", protectAPI(s.handleBookingAvailability, http.MethodGet))
-	mux.HandleFunc("/api/piano/status", protectAPI(s.handlePianoStatus, http.MethodGet))
-	mux.HandleFunc("/api/piano/login", protectAPI(s.handlePianoLogin, http.MethodPost))
-	mux.HandleFunc("/api/piano/logout", protectAPI(s.handlePianoLogout, http.MethodPost))
-	mux.HandleFunc("/api/piano/rooms", protectAPI(s.handlePianoRooms, http.MethodGet))
-	mux.HandleFunc("/api/piano/my", protectAPI(s.handlePianoMy, http.MethodGet))
+	mux.HandleFunc("/api/cas/session", s.protectAPI(s.handleCasSession, http.MethodGet, http.MethodDelete))
+	mux.HandleFunc("/api/cas/challenge", s.protectAPI(s.handleCasChallenge, http.MethodPost))
+	mux.HandleFunc("/api/cas/captcha", s.protectAPI(s.handleCasCaptcha, http.MethodGet))
+	mux.HandleFunc("/api/cas/login", s.protectAPI(s.handleCasLogin, http.MethodPost))
+	mux.HandleFunc("/api/booking/rooms", s.protectAPI(s.handleBookingRooms, http.MethodGet))
+	mux.HandleFunc("/api/booking/availability", s.protectAPI(s.handleBookingAvailability, http.MethodGet))
+	mux.HandleFunc("/api/piano/status", s.protectAPI(s.handlePianoStatus, http.MethodGet))
+	mux.HandleFunc("/api/piano/login", s.protectAPI(s.handlePianoLogin, http.MethodPost))
+	mux.HandleFunc("/api/piano/logout", s.protectAPI(s.handlePianoLogout, http.MethodPost))
+	mux.HandleFunc("/api/piano/rooms", s.protectAPI(s.handlePianoRooms, http.MethodGet))
+	mux.HandleFunc("/api/piano/my", s.protectAPI(s.handlePianoMy, http.MethodGet))
 }
 
 /* ---------- 接口 ---------- */
@@ -362,13 +462,15 @@ type statusResp struct {
 	StoreDesc   string   `json:"store_desc"` // 凭据存在哪
 	LastError   string   `json:"last_error"`
 	Advices     []string `json:"advices"`
+	// AutoLogin 是这次启动时自动连接校园网的结果；没有尝试时省略。
+	AutoLogin *autoLoginResult `json:"auto_login,omitempty"`
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	creds, credErr := s.store.Load()
 
-	det := s.detect()
-	zone := s.selectedZone(det.Zone)
+	netState := s.networkState()
+	det, zone := netState.det, netState.zone
 	out := statusResp{
 		AppVersion: version.Current,
 		Zone:       string(zone),
@@ -382,16 +484,20 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	// 门户按请求出口查询认证状态，与本机有没有保存账号无关。
 	// 账号和设备 IP 默认不向页面回传；查询失败也不等于明确离线。
-	if st, err := portal.QueryOnline(zone, s.opts.SrunHost, s.opts.DrcomHost, "", ""); err != nil {
+	if netState.onlineErr != nil {
 		out.OnlineError = "暂时无法确认校园网认证状态，请稍后刷新或运行网络诊断"
-	} else if st != nil {
+	} else if netState.online != nil {
 		out.OnlineKnown = true
-		out.Online = st.Online
+		out.Online = netState.online.Online
 	}
 
 	s.mu.Lock()
 	if s.lastErr != "" {
 		out.LastError = s.lastErr
+	}
+	if s.autoLogin != nil {
+		result := *s.autoLogin
+		out.AutoLogin = &result
 	}
 	out.Advices = detectAdvices(det)
 	s.mu.Unlock()
@@ -471,6 +577,8 @@ func (s *Server) doLogin(user, pass, requestedZone, acID string) portal.Result {
 
 	switch zone {
 	case portal.ZoneTeaching, portal.ZoneDorm:
+		// 无论成败，认证状态都可能变了：让页面紧接着的刷新重新探测。
+		defer s.invalidateNetworkState()
 		return s.loginWithProtocol(zone, user, pass, acID)
 
 	default:
@@ -495,10 +603,10 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 		attachAcIDCache(c, manual == "")
 		res, err := c.Login()
 		if err != nil {
-			return s.remember(err.Error())
+			return s.remember(portalErrorMessage("认证", err, pass))
 		}
 		if !res.OK {
-			return s.remember(res.Message)
+			return s.remember(scrubSecret(res.Message, pass))
 		}
 		s.clearErr()
 		return *res
@@ -506,10 +614,11 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 	case portal.ZoneDorm:
 		res, err := portal.NewDrcomClient(s.opts.DrcomHost, user, pass).Login()
 		if err != nil {
-			return s.remember(err.Error())
+			// 宿舍区的登录地址里就有明文密码，错误文本一个字都不能透传。
+			return s.remember(portalErrorMessage("认证", err, pass))
 		}
 		if !res.OK {
-			return s.remember(res.Message)
+			return s.remember(scrubSecret(res.Message, pass))
 		}
 		s.clearErr()
 		return *res
@@ -522,9 +631,11 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 // ac_id 不是固定值：同一台笔记本插不同墙口、走有线还是路由器，
 // 接入点编号都可能变（教学区常见 1，接路由器后见过 12）。
 // 拿错就会报 Unknow ac-type。这里按"出口标识"分网缓存，
-// 换网后缓存命中不了，客户端会自动重新发现。
+// 换网后缓存命中不了，客户端会自动重新发现；
+// 同一个网关后面换了接入点、缓存值被服务端拒掉时，客户端会通知这里
+// 把这张网的缓存从磁盘上删掉，免得下次登录还先拿错值去撞一次。
 //
-// onlyCache 为 false 时说明用户手动指定了 ac_id，那就别用缓存覆盖他的选择，
+// useCache 为 false 时说明用户手动指定了 ac_id，那就别用缓存覆盖他的选择，
 // 但成功之后仍要记下来。
 func attachAcIDCache(c *portal.SrunClient, useCache bool) {
 	prefs := netpref.Load()
@@ -537,6 +648,10 @@ func attachAcIDCache(c *portal.SrunClient, useCache bool) {
 	}
 	c.OnAcIDResolved = func(id string) {
 		prefs.SetAcID(key, id)
+		_ = prefs.Save()
+	}
+	c.OnAcIDRejected = func(string) {
+		prefs.DeleteAcID(key)
 		_ = prefs.Save()
 	}
 }
@@ -566,18 +681,30 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	var e error
 	switch zone {
 	case portal.ZoneTeaching:
-		res, e = portal.NewSrunClient(s.opts.SrunHost, user, pass).Logout()
+		// ac_id 与登录同一口径：界面这次填的 > 启动参数 > 这张网上次成功的缓存 > 现场探测。
+		// 以前注销每次都重新探测，既多发外网请求，也可能和登录用的编号对不上。
+		c := portal.NewSrunClient(s.opts.SrunHost, user, pass)
+		manual := req.AcID
+		if manual == "" {
+			manual = s.opts.AcID
+		}
+		if manual != "" {
+			c.AcID = manual
+		}
+		attachAcIDCache(c, manual == "")
+		res, e = c.Logout()
 	case portal.ZoneDorm:
 		res, e = portal.NewDrcomClient(s.opts.DrcomHost, user, pass).Logout()
 	default:
 		writeJSON(w, loginResp{OK: false, Message: "不在校园网里，没有可注销的会话"})
 		return
 	}
+	s.invalidateNetworkState()
 	if e != nil {
-		writeJSON(w, loginResp{OK: false, Message: e.Error()})
+		writeJSON(w, loginResp{OK: false, Message: portalErrorMessage("注销", e, pass)})
 		return
 	}
-	writeJSON(w, loginResp{OK: res.OK, Zone: string(zone), Message: res.Message})
+	writeJSON(w, loginResp{OK: res.OK, Zone: string(zone), Message: scrubSecret(res.Message, pass)})
 }
 
 type diagResp struct {
@@ -595,7 +722,8 @@ type diagResp struct {
 	// AcID / AcIDTrusted 是深澜认证要用的接入点编号。
 	//
 	// 这东西跟着"插哪个墙口 / 走哪条线路"变，拿错会报 Unknow ac-type，
-	// 是校内登录失败最常见的原因。界面上要能看到它，排查才不用猜。
+	// 是校内登录失败最常见的原因。界面上要能看到它，排查才不用猜，
+	// 所以同一个值也写成一句话放进 Advices（页面会原样显示）。
 	// Trusted 为 false 表示只是从门户页面猜的，未必是你真正所在的接入点。
 	AcID        string `json:"ac_id,omitempty"`
 	AcIDTrusted bool   `json:"ac_id_trusted"`
@@ -603,7 +731,11 @@ type diagResp struct {
 
 func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 	user, pass, _ := s.creds()
-	rep := diagnose.Run(user, pass, s.opts.SrunHost, s.opts.DrcomHost)
+	run := s.diagnose
+	if run == nil {
+		run = diagnose.Run
+	}
+	rep := run(user, pass, s.opts.SrunHost, s.opts.DrcomHost)
 
 	out := diagResp{
 		Zone:        string(rep.Detect.Zone),
@@ -621,21 +753,42 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 		out.Online = &on
 	}
 
-	// 顺带把接入点编号算出来给界面显示。
+	// 顺带把接入点编号算出来，写进页面会显示的建议里。
 	//
 	// 只在深澜指纹明确时才查：宿舍区走的是另一套协议，没有 ac_id 这回事，
-	// 白跑一轮探测只会拖慢诊断。
+	// 白跑一轮探测只会拖慢诊断。取值口径与登录一致：先看启动参数，
+	// 再看这张网上次成功的缓存（命中就不再发请求），最后才现场探测。
 	if rep.Detect.SrunUsable {
 		c := portal.NewSrunClient(s.opts.SrunHost, user, pass)
 		if s.opts.AcID != "" {
 			c.AcID = s.opts.AcID
+		} else if id := netpref.Load().AcIDFor(netpref.Egress()); id != "" {
+			c.SetLastAcID(id)
 		}
 		id, source := c.ResolveAcIDWithSource()
 		out.AcID = id
 		out.AcIDTrusted = source != portal.AcIDSourceGuess
+		out.Advices = append(out.Advices, acIDAdvice(id, source))
 	}
 
 	writeJSON(w, out)
+}
+
+// acIDAdvice 把接入点编号和它的来历说成一句话。
+// “Unknow ac-type”是校内登录失败最常见的原因，诊断结果里看得到这个值，
+// 才知道高级设置里该不该手动指定、填什么。
+func acIDAdvice(id string, source portal.AcIDSource) string {
+	lead := "教学区接入点编号（ac_id）：" + id
+	switch source {
+	case portal.AcIDSourceManual:
+		return lead + "，来自启动参数"
+	case portal.AcIDSourceCache:
+		return lead + "，来自这张网上次认证成功的记录"
+	case portal.AcIDSourceRedirect:
+		return lead + "，由校园网网关下发，可信"
+	default:
+		return lead + "，只是从门户页面推测的；若登录报 ac_id / ac-type 错误，可在高级设置里手动指定"
+	}
 }
 
 type credReq struct {
@@ -660,15 +813,17 @@ func (s *Server) handleCredential(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var req credReq
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "请求格式不对", 400)
+			writeAPIError(w, http.StatusBadRequest, errors.New("请求格式不对"))
 			return
 		}
 		if req.Username == "" || req.Password == "" {
-			http.Error(w, "账号和密码都不能空", 400)
+			writeAPIError(w, http.StatusBadRequest, errors.New("账号和密码都不能空"))
 			return
 		}
+		// 真实原因（例如系统安全存储不可用、配置目录没有权限）要让用户看到，
+		// 笼统的“请重新打开应用”解决不了这类问题。
 		if err := s.store.Save(credential.Credentials{Username: req.Username, Password: req.Password}); err != nil {
-			http.Error(w, err.Error(), 500)
+			writeAPIError(w, http.StatusInternalServerError, errors.New(scrubSecret(err.Error(), req.Password)))
 			return
 		}
 		s.clearErr()
@@ -676,13 +831,13 @@ func (s *Server) handleCredential(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodDelete:
 		if err := s.store.Delete(); err != nil {
-			http.Error(w, err.Error(), 500)
+			writeAPIError(w, http.StatusInternalServerError, err)
 			return
 		}
 		writeJSON(w, map[string]any{"ok": true})
 
 	default:
-		http.Error(w, "不支持的方法", 405)
+		writeAPIError(w, http.StatusMethodNotAllowed, errors.New("不支持的方法"))
 	}
 }
 
@@ -737,7 +892,12 @@ func detectAdvices(det *portal.DetectResult) []string {
 //
 // 找不到 Chromium 系浏览器（或启动失败）就退回 rundll32 走默认浏览器，
 // 功能不受影响，只是又变回"一个网页"。
-func openBrowser(url string) error {
+//
+// 传进来的是 launchURL：带一次性的 launch 参数，首页收到后换成会话 Cookie 并跳回 /。
+// 测试替换这个变量，不真的打开浏览器。
+var openBrowser = openSystemBrowser
+
+func openSystemBrowser(url string) error {
 	switch runtime.GOOS {
 	case "windows":
 		// --app: 无边框客户端窗口；--start-maximized: 一屏放下全部界面
@@ -769,8 +929,6 @@ func openBrowser(url string) error {
 		return exec.Command("xdg-open", url).Start()
 	}
 }
-
-var _ = log.Println
 
 func revealedUsername(r *http.Request, username string) string {
 	if r.URL.Query().Get("reveal") == "1" {

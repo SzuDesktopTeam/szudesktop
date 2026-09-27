@@ -13,6 +13,9 @@ const undergradTimetablePath = "/jwapp/sys/wdkb/modules/xskcb/xskcb.do"
 const undergradTermPath = "/jwapp/sys/wdkb/modules/jshkcb/dqxnxq.do"
 const undergradTimetableHome = "https://ehall.szu.edu.cn/jwapp/sys/wdkb/*default/index.do"
 
+// validTermPattern 是教务学期代码的形状，例如 2026-2027-1。
+var validTermPattern = regexp.MustCompile(`^\d{4}-\d{4}-[123]$`)
+
 type undergradCourse struct {
 	Name        string `json:"name"`
 	Code        string `json:"code"`
@@ -43,8 +46,7 @@ func parseUndergradTimetable(data []byte) ([]undergradCourse, error) {
 }
 func (s *Server) handleUndergradTimetable(w http.ResponseWriter, r *http.Request) {
 	term := strings.TrimSpace(r.URL.Query().Get("term"))
-	validTerm := regexp.MustCompile(`^\d{4}-\d{4}-[123]$`)
-	if term != "" && !validTerm.MatchString(term) {
+	if term != "" && !validTermPattern.MatchString(term) {
 		writeAPIError(w, 400, errors.New("学期格式应为 2026-2027-1"))
 		return
 	}
@@ -54,18 +56,19 @@ func (s *Server) handleUndergradTimetable(w http.ResponseWriter, r *http.Request
 		writeSchoolClientError(w, err)
 		return
 	}
+	// 本地请求断开（切走页面、退出应用）时学校请求一并取消，不在后台跑完。
 	if term == "" {
-		body, err := c.postForm(undergradTermPath, url.Values{})
+		body, err := c.postFormContext(r.Context(), undergradTermPath, url.Values{})
 		if err != nil {
-			writeSchoolError(w, err)
+			s.writeSchoolReadError(w, c, err)
 			return
 		}
 		rows, err := ehallRows(body, "dqxnxq")
 		if err != nil {
-			writeSchoolError(w, err)
+			s.writeSchoolReadError(w, c, err)
 			return
 		}
-		if len(rows) != 1 || !validTerm.MatchString(str(rows[0], "DM")) {
+		if len(rows) != 1 || !validTermPattern.MatchString(str(rows[0], "DM")) {
 			writeAPIError(w, 502, errors.New("未能确认学校当前学期，请在本科课表中填写官方学期后重试"))
 			return
 		}
@@ -73,14 +76,14 @@ func (s *Server) handleUndergradTimetable(w http.ResponseWriter, r *http.Request
 	}
 	form := allRowsForm(500)
 	form.Set("XNXQDM", term)
-	body, err := c.postForm(undergradTimetablePath, form)
+	body, err := c.postFormContext(r.Context(), undergradTimetablePath, form)
 	if err != nil {
-		writeSchoolError(w, err)
+		s.writeSchoolReadError(w, c, err)
 		return
 	}
 	courses, err := parseUndergradTimetable(body)
 	if err != nil {
-		writeSchoolError(w, err)
+		s.writeSchoolReadError(w, c, err)
 		return
 	}
 	writeJSON(w, map[string]any{"level": "undergrad", "term": term, "courses": courses, "fetched_at": time.Now().UTC(), "source": undergradTimetableHome})

@@ -22,6 +22,11 @@ export async function mountHomeScene(container, { skin = 'lake', motion = true }
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
+  // Sun, buildings and every shadow caster are static; only the unshadowed lamp
+  // strings and water ripples move. Draw the shadow map once per mount/resize
+  // instead of re-rendering a 1536² depth pass on every animated frame.
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
 
   const scene = new THREE.Scene();
   let world;
@@ -36,7 +41,16 @@ export async function mountHomeScene(container, { skin = 'lake', motion = true }
   let lastDraw = 0;
   const started = performance.now();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const animated = () => motion !== false && !reducedMotion.matches;
+  // Small header windows ask for a still frame; the homepage keeps its motion.
+  let motionEnabled = motion !== false;
+  const animated = () => motionEnabled && !reducedMotion.matches;
+
+  function setMotion(next) {
+    const value = next !== false;
+    if (destroyed || value === motionEnabled) return;
+    motionEnabled = value;
+    syncPlayback();
+  }
 
   function destroy() {
     if (destroyed) return;
@@ -149,6 +163,7 @@ export async function mountHomeScene(container, { skin = 'lake', motion = true }
       pipeline.ink.mat.uniforms.uFadeEnd.value = fogNear + (fogFar - fogNear) * 0.42 + retreatDistance;
       pipeline.ink.mat.uniforms.uThickness.value *= 0.8;
       setOutlineResolution(pipeline.size.x, pipeline.size.y);
+      renderer.shadowMap.needsUpdate = true;
       syncPlayback();
     }
 
@@ -162,7 +177,7 @@ export async function mountHomeScene(container, { skin = 'lake', motion = true }
     document.addEventListener('visibilitychange', syncPlayback);
     reducedMotion.addEventListener('change', syncPlayback);
     resize();
-    return { destroy };
+    return { destroy, setMotion };
   } catch (error) {
     destroy();
     throw error;

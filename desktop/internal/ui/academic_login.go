@@ -26,8 +26,12 @@ const graduateTablePath = graduateRoot + "/xsxkCourse/loadKbxx.do"
 
 // Academic credentials and cookies live only in this process. They are separate
 // from both the network password and the manually imported grade session.
+//
+// mu 只保护字段读写，不跨学校请求持有（与 casService 同一套做法）：锁内取快照并
+// 记下 gen，锁外发请求，回到锁内 gen 没变才落下结果。reset 会让 gen 前进。
 type academicService struct {
 	mu            sync.Mutex
+	gen           uint64
 	client        *http.Client
 	challenge     string
 	vtoken        string
@@ -37,6 +41,9 @@ type academicService struct {
 }
 
 func newAcademicService() *academicService { return &academicService{} }
+
+// errAcademicSuperseded：请求途中这条登录被清除，或被新的登录替换，本次结果作废。
+var errAcademicSuperseded = errors.New("本次登录已被清除或被新的登录替换，请刷新验证码后重新登录")
 
 func writeAcademicError(w http.ResponseWriter, err error) {
 	if errors.Is(err, errSessionInvalid) {
@@ -156,6 +163,7 @@ func (a *academicService) reset() {
 	a.captcha = nil
 	a.expires = time.Time{}
 	a.authenticated = false
+	a.gen++
 }
 
 func (s *Server) handleAcademicSession(w http.ResponseWriter, r *http.Request) {
@@ -173,16 +181,26 @@ func (s *Server) handleAcademicSession(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAcademicChallenge(w http.ResponseWriter, r *http.Request) {
 	a := s.academic
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	// Starting a new account must never leave the previous account active.
 	a.reset()
-	a.client = newAcademicClient()
-	_, err := academicRequest(r.Context(), a.client, graduateHome, nil)
+	gen := a.gen
+	a.mu.Unlock()
+	// 以下学校请求都在锁外。失败时状态本来就是刚复位的空白，不必再动。
+	client := newAcademicClient()
+	fail := func(status int, err error) {
+		client.CloseIdleConnections()
+		if status == 0 {
+			writeAcademicError(w, err)
+			return
+		}
+		writeAPIError(w, status, err)
+	}
+	_, err := academicRequest(r.Context(), client, graduateHome, nil)
 	if err != nil {
-		writeAcademicError(w, err)
+		fail(0, err)
 		return
 	}
-	b, err := academicRequest(r.Context(), a.client, graduateRoot+"/login/4/vcode.do", nil)
+	b, err := academicRequest(r.Context(), client, graduateRoot+"/login/4/vcode.do", nil)
 	var result struct {
 		Code json.RawMessage `json:"code"`
 		Data struct {
@@ -193,23 +211,27 @@ func (s *Server) handleAcademicChallenge(w http.ResponseWriter, r *http.Request)
 		err = errors.New("学校未能提供登录验证码，请稍后重试")
 	}
 	if err != nil {
-		a.reset()
-		writeAcademicError(w, err)
+		fail(0, err)
 		return
 	}
-	a.vtoken = result.Data.Token
-	a.captcha, err = academicRequest(r.Context(), a.client, graduateRoot+"/login/vcode/image.do?vtoken="+url.QueryEscape(a.vtoken), nil)
-	if err != nil || !strings.HasPrefix(http.DetectContentType(a.captcha), "image/") {
-		a.reset()
-		writeAPIError(w, 502, errors.New("学校验证码图片未能加载"))
+	vtoken := result.Data.Token
+	captcha, err := academicRequest(r.Context(), client, graduateRoot+"/login/vcode/image.do?vtoken="+url.QueryEscape(vtoken), nil)
+	if err != nil || !strings.HasPrefix(http.DetectContentType(captcha), "image/") {
+		fail(502, errors.New("学校验证码图片未能加载"))
 		return
 	}
 	nonce := make([]byte, 16)
 	if _, err = rand.Read(nonce); err != nil {
-		a.reset()
-		writeAPIError(w, 500, errors.New("无法创建本次登录"))
+		fail(500, errors.New("无法创建本次登录"))
 		return
 	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.gen != gen {
+		fail(409, errAcademicSuperseded)
+		return
+	}
+	a.client, a.vtoken, a.captcha = client, vtoken, captcha
 	a.challenge = hex.EncodeToString(nonce)
 	a.expires = time.Now().Add(5 * time.Minute)
 	writeJSON(w, map[string]string{"challenge": a.challenge, "image": "/api/academic/captcha?id=" + a.challenge, "message": "请输入学校验证码。账号密码仅本次使用。"})
@@ -220,7 +242,7 @@ func (s *Server) handleAcademicCaptcha(w http.ResponseWriter, r *http.Request) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.challenge == "" || r.URL.Query().Get("id") != a.challenge || time.Now().After(a.expires) {
-		http.Error(w, "验证码已过期，请刷新", 410)
+		writeAPIError(w, 410, errors.New("验证码已过期，请刷新"))
 		return
 	}
 	w.Header().Set("Content-Type", http.DetectContentType(a.captcha))
@@ -243,28 +265,28 @@ func (s *Server) handleAcademicLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	a := s.academic
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	if a.challenge == "" || in.Challenge != a.challenge || time.Now().After(a.expires) {
+		a.mu.Unlock()
 		writeAPIError(w, 409, errors.New("本次验证码已失效，请刷新验证码后登录"))
 		return
 	}
+	// 挑战号只能用一次：取走快照后立刻作废，学校请求放到锁外。
+	client, vtoken, gen := a.client, a.vtoken, a.gen
 	a.challenge = ""
 	a.captcha = nil
-	a.authenticated = false
-	form := url.Values{"loginName": {strings.TrimSpace(in.Username)}, "loginPwd": {graduatePassword(in.Password)}, "verifyCode": {strings.TrimSpace(in.Captcha)}, "vtoken": {a.vtoken}}
-	in.Password = ""
 	a.vtoken = ""
-	b, err := academicRequest(r.Context(), a.client, graduateRoot+"/login/check/login.do", form)
+	a.authenticated = false
+	a.mu.Unlock()
+	form := url.Values{"loginName": {strings.TrimSpace(in.Username)}, "loginPwd": {graduatePassword(in.Password)}, "verifyCode": {strings.TrimSpace(in.Captcha)}, "vtoken": {vtoken}}
+	in.Password = ""
+	b, err := academicRequest(r.Context(), client, graduateRoot+"/login/check/login.do", form)
 	form.Del("loginPwd")
-	if err != nil {
-		a.reset()
-		writeAcademicError(w, err)
-		return
-	}
-	var result struct {
-		Code json.RawMessage `json:"code"`
-	}
+	// rejected：学校明确没接受这次登录，按原因直接回 401，不当成会话失效。
+	rejected := false
 	if err == nil {
+		var result struct {
+			Code json.RawMessage `json:"code"`
+		}
 		if json.Unmarshal(b, &result) != nil {
 			err = errors.New("学校登录响应格式发生变化，请使用官方页面")
 		} else {
@@ -280,15 +302,28 @@ func (s *Server) handleAcademicLogin(w http.ResponseWriter, r *http.Request) {
 				err = errors.New("学校未完成登录，请在官方页面核对是否需要额外验证")
 			}
 		}
+		rejected = err != nil
+	}
+	if err == nil {
+		// A success code is followed by a business read, not merely cookie presence.
+		_, err = readGraduateProfile(r.Context(), client)
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.gen != gen {
+		// 登录途中用户清除了登录或又开始了一次：这次的结果不能复活。
+		if client != nil {
+			client.CloseIdleConnections()
+		}
+		writeAPIError(w, 409, errAcademicSuperseded)
+		return
 	}
 	if err != nil {
 		a.reset()
-		writeAPIError(w, 401, err)
-		return
-	}
-	// A success code is followed by a business read, not merely cookie presence.
-	if _, err = readGraduateProfile(r.Context(), a.client); err != nil {
-		a.reset()
+		if rejected {
+			writeAPIError(w, 401, err)
+			return
+		}
 		writeAcademicError(w, err)
 		return
 	}

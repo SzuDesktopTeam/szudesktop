@@ -10,7 +10,12 @@
 两个 index.html 副本都是构建产物，已经忽略，别手改。直接运行本脚本或
  desktop/build-windows.py 都会从唯一源文件重新生成，不会把旧页面编进去。
 """
-import os, shutil
+import os, shutil, sys
+
+# 与 build-windows.py 一致：GitHub 的 Windows runner 可能是 CP1252，中文输出统一按 UTF-8。
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))  # desktop/ 自身，别写死盘符
 MASTER = os.path.join(ROOT, "index.html")

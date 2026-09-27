@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/SzuDesktopTeam/szudesktop/internal/credential"
 	"github.com/SzuDesktopTeam/szudesktop/internal/portal"
@@ -98,5 +101,131 @@ func TestStatusDoesNotCountCommandLineCredentialsAsSaved(t *testing.T) {
 	}
 	if got.Saved || got.LastError != "" {
 		t.Fatalf("temporary account must not count as saved: %+v", got)
+	}
+}
+
+// 校外时一次探测要十几秒。并发到达的 /api/status 只探一次，短时间内复用；
+// 登录之后必须作废，页面紧接着刷新时要看到新状态。
+func TestStatusSharesProbeAndRefreshesAfterLogin(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
+	var queries int32
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/eportal/portal/rad_user_info":
+			atomic.AddInt32(&queries, 1)
+			_, _ = w.Write([]byte(`dr1003({"result":0})`))
+		case "/eportal/portal/login":
+			_, _ = w.Write([]byte(`dr1003({"result":1,"msg":"认证成功"})`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer fake.Close()
+	var detects int32
+	s := New(Options{DrcomHost: fake.URL, SrunHost: fake.URL})
+	s.store = &statusTestStore{err: credential.ErrNotFound}
+	s.detect = func() *portal.DetectResult {
+		atomic.AddInt32(&detects, 1)
+		time.Sleep(50 * time.Millisecond)
+		return &portal.DetectResult{Zone: portal.ZoneDorm}
+	}
+	status := func() statusResp {
+		rec := httptest.NewRecorder()
+		s.handleStatus(rec, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+		var got statusResp
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Error(err)
+		}
+		return got
+	}
+	var wg sync.WaitGroup
+	for i := 0; i < 6; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if got := status(); got.Zone != string(portal.ZoneDorm) || !got.OnlineKnown {
+				t.Errorf("unexpected status: %+v", got)
+			}
+		}()
+	}
+	wg.Wait()
+	if d, q := atomic.LoadInt32(&detects), atomic.LoadInt32(&queries); d != 1 || q != 1 {
+		t.Fatalf("concurrent status requests probed %d times and queried %d times", d, q)
+	}
+	status()
+	if d := atomic.LoadInt32(&detects); d != 1 {
+		t.Fatalf("fresh result was not reused: %d probes", d)
+	}
+	if res := s.doLogin("123456", "not-real", "dorm", ""); !res.OK {
+		t.Fatalf("login failed: %+v", res)
+	}
+	status()
+	if d, q := atomic.LoadInt32(&detects), atomic.LoadInt32(&queries); d != 2 || q != 2 {
+		t.Fatalf("status after login must probe again: detects=%d queries=%d", d, q)
+	}
+}
+
+// 登录时如果还有一次探测在跑（校外要十几秒），登录后的刷新不能先陪它等完再自己探一遍：
+// 直接另起一次新探测；旧探测晚到的过时结果也不能写回缓存。
+func TestStatusAfterLoginDoesNotWaitForStaleProbe(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/eportal/portal/rad_user_info":
+			_, _ = w.Write([]byte(`dr1003({"result":1,"uid":"123456"})`))
+		case "/eportal/portal/login":
+			_, _ = w.Write([]byte(`dr1003({"result":1,"msg":"认证成功"})`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer fake.Close()
+	var detects int32
+	entered, release := make(chan struct{}), make(chan struct{})
+	var releaseOnce sync.Once
+	defer releaseOnce.Do(func() { close(release) })
+	s := New(Options{DrcomHost: fake.URL, SrunHost: fake.URL})
+	s.store = &statusTestStore{err: credential.ErrNotFound}
+	s.detect = func() *portal.DetectResult {
+		if atomic.AddInt32(&detects, 1) == 1 {
+			close(entered)
+			<-release
+			return &portal.DetectResult{Zone: portal.ZoneOutside}
+		}
+		return &portal.DetectResult{Zone: portal.ZoneDorm}
+	}
+	status := func() <-chan statusResp {
+		out := make(chan statusResp, 1)
+		go func() {
+			rec := httptest.NewRecorder()
+			s.handleStatus(rec, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+			var got statusResp
+			_ = json.Unmarshal(rec.Body.Bytes(), &got)
+			out <- got
+		}()
+		return out
+	}
+	stale := status()
+	<-entered
+	if res := s.doLogin("123456", "not-real", "dorm", ""); !res.OK {
+		t.Fatalf("login failed: %+v", res)
+	}
+	select {
+	case got := <-status():
+		if got.Zone != string(portal.ZoneDorm) {
+			t.Fatalf("status after login must come from a fresh probe: %+v", got)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("status after login waited for the stale in-flight probe")
+	}
+	releaseOnce.Do(func() { close(release) })
+	if got := <-stale; got.Zone != string(portal.ZoneOutside) {
+		t.Fatalf("the request that started the stale probe should still get its answer: %+v", got)
+	}
+	if got := <-status(); got.Zone != string(portal.ZoneDorm) {
+		t.Fatalf("stale probe result must not overwrite the fresh cache: %+v", got)
+	}
+	if d := atomic.LoadInt32(&detects); d != 2 {
+		t.Fatalf("expected the stale probe plus one fresh probe, got %d", d)
 	}
 }

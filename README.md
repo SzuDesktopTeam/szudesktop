@@ -27,7 +27,7 @@
 
 ## 源码预览：为 beta0.9.3 准备
 
-**以下改动尚未公开发布，上方下载仍是 beta0.9.2。** 课程笔记、飞书文档入口、庭院环境与日常入口已合并到源码。本轮继续统一各页排版、暮色阅读和分区导航，具体问题与验收维护在 [STATUS 第 65 节](docs/STATUS.md#65-全应用界面与状态一致性2026-09-27源码未发布)。学校真实业务和飞书多人协作的验收边界不变。
+**以下改动尚未公开发布，上方下载仍是 beta0.9.2。** 课程笔记、飞书文档入口、庭院环境与日常入口已合并到源码。本轮继续统一各页排版、暮色阅读和分区导航，具体问题与验收维护在 [STATUS 第 65 节](docs/STATUS.md#s65)。学校真实业务和飞书多人协作的验收边界不变。
 
 ### 每一页，都住在同一个庭院里
 
@@ -152,7 +152,7 @@
 
 2048 规则改编自 Gabriele Cirulli 的 [MIT 开源原版（固定源码版本）](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc)，保留[完整许可](desktop/assets/garden/licenses/2048-MIT.txt)。庭院玩法参考 [Stardew Valley 的种植与人物关系](https://www.stardewvalley.net/about/)和[动物森友会的材料收集与生活目标](https://animalcrossing.nintendo.com/new-horizons/create/)，将收成、伙伴请求与纪念物串起来；委托规则和文字由本项目编写，没有复制这些商业游戏的素材或代码。
 
-开发者扩展宠物：稳定 ID 与上架状态登记在 `pet-catalog.mjs`，性格和情境语言在 `pet-dialogue.mjs`，逐帧画法在 `pet-animation-art.mjs`，时序和节奏在 `pet-animation.mjs`；主窗、桌宠自动复用 `pet-player.mjs`。新增角色须补齐静态形象、23 类台词（每类 12 句）和 18 组动画（每组 6 帧），运行对应检查。本轮扩展要点见 [STATUS 第 59.3 节](docs/STATUS.md#593-扩展契约与兼容)，基础字段、导出 API 和打包依赖仍见 [第 57.4 节](docs/STATUS.md#574-继续添加伙伴的统一契约)。
+开发者扩展宠物：稳定 ID 与上架状态登记在 `pet-catalog.mjs`，性格和情境语言在 `pet-dialogue.mjs`，逐帧画法在 `pet-animation-art.mjs`，时序和节奏在 `pet-animation.mjs`；主窗、桌宠自动复用 `pet-player.mjs`。新增角色须补齐静态形象、23 类台词（每类 12 句）和 18 组动画（每组 6 帧），运行对应检查。本轮扩展要点见 [STATUS 第 59.3 节](docs/STATUS.md#s59-3)，基础字段、导出 API 和打包依赖仍见 [第 57.4 节](docs/STATUS.md#s57-4)。
 
 本轮没有部署后端、Docker、云同步或热更新，学校个人业务的验收缺口也不会因庭院更新而关闭。
 
@@ -174,7 +174,7 @@
 
 [栗栗的四种表情](docs/cat-rough-preview.png)：它只是认真当猫，不拿自己的长相开玩笑。
 
-企鹅整合基线 `1f5a23b` 已通过[全部 9 项 CI 工作](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079)，包括安装升级和两只企鹅的原生桌宠显示、切换。栗栗随后按反馈恢复抽象比例并调整为毫不自知的猫语，这次修订已检查实际小屋、互动台词与四态画稿，并重新构建本地候选包；此前 CI 对应的是企鹅整合基线。进度与文件记录在 [STATUS 第 56 节](docs/STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布)。
+企鹅整合基线 `1f5a23b` 已通过[全部 9 项 CI 工作](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079)，包括安装升级和两只企鹅的原生桌宠显示、切换。栗栗随后按反馈恢复抽象比例并调整为毫不自知的猫语，这次修订已检查实际小屋、互动台词与四态画稿，并重新构建本地候选包；此前 CI 对应的是企鹅整合基线。进度与文件记录在 [STATUS 第 56 节](docs/STATUS.md#s56)。
 
 这一轮已经写入源码的内容：
 
@@ -184,7 +184,7 @@
 - **安静地留在桌面上。** 安装版源码支持专注完成通知、勿扰、宠物显隐/置顶记忆，以及主动开启的 Windows 自启；完全退出后不通知。CI 已验证显隐偏好落盘及置顶/勿扰设置；系统通知实际弹出与开启自启后的登录启动仍待核验。
 - **记住选择，也说清状态。** 公告来源和本科/研究生选择会保留；设置中可手动检查正式/测试版本、查看说明并复制无凭据的反馈信息。没有自动下载或安装更新。
 
-此前基线的 25 个相关检查脚本及 Go 检查已通过；实际完成了专注、待办编辑归档、种植浇水收获、偏好恢复、版本查询与 PNG 预览保存。最终农田在 420px 窄窗可完整滚动且无横向溢出；候选文件、构建资源与许可材料已核对。CI 构建已完成安装升级、卸载保留数据及桌宠交互检查，使用合成数据与单显示器。完整美术统一、通知与自启实际触发、学校业务、长期资源占用和成长节奏仍需各自验收或试用。此前候选的实施、校验值与证据见 [STATUS 第 55 节](docs/STATUS.md#55-产品体验实施与候选版准备2026-09-27源码未发布)；新增阵容、共享名册与立绘扩展方法见 [第 56 节](docs/STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布)。
+此前基线的 25 个相关检查脚本及 Go 检查已通过；实际完成了专注、待办编辑归档、种植浇水收获、偏好恢复、版本查询与 PNG 预览保存。最终农田在 420px 窄窗可完整滚动且无横向溢出；候选文件、构建资源与许可材料已核对。CI 构建已完成安装升级、卸载保留数据及桌宠交互检查，使用合成数据与单显示器。完整美术统一、通知与自启实际触发、学校业务、长期资源占用和成长节奏仍需各自验收或试用。此前候选的实施、校验值与证据见 [STATUS 第 55 节](docs/STATUS.md#s55)；新增阵容、共享名册与立绘扩展方法见 [第 56 节](docs/STATUS.md#s56)。
 
 ## 现在可以用它做什么
 
@@ -237,9 +237,9 @@
 
 升级前可在设置中导出备份。beta0.9.1 → beta0.9.2 已在干净 Windows 环境通过真实安装升级和数据保留检查，导出、取消恢复与确认恢复也已通过。当前仍需手动下载新安装包，不提供自动更新。
 
-1.0 先完成桌面版，**暂不部署校内后端或 Docker**。四伙伴已发布，本次跨版本升级已验证；剩余重点为校园网现场认证、安装版真实学校会话接回、本科/研究生课表与成绩、应用内预约和学院琴房权限，以及正式版候选包的最终交付。具体缺口统一维护在 [STATUS 第 50.2 节](docs/STATUS.md#502-10-剩余任务暂不部署后端)。后端、云同步和自动更新延期；当前安装包未签名。
+1.0 先完成桌面版，**暂不部署校内后端或 Docker**。四伙伴已发布，本次跨版本升级已验证；剩余重点为校园网现场认证、安装版真实学校会话接回、本科/研究生课表与成绩、应用内预约和学院琴房权限，以及正式版候选包的最终交付。当前未完成事项汇总在 [STATUS 第 1.1 节](docs/STATUS.md#s1-1)，学校业务的验收细节见[第 50.2 节](docs/STATUS.md#s50-2)。后端、云同步和自动更新延期；当前安装包未签名。
 
-面向首批用户的产品审查、UX01–UX26 当前状态和七日试用计划统一记录在 [STATUS 第 54 节](docs/STATUS.md#54-面向真实用户的完整产品审查2026-09-27分析与提案)。部分改进已在源码实现，尚未进入下载的安装包；真实同学试用、物理多屏和完整宣传录屏仍未完成，不能用内部测试替代。
+面向首批用户的产品审查、UX01–UX26 的任务与验收和七日试用计划记录在 [STATUS 第 54 节](docs/STATUS.md#s54)，仍未完成的项汇总在[第 1.1 节](docs/STATUS.md#s1-1)。部分改进已在源码实现，尚未进入下载的安装包；真实同学试用、物理多屏和完整宣传录屏仍未完成，不能用内部测试替代。
 
 ### 首次使用（公开 beta0.9.2）
 
@@ -353,22 +353,29 @@ szuDesktop 同时对付这两件事：**一个按钮完成认证，一个按钮�
 
 | 子命令 | 作用 |
 | :----- | :--- |
-| `login` | 登录（可临时指定 `-u` 卡号 `-p` 密码，不保存） |
+| `login` | 登录（用 `config set` 保存的账号；临时换号用环境变量，见下） |
 | `logout` | 注销下线 |
 | `status` | 查看当前状态 |
 | `detect` | 探测当前网络区域与接入点编号 |
 | `diag` | 断线诊断，输出区域判定与协议指纹 |
-| `config` | 查看 / 修改本机配置 |
+| `config` | 查看 / 保存账号密码（`config set` 交互输入，密码不回显） |
 | `autostart` | 开机自启设置（仅 Windows） |
 | `vpn` | 校外访问校园网的三条官方通道指引（WebVPN / EasyConnect / 零信任）；**只是指引，不含实验 VPN 协议代码** |
 | `version` | 查看版本号 |
 
 ```text
+szunet config set                   # 先保存账号：交互输入，密码不回显
+szunet login                        # 之后直接登录，不用再带密码
 szunet detect                       # 看当前识别出的是哪个区域、接入点编号是多少
 szunet login --zone teaching        # 指定走教学区协议（auto / teaching / dorm）
 szunet login --ac-id 12             # 手动指定接入点编号
 szunet diag                         # 连不上时先跑它，再按结论排查
 ```
+
+脚本里保存账号用 `--password-stdin` 从管道传入密码，不进命令行参数：
+`<输出密码的命令> | szunet config set -u 你的卡号 --password-stdin`。
+临时换号也可以用环境变量 `SZUNET_USERNAME`、`SZUNET_PASSWORD`。
+`-p` 只为兼容旧脚本保留，密码会留在 shell 历史和进程列表里，使用时会提示风险，**不推荐**。
 
 `--help` 看全部参数。**不要把真实账号密码写进共享脚本或日志。**
 
@@ -426,7 +433,11 @@ macOS 上保存凭据（`config set`）走系统钥匙串：写入前会先用�
 <details>
 <summary><b>会不会在后台自动重连</b></summary>
 
-不会。要不要登录由你在登录页决定，程序不会在背后周期性发认证请求。
+不会周期性重连。除了你在登录页手动登录，只有启动时可能连接一次（见下），程序不会在背后周期性发认证请求。
+
+启动时的一次连接另有开关：安装版的「设置 → 桌面陪伴 → 启动时自动连接校园网」默认开启（可关闭，下次启动生效），
+开启后每次启动用已记住的账号认证一次，本机已在线时跳过，结果显示在校园网页。
+便携版不经过这个开关，默认启动时就用已记住的账号认证一次（本机已在线或检测不到校园网认证门户时跳过）；不需要可给 `szudesktop.exe` 加 `--no-auto-login`。
 </details>
 
 <details>
@@ -449,6 +460,7 @@ Linux 走 Secret Service。**三端都没有明文兜底**：机器上没有对�
 - **凭据本地加密**：Windows DPAPI，换机器或换用户都解不开；macOS 钥匙串；Linux Secret Service。没有系统安全设施时拒绝保存并报错，**不落明文文件**
 - **业务在学校页面办理**：社区预约、选课和付款由你在官方系统操作；界面上没有代提交入口，服务端也没有任何预约写操作端点（F23 已删），本应用不自动抢位
 - **本地服务只绑回环**：桌面服务只监听 `127.0.0.1`，非回环地址会直接拒绝启动；所有 `/api/*` 校验 Host、`Sec-Fetch-Site` 与同源 `Origin`，其它页面的请求一律 403
+  除只回报版本的 `/api/health` 和自带校验的 `/api/instance` 外，所有 `/api/*` 还要求本次运行随机生成的凭据：安装版主进程带 `X-SZU-Token` 头；页面首次打开时用一次性的 `?launch=` 参数换成 HttpOnly、SameSite=Strict 的会话 Cookie 并立即跳走，地址栏不留凭据。
 - **宿舍区认证是明文的**：学校 Dr.COM 网关默认走 HTTP（`http://172.30.255.42`），这是学校协议的现状、不是本应用的选择；教学区深澜走 HTTPS 且**保留**证书校验
 - **不做绕过计费或共享上网的功能**，请遵守学校网络使用规定
 - **官方业务只走预设来源**：公告只读取学校公开页面，不提供任意网址代理
@@ -460,52 +472,30 @@ Linux 走 Secret Service。**三端都没有明文兜底**：机器上没有对�
 需要 Go（版本见 `go.mod`）、Python 3 和 Node.js。
 
 ```text
-python desktop/sync-assets.py      # 同步界面资源
-node   desktop/check-ui.mjs        # 以下回归均在 CI 中运行
-node   desktop/check-rewards.mjs
-node   desktop/check-garden-progress.mjs
-node   desktop/check-campus.mjs
-node   desktop/check-notices.mjs
-node   desktop/check-session-ui.mjs
-node   desktop/check-academic.mjs
-node   desktop/check-school.mjs
-node   desktop/check-booking.mjs
-node   desktop/check-network-ui.mjs
-node   desktop/check-workspace-ui.mjs
-node   desktop/check-productivity.mjs
-node   desktop/check-autostart-ui.mjs
-node   desktop/check-release-ui.mjs
-node   desktop/check-feedback.mjs
-python desktop/check_licenses.py
-node   desktop/electron/check-sidecar.mjs # Electron 启动/退出与复用回归
-node   desktop/electron/check-window-policy.mjs
-node   desktop/electron/check-pet-policy.mjs
-node   desktop/electron/check-pet-settings.mjs
-node   desktop/electron/check-desktop-settings.mjs
-node   desktop/electron/check-pet-view.mjs
-node   desktop/electron/check-school-policy.mjs
-node   desktop/check-interactions.mjs
-node   desktop/check-pet-commands.mjs
-node   desktop/check-piano.mjs
+python desktop/sync-assets.py      # 同步界面资源（go:embed 需要）
+node   desktop/run-checks.mjs      # 全部回归，与 CI 同一入口（见下）
 go vet ./... && go test ./...      # 静态检查与单元测试
-python desktop/check_release_notes.py # 发布说明抽取回归
 python desktop/build-windows.py    # 构建 Windows 桌面版单 exe（也是 Electron 包里的 Go sidecar）
 node   desktop/electron/build.mjs  # 构建 Windows Electron 安装包（先在 desktop/electron 下 npm ci）
 python desktop/smoke_windows.py    # 整机冒烟
 python desktop/make_release.py     # 生成发布包（只在真的要发布时跑，会覆盖同名本地产物）
 ```
 
+`desktop/run-checks.mjs` 自动找到 `desktop/check-*.mjs`、`desktop/electron/check-*.mjs` 与 `desktop/check_*.py`（发布说明、许可、Windows 版本资源等）并逐个运行（第一步是模块语法与链接检查 `desktop/module-links.mjs`），最后汇总失败项、以非零退出码结束；只跑 Node 检查时加 `--only-node`。新增检查按 `check-*.mjs` 或 `check_*.py` 命名放进这些目录即可被发现，不用再改任何清单。
+
 `python desktop/electron/smoke_installer.py` 只在一次性的 GitHub Windows runner 安装、重开、重装和卸载最终安装包；本机开发环境不运行这项安装检查。PR 与标签流水线保留所有构建和安装检查，成功后才发布附件。
 
 发布说明写在根目录的 [CHANGELOG.md](CHANGELOG.md)：升版本号时把 `## 未发布`
 那一节改成新版本号，CI 会抽取它作为 GitHub Release 的正文，抽不到就让发布失败。
-`python desktop/release_notes.py <版本号>` 可以本地预览。
+还没打 tag 的候选版在该节开头单独写一行 `> 候选版：…`，抽取时会被丢掉；
+正文其他地方不要写“尚未公开发布”“本地候选版”，否则打 tag 发布时会被拦下。
+`python desktop/release_notes.py <版本号>` 可以本地预览；加 `--release` 按打 tag 发布的规则预检（核对版本号与候选版字样）。
 
 界面唯一源文件是 `desktop/index.html` 与 `desktop/assets/garden/`，
 构建产物不要手改。默认桌面构建**排除实验 VPN 协议**与未核实的第三方游戏原型美术，
 只提供官方 WebVPN 入口；实验源码保留供来源核验与协议研究，不能按已验收功能宣传。
-排除方式是构建标签：`internal/vpn` 只被 `//go:build campusvpn` 的文件引用，CI 与构建脚本都不传
-`-tags campusvpn`，所以桌面端和五个平台的命令行发布件里都没有这套协议代码。
+排除方式是构建标签：`internal/vpn` 只被 `//go:build campusvpn` 的文件引用，构建脚本不传
+`-tags campusvpn`，所以桌面端和五个平台的命令行发布件里都没有这套协议代码；CI 另外单独编译并测试一次这个标签，保证它不会悄悄坏掉。
 `internal/vpn` 的来源与授权仍未核实（STATUS.md F11）：包注释已改成如实说明「来源与授权
 尚未核实、不作独立编写的保证」，`F06 / F07 / F08`（假成功、缺超时、跳过证书验证）也都没修。
 在来源核实之前，不要把这套实现当成可用功能或干净来源对外宣传。
@@ -532,6 +522,14 @@ python desktop/make_release.py     # 生成发布包（只在真的要发布时�
 
 MIT，见 [LICENSE](LICENSE)。
 
-其中第三方组件的原有许可不受本项目 MIT 替代：Fusion Pixel 字体遵循 OFL 1.1；
+其中第三方组件的原有许可不受本项目 MIT 替代，完整声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)：
+
+- Fusion Pixel 字体：SIL Open Font License 1.1
+- [Three.js 0.180.0](https://www.npmjs.com/package/three/v/0.180.0)：MIT，Copyright © 2010-2025 three.js authors
+- 改编自 [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81) 的三渲二渲染模块：MIT，Copyright (c) 2026 Kenton Wang
+- 改编自 [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc) 的移动与合并规则：MIT，Copyright (c) 2014 Gabriele Cirulli
+- Electron 与 Chromium（仅安装版）：各自许可保留在安装目录
+
+安装版把项目、字体、2048、Three.js 和 Sakura Crossing 的许可文件放在 `resources/licenses/`，便携 ZIP 放在解压目录。
 实验 VPN 模块的第三方来源与授权范围仍在核对中，默认桌面构建不包含该模块。
 EasyConnect 等第三方名称的权利归各自权利人所有。

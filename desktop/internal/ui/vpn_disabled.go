@@ -3,7 +3,6 @@
 package ui
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -11,11 +10,10 @@ import (
 type vpnManager struct{}
 
 func newVPNManager() *vpnManager { return &vpnManager{} }
-func writeAPIError(w http.ResponseWriter, status int, err error) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "message": err.Error()})
-}
+
+// shutdown 与 recoverLeftover 与 campusvpn 构建对齐：发布版没有隧道，也不改系统代理。
+func (m *vpnManager) shutdown()        {}
+func (m *vpnManager) recoverLeftover() {}
 func (s *Server) handleVPNStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{"state": "unavailable", "state_label": "请使用官方 WebVPN", "experimental": false, "connected": false, "message": "当前发布版不包含实验 VPN 协议", "official_url": "https://webvpn.szu.edu.cn/"})
 }

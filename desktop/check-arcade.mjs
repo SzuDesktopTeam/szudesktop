@@ -134,8 +134,25 @@ test('orders round-trip with frozen prices and discard foreign fields without in
  const clean=normalizeOrders(g.orders,CROPS);assert.equal(JSON.stringify(clean).includes('secret'),false);
  assert.deepEqual(normalizeOrders(clean,CROPS),clean);
  assert.deepEqual(normalizeOrders(undefined,CROPS),createOrders());
- const broken=structuredClone(clean);broken.offers[0].needs={unknown:2};
- assert.throws(()=>normalizeOrders(broken,CROPS),/材料/);
+});
+
+test('offers saved under older rules are rebuilt for the same day without paying twice',()=>{
+ const g=game(3),offers=dailyOrders(g,day,CROPS);deliverOrder(g,offers[0].id,day,CROPS);
+ const coins=g.coins,total=g.orders.total;
+ // A removed crop, a changed bonus, a retired requester or a different board size.
+ for(const change of [o=>{o.offers[1].needs={melon:2}},o=>{o.offers[2].bonus=9},o=>{o.offers[0].pet='retired'},o=>{o.offers.pop()}]){
+  const old=structuredClone(g.orders);change(old);
+  const restored={...g,orders:normalizeOrders(JSON.parse(JSON.stringify(old)),CROPS)};
+  assert.deepEqual(restored.orders.offers,[]);assert.equal(restored.orders.day,day);assert.deepEqual(restored.orders.completed,[offers[0].id]);
+  assert.deepEqual(dailyOrders(restored,day,CROPS),offers,'the saved day is regenerated deterministically');
+  assert.deepEqual(restored.orders.completed,[offers[0].id]);
+  assert.throws(()=>deliverOrder(restored,offers[0].id,day,CROPS),/已经交付/);
+  assert.equal(restored.coins,coins);assert.equal(restored.orders.total,total);
+  const rolledBack={...g,orders:normalizeOrders(JSON.parse(JSON.stringify(old)),CROPS)};
+  assert.deepEqual(dailyOrders(rolledBack,'2026-09-26',CROPS),offers,'a clock rollback still rebuilds the saved day');
+  assert.equal(rolledBack.orders.day,day);
+ }
+ for(const broken of [{...g.orders,offers:'x'},{...g.orders,day:'2026-02-30'},{...g.orders,total:-1}])assert.throws(()=>normalizeOrders(broken,CROPS),/委托/);
 });
 
 console.log(`${checks} arcade and order checks passed`);

@@ -21,5 +21,5 @@ const srv=http.createServer((req,res)=>{
 });
 srv.listen(0,'127.0.0.1',()=>{
   const port=srv.address().port;
-  process.stdout.write(`szuDesktop 已启动: http://127.0.0.1:${port}\n`);
+  process.stdout.write(`szuDesktop 已启动: http://127.0.0.1:${port}\nszuDesktop 会话: ${'0123456789abcdef'.repeat(4)}\n`);
 });

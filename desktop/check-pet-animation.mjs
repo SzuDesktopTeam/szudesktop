@@ -2,10 +2,28 @@ import assert from 'node:assert/strict';
 import {PETS,PET_SPRITES} from './assets/garden/pet-catalog.mjs';
 import {PET_ACTIONS,PET_CLIPS,ACTION_GROUPS,animationClip,animationFrame,idleAction,signatureLabel} from './assets/garden/pet-animation.mjs';
 import {petDetails} from './assets/garden/pet-details.mjs';
-import {ANIMATION_FRAMES,ANIMATION_SYMBOLS,animationSymbols,animationContactSheet} from './assets/garden/pet-animation-art.mjs';
+import * as animationArt from './assets/garden/pet-animation-art.mjs';
+const {animationFrames,animationSymbols,animationContactSheet}=animationArt;
 
 let checks=0;
 function test(name,run){run();checks++;console.log('PASS',name)}
+
+// A fresh module instance, so nothing drawn by this file or its other imports counts.
+const probe=await import('./assets/garden/pet-animation-art.mjs?lazy-probe');
+test('frames are drawn per companion on demand and cached, not all at module load',()=>{
+  assert.deepEqual(probe.drawnAnimationSpecies(),[],'importing the module draws no companion');
+  assert.ok(probe.animationSymbols('pingu').includes('<symbol id="'));
+  assert.deepEqual(probe.drawnAnimationSpecies(),['pingu'],'installing one companion draws only that one');
+  probe.animationSymbols('pingu');probe.animationContactSheet('pingu');
+  assert.deepEqual(probe.drawnAnimationSpecies(),['pingu'],'later uses reuse the cached frames');
+  assert.equal('ANIMATION_FRAMES' in animationArt,false);assert.equal('ANIMATION_SYMBOLS' in animationArt,false);
+  assert.equal(animationFrames('libao'),animationFrames('libao'),'a companion is drawn once per window');
+  assert.ok(Object.isFrozen(animationFrames('libao'))&&Object.isFrozen(animationFrames('libao')[0]));
+  for(const species of ['unknown','constructor',undefined]){assert.deepEqual(animationFrames(species),[]);assert.equal(animationSymbols(species),'')}
+});
+// Tests draw every companion on demand; the app itself only draws the ones it shows.
+const ANIMATION_FRAMES=Object.keys(PETS).flatMap(animationFrames);
+const SYMBOLS=Object.fromEntries(Object.keys(PETS).map(species=>[species,animationSymbols(species)]));
 
 test('every registered companion has all eighteen complete six-frame clips',()=>{
   assert.equal(PET_ACTIONS.length,18);
@@ -15,7 +33,7 @@ test('every registered companion has all eighteen complete six-frame clips',()=>
     assert.equal(ids.has(frame.id),false,`duplicate ${frame.id}`);ids.add(frame.id);
     const clip=PET_CLIPS[frame.species][frame.action];
     assert.equal(clip.frames[frame.index].id,frame.id);assert.equal(frame.viewBox,PETS[frame.species].viewBox);
-    assert.match(ANIMATION_SYMBOLS,new RegExp(`id="${frame.id}"`));
+    assert.ok(SYMBOLS[frame.species].includes(`<symbol id="${frame.id}" `),frame.id);
     assert.doesNotMatch(frame.art,/<(?:use|image|script|foreignObject|animate)\b|(?:href|style|transform)=/i,'each frame must draw its own pixels, not transform/reference one still');
   }
   for(const species of Object.keys(PETS))for(const action of PET_ACTIONS){

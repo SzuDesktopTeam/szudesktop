@@ -18,7 +18,7 @@ body[data-home-skin=terrace][data-theme=night] { --world-sky:#303c55; --world-gr
 body[data-home-skin]::before,body[data-page=home][data-home-skin]::before { background:linear-gradient(180deg,var(--world-sky),transparent 580px); }
 body[data-page=home][data-home-skin] { background:var(--world-ground); }
 body[data-home-skin] .mast,body[data-home-skin] .shell { max-width:1240px; }
-body[data-home-skin] .mast { min-height:94px; padding:15px 2px 13px; }
+body[data-home-skin] .mast { padding:15px 2px 13px; }
 body[data-home-skin] .mast .brand { padding:9px 18px; border:1px solid var(--world-wood-dark); background:var(--world-wood); box-shadow:inset 0 1px #ffffff28,0 3px var(--world-shadow); }
 body[data-home-skin] .brand::before,body[data-home-skin] .brand::after { width:3px;height:3px;top:11px;background:#263c2c;box-shadow:0 1px #fff4cf60; }
 body[data-home-skin] .brand::before { left:6px; }body[data-home-skin] .brand::after { right:6px; }
@@ -28,8 +28,8 @@ body[data-home-skin] .hud > span { background:#f9fbedbd; color:var(--world-ink);
 body[data-home-skin][data-theme=night] .hud > span { background:#dae5dbe0; }
 body[data-home-skin] .mast .scene-caption button { color:var(--world-ink); text-shadow:none; font:11px/1.6 var(--body); }
 body[data-home-skin][data-theme=night] .mast .scene-caption button { color:#eff4df; }
-body[data-home-skin] nav { border:1px solid var(--world-wood-dark); border-bottom:0; padding:8px 10px; gap:6px; background:var(--world-wood); box-shadow:inset 0 1px #ffffff30; }
-body[data-home-skin] nav button { color:#f2f3df; border:1px solid transparent; background:transparent; box-shadow:none; font-size:17px; min-height:42px; }
+body[data-home-skin] nav { border:1px solid var(--world-wood-dark); border-bottom:0; gap:6px; background:var(--world-wood); box-shadow:inset 0 1px #ffffff30; }
+body[data-home-skin] nav button { color:#f2f3df; border:1px solid transparent; background:transparent; box-shadow:none; font-size:17px; }
 body[data-home-skin] nav button:hover { color:#fffdee; background:#ffffff12; border-color:#ffffff38; }
 body[data-home-skin] nav button[aria-current=page] { color:var(--world-ink); background:var(--world-paper); border-color:#f8ffef; box-shadow:inset 0 -3px #b5c6a9; }
 body[data-home-skin] main,body[data-home-skin][data-theme=night] main { background:var(--world-desk); border:1px solid var(--world-wood-dark); border-top:0; box-shadow:0 8px 24px var(--world-shadow); padding:25px 28px 30px; min-height:440px; }
@@ -46,7 +46,7 @@ body[data-home-skin] .subnav,body[data-home-skin][data-page=garden] .subnav { di
 body[data-home-skin] .subnav button,body[data-home-skin][data-page=garden] .subnav button { flex:1; padding:9px 14px; font-size:15px; color:var(--world-muted); border:1px solid transparent; background:transparent; box-shadow:none; }
 body[data-home-skin] .subnav button:hover,body[data-home-skin][data-page=garden] .subnav button:hover { color:var(--world-ink); background:#ffffff65; }
 body[data-home-skin] .subnav button.active,body[data-home-skin][data-page=garden] .subnav button.active { color:var(--world-ink); background:var(--world-paper); border-color:var(--world-line); box-shadow:0 2px var(--world-shadow); }
-body[data-home-skin] .focus-layout .card,body[data-home-skin] .weekly-card,body[data-home-skin] .desktop-options,body[data-home-skin] .journey-card { background:var(--world-paper); border-color:var(--world-line); }
+body[data-home-skin] .focus-layout .card,body[data-home-skin] .weekly-card,body[data-home-skin] .desktop-options { background:var(--world-paper); border-color:var(--world-line); }
 body[data-home-skin] .companion-dialog { margin-top:14px; background:var(--world-paper); border:1px solid var(--world-line); box-shadow:0 3px var(--world-shadow); padding:13px 18px; min-height:85px; }
 body[data-home-skin] .companion-dialog .companion-portrait { border:0; background:var(--world-soft); width:58px; height:60px; }
 body[data-home-skin] .companion-dialog .speaker { position:static; padding:0; border:0; background:none; color:var(--world-accent); }
@@ -113,7 +113,7 @@ body[data-home-skin][data-page=study][data-study-tab=notes] .campus-room-sill .r
 .scene-link-icon { display:flex; align-items:center; justify-content:center; width:30px; height:32px; flex-shrink:0; }
 .scene-link-icon .sprite { width:27px; height:27px; filter:drop-shadow(1px 2px #47644325); }
 .campus-scene-link strong { display:block; font:15px/1.4 var(--pixel); color:#365442; }
-.campus-scene-link small { display:block; font:10px/1.7 var(--body); color:#6d7965; margin-top:1px; }
+.campus-scene-link small { font:10px/1.7 var(--body); color:#6d7965; margin-top:1px; }
 .scene-link-arrow { margin-left:auto; font:13px/1 var(--body); color:#70886b; }
 .scene-link-study { left:56%; top:21%; }
 .scene-link-services { left:34%; top:47%; }

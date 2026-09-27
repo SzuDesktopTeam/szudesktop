@@ -60,14 +60,28 @@ func findFeishuCLI() string {
 	return ""
 }
 
-type feishuOutput struct{ bytes.Buffer }
+var errFeishuTooLarge = errors.New("飞书文档过大，请在官方页面查看")
+
+// feishuOutput 收 CLI 输出，最多 2MB。超出时记下 overflow：拷贝协程随之关闭管道，
+// CLI 多半以非零码退出，调用方要先认这个标志，别把「文档过大」报成配置或权限问题。
+//
+// 不能嵌入 bytes.Buffer：那会把 ReadFrom 一并提升出来，os/exec 的 io.Copy 就绕过
+// 这里的 Write 一口气读完，2MB 上限形同虚设。
+type feishuOutput struct {
+	buf      bytes.Buffer
+	overflow bool
+}
 
 func (b *feishuOutput) Write(p []byte) (int, error) {
-	if b.Len()+len(p) > 2<<20 {
-		return 0, errors.New("飞书文档过大，请在官方页面查看")
+	if b.buf.Len()+len(p) > 2<<20 {
+		b.overflow = true
+		return 0, errFeishuTooLarge
 	}
-	return b.Buffer.Write(p)
+	return b.buf.Write(p)
 }
+
+func (b *feishuOutput) Len() int      { return b.buf.Len() }
+func (b *feishuOutput) Bytes() []byte { return b.buf.Bytes() }
 
 func runFeishuCLI(ctx context.Context, args ...string) ([]byte, error) {
 	path := findFeishuCLI()
@@ -78,9 +92,18 @@ func runFeishuCLI(ctx context.Context, args ...string) ([]byte, error) {
 	cmd.Dir, _ = os.UserHomeDir()
 	cmd.Env = append(os.Environ(), "LARKSUITE_CLI_NO_UPDATE_NOTIFIER=1", "LARKSUITE_CLI_NO_SKILLS_NOTIFIER=1")
 	hideFeishuCommand(cmd)
+	return feishuCommandOutput(ctx, cmd)
+}
+
+// feishuCommandOutput 运行 CLI，把失败归成用户能照着处理的原因。
+func feishuCommandOutput(ctx context.Context, cmd *exec.Cmd) ([]byte, error) {
 	var out, failure feishuOutput
 	cmd.Stdout, cmd.Stderr = &out, &failure
-	if err := cmd.Run(); err != nil {
+	err := cmd.Run()
+	if out.overflow {
+		return nil, errFeishuTooLarge
+	}
+	if err != nil {
 		if ctx.Err() != nil {
 			return nil, errors.New("飞书暂时没有响应，请完成授权或检查网络后再试")
 		}

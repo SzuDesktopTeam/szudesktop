@@ -1,6 +1,6 @@
 import {HOME_SKIN_DETAILS,homeSkinDetails} from './home-skins.mjs';
+import {esc} from './html.mjs';
 
-const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const ROOMS={
  study:{name:'庭院书屋',detail:'把想弄明白的，留在这张书桌上。',icon:'i-book',objects:['i-book','i-mug','i-quill']},
  services:{name:'荔园告示板',detail:'校园里的新消息，和想去的地方。',icon:'i-sign',objects:['i-mail','i-bell','i-flower']},

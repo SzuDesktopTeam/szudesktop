@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import uuid
 from urllib.parse import urlsplit
@@ -24,14 +25,28 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 EVIDENCE = HERE / "release" / "smoke-evidence"
 # electron-builder's stable NSIS UUID v5 namespace and this app's configured ID.
-APP_GUID = str(uuid.uuid5(uuid.UUID("50e065bc-3134-11e6-9bab-38c9862bdaf3"), "com.szudesktop.app"))
+APP_ID = "com.szudesktop.app"
+APP_GUID = str(uuid.uuid5(uuid.UUID("50e065bc-3134-11e6-9bab-38c9862bdaf3"), APP_ID))
 INSTALL_KEY = "Software\\" + APP_GUID
 UNINSTALL_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + APP_GUID
 RUN_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+# Task Manager's enabled/disabled state for a Run entry, keyed by the same value name.
+STARTUP_APPROVED_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run"
+# Chromium locales the package keeps (electron-builder.yml electronLanguages).
+EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # Keep this baseline fixed: a moving latest URL could silently test a reinstall.
-BASELINE_VERSION = "beta0.9.1"
+# It is the latest *published* release, i.e. what existing users upgrade from.
+# After publishing a release, move it forward and pin that installer's digest
+# (the release page and its .sha256 asset both show it) in the same change that
+# bumps internal/version/VERSION to the next version, or after that bump has
+# landed: main() requires the candidate to differ from the baseline, so moving
+# the baseline first fails every PR and main build.
+BASELINE_VERSION = "beta0.9.2"
 BASELINE_ELECTRON = "44.4.5"
-BASELINE_SHA256 = "c45de44c63b74b1f9a17f2f1b698ee04f1786211c2239b762e823dded20484a3"
+BASELINE_SHA256 = "454e92d6ef8b888fac3fb15363bce62845088494300d69959fd6da89c67b64e4"
+BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
+# A fresh beta0.9.2 save carries exactly these companions, in this order.
+BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "turtle"]
 
 
 def check(label, condition):
@@ -61,6 +76,47 @@ def reg_values(hive, key, view):
 def installation():
     import winreg
     return reg_values(winreg.HKEY_CURRENT_USER, INSTALL_KEY, winreg.KEY_WOW64_64KEY)
+
+
+def seed_autostart(exe):
+    """Register launch at login the way Electron's setLoginItemSettings does.
+
+    Smoke launches never touch the real login items, so write the values
+    directly: the Run command and an enabled StartupApproved entry, both named
+    after the AppUserModelId. A real uninstall must remove both (electron-7).
+    """
+    import winreg
+    command = subprocess.list2cmdline([str(exe), "--autostart"])
+    access = winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY
+    with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, access) as key:
+        winreg.SetValueEx(key, APP_ID, 0, winreg.REG_SZ, command)
+    with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, STARTUP_APPROVED_KEY, 0, access) as key:
+        # First byte 02 means enabled in Task Manager; the rest is a timestamp.
+        winreg.SetValueEx(key, APP_ID, 0, winreg.REG_BINARY, bytes([2] + [0] * 11))
+    check("launch at login registered before uninstall",
+          reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY).get(APP_ID) == command
+          and APP_ID in reg_values(winreg.HKEY_CURRENT_USER, STARTUP_APPROVED_KEY, winreg.KEY_WOW64_64KEY))
+
+
+def remove_autostart_leftovers():
+    """Return the keys that still hold our autostart value, then delete them.
+
+    Cleanup comes first so a failing check never leaves a dead startup entry
+    behind, even on a disposable runner.
+    """
+    import winreg
+    leftovers = []
+    for key in (RUN_KEY, STARTUP_APPROVED_KEY):
+        if APP_ID not in reg_values(winreg.HKEY_CURRENT_USER, key, winreg.KEY_WOW64_64KEY):
+            continue
+        leftovers.append(key)
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key, 0,
+                                winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as opened:
+                winreg.DeleteValue(opened, APP_ID)
+        except OSError:
+            pass
+    return leftovers
 
 
 def no_existing_installation():
@@ -126,7 +182,9 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
         proc = subprocess.Popen([str(exe)], env=env, stdout=log, stderr=log,
                                 creationflags=subprocess.CREATE_NO_WINDOW)
         try:
-            deadline = time.monotonic() + 60
+            # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；共享 runner 上偶尔要 40 秒以上，
+            # 60 秒的旧上限会把慢启动误报成失败（PR #23 的 reuse-portable 就是这样）。真的卡死仍会超时报错。
+            deadline = time.monotonic() + 120
             while not report.exists() and time.monotonic() < deadline:
                 if proc.poll() is not None:
                     raise RuntimeError("installed application exited before its rendered-page report")
@@ -157,6 +215,8 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
                 check(label + ": both penguins render and switch", pet.get("penguinSelection") is True
                       and all(species in pet.get("companionSpecies", []) for species in ("pingu", "skipper")))
                 check(label + ": backup export and restore", pet.get("backupRestore") is True)
+                # smoke-pet reports null off Windows; this runner is Windows, so it must be true.
+                check(label + ": transparent pet area clicks through", pet.get("clickThrough") is True)
             check(label + ": normal window exit", proc.wait(timeout=25) == 0)
             if owned:
                 wait_process_gone(result["sidecarPid"])
@@ -171,14 +231,18 @@ def assert_install_path(install_dir):
           bool(stored) and Path(stored).resolve() == install_dir)
 
 
-def local_request(base_url, endpoint, method="GET", data=None):
+def local_request(engine, endpoint, method="GET", data=None):
+    """engine is (base_url, token). The baseline beta0.9.2 engine has no token."""
+    base_url, token = engine
     parsed = urlsplit(base_url)
     check("probe only calls loopback", parsed.hostname == "127.0.0.1")
     conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=5)
     try:
         body = json.dumps(data if data is not None else {}).encode("utf-8") if method == "POST" else None
-        conn.request(method, endpoint, body=body,
-                     headers={"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["X-SZU-Token"] = token
+        conn.request(method, endpoint, body=body, headers=headers)
         response = conn.getresponse()
         check("local probe HTTP success", response.status == 200)
         return json.loads(response.read())
@@ -186,47 +250,97 @@ def local_request(base_url, endpoint, method="GET", data=None):
         conn.close()
 
 
+def local_status(engine, endpoint):
+    """Status code of a GET that is expected to be refused."""
+    base_url, token = engine
+    parsed = urlsplit(base_url)
+    check("probe only calls loopback", parsed.hostname == "127.0.0.1")
+    conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=5)
+    try:
+        conn.request("GET", endpoint, headers={"X-SZU-Token": token} if token else {})
+        response = conn.getresponse()
+        response.read()
+        return response.status
+    finally:
+        conn.close()
+
+
+# The engine's stdout protocol lines (desktop/internal/ui/server.go announce).
+ENDPOINT_LINE = re.compile(r"szuDesktop (?:已启动|已复用): (http://127\.0\.0\.1:\d+)\r?")
+SESSION_LINE = re.compile(r"szuDesktop 会话: ([0-9a-f]{64})\r?")
+
+
+def relay_engine_output(stream, log, found):
+    """Copy engine output into the evidence log without its session token.
+
+    The token only lives for this disposable engine, but evidence logs are
+    uploaded as CI artifacts and must never carry credentials of any kind.
+    """
+    for raw in stream:
+        line = raw.decode("utf-8", "replace").rstrip("\r\n")
+        endpoint, session = ENDPOINT_LINE.fullmatch(line), SESSION_LINE.fullmatch(line)
+        if endpoint and "url" not in found:
+            found["url"] = endpoint.group(1)
+        if session:
+            found.setdefault("token", session.group(1))
+            line = "szuDesktop 会话: <redacted>"
+        log.write((line + "\n").encode("utf-8"))
+        log.flush()
+
+
 @contextmanager
 def running_engine(sidecar, cfg, version, label):
-    """Own a no-auto-login engine with isolated state for local-only probes."""
+    """Own a no-auto-login engine with isolated state for local-only probes.
+
+    Yields ((base_url, token), proc). The published baseline predates the
+    per-run API token, so its token is None and requests carry no header.
+    """
     log_path = EVIDENCE / (label + ".log")
     with log_path.open("wb") as log:
         proc = subprocess.Popen([str(sidecar), "--no-open", "--no-auto-login", "--addr", "127.0.0.1:0"],
-                                env=dict(os.environ, SZUNET_CONFIG_DIR=str(cfg)), stdout=log, stderr=log,
-                                creationflags=subprocess.CREATE_NO_WINDOW)
+                                env=dict(os.environ, SZUNET_CONFIG_DIR=str(cfg)), stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
+        found = {}
+        relay = threading.Thread(target=relay_engine_output, args=(proc.stdout, log, found), daemon=True)
+        relay.start()
         try:
+            needs_token = version != BASELINE_VERSION
             deadline = time.monotonic() + 25
-            base_url = None
             while time.monotonic() < deadline:
                 check("isolated portable engine remains alive", proc.poll() is None)
-                matches = re.findall(r"http://127\.0\.0\.1:\d+(?:/)?(?=\s|$)",
-                                     log_path.read_text(encoding="utf-8", errors="replace"))
-                if matches:
-                    base_url = matches[-1].rstrip("/")
+                if "url" in found and ("token" in found or not needs_token):
                     break
                 time.sleep(.2)
-            check("isolated portable engine reports URL", base_url is not None)
-            check(label + ": engine version", local_request(base_url, "/api/health")["app_version"] == version)
-            yield base_url, proc
-            local_request(base_url, "/api/shutdown", "POST")
+            check("isolated portable engine reports URL", "url" in found)
+            if needs_token:
+                check("isolated portable engine reports its session token", "token" in found)
+            engine = (found["url"], found.get("token"))
+            check(label + ": engine version", local_request((engine[0], None), "/api/health")["app_version"] == version)
+            if needs_token:
+                check(label + ": engine rejects callers without the token",
+                      local_status((engine[0], None), "/api/workspace") == 401)
+            yield engine, proc
+            local_request(engine, "/api/shutdown", "POST")
             check("test's portable engine shuts down normally", proc.wait(timeout=10) == 0)
         finally:
             stop_owned_tree(proc)
+            relay.join(timeout=5)
 
 
 def coexist_with_portable(exe, sidecar, cfg, version):
     """A pre-existing portable engine belongs to its launcher, not Electron."""
-    with running_engine(sidecar, cfg, version, "portable-engine") as (base_url, proc):
+    with running_engine(sidecar, cfg, version, "portable-engine") as (engine, proc):
         result = launch(exe, cfg, version, "reuse-portable", owned=False)
-        check("installer reuses the pre-existing engine", result["baseUrl"].rstrip("/") == base_url)
+        check("installer reuses the pre-existing engine", result["baseUrl"].rstrip("/") == engine[0])
         check("closing installer leaves portable engine alive", proc.poll() is None
-              and local_request(base_url, "/api/health")["app_version"] == version)
+              and local_request(engine, "/api/health")["app_version"] == version)
 
 
-def seed_upgrade_data(base_url):
-    snapshot = local_request(base_url, "/api/workspace")
+def seed_upgrade_data(engine):
+    snapshot = local_request(engine, "/api/workspace")
     data = snapshot["data"]
-    check("baseline really has the two original companions", len(data["game"]["pets"]) == 2)
+    check("baseline really has its own companion roster",
+          [pet["species"] for pet in data["game"]["pets"]] == BASELINE_COMPANIONS)
     data["profile"] = {"name": "升级验收", "college": "合成资料"}
     data["preferences"] = {"theme": "night", "motion": False, "onboarded": True}
     data["todos"] = [{"id": "upgrade-task", "text": "升级后保留的合成待办", "done": True, "rewarded": True}]
@@ -242,11 +356,13 @@ def seed_upgrade_data(base_url):
     game["stats"].update({"focus": 3, "minutes": 75, "tasks": 1})
     game["pets"][0].update({"name": "留住荔宝", "xp": 125, "hunger": 100})
     game["pets"][1].update({"name": "留住栗栗", "xp": 75})
-    saved = local_request(base_url, "/api/workspace", "POST", snapshot)
+    # The turtle is retired from new saves; an existing save must keep it intact.
+    game["pets"][3].update({"name": "留住阿青", "xp": 40})
+    saved = local_request(engine, "/api/workspace", "POST", snapshot)
     # This deliberately invalid account is stored locally, never authenticated.
     fake = {"username": "installer-upgrade-fixture", "password": "synthetic-local-only-password"}
-    local_request(base_url, "/api/credential", "POST", fake)
-    check("synthetic account is readable on the old version", local_request(base_url, "/api/credential?reveal=1")["username"] == fake["username"])
+    local_request(engine, "/api/credential", "POST", fake)
+    check("synthetic account is readable on the old version", local_request(engine, "/api/credential?reveal=1")["username"] == fake["username"])
     return saved
 
 
@@ -290,13 +406,16 @@ def main():
           == digest + "  " + installer.name + "\n")
     baseline = Path(os.environ["SZU_UPGRADE_INSTALLER"]).resolve()
     check("baseline is the separately downloaded published installer", baseline.is_file() and baseline != installer.resolve()
-          and baseline.name == "szuDesktop-Setup-0.9.1.exe")
+          and baseline.name == BASELINE_INSTALLER)
     check("candidate differs from the baseline version", version != BASELINE_VERSION)
     check("published baseline matches pinned release digest", hashlib.sha256(baseline.read_bytes()).hexdigest() == BASELINE_SHA256)
     check("published baseline checksum file agrees", Path(str(baseline) + ".sha256").read_text(encoding="ascii")
           == BASELINE_SHA256 + "  " + baseline.name + "\n")
     no_existing_installation()
     startup_before = reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY)
+    # The uninstall check below deletes this value name; never touch one we did not write.
+    check("no pre-existing szuDesktop launch-at-login entry", APP_ID not in startup_before
+          and APP_ID not in reg_values(winreg.HKEY_CURRENT_USER, STARTUP_APPROVED_KEY, winreg.KEY_WOW64_64KEY))
     runner_temp = Path(os.environ["RUNNER_TEMP"]).resolve()
     # The enclosing TemporaryDirectory is the only recursively cleaned path.
     # It is freshly allocated beneath runner temp and never an installed user path.
@@ -318,8 +437,8 @@ def main():
             check("main executable installed in Chinese/space path", exe.is_file())
             sidecar = install_dir / "resources" / "szudesktop-windows-amd64.exe"
             launch(exe, cfg, BASELINE_VERSION, "baseline-open", initial_scale=1, runtime=BASELINE_ELECTRON)
-            with running_engine(sidecar, cfg, BASELINE_VERSION, "baseline-data") as (base_url, _):
-                expected = seed_upgrade_data(base_url)
+            with running_engine(sidecar, cfg, BASELINE_VERSION, "baseline-data") as (engine, _):
+                expected = seed_upgrade_data(engine)
             preserved = {file: file.read_bytes() for file in preserved_files}
             check("test account is not stored in plaintext", b"synthetic-local-only-password" not in preserved[cfg / "credentials.json"])
             obsolete = install_dir / "resources" / "obsolete-upgrade-smoke.txt"
@@ -332,17 +451,23 @@ def main():
                 check("upgrade preserves " + file.name + " byte for byte before opening", file.read_bytes() == contents)
             check("installed Go engine matches final build", sidecar.read_bytes()
                   == (ROOT / "dist" / "szudesktop-windows-amd64.exe").read_bytes())
-            with running_engine(sidecar, cfg, version, "upgraded-data") as (base_url, _):
-                check("new engine reads the unchanged old save", local_request(base_url, "/api/workspace") == expected)
-                check("new engine decrypts the old synthetic account", local_request(base_url, "/api/credential?reveal=1")["username"]
+            # The baseline shipped every Chromium locale; the upgrade must leave only these two.
+            locales = install_dir / "locales"
+            check("only zh-CN and en-US Chromium locales installed", locales.is_dir()
+                  and sorted(path.name for path in locales.iterdir()) == EXPECTED_LOCALES)
+            with running_engine(sidecar, cfg, version, "upgraded-data") as (engine, _):
+                check("new engine reads the unchanged old save", local_request(engine, "/api/workspace") == expected)
+                check("new engine decrypts the old synthetic account", local_request(engine, "/api/credential?reveal=1")["username"]
                       == "installer-upgrade-fixture")
-                check("saved account remains hidden by default", local_request(base_url, "/api/credential")["username"] == "")
+                check("saved account remains hidden by default", local_request(engine, "/api/credential")["username"] == "")
             first = launch(exe, cfg, version, "after-upgrade")
             assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
             launch(exe, cfg, version, "reopen")
             coexist_with_portable(exe, sidecar, cfg, version)
             assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
             check("no startup entries changed", startup_before == reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY))
+            # Last step before uninstall: the user turned on launch at login.
+            seed_autostart(exe)
             (EVIDENCE / "summary.json").write_text(json.dumps({
                 "version": version, "electron": first["electron"], "installer_sha256": digest,
                 "upgrade_from": BASELINE_VERSION, "baseline_sha256": BASELINE_SHA256,
@@ -354,6 +479,8 @@ def main():
                 "pet_and_tray": True, "pet_scale_persists": True,
                 "companion_species": first["pet"]["companionSpecies"],
                 "penguins_render_and_switch": first["pet"]["penguinSelection"],
+                "pet_click_through": first["pet"]["clickThrough"],
+                "locales": EXPECTED_LOCALES,
             }, ensure_ascii=False, indent=2), encoding="utf-8")
         finally:
             if installed:
@@ -373,10 +500,13 @@ def main():
                       and not reg_values(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY, winreg.KEY_WOW64_64KEY))
                 for file, contents in saved_before_uninstall.items():
                     check("uninstall keeps " + file.name + " byte for byte", file.is_file() and file.read_bytes() == contents)
-                check("uninstall leaves startup entries unchanged", startup_before
+                # installer.nsh customUnInstall (not --updated): no dead startup entry may survive.
+                check("uninstall removes launch-at-login Run and StartupApproved values", not remove_autostart_leftovers())
+                check("uninstall leaves other startup entries unchanged", startup_before
                       == reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY))
     summary = json.loads((EVIDENCE / "summary.json").read_text(encoding="utf-8"))
     summary["uninstalled"] = True
+    summary["autostart_removed_on_uninstall"] = True
     (EVIDENCE / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print("ALL INSTALLER SMOKE CHECKS PASSED", flush=True)
 
@@ -385,4 +515,8 @@ if __name__ == "__main__":
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    main()
+    if sys.argv[1:] == ["--baseline"]:
+        # The workflow downloads exactly this release asset; keep one source of truth.
+        print(BASELINE_VERSION, BASELINE_INSTALLER)
+    else:
+        main()

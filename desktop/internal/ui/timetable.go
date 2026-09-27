@@ -99,21 +99,28 @@ func parseGraduateTimetable(b []byte) (*timetableResult, error) {
 }
 
 func (s *Server) handleTimetable(w http.ResponseWriter, r *http.Request) {
+	// 锁只用来取出当前会话，读课表的三次学校请求都在锁外。
 	a := s.academic
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if !a.authenticated || a.client == nil {
+	client, authenticated := a.client, a.authenticated && a.client != nil
+	a.mu.Unlock()
+	if !authenticated {
 		writeAPIError(w, 409, errors.New("请先登录研究生教务，再读取课表"))
 		return
 	}
-	if _, err := readGraduateProfile(r.Context(), a.client); err != nil {
+	if _, err := readGraduateProfile(r.Context(), client); err != nil {
 		if errors.Is(err, errSessionInvalid) {
-			a.reset()
+			// 只复位读取时用的那条会话；途中已重新登录的新会话不受影响。
+			a.mu.Lock()
+			if a.client == client {
+				a.reset()
+			}
+			a.mu.Unlock()
 		}
 		writeAcademicError(w, err)
 		return
 	}
-	b, err := academicRequest(r.Context(), a.client, graduateTablePath, nil)
+	b, err := academicRequest(r.Context(), client, graduateTablePath, nil)
 	if err != nil {
 		writeAcademicError(w, err)
 		return
@@ -123,7 +130,7 @@ func (s *Server) handleTimetable(w http.ResponseWriter, r *http.Request) {
 		writeAcademicError(w, err)
 		return
 	}
-	b, err = academicRequest(r.Context(), a.client, graduatePublicPath, nil)
+	b, err = academicRequest(r.Context(), client, graduatePublicPath, nil)
 	if err != nil {
 		writeAcademicError(w, err)
 		return

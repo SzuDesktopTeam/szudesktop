@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/SzuDesktopTeam/szudesktop/desktop/internal/ui"
 	"github.com/SzuDesktopTeam/szudesktop/internal/portal"
@@ -53,10 +54,26 @@ func main() {
 	})
 
 	if err := srv.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "启动失败: %v\n", err)
+		reason := startupReason(err, *pass)
+		// 固定前缀、单独一行：Electron 外壳读取 stderr 的最后一行非空内容展示给用户，
+		// 否则用户只能看到“码 1……请重新安装”，而重装解决不了旧进程未退出或目录权限问题。
+		fmt.Fprintf(os.Stderr, "启动失败: %s\n", reason)
 		if !*noOpen {
-			startupError("启动失败：" + err.Error())
+			startupError("启动失败：" + reason)
 		}
 		os.Exit(1)
 	}
+}
+
+// startupReason 把启动错误压成一行，并抹掉命令行传入的密码。
+func startupReason(err error, password string) string {
+	reason := err.Error()
+	if password != "" {
+		reason = strings.ReplaceAll(reason, password, "***")
+	}
+	reason = strings.Join(strings.Fields(reason), " ")
+	if reason == "" {
+		reason = "未知原因"
+	}
+	return reason
 }

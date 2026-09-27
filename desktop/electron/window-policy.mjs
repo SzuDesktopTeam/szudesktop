@@ -18,3 +18,9 @@ export function isTrustedSender(event, mainWin, baseUrl) {
     && event.senderFrame === mainWin.webContents.mainFrame
     && isAppUrl(event.senderFrame?.url, baseUrl));
 }
+
+// loadURL 要等页面完全加载才 resolve；在此之前页面自己跳转、用户提交登录表单或再次打开
+// 同一窗口，都会让它以 ERR_ABORTED（-3）结束。页面其实仍在正常导航，不能当成打开失败。
+export function isNavigationAbort(error) {
+  return error?.code === 'ERR_ABORTED' || error?.errno === -3;
+}

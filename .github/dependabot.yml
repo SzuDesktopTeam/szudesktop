@@ -1,0 +1,32 @@
+# 依赖升级提醒：每周检查一次，按生态各开 PR，照常走 CI。
+# - github-actions：release.yml 里的 action 都固定在提交 SHA 上，由这里跟进新版本（连同行尾版本注释）。
+# - npm：Electron 与 electron-builder，Electron 的安全补丁不能只靠人记得去跟。
+# - gomod：CLI 与桌面引擎的 Go 依赖。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: npm
+    directory: /desktop/electron
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps

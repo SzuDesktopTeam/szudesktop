@@ -143,7 +143,7 @@ func (s *Server) handleSessionCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := s.makeEhallClient(v.Cookie)
-	body, err := c.postForm(app.Path, allRowsForm(1))
+	body, err := c.postFormContext(r.Context(), app.Path, allRowsForm(1))
 	if err == nil {
 		_, err = ehallRows(body, app.Dataset)
 	}
@@ -194,7 +194,7 @@ func (s *Server) handleScores(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := readScoreContext(r.Context(), c, app)
 	if err != nil {
-		writeSchoolError(w, err)
+		s.writeSchoolReadError(w, c, err)
 		return
 	}
 	writeJSON(w, result)

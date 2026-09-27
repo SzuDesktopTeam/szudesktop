@@ -1,7 +1,7 @@
 import {dayKey,activePet,petSprite,journeyList} from './engine.mjs';
 import {petViewBox} from './pet-catalog.mjs';
 import {nextProject,projectStatus} from './garden-loop.mjs';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 const button=(label,action,attrs='',cls='quiet')=>`<button class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;
 const dateLabel=value=>value?new Date(value).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}):'';
 

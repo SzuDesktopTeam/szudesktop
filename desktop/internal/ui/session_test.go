@@ -146,7 +146,12 @@ func TestEhallRowsDistinguishesExpiredFromEmpty(t *testing.T) {
 		{
 			name:    "会话失效返回登录页",
 			body:    `<html><head><title>统一身份认证</title></head></html>`,
-			wantErr: errSessionInvalid,
+			wantErr: errSessionExpired,
+		},
+		{
+			name:    "维护页不是登录页",
+			body:    `<html><head><title>系统维护中</title></head><body>请稍后访问</body></html>`,
+			wantErr: errSchoolPage,
 		},
 		{
 			name:    "服务端说没登录",
@@ -258,8 +263,7 @@ func TestScoreEndpointRejectsUnknownLevelAndMissingSession(t *testing.T) {
 
 func TestScoreRoutesAreGuardedAndReadOnly(t *testing.T) {
 	s := &Server{session: &memSessionStore{}}
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 
 	cases := []struct {
 		name, method, path string
@@ -421,10 +425,22 @@ func TestNoSessionCookieNeverReachesTheSchool(t *testing.T) {
 	defer srv.Close()
 
 	c := newEhallClient("", 5*time.Second).withBase(srv.URL)
-	if _, err := c.postForm(undergradScorePath, allRowsForm(10)); err == nil {
+	if _, err := c.postFormContext(t.Context(), undergradScorePath, allRowsForm(10)); err == nil {
 		t.Fatal("没有会话时应当直接报错")
 	}
 	if called {
 		t.Fatal("没有会话时不应该把请求发到学校系统")
+	}
+}
+
+// 粘贴 Cookie 的客户端共用一个带空闲期限的连接池，不再每次点击都新建 Transport；
+// 各自的 http.Client（带自己的跳转检查）仍然分开。
+func TestEhallClientsShareIdleBoundedTransport(t *testing.T) {
+	a, b := newEhallClient("a=test-only", 0), newEhallClient("b=test-only", 0)
+	if a.http == b.http || a.http.Transport != b.http.Transport || a.http.Transport != ehallTransport {
+		t.Fatal("粘贴 Cookie 的客户端应共用连接池、各自持有 http.Client")
+	}
+	if ehallTransport.Proxy != nil || ehallTransport.IdleConnTimeout <= 0 || ehallTransport.TLSHandshakeTimeout <= 0 {
+		t.Fatal("连接池必须直连，并给空闲连接和握手设上期限")
 	}
 }

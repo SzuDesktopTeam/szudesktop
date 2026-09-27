@@ -7,6 +7,25 @@ import {readDesktopSettings} from './desktop-settings.mjs';
 import {petWindowBounds} from './pet-policy.mjs';
 import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
 import {PET_CLIPS} from './pet-animation.mjs';
+import {TOKEN_HEADER} from './listen-url.mjs';
+
+// 冒烟里对页面执行脚本都要有上限：渲染进程崩溃或页面卡死时 executeJavaScript 永远不返回，
+// 以前只会表现为“报告一直没出现”。超时后带上窗口与渲染进程状态报错，写进失败报告。
+const goneRenderers=new WeakMap();
+function watchRenderer(win){
+  const wc=win.webContents;
+  if(!goneRenderers.has(wc)){goneRenderers.set(wc,null);wc.on('render-process-gone',(_e,details)=>goneRenderers.set(wc,details));}
+}
+function evalWithin(win,label,source,ms=15000){
+  watchRenderer(win);
+  let timer;
+  const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{
+    const wc=win.webContents,gone=goneRenderers.get(wc);
+    const state={destroyed:win.isDestroyed(),visible:!win.isDestroyed()&&win.isVisible(),loading:!wc.isDestroyed()&&wc.isLoading(),crashed:!wc.isDestroyed()&&wc.isCrashed(),gone:gone?`${gone.reason}/${gone.exitCode}`:null};
+    reject(Error(`${label} 窗口执行脚本 ${ms/1000} 秒未返回：${JSON.stringify(state)}；脚本开头 ${String(source).slice(0,80)}`));
+  },ms);});
+  return Promise.race([win.webContents.executeJavaScript(source),timeout]).finally(()=>clearTimeout(timer));
+}
 
 async function until(read, message) {
   const end=Date.now()+6000;
@@ -25,15 +44,18 @@ function personalAfterMigration(data){
 
 // Exercise the same download, file input and confirmation used by users. This
 // module only runs with the isolated smoke profile; no real account is loaded.
-async function checkBackup(mainWin,baseUrl,evidenceDir){
-  const main=source=>mainWin.webContents.executeJavaScript(source);
-  const snapshot=async()=>{const r=await fetch(baseUrl+'/api/workspace');assert.ok(r.ok);return r.json();};
+// 主进程直接调本机服务要带 sidecar 交来的凭据；页面里的请求靠首次加载换来的 Cookie。
+const localApi=(baseUrl,token)=>(endpoint,options={})=>fetch(baseUrl+endpoint,{...options,headers:{...options.headers,[TOKEN_HEADER]:token}});
+async function checkBackup(mainWin,baseUrl,token,evidenceDir){
+  const main=source=>evalWithin(mainWin,'主',source);
+  const api=localApi(baseUrl,token);
+  const snapshot=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return r.json();};
   const seed=await snapshot();
   const original=structuredClone(seed.data);
   seed.data.profile.name='备份验收';
   seed.data.todos=[{id:'backup-task',text:'验收后恢复学习记录',done:false,rewarded:false,date:'',createdAt:0,completedAt:0,archived:false}];
   seed.data.courses=[{code:'backup-course',name:'合成课程',credit:2,point:3.5}];
-  const saved=await fetch(baseUrl+'/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
+  const saved=await api('/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
   assert.ok(saved.ok,'synthetic backup fixture saved');
   await mainWin.loadURL(baseUrl+'/?smoke=backup#settings/data');
   await until(()=>main("location.hash==='#settings/data' && Boolean(document.querySelector('#import-file') && document.querySelector('[data-action=\"export\"]'))"),'backup settings section not loaded');
@@ -98,14 +120,15 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   for(const key of ['profile','preferences','todos','courses','reminders','semester'])assert.deepEqual(reset[key],expectedOriginal[key],'original '+key+' retained');
 }
 
-export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,screen,initialScale,userData,evidenceDir,baseUrl}){
+export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,getPetMouse,getPetHitLog,screen,initialScale,userData,evidenceDir,baseUrl,token}){
+  const api=localApi(baseUrl,token);
   const trace=stage=>writeFileSync(path.join(evidenceDir,'pet-progress.json'),JSON.stringify({stage,bounds:petWin?.getBounds(),visible:petWin?.isVisible()}));
   trace('start');
   assert.ok(petWin&&!petWin.isDestroyed()&&petWin.isVisible(),'pet window exists');
   assert.ok(tray&&!tray.isDestroyed(),'packaged tray icon loads');
   assert.ok(petWin.isAlwaysOnTop(),'pet stays on top');
-  const main=source=>mainWin.webContents.executeJavaScript(source);
-  const pet=source=>petWin.webContents.executeJavaScript(source);
+  const main=source=>evalWithin(mainWin,'主',source);
+  const pet=source=>evalWithin(petWin,'桌宠',source);
   const menu=label=>getMenu().items.find(item=>item.label===label);
   const sizeItems=()=>menu('宠物大小').submenu.items;
   await main("document.querySelector('#guide[open] button')?.click()");
@@ -123,6 +146,20 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   trace('main-hidden');
   assert.ok(!mainWin.isDestroyed()&&!mainWin.isVisible(),'close hides main without destroying it');
   const target=await pet("(()=>{const r=document.querySelector('#pet').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
+  // 透明区域默认点穿；指针进入立绘后才接收点击，离开后恢复穿透。
+  let clickThrough=null;
+  if(process.platform==='win32'){
+    assert.equal(getPetMouse().ignoring,true,'transparent pet area lets clicks through by default');
+    // CI 桌面上真实光标的位置也会经 forward 转发进来，可能紧跟着触发 pointerleave；所以检查进出记录，而不是轮询瞬时状态。
+    const seen=getPetHitLog().length;
+    petWin.webContents.sendInputEvent({type:'mouseMove',...target});
+    await until(()=>getPetHitLog().slice(seen).some(e=>e.inside&&e.ignoring===false),'pointer over the companion did not make it clickable');
+    const entered=getPetHitLog().length;
+    petWin.webContents.sendInputEvent({type:'mouseMove',x:2,y:2});
+    await until(()=>getPetHitLog().slice(entered-1).some(e=>!e.inside&&e.ignoring===true)&&getPetMouse().ignoring===true,'leaving the companion did not restore click-through');
+    clickThrough=true;
+  }
+  trace('click-through');
   const beforeDrag=petWin.getBounds(),dragArea=screen.getDisplayMatching(beforeDrag).workArea;
   const globalPoint={globalX:beforeDrag.x+target.x,globalY:beforeDrag.y+target.y};
   const dragPoint={globalX:globalPoint.globalX-48,globalY:globalPoint.globalY-36};
@@ -141,7 +178,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   assert.equal(mainWin.isVisible(),false,'click opens a menu without opening main');
   getPetMenu().closePopup(petWin);
   trace('menu-closed');
-  const game=async()=>{const r=await fetch(baseUrl+'/api/workspace');assert.ok(r.ok);return (await r.json()).data.game;};
+  const game=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return (await r.json()).data.game;};
   const active=g=>g.pets[g.active]||g.pets[0];
   for(let i=0;i<2;i++){
     trace('sleep-'+i);
@@ -220,7 +257,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await until(async()=>['idle','sad','sleep','focus'].includes(await pet("document.querySelector('#pet').dataset.action")),'one-shot action never returns to base');
   // The upgrade fixture deliberately has motion disabled. Exercise the real
   // setting and IPC path temporarily, then retain all original preferences.
-  const preferences=async()=>{const response=await fetch(baseUrl+'/api/workspace');assert.ok(response.ok);return (await response.json()).data.preferences;};
+  const preferences=async()=>{const response=await api('/api/workspace');assert.ok(response.ok);return (await response.json()).data.preferences;};
   const originalPreferences=await preferences();
   const setMotion=async value=>{
     await main("document.querySelector('[data-action=\"navigate\"][data-page=\"settings\"]').click()");
@@ -331,8 +368,12 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   await main('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
   writeFileSync(path.join(evidenceDir,'school-account.png'),(await mainWin.webContents.capturePage()).toPNG());
   trace('backup-restore');
-  await checkBackup(mainWin,baseUrl,evidenceDir);
+  // 没有凭据的请求必须被拒绝：只挡跨站不够，本机其他用户的进程也能直接连端口。
+  const anonymous=await fetch(baseUrl+'/api/workspace');
+  assert.equal(anonymous.status,401,'local API rejects callers without the session token');
+  await anonymous.body?.cancel();
+  await checkBackup(mainWin,baseUrl,token,evidenceDir);
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
   return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,displayCount:screen.getAllDisplays().length};
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
 }

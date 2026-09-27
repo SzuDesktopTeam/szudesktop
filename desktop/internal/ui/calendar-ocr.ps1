@@ -1,12 +1,19 @@
-$ImagePath=$env:SZU_CALENDAR_IMAGE
+# 失败原因只用固定的英文标记（SZU_OCR_*）报给 Go 端：PowerShell 自己的报错会按
+# 系统语言翻译，受限语言模式下连输出编码都来不及设置，按报错原文归类在中文系统上
+# 一条都对不上。标记只写在各自 throw 的那一行，别处的报错回显不会误中。
 $ErrorActionPreference='Stop'
+if($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage'){throw 'SZU_OCR_BLOCKED_LANGUAGE_MODE'}
+$ImagePath=$env:SZU_CALENDAR_IMAGE
 [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
-Add-Type -AssemblyName System.Runtime.WindowsRuntime
-[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime] | Out-Null
-[Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,ContentType=WindowsRuntime] | Out-Null
-[Windows.Media.Ocr.OcrEngine,Windows.Foundation,ContentType=WindowsRuntime] | Out-Null
-[Windows.Globalization.Language,Windows.Globalization,ContentType=WindowsRuntime] | Out-Null
-$asTask=([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.IsGenericMethod -and $_.GetGenericArguments().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]
+try{
+  Add-Type -AssemblyName System.Runtime.WindowsRuntime
+  [Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime] | Out-Null
+  [Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,ContentType=WindowsRuntime] | Out-Null
+  [Windows.Media.Ocr.OcrEngine,Windows.Foundation,ContentType=WindowsRuntime] | Out-Null
+  [Windows.Globalization.Language,Windows.Globalization,ContentType=WindowsRuntime] | Out-Null
+  $asTask=([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.IsGenericMethod -and $_.GetGenericArguments().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]
+}catch{$asTask=$null}
+if($null -eq $asTask){throw 'SZU_OCR_WINRT_UNAVAILABLE'}
 function Await($Operation,[Type]$ResultType){$task=$asTask.MakeGenericMethod($ResultType).Invoke($null,@($Operation));$task.Wait();$task.Result}
 $file=Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($ImagePath)) ([Windows.Storage.StorageFile])
 $stream=Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
@@ -30,7 +37,7 @@ foreach($tag in @('zh-Hans-CN','zh-CN','zh-Hans')){
   if($null -ne $engine){break}
 }
 if($null -eq $engine){$engine=[Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()}
-if($null -eq $engine){throw 'OCR language pack unavailable'}
+if($null -eq $engine){throw 'SZU_OCR_LANGUAGE_UNAVAILABLE'}
 $result=Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
 $result.Lines | ForEach-Object {$_.Text}
 $stream.Dispose();$bitmap.Dispose()

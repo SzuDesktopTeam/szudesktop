@@ -17,8 +17,7 @@ import (
 const notebookFixture = `{"courses":[{"id":"c1","name":"计算机网络","color":"green","futureMetadata":{"semester":"秋"}}],"notes":[{"id":"n1","courseId":"c1","title":"第一讲","body":"# 网络分层\n保留原始正文。","createdAt":1790467200000,"updatedAt":1790467200000,"sourceUrl":"https://example.feishu.cn/docx/example"}],"preferences":{"selectedCourseId":"c1","selectedNoteId":"n1"},"editorVersion":"future"}`
 
 func notebookRequest(s *Server, method, body string) *httptest.ResponseRecorder {
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(method, "http://127.0.0.1:1234/api/notebook", strings.NewReader(body))
 	r.Header.Set("Content-Type", "application/json")
@@ -158,8 +157,7 @@ func TestNotebookRouteCapacityAndOriginGuard(t *testing.T) {
 			t.Fatalf("oversized body returned %d: %s", w.Code, w.Body.String())
 		}
 	}
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 	for _, tc := range []struct {
 		method, origin, contentType string
 		want                        int
@@ -181,5 +179,72 @@ func TestNotebookRouteCapacityAndOriginGuard(t *testing.T) {
 	after, _ := os.ReadFile(s.notebook.path)
 	if !bytes.Equal(before, after) {
 		t.Fatal("rejected request changed notebook")
+	}
+}
+
+func TestNotebookRecoversFromLastGoodBackup(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("SZUNET_CONFIG_DIR", dir)
+	s := New(Options{})
+	second := strings.Replace(notebookFixture, "第一讲", "第二讲", 1)
+	for i, body := range []string{notebookBody(0, notebookFixture), notebookBody(1, second)} {
+		if w := notebookRequest(s, http.MethodPut, body); w.Code != 200 {
+			t.Fatalf("save %d: %d %s", i, w.Code, w.Body.String())
+		}
+	}
+	path := filepath.Join(dir, "notebook-v1.json")
+	if err := os.WriteFile(path, []byte(`{"version":1,"revision":2,"data":{"courses":`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	w := notebookRequest(New(Options{}), http.MethodGet, "")
+	var got notebookSnapshot
+	if w.Code != 200 || w.Header().Get("X-SZU-Recovered") != "backup" || json.Unmarshal(w.Body.Bytes(), &got) != nil || got.Revision != 1 || !bytes.Equal(got.Data, []byte(notebookFixture)) {
+		t.Fatalf("corrupt notes must be restored from backup: %d %v %s", w.Code, w.Header(), w.Body.String())
+	}
+	if kept, _ := filepath.Glob(path + ".corrupt-*"); len(kept) != 1 {
+		t.Fatalf("corrupt notes must be kept aside: %v", kept)
+	}
+	os.WriteFile(path, []byte("broken"), 0600)
+	os.WriteFile(path+".bak", []byte("broken too"), 0600)
+	if w = notebookRequest(s, http.MethodGet, ""); w.Code != 500 || !strings.Contains(w.Body.String(), "原文件已保留") {
+		t.Fatalf("unrecoverable notes: %d %s", w.Code, w.Body.String())
+	}
+	if b, _ := os.ReadFile(path); string(b) != "broken" {
+		t.Fatal("unrecoverable notes were modified")
+	}
+}
+
+// 笔记的自动保存（PUT）先撞上损坏文件时，恢复提示同样要留到页面下一次读取。
+func TestNotebookRecoveryNoticeSurvivesAutosaveConflict(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("SZUNET_CONFIG_DIR", dir)
+	s := New(Options{})
+	second := strings.Replace(notebookFixture, "第一讲", "第二讲", 1)
+	for i, body := range []string{notebookBody(0, notebookFixture), notebookBody(1, second)} {
+		if w := notebookRequest(s, http.MethodPut, body); w.Code != 200 {
+			t.Fatalf("save %d: %d %s", i, w.Code, w.Body.String())
+		}
+	}
+	path := filepath.Join(dir, "notebook-v1.json")
+	os.WriteFile(path, []byte(`{"version":1,"revision":2,"data":{"courses":`), 0600)
+	w := notebookRequest(s, http.MethodPut, notebookBody(2, second))
+	if w.Code != http.StatusConflict || w.Header().Get("X-SZU-Recovered") != "backup" || !strings.Contains(w.Body.String(), "笔记文件损坏，已恢复") {
+		t.Fatalf("autosave after corruption must explain the recovery: %d %v %s", w.Code, w.Header(), w.Body.String())
+	}
+	if w = notebookRequest(s, http.MethodGet, ""); w.Code != 200 || w.Header().Get("X-SZU-Recovered") != "backup" {
+		t.Fatalf("reload after the conflict must still carry the recovery notice: %d %v", w.Code, w.Header())
+	}
+	if w = notebookRequest(s, http.MethodGet, ""); w.Header().Get("X-SZU-Recovered") != "" {
+		t.Fatal("recovery notice must be delivered only once")
+	}
+
+	// 主文件缺失、备份完好：同样恢复，而不是当成一本空笔记。
+	os.Remove(path)
+	w = notebookRequest(New(Options{}), http.MethodGet, "")
+	if w.Code != 200 || w.Header().Get("X-SZU-Recovered") != "backup" || !strings.Contains(w.Body.String(), `"revision":1`) {
+		t.Fatalf("missing notes must come back from backup: %d %v %s", w.Code, w.Header(), w.Body.String())
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("notes file must be restored: %v", err)
 	}
 }

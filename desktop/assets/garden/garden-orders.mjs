@@ -18,21 +18,27 @@ function check(ok,message){if(!ok)throw Error(message)}
 const natural=n=>Number.isSafeInteger(n)&&n>=0;
 function validDay(day){return typeof day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(day)&&!Number.isNaN(Date.parse(day+'T12:00:00Z'))&&new Date(day+'T12:00:00Z').toISOString().slice(0,10)===day}
 export function createOrders(){return {day:'',offers:[],completed:[],total:0,keepsakes:[]}}
+// An offer saved under older rules (bonuses, requesting pets or crops that have
+// since changed) is not an error: the day's board is simply regenerated.
+function currentOffer(offer,index,day,crops){
+ if(!offer||typeof offer!=='object'||offer.id!==day+':'+index||!REQUESTS.some(p=>p.pet===offer.pet))return null;
+ if(!offer.needs||typeof offer.needs!=='object'||Array.isArray(offer.needs))return null;
+ const entries=Object.entries(offer.needs);
+ if(!(entries.length>=1&&entries.length<=2&&entries.every(([id,n])=>Object.hasOwn(crops,id)&&Number.isInteger(n)&&n>0&&n<=4)))return null;
+ if(!(offer.bonus===BONUSES[index]&&natural(offer.coins)&&offer.coins>=offer.bonus))return null;
+ return {id:offer.id,pet:offer.pet,title:String(offer.title||'伙伴委托').slice(0,40),text:String(offer.text||'').slice(0,120),needs:Object.fromEntries(entries),coins:offer.coins,bonus:offer.bonus};
+}
 export function normalizeOrders(raw,crops){
  if(raw==null)return createOrders();
  check(raw&&typeof raw==='object'&&(raw.day===''||validDay(raw.day)),'委托日期存档格式错误');
- check(Array.isArray(raw.offers)&&(raw.offers.length===0||raw.offers.length===3),'委托清单存档格式错误');
- check((raw.day===''&&raw.offers.length===0)||(raw.day!==''&&raw.offers.length===3),'委托日期与清单不一致');
+ check(Array.isArray(raw.offers),'委托清单存档格式错误');
  check(natural(raw.total),'委托累计次数格式错误');
- const offers=raw.offers.map((offer,index)=>{
-  check(offer&&offer.id===raw.day+':'+index&&REQUESTS.some(p=>p.pet===offer.pet),'委托条目存档格式错误');
-  check(offer.needs&&typeof offer.needs==='object'&&!Array.isArray(offer.needs),'委托材料存档格式错误');
-  const entries=Object.entries(offer.needs);
-  check(entries.length>=1&&entries.length<=2&&entries.every(([id,n])=>Object.hasOwn(crops,id)&&Number.isInteger(n)&&n>0&&n<=4),'委托材料存档格式错误');
-  check(offer.bonus===BONUSES[index]&&natural(offer.coins)&&offer.coins>=offer.bonus,'委托奖励存档格式错误');
-  return {id:offer.id,pet:offer.pet,title:String(offer.title||'伙伴委托').slice(0,40),text:String(offer.text||'').slice(0,120),needs:Object.fromEntries(entries),coins:offer.coins,bonus:offer.bonus};
- });
- const completed=[...new Set((Array.isArray(raw.completed)?raw.completed:[]).filter(id=>offers.some(o=>o.id===id)))];
+ // Offers are derived data, rebuilt by dailyOrders for the same saved day. The
+ // day and its delivered IDs stay, so a regenerated board cannot pay twice.
+ const current=raw.day&&raw.offers.length===BONUSES.length?raw.offers.map((offer,index)=>currentOffer(offer,index,raw.day,crops)):[];
+ const offers=current.length&&current.every(Boolean)?current:[];
+ const ids=raw.day?BONUSES.map((_,index)=>raw.day+':'+index):[];
+ const completed=[...new Set((Array.isArray(raw.completed)?raw.completed:[]).filter(id=>ids.includes(id)))];
  const keepsakes=[...new Set((Array.isArray(raw.keepsakes)?raw.keepsakes:[]).filter(id=>ORDER_KEEPSAKES.some(k=>k.id===id&&k.total<=raw.total)))];
  return {day:raw.day,offers,completed,total:Math.max(raw.total,completed.length),keepsakes};
 }
@@ -42,7 +48,10 @@ export function dailyOrders(game,day,crops,level=game.gardenLevel||1){
  if(!game.orders)game.orders=createOrders();
  const orders=game.orders;
  // A clock rollback cannot replace today's completed order IDs.
- if(orders.day&&day<=orders.day)return orders.offers;
+ if(orders.day&&day<=orders.day&&orders.offers.length)return orders.offers;
+ // A saved day whose offers were cleared on load is rebuilt for that same day.
+ if(orders.day>day)day=orders.day;
+ const kept=day===orders.day?orders.completed:[];
  const available=Object.keys(crops).filter(id=>crops[id].level<=level);
  check(available.length>0,'庭院还没有可用于委托的作物');
  const ordinal=dayNumber(day),quantity=id=>crops[id].sell<=12?2:1;
@@ -54,7 +63,7 @@ export function dailyOrders(game,day,crops,level=game.gardenLevel||1){
   const coins=Object.entries(needs).reduce((sum,[id,n])=>sum+crops[id].sell*n,bonus);
   return {id:day+':'+index,...request,needs,coins,bonus};
  });
- orders.day=day;orders.offers=offers;orders.completed=[];
+ orders.day=day;orders.offers=offers;orders.completed=kept.filter(id=>offers.some(o=>o.id===id));
  return offers;
 }
 export function orderKeepsakes(game){return ORDER_KEEPSAKES.filter(k=>game.orders?.keepsakes.includes(k.id))}

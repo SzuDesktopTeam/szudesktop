@@ -67,6 +67,12 @@ window.szuPet?.onScale(setScale);
 window.szuPet?.onReaction(playOnce);
 window.addEventListener('beforeunload',()=>{player?.destroy();clearTimeout(hideTimer)});
 
+// 窗口默认让点击穿到下层应用；指针进入立绘才接收点击，离开后恢复穿透。
+// 拖动时有指针捕获，不会中途触发 pointerleave；拖动与菜单期间主进程也会保持可点。
+// 气泡本身 pointer-events: none，始终不拦截下层点击。
+pet.addEventListener('pointerenter', () => window.szuPet?.hit(true));
+pet.addEventListener('pointerleave', () => window.szuPet?.hit(false));
+
 // 单击/右键打开菜单；拖动超过阈值时只移动，不误触菜单。
 let pointer = null;
 let lastWheel = 0;

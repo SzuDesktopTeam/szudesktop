@@ -53,7 +53,7 @@ func TestAcademicLoginReadAndClear(t *testing.T) {
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest(method, "http://127.0.0.1/api/academic", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
-		protectAPI(handler, method)(rec, req)
+		guardAPI(nil, handler, method)(rec, req)
 		return rec
 	}
 	payload := `{"username":"test-student","password":"test","captcha":"0000","challenge":"test-challenge"}`
@@ -98,7 +98,7 @@ func TestAcademicLoginExpiredAndCrossOrigin(t *testing.T) {
 	req = httptest.NewRequest("POST", "http://127.0.0.1/api/academic/login", strings.NewReader(`{}`))
 	req.Header.Set("Origin", "https://example.com")
 	req.Header.Set("Content-Type", "application/json")
-	protectAPI(s.handleAcademicLogin, "POST")(rec, req)
+	guardAPI(nil, s.handleAcademicLogin, "POST")(rec, req)
 	if rec.Code != 403 {
 		t.Fatal("cross-origin school login accepted")
 	}
@@ -136,5 +136,65 @@ func TestGraduateTimetableAndUnscheduled(t *testing.T) {
 		if _, err := parseGraduateTimetable([]byte(raw)); err == nil {
 			t.Fatal("malformed response treated as empty", raw)
 		}
+	}
+}
+
+// 研究生登录在学校那边卡住时，会话查询与清除不能排在锁后面；途中清除后结果不能复活。
+func TestAcademicLoginDoesNotHoldLockDuringSchoolRequests(t *testing.T) {
+	a := newAcademicService()
+	a.client = newAcademicClient()
+	a.challenge, a.vtoken, a.expires = "test-challenge", "test-token", time.Now().Add(time.Minute)
+	entered, release := make(chan struct{}), make(chan struct{})
+	a.client.Transport = calendarTransport(func(r *http.Request) (*http.Response, error) {
+		body := `{"XM":"test-student"}`
+		if r.URL.Path == "/yjsxkapp/sys/xsxkapp/login/check/login.do" {
+			close(entered)
+			<-release
+			body = `{"code":"1"}`
+		}
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+	})
+	s := &Server{academic: a}
+	done := make(chan *httptest.ResponseRecorder)
+	go func() {
+		rec := httptest.NewRecorder()
+		s.handleAcademicLogin(rec, httptest.NewRequest("POST", "/api/academic/login", strings.NewReader(`{"username":"test-student","password":"test","captcha":"0000","challenge":"test-challenge"}`)))
+		done <- rec
+	}()
+	<-entered
+	quick := make(chan struct{})
+	go func() {
+		s.handleAcademicSession(httptest.NewRecorder(), httptest.NewRequest("GET", "/api/academic/session", nil))
+		s.handleAcademicSession(httptest.NewRecorder(), httptest.NewRequest("DELETE", "/api/academic/session", nil))
+		close(quick)
+	}()
+	select {
+	case <-quick:
+	case <-time.After(5 * time.Second):
+		close(release)
+		t.Fatal("研究生登录进行中，会话查询或清除被锁住了")
+	}
+	close(release)
+	rec := <-done
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if rec.Code != 409 || a.authenticated || a.client != nil {
+		t.Fatalf("途中清除后登录结果复活了：%d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// 课表读取改到锁外后，研究生会话失效时仍要复位（只复位读取所用的那一条）。
+func TestGraduateTimetableExpiryResetsSession(t *testing.T) {
+	a := newAcademicService()
+	expired := newAcademicClient()
+	expired.Transport = calendarTransport(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 401, Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
+	})
+	a.client, a.authenticated = expired, true
+	s := &Server{academic: a}
+	rec := httptest.NewRecorder()
+	s.handleTimetable(rec, httptest.NewRequest("GET", "/api/academic/timetable", nil))
+	if rec.Code != 401 || a.authenticated || a.client != nil {
+		t.Fatalf("会话失效后没有复位：%d", rec.Code)
 	}
 }

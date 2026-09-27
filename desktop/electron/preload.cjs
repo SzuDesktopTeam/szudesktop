@@ -2,7 +2,7 @@ const {contextBridge, ipcRenderer} = require('electron');
 let beforeQuit=null;
 ipcRenderer.on('szu:prepare-quit',async(_event,id)=>{
   try{if(beforeQuit)await beforeQuit();ipcRenderer.send('szu:quit-prepared',{id,ok:true});}
-  catch(error){ipcRenderer.send('szu:quit-prepared',{id,ok:false,message:String(error?.message||'笔记尚未保存').slice(0,240)});}
+  catch(error){ipcRenderer.send('szu:quit-prepared',{id,ok:false,message:String(error?.message||'还有内容尚未保存').slice(0,240)});}
 });
 const petCommands = new Set(['pat', 'feed', 'play', 'chat', 'sleep', 'garden', 'farm', 'study', 'home']);
 contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({

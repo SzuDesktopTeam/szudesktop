@@ -4,13 +4,17 @@ import vm from 'node:vm';
 import {petReaction} from './assets/garden/pet-player.mjs';
 import {act,activePet,createState,normalize} from './assets/garden/engine.mjs';
 import {PET_SPRITES,petSprite} from './assets/garden/pet-catalog.mjs';
+import {focusKey,restoreFocus} from './assets/garden/shell-repaint.mjs';
+import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
-const handlers=source.slice(source.indexOf('async function run('),source.indexOf("document.addEventListener('click'"));
-const commitSource=source.slice(source.indexOf('async function commit('),source.indexOf('async function confirm('));
-const companionSource=source.slice(source.indexOf('const sprite='),source.indexOf('const cat='))+
- source.slice(source.indexOf('const pageTips='),source.indexOf('const pages='))+
- source.slice(source.indexOf('function paintCompanionDialog('),source.indexOf('function render(){'));
+// 标记找不到或顺序变了就直接报出是哪一段，不能切出空串或错位的代码再去执行。
+function section(start,end){const from=source.indexOf(start),to=source.indexOf(end,from);assert.ok(from>=0&&to>from,'app.mjs 里找不到这一段：'+start);return source.slice(from,to)}
+const handlers=section('async function run(',"document.addEventListener('click'");
+const careSource=section('function renderPetCare(','function showGuide(');
+const companionSource=section('const sprite=','const cat=')+section('const pageTips=','const pages=')+section('function paintCompanionDialog(','function render(){');
+// commit() 来自 workspace-commit.mjs；按 app.mjs 的接线绑到 vm 上下文里的 state、revision 与 workspaceFailure。
+function bindCommit(context){if(!('workspaceFailure' in context))context.workspaceFailure=null;context.commit=createWorkspaceCommit({api:(...args)=>context.api(...args),normalize:data=>context.normalize(data),read:()=>({failure:context.workspaceFailure,revision:context.revision}),setRevision:next=>{context.revision=next},setState:next=>{context.state=next},paint:()=>context.render(),byId:id=>context.document.getElementById(id)});return context}
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}};
 function fixture(){
  const results=[],toasts=[],writes=[],controls=[{disabled:false,isConnected:true}];
@@ -18,14 +22,14 @@ function fixture(){
  const dialog={querySelector:selector=>selector==='.companion-portrait'?footer.portrait:footer.speaker,setAttribute:(name,value)=>{footer.attrs[name]=value}};
  const context=vm.createContext({
   state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',studyTab:'focus',
-  act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},
+  act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},focusKey,restoreFocus,
   $:selector=>selector==='.companion-dialog'?dialog:selector==='#companion-tip'?footer.tip:null,
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
   navigate:async(page,tab)=>{context.page=page;if(page==='study'&&tab)context.studyTab=tab;if(page==='garden'&&tab)context.gardenTab=tab;return true},
   szuDesktop:{petResult:result=>results.push({...result})},
   api:async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:context.revision+1}},
  });
- vm.runInContext(companionSource+commitSource+handlers,context);
+ vm.runInContext(companionSource+careSource+handlers,bindCommit(context));
  context.paintCompanionDialog();
  return {context,results,toasts,writes,controls,footer,command:command=>context.handlePetCommand(command)};
 }
@@ -81,6 +85,12 @@ await check('busy, startup, and shutdown reject commands explicitly',async()=>{
   const f=fixture();Object.assign(f.context,changed);await f.command('feed');
   assert.equal(f.writes.length,0);assert.equal(f.results.length,1);assert.equal(f.results[0].ok,false);
  }
+});
+await check('a failed workspace load does not present the placeholder pet as the real companion',async()=>{
+ const f=fixture();vm.runInContext('workspaceFailure={message:"存档时间异常",raw:null}',f.context);f.context.paintCompanionDialog();
+ assert.equal(f.footer.speaker.textContent,'小提示');assert.equal(f.footer.attrs['aria-label'],'庭院的小提示');
+ assert.match(f.footer.tip.textContent,/伙伴们都还在原存档里/);assert.ok(!f.footer.portrait.innerHTML.includes(`href="#${petSprite(activePet(f.context.state.game))}"`),'页脚不画占位伙伴');
+ vm.runInContext('workspaceFailure=null',f.context);f.context.paintCompanionDialog();assertCompanion(f);
 });
 await check('navigation selects the requested real page and the correct garden section',async()=>{
  const f=fixture();await f.command('farm');assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'farm');
@@ -215,7 +225,7 @@ await check('shell size updates change existing controls without saving back',()
   $:selector=>({'#pet-scale':field,'#pet-scale-value':label})[selector],
   szuDesktop:{onPetScale:callback=>{received=callback},setPetScale:()=>{saves++}},
  });
- vm.runInContext(source.slice(source.indexOf('function showPetScale('),source.indexOf('function render(){')),context);
+ vm.runInContext(section('function showPetScale(','function render(){'),context);
  const registration=source.match(/globalThis\.szuDesktop\?\.onPetScale\?\.\(showPetScale\);/);
  assert.ok(registration);vm.runInContext(registration[0],context);
  received(1.35);assert.equal(field.value,'1.35');assert.equal(label.textContent,'135%');assert.equal(saves,0);

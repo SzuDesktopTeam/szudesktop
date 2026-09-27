@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {CROPS,DECOR,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet} from './assets/garden/engine.mjs';
 import {todoView,focusView,weeklyView} from './assets/garden/productivity.mjs';
 import {ordersView} from './assets/garden/arcade-ui.mjs';
+import {movePuzzle} from './assets/garden/puzzle2048.mjs';
 import {reservedStock,sellableStock} from './assets/garden/garden-loop.mjs';
 import {cropPurpose,readyOrders} from './assets/garden/garden-path.mjs';
 import {projectScene} from './assets/garden/garden-loop-ui.mjs';
@@ -11,6 +12,10 @@ import {homeSkinPicker} from './assets/garden/home-skins.mjs';
 import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
 import {readRoute,routeHash} from './assets/garden/routes.mjs';
+import {countdown,remaining,recordOnboarded} from './assets/garden/app-logic.mjs';
+import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
+import {focusKey,restoreFocus,formEdited,refreshDraft} from './assets/garden/shell-repaint.mjs';
+import {esc} from './assets/garden/html.mjs';
 
 // Exercise the actual page handlers with an isolated DOM and workspace API.
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
@@ -19,6 +24,8 @@ function section(start,end){
  assert.ok(from>=0&&to>from,'page handler was not found');
  return source.slice(from,to);
 }
+// commit() 来自 workspace-commit.mjs；按 app.mjs 的接线绑到 vm 上下文里的 state、revision 与 workspaceFailure。
+function bindCommit(context){if(!('workspaceFailure' in context))context.workspaceFailure=null;context.commit=createWorkspaceCommit({api:(...args)=>context.api(...args),normalize:data=>context.normalize(data),read:()=>({failure:context.workspaceFailure,revision:context.revision}),setRevision:next=>{context.revision=next},setState:next=>{context.state=next},paint:()=>context.render(),byId:id=>context.document.getElementById(id)});return context}
 let checks=0;
 async function check(name,fn){await fn();checks++;console.log('PASS',name)}
 
@@ -43,7 +50,7 @@ function sceneFixture(){
  const mounts=[],nodes=new Map(),state=createState();state.preferences.homeSkin='lake';
  const context=vm.createContext({
   state,page:'home',studyTab:'focus',serviceTab:'spaces',revision:1,pages:{home:'今日',garden:'庭院',study:'学习',services:'校园服务'},pageIcons:{},Date,
-  sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},
+  sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},focusKey,restoreFocus,refreshDraft,
   document:{body:{dataset:{}},activeElement:null,querySelector:selector=>selector==='[data-home-scene]'?current:null},
   api:async()=>({revision:2}),
   loadSceneRenderer:async()=>({mountHomeScene(host,options){
@@ -63,7 +70,7 @@ function sceneFixture(){
  context.$=selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector);
  context.mountGardenPlayers=()=>context.mountHomeScenery();
  vm.runInContext(section('let homeScene=','function mountGardenPlayers(').replace("import('./home-scene-renderer.mjs')",'loadSceneRenderer()')+
-  section('async function commit(','function renderPetCare(')+section('function render(){','function pageHTML('),context);
+  section('function render(){','function pageHTML('),bindCommit(context));
  return {context,mounts,host:()=>current,render(skin=context.state.preferences.homeSkin,page='home'){
   context.state.preferences.homeSkin=skin;context.page=page;context.render();
  }};
@@ -80,7 +87,7 @@ await check('page repaints reattach the actual notebook editor with draft, selec
   visibleNotebook={isConnected:true,contains:()=>false,replaceWith(original){this.isConnected=false;original.isConnected=true;visibleNotebook=original}};
  }};
  const context=vm.createContext({state,page:'study',studyTab:'notes',serviceTab:'spaces',pages:{study:'学习书屋'},pageIcons:{},Date,
-  sprite:()=>'',pageHTML:()=>'<section data-notebook>new placeholder</section>',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},
+  sprite:()=>'',pageHTML:()=>'<section data-notebook>new placeholder</section>',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},focusKey,restoreFocus,refreshDraft,
   notebookUI:{mount(root){assert.equal(root,main);mounts.push(visibleNotebook)}},
   document:{body,activeElement:editor,querySelector:selector=>selector==='[data-notebook]'?visibleNotebook:null,getElementById:id=>id==='main'?main:null},
   $:selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector),
@@ -122,6 +129,61 @@ await check('moving between rooms reuses the campus canvas; skin, motion and pix
  f.render('pixel','study');assert.equal(f.host(),null);assert.equal(f.mounts[2].destroyed,1);
  f.render('bookshop','study');await sceneTick();assert.equal(f.mounts.length,4);assert.notEqual(f.host(),room);
 });
+await check('business-page header windows draw a still frame while the homepage keeps its motion',async()=>{
+ const f=sceneFixture(),calls=[];
+ // 页头小窗由 campusRoomHeader 输出 .campus-room-scene；首页大图没有这个类名。
+ const make=still=>({dataset:{homeScene:'lake'},isConnected:true,classList:{contains:name=>still&&name==='campus-room-scene'},querySelector:()=>({textContent:''}),replaceWith(host){this.isConnected=false;host.isConnected=true;hosts.current=host}});
+ const hosts={current:make(true)};f.context.document.querySelector=selector=>selector==='[data-home-scene]'?hosts.current:null;
+ f.context.page='study';f.context.mountHomeScenery();await sceneTick();
+ assert.equal(f.mounts.length,1);assert.equal(f.mounts[0].options.motion,false,'页头小窗只画静帧');
+ f.mounts[0].setMotion=value=>calls.push(value);
+ hosts.current=make(false);f.context.page='home';f.context.mountHomeScenery();
+ assert.equal(f.mounts.length,1,'同一块画布移到首页，不重建 WebGL');assert.deepEqual(calls,[true],'回到首页恢复动画');
+ hosts.current=make(true);f.context.page='settings';f.context.mountHomeScenery();assert.deepEqual(calls,[true,false]);
+ f.context.state.preferences.motion=false;hosts.current=make(false);f.context.mountHomeScenery();await sceneTick();
+ assert.equal(f.mounts.length,2);assert.equal(f.mounts[1].options.motion,false,'关闭动画时首页也只画静帧');
+});
+// 用假 WebGL、假场景和假帧循环执行真实的 mountHomeScene：去掉 import，导出改成普通函数。
+async function sceneRenderer(options){
+ const text=readFileSync(new URL('./assets/garden/home-scene-renderer.mjs',import.meta.url),'utf8');
+ const body=text.replace(/^import .*$/gm,'').replace('export async function mountHomeScene','async function mountHomeScene');
+ const shadows=[],frames=new Map(),vec=()=>({set(){return this},copy(){return this},addScaledVector(){return this},sub:()=>({length:()=>1}),setScalar(){}});
+ let resized=null,frameId=0;
+ const renderer={shadowMap:{},setPixelRatio(){},dispose(){},forceContextLoss(){}};
+ const uniforms=()=>new Proxy({},{get:(target,key)=>target[key]??={value:{set(){}}}});
+ class Light{constructor(){this.position=vec();this.target={position:vec()};this.shadow={mapSize:vec(),camera:{},dispose(){}}}}
+ const context=vm.createContext({
+  THREE:{WebGLRenderer:function(){return renderer},SRGBColorSpace:'srgb',NoToneMapping:0,PCFShadowMap:1,Scene:class{add(){}traverse(){}clear(){}},
+   PerspectiveCamera:class{constructor(){this.position=vec();this.far=240}lookAt(){}updateProjectionMatrix(){}},Vector3:function(){return vec()},Fog:class{},DirectionalLight:Light,HemisphereLight:Light},
+  // 与 three.js 一致：带着 needsUpdate 渲染一帧后，阴影贴图重画一次并清掉标记。
+  Pipeline:class{constructor(){this.ink={mat:{uniforms:uniforms()}};this.size={x:320,y:96}}setSize(){}render(){shadows.push(!!renderer.shadowMap.needsUpdate);renderer.shadowMap.needsUpdate=false}dispose(){}},
+  buildSky:()=>({dome:{position:vec(),material:{uniforms:uniforms()}},clouds:{position:vec(),scale:vec()}}),PAL:{},setOutlineResolution(){},
+  buildCampusScene:()=>({camera:{target:[0,0,0],position:[0,4,12]},lighting:{},update(){}}),
+  document:{hidden:false,createElement:()=>({style:{},setAttribute(){},addEventListener(){},removeEventListener(){},remove(){}}),addEventListener(){},removeEventListener(){}},
+  matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),performance:{now:()=>0},
+  ResizeObserver:class{constructor(fn){resized=fn}observe(){}disconnect(){}},IntersectionObserver:class{observe(){}disconnect(){}},
+  requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId},cancelAnimationFrame:id=>frames.delete(id),
+ });
+ const mount=vm.runInContext(body+'\nmountHomeScene',context);
+ const container={isConnected:true,dataset:{},append(){},querySelector:()=>null,getBoundingClientRect:()=>({width:320,height:96})};
+ const scene=await mount(container,options);
+ const frame=now=>{const [id,fn]=[...frames].at(-1)||[];if(!fn)return false;frames.delete(id);fn(now);return true};
+ return {scene,renderer,shadows,frames,frame,resize:()=>resized(),container};
+}
+await check('the scene draws its static shadow map once per mount or resize, not on every animated frame',async()=>{
+ const home=await sceneRenderer({skin:'lake',motion:true});
+ assert.equal(home.renderer.shadowMap.autoUpdate,false,'静止的阴影不能每帧重画');
+ assert.deepEqual(home.shadows,[true],'挂载后第一帧画出阴影');assert.equal(home.container.dataset.sceneMode,'animated');
+ for(const now of [100,200,300])assert.equal(home.frame(now),true,'首页大图保持动画帧循环');
+ assert.deepEqual(home.shadows,[true,false,false,false],'动画帧不重画阴影贴图');
+ home.resize();assert.deepEqual(home.shadows.slice(-1),[true],'尺寸变化后重画一次阴影');
+ home.frame(400);home.frame(500);assert.deepEqual(home.shadows.slice(-2),[false,false]);
+ home.scene.destroy();assert.equal(home.frames.size,0,'销毁后不再排帧');
+ const header=await sceneRenderer({skin:'lake',motion:false});
+ assert.deepEqual(header.shadows,[true]);assert.equal(header.frames.size,0,'页头小窗只画一帧静图，不排动画帧');assert.equal(header.container.dataset.sceneMode,'still');
+ header.scene.setMotion(true);assert.equal(header.frames.size,1,'同一块画布移到首页时恢复动画');assert.equal(header.container.dataset.sceneMode,'animated');
+ header.scene.setMotion(false);assert.equal(header.frames.size,0,'移回页头小窗时停止排帧');assert.deepEqual(header.shadows,[true,false,false]);
+});
 await check('pending scene imports and late mounts cannot revive a replaced view',async()=>{
  const f=sceneFixture(),imports=[];const loader=f.context.loadSceneRenderer;
  f.context.loadSceneRenderer=()=>new Promise(resolve=>imports.push(resolve));
@@ -145,15 +207,17 @@ function farmFixture(){
  const plots=state.game.plots.map((p,i)=>{const classes=new Set(),el={dataset:{farmPlot:String(i),growth:''},attrs:{},disabled:false,isConnected:true,html:'',ready:{dataset:{},textContent:''},soil:{classList:{add:value=>classes.add(value),remove:value=>classes.delete(value),contains:value=>classes.has(value)}},setAttribute(name,value){this.attrs[name]=value},querySelector(){return this.soil},set innerHTML(value){this.html=value;classes.clear();for(const c of /class="soil ([^"]+)"/.exec(value)?.[1].split(' ')||[])classes.add(c);const due=/data-ready="(\d+)"/.exec(value);this.ready.dataset.ready=due?due[1]:''},get innerHTML(){return this.html}};readyLabels.push(el.ready);return el});
  for(const [id,node] of Object.entries({'farm-selected-title':title,'farm-plot-details':details,'farm-plot-actions':actions,'seed-choice':seeds}))nodes.set(id,node);
  const money={outerHTML:''},basket={outerHTML:''},daily={outerHTML:''},activity={hidden:true};
- const context=vm.createContext({state,CROPS,Date:Clock,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,petPlayer:null,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
+ const context=vm.createContext({state,CROPS,Date:Clock,esc,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,petPlayer:null,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cat:()=>'<svg data-animated-pet></svg>',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
   render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},paintGardenPath(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
-  schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},
+  schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},focusKey,restoreFocus,
   api:async(path,data)=>{assert.equal(path,'/api/workspace');assert.ok(data?.data);requests++;return {revision:requests+1}},
  });
  context.$=selector=>context.document.querySelector(selector);
- vm.runInContext(section('const $=','const pageIcons=')+section('function plotGrowth(','function market(')+section('function countdown(','function stampVersion(')+section('async function commit(','function renderPetCare(')+section('async function run(','// 只有下列公开查询')+section('function clocks(){','function paintDay('),context);
+ // 倒计时文字来自 app-logic.mjs，按这里的测试时钟计算。
+ Object.assign(context,{countdown:end=>countdown(end,now),remaining:end=>remaining(end,now)});
+ vm.runInContext(section('const $=','const pageIcons=')+section('function plotGrowth(','function market(')+section('async function run(','// 只有下列公开查询')+section('function clocks(){','function paintDay('),bindCommit(context));
  vm.runInContext(section("document.addEventListener('click'","document.addEventListener('submit'")+section("document.addEventListener('change'",'let exiting='),context);
  context.renderFarmState();
  return {context,plots,seeds,title,details,actions,money,basket,now:()=>now,advanceTo:t=>{now=t},requests:()=>requests,
@@ -239,30 +303,28 @@ await check('onboarding flag is explicit and survives a save round trip',()=>{
 await check('dismissing the guide records it once and keeps other preferences',async()=>{
  const local=createState();local.preferences.theme='night';local.preferences.motion=false;
  const committed=[],toasts=[];
- const context=vm.createContext({state:local,structuredClone,toast:m=>toasts.push(m)});
- context.commit=async next=>{committed.push(next);context.state=next};
- vm.runInContext(section('function showGuide(','function todoHTML('),context);
- await vm.runInContext('markOnboarded()',context);
+ const context={state:local};
+ const commit=async next=>{committed.push(next);context.state=next},markOnboarded=()=>recordOnboarded(context.state,{commit,toast:m=>toasts.push(m)});
+ assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(state,\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
+ await markOnboarded();
  assert.equal(committed.length,1);
  assert.equal(committed[0].preferences.onboarded,true);
  assert.equal(committed[0].preferences.theme,'night','记录引导状态不能顺手改掉用户选的庭院光线');
  assert.equal(committed[0].preferences.motion,false);
  assert.equal(toasts.length,0);
- await vm.runInContext('markOnboarded()',context);
+ await markOnboarded();
  assert.equal(committed.length,1,'已经看过引导就不该再写一次存档');
 });
 
 await check('a failed onboarding save is reported, not swallowed',async()=>{
  const local=createState();const toasts=[];
- const context=vm.createContext({state:local,structuredClone,toast:m=>toasts.push(m),commit:async()=>{throw Error('另一个窗口更新了存档')}});
- vm.runInContext(section('function showGuide(','function todoHTML('),context);
- await vm.runInContext('markOnboarded()',context);
+ await recordOnboarded(local,{toast:m=>toasts.push(m),commit:async()=>{throw Error('另一个窗口更新了存档')}});
  assert.equal(toasts.length,1,'存档没写成功却不告诉用户，下次打开会莫名再弹一次');
  assert.match(toasts[0],/另一个窗口更新了存档/);
 });
 
 await check('first run opens the guide, settings save keeps the flag',()=>{
- assert.match(source,/if\(!state\.preferences\.onboarded\)showGuide\(\)/,'启动时没有按存档状态决定是否展示引导');
+ assert.match(source,/if\(workspaceReady&&!state\.preferences\.onboarded\)showGuide\(\)/,'启动时没有按存档状态决定是否展示引导；读档失败时不展示');
  assert.match(source,/next\.preferences=\{\.\.\.next\.preferences,theme:d\.theme,motion:!!d\.motion\}/,'保存设置会把「已看过引导」丢掉，用户每次打开都会被再教一遍');
  const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
  assert.match(html,/<dialog id="guide"><form method="dialog">/);
@@ -288,7 +350,7 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  });
  context.commit=async(next,_draft,paint)=>{writes.push(next);context.state=next;paint()};
  context.run=work=>{pending=work();return pending};
- vm.runInContext(section('function paintDay(','function countdown('),context);
+ vm.runInContext(section('function paintDay(','function stampVersion('),context);
  context.refreshDay();await pending;
  assert.equal(context.state.game.daily.day,'2026-09-28');assert.equal(gift.disabled,false);assert.match(gift.innerHTML,/领取每日补给/);
  assert.equal(board.outerHTML,'daily:2026-09-28:false');assert.match(today.innerHTML,/9月28日/);
@@ -303,9 +365,23 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  assert.equal(context.state,current);assert.equal(writes.length,1,'正在写存档时不应与跨日刷新竞争');
  for(const chosen of ['2026-09-30','']){plannedDate.value=chosen;plannedDate.defaultValue='2026-09-27';context.paintDay('2026-09-27');assert.equal(plannedDate.value,chosen,'用户改过或清空的日期不能被跨日更新覆盖');}
  assert.match(source,/function clocks\(\)\{[^]*?refreshDay\(\)/);
- assert.match(source,/addEventListener\('visibilitychange',[^]*?if\(!document\.hidden\)clocks\(\)/);
+ assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden\)\{clocks\(\)/);
 });
 
+await check('a clock corrected back across midnight repaints once instead of every second',()=>{
+ const ahead=new Date(2026,8,28,0,30).getTime();let now=new Date(2026,8,27,23,58).getTime();
+ class Clock extends Date {constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
+ const current=settle(createState(ahead),ahead);let paints=0,renders=0;
+ const context=vm.createContext({state:current,busy:false,workspaceReady:false,visitAttemptDay:'',page:'garden',gardenTab:'market',todoFilter:'open',Date:Clock,settle,dayKey,todoView,weeklyView,sprite:()=>'',dailyBoard:()=>'',
+  document:{getElementById:()=>null,querySelectorAll:()=>[],querySelector:()=>null},render(){renders++},paintArcade(){paints++},
+ });
+ vm.runInContext(section('function paintDay(','function stampVersion('),context);
+ for(let i=0;i<5;i++){context.refreshDay();now+=1000}
+ assert.equal(context.state.game.daily.day,'2026-09-28','存档日期不会倒退');assert.equal(renders,0,'时钟校正后不能每秒整页重绘集市');
+ now=new Date(2026,8,28,0,1).getTime();context.refreshDay();assert.equal(renders,1,'本机日期真正变化时刷新一次');
+ for(let i=0;i<5;i++){now+=1000;context.refreshDay()}assert.equal(renders,1);
+ now=new Date(2026,8,29,0,1).getTime();context.refreshDay();assert.equal(context.state.game.daily.day,'2026-09-29');assert.equal(renders,2);
+});
 await check('midnight refreshes order reservations and sale quantities while retaining the arcade board',()=>{
  const before=new Date(2026,8,27,23,59).getTime(),now=new Date(2026,8,28,0,1).getTime();
  class Clock extends Date {constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
@@ -328,7 +404,7 @@ await check('midnight refreshes order reservations and sale quantities while ret
   vm.runInContext(section('function market(','function journal('),context);
   marketMarkup=context.market(current.game);
   assert.match(marketMarkup,/出售多余 ×6/,'昨天的委托全部完成时只预留建设材料');
-  vm.runInContext(section('function paintDay(','function countdown('),context);
+  vm.runInContext(section('function paintDay(','function stampVersion('),context);
   context.refreshDay();
   assert.equal(context.state.game.daily.day,'2026-09-28');assert.equal(context.state.game.orders.day,'2026-09-28');
   if(tab==='market'){
@@ -353,7 +429,7 @@ await check('study sections display only their requested tools and honor student
   todoHTML:()=>'<form id="todo-only"></form>',weeklyView:()=>'<section id="week-only"></section>',
   officialUI:{card:()=>'<section id="official-only"></section>'},academicUI:{card:()=>'<section id="calendar-only"></section>'},
   schoolUI:{loginCard:()=>'<section id="graduate-login-only"></section>',timetableCard:level=>`<section id="timetable-${level}"></section>`},
-  campusUI:{grades:()=>'<section id="grades-only"></section>'}});
+  campusUI:{grades:()=>'<section id="grades-only"></section>'},workspaceFailure:null,workspaceFailureHTML:()=>'<section id="recovery-only"></section>',notebookUI:{view:()=>'<section id="notes-only"></section>'}});
  vm.runInContext(section('function study(){','function settings(){'),context);
  let html=context.study();assert.match(html,/focus-only/);assert.match(html,/todo-only/);assert.match(html,/week-only/);
  assert.doesNotMatch(html,/official-only|calendar-only|timetable-|grades-only|id="student-level"/);
@@ -363,6 +439,11 @@ await check('study sections display only their requested tools and honor student
  context.state.preferences.studentLevel='graduate';html=context.study();assert.match(html,/graduate-login-only/);assert.match(html,/timetable-graduate/);
  context.studyTab='grades';html=context.study();assert.match(html,/grades-only/);assert.match(html,/id="student-level"/);
  assert.doesNotMatch(html,/calendar-only|timetable-graduate|graduate-login-only|focus-only|todo-only|week-only/);
+ context.workspaceFailure={message:'存档时间异常',raw:{}};
+ for(const tab of ['focus','grades']){context.studyTab=tab;html=context.study();assert.match(html,/recovery-only/);assert.doesNotMatch(html,/focus-only|todo-only|grades-only|id="student-level"/,tab+' 依赖庭院存档，读档失败时不能显示占位数据')}
+ context.studyTab='notes';assert.match(context.study(),/notes-only/,'课程笔记不依赖庭院存档');
+ context.studyTab='timetable';html=context.study();assert.match(html,/timetable-graduate/);
+ assert.match(html,/id="student-level"[^]*只在本次打开期间有效[^]*学期按官方校历计算/,'占位状态里的培养层次和学期不能冒充已保存的设置');
 });
 
 await check('campus service sections do not mount unrelated forms or booking tools',()=>{
@@ -384,6 +465,7 @@ await check('settings sections retain appearance, desktop controls, both backups
   desktopUI:{card:()=>'<section id="desktop-options"></section>'},
   releaseUI:createReleaseUI({getVersion:()=> 'beta0.9.3',api:()=>assert.fail('rendering settings must not check updates automatically')}),
   feedbackUI:createFeedbackUI({getVersion:()=> 'beta0.9.3',getMode:()=> 'browser',toast(){}}),exitHint:()=> '退出方式',
+  workspaceFailure:null,workspaceFailureHTML:()=>'<section id="recovery-only"></section>',
  });
  vm.runInContext(section('function sectionNav(','function servicesPage(')+section('function settings(){','function loadPetScale(){'),context);
  for(const [tab,required] of Object.entries({
@@ -402,6 +484,18 @@ await check('settings sections retain appearance, desktop controls, both backups
  }
  context.settingsTab='desktop';context.szuDesktop={shell:'electron'};
  const installed=context.settings();assert.match(installed,/id="desktop-options"/);assert.match(installed,/id="pet-scale"/);assert.doesNotMatch(installed,/id="autostart-state"/,'installed Windows startup is owned by the Electron desktop preferences');
+ context.workspaceFailure={message:'存档时间异常',raw:{}};
+ for(const tab of ['appearance','data','desktop','about']){
+  context.settingsTab=tab;const html=context.settings();assert.match(html,new RegExp(`data-tab="${tab}" aria-pressed="true"`),'读档失败时仍能切换设置分区');
+  if(tab==='appearance'){assert.match(html,/recovery-only/);assert.doesNotMatch(html,/id="profile-form"/)}
+  else if(tab==='data'){
+   assert.match(html,/recovery-only/);
+   // 删除凭据、备份笔记与从备份恢复都与庭院存档无关，读档失败时仍要可用；导出存档则由恢复卡的“导出原始存档”代替。
+   for(const pattern of [/data-action="forget"/,/data-action="notebookBackup"/,/id="import-file"/])assert.match(html,pattern,`读档失败时 data 分区仍要保留 ${pattern}`);
+   assert.doesNotMatch(html,/data-action="export"/);assert.match(html,/可以用以前导出的备份替换它/);
+  }
+  else assert.doesNotMatch(html,/recovery-only/);
+ }
 });
 
 function formFixture(){
@@ -423,7 +517,7 @@ function formFixture(){
  });
  context.run=work=>{pending=work();return pending;};
  context.api=async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:context.revision+1};};
- vm.runInContext(section('async function commit(','function renderPetCare('),context);
+ bindCommit(context);
  vm.runInContext(section('function renderStudyProgress(){','function home(){'),context);
  vm.runInContext(section("document.addEventListener('click'","document.addEventListener('input'"),context);
  return {context,nodes,writes,messages,reactions,draft,date,todoForm,focusPanel,weekPanel,get fullRenders(){return fullRenders},
@@ -499,12 +593,16 @@ await check('failed animation preference saves do not tell the desktop pet they 
  assert.equal(notifications.length,0);assert.equal(f.context.state.preferences.motion,originalMotion);assert.equal(f.fullRenders,0);assert.equal(f.messages.length,0);
 });
 
+function profileForm(values){
+ const field=(name,value,defaultValue=value)=>({name,value,defaultValue});
+ return {id:'profile-form',elements:[field('name',values.name,values.savedName??values.name),field('college',values.college,values.savedCollege??values.college),{name:'motion',type:'checkbox',checked:values.motion,defaultChecked:values.savedMotion??values.motion}]};
+}
 await check('settings navigation keeps the original unsaved profile form in memory and same-room clicks do not repaint',async()=>{
- const state=createState(),nodes=new Map(),form={id:'profile-form',name:'还没保存的昵称',college:'一段草稿',theme:'night',motion:false};
+ const state=createState(),nodes=new Map(),form=profileForm({name:'还没保存的昵称',savedName:'',college:'一段草稿',savedCollege:'',motion:false,savedMotion:true});
  const savedProfile=structuredClone(state.profile);let visible=form,repaints=0;
  const main={focus(){},set innerHTML(_html){repaints++;visible=context.page==='settings'&&context.settingsTab==='appearance'?{replaceWith(original){visible=original}}:null}};
  const context=vm.createContext({state,page:'settings',settingsTab:'appearance',studyTab:'notes',serviceTab:'spaces',gardenTab:'pet',settingsProfileDraft:null,busy:false,
-  pages:{settings:'设置',home:'今日'},pageIcons:{},readRoute,routeHash,Date,sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},
+  pages:{settings:'设置',home:'今日'},pageIcons:{},readRoute,routeHash,Date,sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},focusKey,restoreFocus,formEdited,refreshDraft,pollNetwork(){},mountGardenPlayers(){},
   notebookUI:{leave:()=>assert.fail('settings navigation must not trigger the notebook save gate')},
   desktopUI:{load(){}},loadAutostart(){},loadPetScale(){},window:{scrollTo(){}},history:{replaceState(){},pushState(){}},
   document:{body:{dataset:{}},activeElement:null,querySelector:()=>null,getElementById:id=>id==='profile-form'?visible:null},
@@ -517,8 +615,29 @@ await check('settings navigation keeps the original unsaved profile form in memo
   await context.navigate('settings','appearance');assert.equal(visible,form);
  }
  await context.navigate('home');await context.navigate('settings','appearance');assert.equal(visible,form);
- assert.deepEqual(form,{id:'profile-form',name:'还没保存的昵称',college:'一段草稿',theme:'night',motion:false});
+ assert.deepEqual(form.elements.map(field=>field.value??field.checked),['还没保存的昵称','一段草稿',false]);
  assert.deepEqual(state.profile,savedProfile,'changing rooms must not silently save the profile draft');
+});
+await check('an untouched profile form is not kept as a draft, and a kept draft picks up newer saved fields',async()=>{
+ const state=createState();state.profile.name='窗口 A';
+ let visible=profileForm({name:'窗口 A',college:'',motion:true}),fresh=null;
+ const main={focus(){},set innerHTML(_html){visible=context.page==='settings'&&context.settingsTab==='appearance'?(fresh={...profileForm({name:context.state.profile.name,college:context.state.profile.college,motion:context.state.preferences.motion}),replaceWith(original){visible=original}}):null;if(fresh)fresh.elements.namedItem=name=>fresh.elements.find(field=>field.name===name)}};
+ const context=vm.createContext({state,page:'settings',settingsTab:'appearance',studyTab:'notes',serviceTab:'spaces',gardenTab:'pet',settingsProfileDraft:null,busy:false,
+  pages:{settings:'设置',home:'今日'},pageIcons:{},readRoute,routeHash,Date,sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},focusKey,restoreFocus,formEdited,refreshDraft,pollNetwork(){},mountGardenPlayers(){},
+  notebookUI:{leave:()=>assert.fail('settings navigation must not trigger the notebook save gate')},desktopUI:{load(){}},loadAutostart(){},loadPetScale(){},window:{scrollTo(){}},history:{replaceState(){},pushState(){}},
+  document:{body:{dataset:{}},activeElement:null,querySelector:()=>null,getElementById:id=>id==='profile-form'?visible:null},
+  $:selector=>selector==='#main'?main:{},toast:message=>assert.fail(message),
+ });
+ vm.runInContext(section('function render(){','function pageHTML(')+section('let navigating=false;','let notifiedFocus='),context);
+ await context.navigate('home');assert.equal(context.settingsProfileDraft,null,'原样离开的表单不能留作草稿');
+ context.state=structuredClone(state);context.state.profile.name='窗口 B';
+ await context.navigate('settings','appearance');assert.equal(visible.elements[0].value,'窗口 B','回来时按另一个窗口保存的最新昵称显示');
+ visible.elements[1].value='只改了学院';await context.navigate('home');assert.ok(context.settingsProfileDraft,'改过的表单留作草稿');
+ context.state=structuredClone(context.state);context.state.profile.name='窗口 C';context.state.preferences.motion=false;
+ await context.navigate('settings','appearance');
+ assert.equal(visible,context.settingsProfileDraft,'回来时仍是原来的表单节点');
+ assert.deepEqual(visible.elements.map(field=>field.value??field.checked),['窗口 C','只改了学院',false],'没改过的字段跟随最新存档，改过的学院保持草稿');
+ assert.equal(visible.elements[0].defaultValue,'窗口 C');assert.equal(visible.elements[2].defaultChecked,false);
 });
 await check('saving a profile clears its in-memory form only after the write succeeds',async()=>{
  const f=formFixture(),form={id:'profile-form',elements:{name:{value:'  新名字  '},college:{value:'  新学院  '},theme:{value:'night'},motion:{type:'checkbox',checked:false,value:'on'}}};
@@ -529,5 +648,103 @@ await check('saving a profile clears its in-memory form only after the write suc
  f.context.api=save;await f.submit(form);
  assert.equal(f.context.settingsProfileDraft,null);assert.equal(f.context.state.profile.name,'新名字');assert.equal(f.context.state.profile.college,'新学院');
  assert.equal(f.context.state.preferences.theme,'night');assert.equal(f.context.state.preferences.motion,false);assert.equal(f.fullRenders,1);
+});
+function puzzleFixture(values=[2,2,4]){
+ const state=createState();state.game.puzzle.board=[...values,...Array(16-values.length).fill(0)];
+ const writes=[],paints=[],toasts=[],timers=[];let reply=null;
+ const context=vm.createContext({state,revision:1,busy:false,exiting:false,page:'garden',gardenTab:'arcade',act,movePuzzle,normalize,activePet,structuredClone,
+  petPlayer:null,paintGardenPath(){},wallet:()=>'',actionReward:()=>null,reactPet(){},showReward(){},confirm:async()=>true,toast:message=>toasts.push(message),
+  paintArcade:(_root,game,options)=>paints.push({moves:game.puzzle.moves,animated:!!options.result}),
+  document:{activeElement:null,getElementById:()=>({}),querySelector:()=>null,querySelectorAll:()=>[]},
+  schoolUI:{sync(){}},clocks(){},networkResult(){},focusKey,restoreFocus,
+  // 其他写入期间的排队轮询用真实计时；合并保存的延迟由测试手动触发。
+  setTimeout:(fn,delay)=>{if(delay===40)return setTimeout(fn,0);timers.push({fn,delay});return timers.length},clearTimeout:id=>{if(timers[id-1])timers[id-1].cleared=true},
+  api:async(path,body)=>{assert.equal(path,'/api/workspace');if(body)writes.push({revision:body.revision,moves:body.data.game.puzzle.moves,board:[...body.data.game.puzzle.board]});if(reply)return reply(body);return {revision:(body?.revision??0)+1}},
+ });
+ vm.runInContext(section('// 2048 走子先在本机生效','const btn=(text')+section('async function run(','// 只有下列公开查询'),bindCommit(context));
+ const move=()=>{const direction=['left','right','up','down'].find(d=>movePuzzle(context.state.game.puzzle,d).changed);assert.ok(direction);context.puzzleMove(direction);return direction};
+ const fire=async()=>{const due=timers.filter(timer=>!timer.cleared&&!timer.fired);due.forEach(timer=>{timer.fired=true;timer.fn()});await farmTick();await farmTick()};
+ return {context,writes,paints,toasts,timers,move,fire,setReply:fn=>{reply=fn}};
+}
+await check('2048 moves apply at once and coalesce into one save after the player pauses',async()=>{
+ const f=puzzleFixture();
+ for(let i=0;i<3;i++)f.move();
+ assert.equal(f.context.state.game.puzzle.moves,3,'每一步立即在本机生效');assert.deepEqual(f.paints.map(p=>p.moves),[1,2,3]);assert.ok(f.paints.every(p=>p.animated));
+ assert.equal(f.writes.length,0,'走子时不逐步写盘');assert.equal(f.context.busy,false,'走子不占用存档写锁');
+ assert.deepEqual(f.timers.filter(t=>!t.cleared).map(t=>t.delay),[600],'停手后只保留一次合并保存');
+ await f.fire();
+ assert.equal(f.writes.length,1);assert.equal(f.writes[0].moves,3);assert.equal(f.writes[0].revision,1);assert.equal(f.context.revision,2);assert.equal(f.context.busy,false);
+ assert.deepEqual(f.toasts,[]);
+});
+await check('keys pressed during a puzzle save still move, then save with the new revision',async()=>{
+ const f=puzzleFixture();let release;f.setReply(body=>new Promise(resolve=>{release=()=>resolve({revision:body.revision+1})}));
+ f.move();await f.fire();assert.equal(f.writes.length,1);assert.equal(f.context.busy,true,'保存进行中占用写锁，其他写入不会并发');
+ f.move();f.move();assert.equal(f.context.state.game.puzzle.moves,3,'保存中的按键照常生效，不被丢弃');assert.deepEqual(f.toasts,[],'不弹“正在保存”提示');
+ f.setReply(null);release();await farmTick();await farmTick();
+ assert.equal(f.writes.length,2);assert.equal(f.writes[1].moves,3);assert.equal(f.writes[1].revision,2,'第二次保存使用第一次返回的修订号');
+ assert.equal(f.context.revision,3);assert.equal(f.context.busy,false);
+});
+await check('keys pressed while another save runs wait for it instead of being dropped',async()=>{
+ const f=puzzleFixture();f.context.busy=true;
+ f.move();f.move();assert.equal(f.context.state.game.puzzle.moves,0,'其他写入完成前不改动它将替换的存档');
+ f.context.busy=false;await new Promise(resolve=>setTimeout(resolve,20));await farmTick();
+ assert.equal(f.context.state.game.puzzle.moves,2,'写入结束后排队的按键依次生效');assert.deepEqual(f.toasts,[]);
+});
+await check('a puzzle save conflict syncs the latest workspace and keeps revisions consistent',async()=>{
+ const f=puzzleFixture(),latest=createState();latest.game.coins=321;
+ f.move();f.move();
+ f.setReply(body=>{if(body){const e=Error('conflict');e.code=409;throw e}return {revision:9,data:latest}});
+ await f.fire();
+ assert.equal(f.context.revision,9);assert.equal(f.context.state.game.coins,321);assert.equal(f.context.state.game.puzzle.moves,0);
+ assert.match(f.toasts.at(-1),/另一个窗口有新记录，已同步/);assert.equal(f.context.busy,false);
+ f.setReply(null);f.move();await f.fire();assert.equal(f.writes.at(-1).revision,9,'同步后的下一次保存基于最新修订号');
+});
+await check('a puzzle save conflict caused by a backup recovery says the file was restored, not another window',async()=>{
+ // 409 本身带恢复标记，或只有冲突后重读的结果带（api() 以不可枚举属性标出），两种都要如实说明。
+ for(const where of ['conflict','reload']){
+  const f=puzzleFixture(),latest=createState();latest.game.coins=77;f.move();
+  f.setReply(body=>{if(body){const e=Error('存档文件损坏，已恢复到上一次成功保存的版本，请重新加载后继续');e.code=409;if(where==='conflict')e.recovered=true;throw e}
+   const result={revision:4,data:latest};if(where==='reload')Object.defineProperty(result,'recovered',{value:true});return result});
+  await f.fire();
+  assert.equal(f.toasts.at(-1),'存档文件损坏，已恢复到上一次成功保存的版本。刚才的几步没有保存，可以接着玩。',where);
+  assert.equal(f.context.revision,4);assert.equal(f.context.state.game.coins,77);assert.equal(f.context.busy,false);
+ }
+});
+await check('a new sticker saves immediately and claiming first saves pending moves',async()=>{
+ const f=puzzleFixture([64,64]);f.context.puzzleMove('left');
+ assert.equal(f.timers.at(-1).delay,0,'得到新贴纸或奖励资格时立即保存');await f.fire();assert.equal(f.writes.length,1);
+ const g=puzzleFixture();g.move();const claim=g.context.puzzleAction('puzzleUndo');await claim;
+ assert.equal(g.writes.length,2,'先存好走子，再写入悔一步');assert.equal(g.writes[0].moves,1);assert.equal(g.writes[1].revision,2);
+});
+await check('leaving the arcade saves pending moves right away',async()=>{
+ const f=puzzleFixture();let unbound=0;
+ Object.assign(f.context,{arcadeCleanup:null,mountHomeScenery(){},createPetPlayer:()=>assert.fail('测试页面没有伙伴头像'),bindArcade:(_root,handlers)=>{assert.equal(handlers.onMove,f.context.puzzleMove);return ()=>{unbound++}}});
+ vm.runInContext(section('function mountGardenPlayers(','function reactPet('),f.context);
+ f.context.mountGardenPlayers();f.move();f.move();assert.equal(f.writes.length,0);
+ f.context.gardenTab='pet';f.context.mountGardenPlayers();await farmTick();
+ assert.equal(unbound,1);assert.equal(f.writes.length,1,'离开伙伴小桌时立即存好走子，不等合并延迟');assert.equal(f.writes[0].moves,2);
+});
+// 退出回调就是应用注册给 Electron 的那一段；preload 会把它抛出的消息交给主进程的退出确认框。
+function quitHook(f){let quit=null;f.context.szuDesktop={onBeforeQuit:fn=>{quit=fn}};f.context.notebookUI={flush:async()=>{}};vm.runInContext(section('// 棋局冲突时已同步','async function notebookLearningAction('),f.context);assert.equal(typeof quit,'function');return quit}
+await check('quitting saves pending 2048 moves and blocks the exit only when moves really stay unsaved',async()=>{
+ let f=puzzleFixture(),quit=quitHook(f);
+ f.move();f.move();await quit();assert.equal(f.writes.length,1,'退出前存好合并中的走子');assert.equal(f.writes[0].moves,2);
+ f.move();f.setReply(body=>{if(body){const e=Error('conflict');e.code=409;throw e}return {revision:9,data:createState()}});
+ await quit();assert.equal(f.context.revision,9,'冲突时已同步最新存档、没有待存走子，不能拦下退出');
+ f.setReply(()=>{throw Error('本机服务暂时无响应')});f.move();
+ await assert.rejects(quit(),/2048 棋局尚未保存：本机服务暂时无响应/,'走子确实没存上时如实说明是棋局');
+ f=puzzleFixture();quit=quitHook(f);f.move();f.context.busy=true;
+ const pending=quit();await new Promise(resolve=>setTimeout(resolve,20));assert.equal(f.writes.length,0,'另一项写入进行中时先等它写完');
+ f.context.busy=false;await pending;assert.equal(f.writes.length,1,'等到写锁后再存走子，不会悄悄丢掉');assert.equal(f.writes[0].moves,1);
+ f=puzzleFixture();quit=quitHook(f);f.move();f.context.busy=true;let clock=0;f.context.Date={now:()=>clock+=1000};
+ await assert.rejects(quit(),/2048 棋局尚未保存：上一项操作还在保存/,'等不到写锁时在主进程超时前如实报告');assert.equal(f.writes.length,0);
+});
+await check('a degraded workspace never lets the puzzle write over the unreadable save',async()=>{
+ const f=puzzleFixture(),quit=quitHook(f);f.move();
+ vm.runInContext('workspaceFailure={message:"存档时间异常",raw:null}',f.context);
+ await assert.rejects(f.context.flushPuzzle(),/庭院存档暂时打不开，棋局没有保存/);assert.equal(f.writes.length,0);
+ const moves=f.context.state.game.puzzle.moves;for(const direction of ['left','right','up','down'])f.context.puzzleMove(direction);
+ assert.equal(f.context.state.game.puzzle.moves,moves,'降级时不再应用走子');
+ await quit();assert.equal(f.writes.length,0,'没有待存走子，退出不被拦下');
 });
 console.log(`${checks} workspace UI checks passed`);

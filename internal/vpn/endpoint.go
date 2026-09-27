@@ -3,6 +3,7 @@ package vpn
 import (
 	"context"
 	"net"
+	"sync/atomic"
 
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -23,7 +24,10 @@ const (
 // 把栈发出的包回调给发流。
 type Endpoint struct {
 	dispatcher stack.NetworkDispatcher
-	onRecv     func([]byte)
+
+	// onRecv 由发流在重连时换掉，而 WritePackets 在 gVisor 的协程里读它，
+	// 所以用原子指针，不能是裸字段。
+	onRecv atomic.Pointer[func([]byte)]
 }
 
 func (ep *Endpoint) MTU() uint32                    { return defaultMTU }
@@ -51,8 +55,8 @@ func (ep *Endpoint) WritePackets(list stack.PacketBufferList) (int, tcpip.Error)
 		for _, s := range pb.AsSlices() {
 			buf = append(buf, s...)
 		}
-		if len(buf) > 0 && ep.onRecv != nil {
-			ep.onRecv(buf)
+		if fn := ep.onRecv.Load(); len(buf) > 0 && fn != nil {
+			(*fn)(buf)
 		}
 		n++
 	}
@@ -72,7 +76,13 @@ func (ep *Endpoint) WriteTo(buf []byte) {
 }
 
 // SetOnRecv 注册发流回调（nil = 摘除）。
-func (ep *Endpoint) SetOnRecv(fn func([]byte)) { ep.onRecv = fn }
+func (ep *Endpoint) SetOnRecv(fn func([]byte)) {
+	if fn == nil {
+		ep.onRecv.Store(nil)
+		return
+	}
+	ep.onRecv.Store(&fn)
+}
 
 // setupStack 建用户态 IP 栈：本机 IP/32 + 默认路由全走这条 NIC。
 func setupStack(ip []byte, endpoint *Endpoint) *stack.Stack {

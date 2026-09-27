@@ -2,6 +2,7 @@ package portal
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,28 +36,42 @@ type SrunClient struct {
 	AcID     string // 可选：手动指定接入点编号；留空则自动发现
 
 	// lastAcID 是上一次成功认证用过的接入点编号。
-	// 同一张网里不用每次重探；换网后发现不对会自动重新发现。
+	// 同一张网里不用每次重探；服务端说这个编号不对时，Login 会把它作废、
+	// 跳过缓存重新发现一次（见 Login）。
 	lastAcID string
 
 	// OnAcIDResolved 在自动发现出 ac_id 后回调，方便调用方持久化。
 	// 可以为 nil。
 	OnAcIDResolved func(acID string)
 
+	// OnAcIDRejected 在缓存下来的 ac_id 被服务端拒绝（ac-type / auth_info 一类报错）
+	// 时回调，调用方应该把这张网的缓存删掉。可以为 nil。
+	OnAcIDRejected func(acID string)
+
+	// redirectProbes 是网关跳转发现用的外网探针，测试可以换成假网关。
+	redirectProbes []string
+
 	http *http.Client
 }
 
 // NewSrunClient 创建一个深澜认证客户端。
 func NewSrunClient(host, username, password string) *SrunClient {
+	c := newSrunClient(host, username, password)
+	c.http = newHTTPClient(c.Host, "", 10*time.Second)
+	return c
+}
+
+// newSrunClient 只填字段，HTTP 客户端由调用方配（在线查询用不保活的那个）。
+func newSrunClient(host, username, password string) *SrunClient {
 	if host == "" {
 		host = DefaultSrunHost
 	}
-	c := &SrunClient{
-		Host:     strings.TrimRight(host, "/"),
-		Username: username,
-		Password: password,
+	return &SrunClient{
+		Host:           strings.TrimRight(host, "/"),
+		Username:       username,
+		Password:       password,
+		redirectProbes: append([]string(nil), defaultRedirectProbes...),
 	}
-	c.http = newHTTPClient(c.Host, "", 10*time.Second)
-	return c
 }
 
 // SetServerIP 指定认证服务器的 IP，用于域名解析不通的情况。
@@ -70,12 +85,7 @@ func (c *SrunClient) SetLastAcID(id string) {
 	c.lastAcID = id
 }
 
-// ResolveAcID 对外暴露一次接入点发现，供界面「断线诊断」显示。
-func (c *SrunClient) ResolveAcID() string {
-	return c.resolveAcID()
-}
-
-// ResolveAcIDWithSource 同 ResolveAcID，但把来源一起带出来。
+// ResolveAcIDWithSource 对外暴露一次接入点发现，并把来源一起带出来。
 //
 // 调用方需要知道这个编号可不可信：猜出来的值不该当成定论给用户看，
 // 更不该缓存。
@@ -218,10 +228,31 @@ func parseOnlineDevices(detail string) []string {
 //
 // 流程：要 challenge → 定 acid → 算 HMAC-MD5 密码 → 算加密用户信息
 // → 算 SHA1 校验和 → 发登录请求。
+//
+// 缓存下来的 ac_id 被服务端拒了（换了墙口 / AP，或者撞上了别的网络的缓存键），
+// 就把缓存作废（通知 OnAcIDRejected），跳过缓存重新发现一次再试。
+// 只重试这一种来源：手填的值用户说了算，网关跳转来的值本身就是权威，
+// 重试也换不出别的答案。
 func (c *SrunClient) Login() (*Result, error) {
+	res, acIDRejected, err := c.loginOnce()
+	if err != nil || res.OK || !acIDRejected || res.AcIDSource != string(AcIDSourceCache) {
+		return res, err
+	}
+	stale := c.lastAcID
+	c.lastAcID = ""
+	if c.OnAcIDRejected != nil {
+		c.OnAcIDRejected(stale)
+	}
+	// lastAcID 已清空，这次只会走跳转发现或兜底猜测，不会再回到缓存。
+	res, _, err = c.loginOnce()
+	return res, err
+}
+
+// loginOnce 发一次登录请求。acIDRejected 表示服务端明确说 ac_id 不对。
+func (c *SrunClient) loginOnce() (res *Result, acIDRejected bool, err error) {
 	token, ip, err := c.challenge()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	acID, acIDSource := c.resolveAcIDWithSource()
@@ -230,7 +261,7 @@ func (c *SrunClient) Login() (*Result, error) {
 
 	info, err := c.encodeUserInfo(token, ip, acID)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// 校验和：按固定顺序把「token+字段」拼起来算 SHA1。
@@ -260,17 +291,29 @@ func (c *SrunClient) Login() (*Result, error) {
 	q.Set("n", srunN)
 	q.Set("type", srunType)
 
-	body, err := c.get(c.Host + "/cgi-bin/srun_portal?" + q.Encode())
+	// 查询串里有学号、{MD5} 摘要和加密后的用户信息：get 已经把错误里的地址
+	// 截掉了查询串，响应正文里出现这几样时也整段不给出；这里再兜一次底。
+	body, err := c.get(c.Host+"/cgi-bin/srun_portal?"+q.Encode(), c.Password, pwd, info)
 	if err != nil {
-		return nil, fmt.Errorf("发送登录请求失败: %w", err)
+		return nil, false, scrubSecrets(fmt.Errorf("发送登录请求失败: %w", err), c.Password, pwd, info)
 	}
 
 	var resp srunPortalResp
 	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, fmt.Errorf("解析登录响应失败: %w", err)
+		return nil, false, scrubSecrets(fmt.Errorf("解析登录响应失败: %w", err), c.Password, pwd, info)
 	}
 
-	raw := truncate(string(body), 2000)
+	// 先对完整正文查机密，再截断，见 withholdSecrets。
+	raw := truncate(withholdSecrets(string(body), c.Password, pwd, info), 2000)
+	fail := func() (*Result, bool, error) {
+		return &Result{
+			OK:         false,
+			Message:    friendlySrunError(resp),
+			Raw:        raw,
+			AcID:       acID,
+			AcIDSource: string(acIDSource),
+		}, srunAcIDRejected(resp), nil
+	}
 
 	// 深澜这里有两种"已在线"，含义完全不同，以前混着都当成功，是错的：
 	//
@@ -291,7 +334,15 @@ func (c *SrunClient) Login() (*Result, error) {
 				Raw:        raw,
 				AcID:       acID,
 				AcIDSource: string(acIDSource),
-			}, nil
+			}, false, nil
+		}
+
+		// error=ok 也不等于成功：ac_id 用错时服务端同样回 error=ok，
+		// 真正的结论只在 error_msg / res 里（friendlySrunError 的注释和测试夹具
+		// 记的就是这种形态）。当成功报出去，用户上不了网却看到「认证成功」，
+		// 错的 ac_id 还会被写进缓存固化下来。
+		if srunLoginRejected(resp) {
+			return fail()
 		}
 
 		// 走到这里才算认证被服务端接受，说明这个 ac_id 是对的，记下来给下次用。
@@ -307,10 +358,41 @@ func (c *SrunClient) Login() (*Result, error) {
 		if strings.Contains(resp.SucMsg, "already_online") {
 			msg = "该账号本来就在线，无需重复认证"
 		}
-		return &Result{OK: true, Message: msg, Raw: raw, AcID: acID, AcIDSource: string(acIDSource)}, nil
+		return &Result{OK: true, Message: msg, Raw: raw, AcID: acID, AcIDSource: string(acIDSource)}, false, nil
 	}
 
-	return &Result{OK: false, Message: friendlySrunError(resp), Raw: raw}, nil
+	return fail()
+}
+
+// srunRejectMarkers 是 error=ok 时仍说明「这次没登上」的关键词，
+// 和 friendlySrunError 认的那几类失败一一对应。
+var srunRejectMarkers = []string{
+	"ac-type", "ac_id", "auth_info", "sign_error", "sign error", "ldap", "userid",
+	"decrypt", "challenge_expire", "bad_request", "login_error",
+}
+
+// srunLoginRejected 判断 error=ok 的响应里是不是其实藏着失败。
+// error 字段本身是 ok，所以只看另外三个字段。
+func srunLoginRejected(resp srunPortalResp) bool {
+	text := strings.ToLower(strings.Join([]string{resp.ErrorMsg, resp.Res, resp.SucMsg}, " "))
+	for _, m := range srunRejectMarkers {
+		if strings.Contains(text, m) {
+			return true
+		}
+	}
+	return false
+}
+
+// srunAcIDRejected 判断服务端是不是在说「ac_id 不对」。
+// auth_info_error 也算：它最常见的原因就是 ac_id 对不上。
+func srunAcIDRejected(resp srunPortalResp) bool {
+	text := strings.ToLower(strings.Join([]string{resp.Error, resp.ErrorMsg, resp.SucMsg, resp.Res}, " "))
+	for _, m := range []string{"ac-type", "ac_id", "auth_info"} {
+		if strings.Contains(text, m) {
+			return true
+		}
+	}
+	return false
 }
 
 // explainIPAlreadyOnline 给"出口已被占用"这个结果配一句能照着做的话。
@@ -443,6 +525,20 @@ func isAllDigits(s string) bool {
 	return true
 }
 
+// defaultRedirectProbes 是网关跳转发现用的外网探针。
+//
+// ⚠️ 探针必须是**真正的外网站点**，见 discoverAcIDFromRedirect。
+var defaultRedirectProbes = []string{
+	connectivityProbe,                                   // 未认证时必定被拦
+	"http://www.msftconnecttest.com/redirect",           // Windows 自带探测
+	"http://connectivitycheck.gstatic.com/generate_204", // 安卓/Chrome
+	"http://captive.apple.com/hotspot-detect.html",      // 苹果
+}
+
+// redirectProbeTimeout 是单个探针的超时。网关拦截是就近回的 302，
+// 真被拦时很快就有结果；等不到说明根本没人拦，没必要干等 10 秒。
+const redirectProbeTimeout = 4 * time.Second
+
 // discoverAcIDFromRedirect 让网关自己告诉我们 ac_id。
 //
 // 这是**唯一可靠**的一招：未认证时请求任意外网地址，校园网网关会把
@@ -457,40 +553,57 @@ func isAllDigits(s string) bool {
 // 网关根本没拦的时候，这里也会"成功"读出一个 1，还被当成可信值。
 // 那是个假信号 —— 门户的默认入口不反映你实际挂在哪个接入点。
 //
+// ⚠️ 探测用的客户端**不能跟随跳转**。默认的 http.Client 会自动跟到认证页，
+// 拿回来的是 200、Location 为空，下面的 3xx 判断永远不成立——这一步曾经
+// 因此整个是死代码。也不能用 c.http：指定了服务器 IP 时它会把外网探针
+// 也拨到认证服务器上，问出来的又是门户默认的那个 1。
+//
 // 已经在线时访问外网不会被拦，拿不到跳转，这里返回空串 —— 这是
 // 正常情况，交给后续兜底（并且兜底结果不会被标记为可信）。
+//
+// 几个探针并发发出，谁先读出编号就用谁的：都没被拦时总耗时是最慢的那一个，
+// 而不是几个超时加起来。
 func (c *SrunClient) discoverAcIDFromRedirect() string {
-	probes := []string{
-		connectivityProbe,                                   // 未认证时必定被拦
-		"http://www.msftconnecttest.com/redirect",           // Windows 自带探测
-		"http://connectivitycheck.gstatic.com/generate_204", // 安卓/Chrome
-		"http://captive.apple.com/hotspot-detect.html",      // 苹果
+	probes := c.redirectProbes
+	if len(probes) == 0 {
+		return ""
 	}
+	client := noProxyClient(redirectProbeTimeout)
 
+	// 带缓冲：提前返回后，剩下的探针照样能把结果放下，不会卡住协程。
+	found := make(chan string, len(probes))
 	for _, p := range probes {
-		resp, err := c.http.Get(p)
-		if err != nil {
-			continue
-		}
-		loc := resp.Header.Get("Location")
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 8192))
-		_ = resp.Body.Close()
-
-		// 只认 3xx 跳转。200 说明没被拦，那就是正常上网，不是校园网闸门。
-		if resp.StatusCode/100 != 3 {
-			continue
-		}
-
-		if id := c.acIDFromLocation(p, loc); id != "" {
-			return id
-		}
-		// 有些网关不返回 Location 头，而是塞一个带 meta refresh /
-		// JS 跳转的拦截页。这种也一起捞，否则在那些设备上就彻底瞎了。
-		if id := acIDFromInterceptPage(string(body)); id != "" {
+		go func(p string) { found <- c.acIDFromProbe(client, p) }(p)
+	}
+	for range probes {
+		if id := <-found; id != "" {
 			return id
 		}
 	}
 	return ""
+}
+
+// acIDFromProbe 请求一个探针，被网关拦下时从跳转里读 ac_id。
+func (c *SrunClient) acIDFromProbe(client *http.Client, probe string) string {
+	resp, err := client.Get(probe)
+	if err != nil {
+		return ""
+	}
+	loc := resp.Header.Get("Location")
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 8192))
+	_ = resp.Body.Close()
+
+	// 只认 3xx 跳转。200 说明没被拦，那就是正常上网，不是校园网闸门。
+	if resp.StatusCode/100 != 3 {
+		return ""
+	}
+
+	if id := c.acIDFromLocation(probe, loc); id != "" {
+		return id
+	}
+	// 有些网关不返回 Location 头，而是塞一个带 meta refresh /
+	// JS 跳转的拦截页。这种也一起捞，否则在那些设备上就彻底瞎了。
+	return acIDFromInterceptPage(string(body))
 }
 
 // acIDFromLocation 把可能是相对路径的 Location 补全后取 ac_id。
@@ -545,6 +658,9 @@ func acIDFromInterceptPage(body string) string {
 //
 // 所以返回的只是一个"能用但未必对"的值。能拿到网关跳转时，
 // 一定要走 discoverAcIDFromRedirect —— 那才是权威答案。
+//
+// 门户连不上时（校外、代理把域名解析抢走），第一个请求就会失败，
+// 后面几个也一样，没必要每个都干等超时——直接放弃，交给最后的兜底。
 func (c *SrunClient) discoverAcIDFromPortal() string {
 	candidates := []string{}
 	if c.lastAcID != "" {
@@ -559,12 +675,21 @@ func (c *SrunClient) discoverAcIDFromPortal() string {
 		}
 		seen[id] = true
 
-		resp, err := c.http.Get(c.Host + "/srun_portal_pc?ac_id=" + url.QueryEscape(id) + "&theme=proyx")
+		ctx, cancel := context.WithTimeout(context.Background(), portalGuessTimeout)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			c.Host+"/srun_portal_pc?ac_id="+url.QueryEscape(id)+"&theme=proyx", nil)
 		if err != nil {
-			continue
+			cancel()
+			return ""
+		}
+		resp, err := c.http.Do(req)
+		if err != nil {
+			cancel()
+			return ""
 		}
 		body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 		_ = resp.Body.Close()
+		cancel()
 		if err != nil {
 			continue
 		}
@@ -582,6 +707,10 @@ func (c *SrunClient) discoverAcIDFromPortal() string {
 // 真正该用的是网关跳转里那个。这里只保证"有个值能跑"，
 // 结果带 AcIDSourceGuess 标记，调用方不该把它当定论缓存起来。
 var defaultAcIDCandidates = []string{"1", "2", "3", "4", "5", "10", "12"}
+
+// portalGuessTimeout 是兜底猜测时每个门户页的超时。门户页只有 8KB，
+// 门户正常时远用不了这么久。
+const portalGuessTimeout = 3 * time.Second
 
 // AcIDSource 说明一个 ac_id 是怎么来的，决定它能被信任到什么程度。
 type AcIDSource string
@@ -663,10 +792,12 @@ func (c *SrunClient) encodeUserInfo(token, ip, acID string) (string, error) {
 }
 
 // get 发一个 GET 请求，并返回 JSONP 里的 JSON 部分。
-func (c *SrunClient) get(rawURL string) ([]byte, error) {
+// 请求出错时，错误里的地址只保留到路径，见 redactRequestError；
+// secrets 是请求里带的机密，响应不是 JSONP 时不让它们随正文进错误，见 parseJSONP。
+func (c *SrunClient) get(rawURL string, secrets ...string) ([]byte, error) {
 	resp, err := c.http.Get(rawURL)
 	if err != nil {
-		return nil, err
+		return nil, redactRequestError(err)
 	}
 	defer resp.Body.Close()
 
@@ -674,7 +805,7 @@ func (c *SrunClient) get(rawURL string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parseJSONP(body)
+	return parseJSONP(body, secrets...)
 }
 
 // friendlySrunError 把服务端返回的错误码翻成能看懂的话，并给出常见原因。
@@ -704,9 +835,9 @@ func friendlySrunError(resp srunPortalResp) string {
 	case strings.Contains(code, "userid"):
 		return "认证失败：账号不对（Rad:userid error）。账号是 6 位数的校园卡号"
 	case strings.Contains(code, "ac-type"):
-		return "认证失败：ac_id 用错了（Unknow ac-type）。可以加 --ac-id 手动指定"
+		return "认证失败：ac_id 用错了（Unknow ac-type）。可以在登录页「高级设置」里填接入点编号（命令行版用 --ac-id）"
 	case strings.Contains(code, "ac_id"):
-		return "认证失败：ac_id 用错了。可以加 --ac-id 手动指定（教学区常见值：1）"
+		return "认证失败：ac_id 用错了。可以在登录页「高级设置」里填接入点编号（教学区常见值：1；命令行版用 --ac-id）"
 	case strings.Contains(code, "sign"):
 		return "认证失败：校验和不对（sign error）。加密环节出错，请把原始返回发给作者排查"
 	case strings.Contains(code, "decrypt"):

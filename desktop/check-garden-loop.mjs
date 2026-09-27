@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
-import {act,createState,normalize,settle,dayKey,CROPS,DECOR} from './assets/garden/engine.mjs';
-import {PROJECTS,projectStatus,nextProject,reservedStock,sellableStock,puzzleSupply} from './assets/garden/garden-loop.mjs';
+import {readFileSync} from 'node:fs';
+import {act,createState,normalize,settle,dayKey,achievementList,CROPS,DECOR} from './assets/garden/engine.mjs';
+import {CROPS as LOOP_CROPS,PROJECTS,projectStatus,nextProject,reservedStock,sellableStock,puzzleSupply,cropName} from './assets/garden/garden-loop.mjs';
+import {createPuzzle,normalizePuzzle} from './assets/garden/puzzle2048.mjs';
+import {projectView,projectStrip} from './assets/garden/garden-loop-ui.mjs';
+import {arcadeView,stickerItems} from './assets/garden/arcade-ui.mjs';
+import {cropIcon} from './assets/garden/garden-items.mjs';
+import {TILE_LEVELS} from './assets/garden/arcade-art.mjs';
 
 const now=new Date(2026,8,27,12).getTime(),day=dayKey(now);
 const roundTrip=(state,time=now)=>normalize(JSON.parse(JSON.stringify(state)),time);
@@ -160,6 +166,58 @@ test('order thanks and growth go to the named recipient without switching the ac
  assert.deepEqual(state.game.pets[state.game.active],before.pets[before.active]);
  assert.deepEqual(roundTrip(state).game.pets,state.game.pets);
  assert.throws(()=>act(state,{type:'orderDeliver',id:order.id},now),/已经交付/);
+});
+
+test('crop metadata has one source that the engine, goals and every screen follow',()=>{
+ assert.equal(CROPS,LOOP_CROPS,'the engine re-exports the garden-loop table instead of keeping a copy');
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ for(const [id,crop] of Object.entries(CROPS)){
+  for(const key of ['time','price','sell','yield','level','xp'])assert.ok(Number.isInteger(crop[key])&&crop[key]>0,id+'.'+key);
+  assert.equal(cropName(id),crop.name);
+  const icon=cropIcon(id),symbol=/href="#([^"]+)"/.exec(icon)?.[1];
+  assert.ok(icon.startsWith('<svg')&&(!symbol||html.includes(`<symbol id="${symbol}"`)),id+' needs farm art');
+ }
+ for(const project of Object.values(PROJECTS))for(const crop of Object.keys(project.needs))assert.ok(Object.hasOwn(CROPS,crop),project.id+' needs '+crop);
+ for(const item of stickerItems(fresh().game))assert.ok(Object.hasOwn(CROPS,item.crop),item.id);
+ assert.equal(cropName('constructor'),'作物');
+ // The 2048 ladder is hand-drawn art, but its crop tiles must still use names from the table.
+ for(const tile of TILE_LEVELS.filter(t=>t.kind==='crop'))assert.ok(Object.values(CROPS).some(c=>c.name===tile.name),tile.value+' tile names a crop missing from CROPS');
+ // Names shown by the construction and 2048 screens are read from the table.
+ const radish=CROPS.radish.name;CROPS.radish.name='白萝卜';
+ try{
+  const game=fresh().game;assert.match(projectView(game),/白萝卜 <strong>/);
+  game.stats.harvest=3;game.coins=60;game.stock.strawberry=2;assert.match(projectView(game),/白萝卜还差 4 个/);
+  game.decor=['picnic'];assert.match(projectStrip(game),/蓝莓待解锁 · Lv\.2/);
+  const supply=puzzleSupply(game);assert.ok(arcadeView(game).includes(CROPS[supply.crop].name+'种子 ×1'));
+ }finally{CROPS.radish.name=radish}
+ // A crop added to the table reaches saves, planning, supplies and achievements without editing other modules.
+ CROPS.melon={name:'甜瓜',icon:'melon',time:600000,price:30,sell:50,yield:2,level:1,xp:30};
+ try{
+  const state=act(fresh(),{type:'buySeed',crop:'melon'},now);
+  assert.equal(state.game.seeds.melon,1);for(const order of state.game.orders.offers)order.needs={radish:1};
+  assert.equal(reservedStock(state.game).melon,0);state.game.orders.offers[0].needs={melon:4};assert.equal(reservedStock(state.game).melon,4);assert.equal(puzzleSupply(state.game).crop,'melon');
+  assert.deepEqual(normalizePuzzle({...createPuzzle(1),earnedDay:day,supplyClaim:{day,crop:'melon',quantity:1}}).supplyClaim,{day,crop:'melon',quantity:1});
+  state.game.discovered=['radish','strawberry','blueberry','lychee'];
+  assert.equal(achievementList(state.game).find(a=>a.id==='collection').done,false);
+  assert.equal(roundTrip(state).game.seeds.melon,1);
+ }finally{delete CROPS.melon}
+ // Derived data that names a retired crop never crashes planning.
+ const game=fresh().game;game.orders.offers[0].needs={retired:2};
+ assert.doesNotThrow(()=>puzzleSupply(game));assert.equal(reservedStock(game).retired,undefined);
+ assert.equal(normalizePuzzle({...createPuzzle(1),earnedDay:day,supplyClaim:{day,crop:'retired',quantity:1}}).supplyClaim,null);
+});
+
+const {gardenEngineResources}=await import('./electron/garden-engine-deps.mjs');
+test('the packaged desktop menu ships every module the engine imports',()=>{
+ // Electron copies the engine and its imports one by one (extraResources); a new
+ // import missing there breaks the installed app while development still works.
+ // build.mjs derives that list from garden-engine-deps.mjs, so check the derived list.
+ const shipped=new Set(gardenEngineResources().map(r=>r.to)),seen=new Set();
+ const visit=name=>{if(seen.has(name))return;seen.add(name);const source=readFileSync(new URL('./assets/garden/'+name,import.meta.url),'utf8');for(const m of source.matchAll(/(?:import|export)\s[^;]*?from\s*'\.\/([^']+)'/g))visit(m[1])};
+ visit('engine.mjs');seen.delete('engine.mjs');
+ assert.ok(seen.has('garden-loop.mjs')&&seen.has('puzzle2048.mjs'));
+ assert.ok(shipped.has('garden-engine.mjs'),'the engine entry is shipped as garden-engine.mjs');
+ for(const name of seen)assert.ok(shipped.has(name),'the packaged engine resources must include '+name);
 });
 
 console.log(`\n${checks} garden loop checks passed.`);

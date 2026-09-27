@@ -12,6 +12,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -76,7 +77,11 @@ func main() {
 }
 
 func usage() {
-	fmt.Print(`szunet - 深圳大学校园网命令行工具
+	fmt.Print(usageText())
+}
+
+func usageText() string {
+	return `szunet - 深圳大学校园网命令行工具
 
 用法:
   szunet login      登录（自动判断你在教学区还是宿舍区）
@@ -91,22 +96,24 @@ func usage() {
 
 常用参数:
   -u, --user        校园卡号（6 位）
-  -p, --password    统一身份认证密码
+  -p, --password    统一身份认证密码（不推荐：会留在 shell 历史和进程列表里）
   --zone            强制指定区域：auto（默认）/ teaching / dorm
   --ip              直接指定认证服务器 IP，绕过域名解析
   --ac-id           指定深澜的 ac_id（教学区，一般不用手动给）
   --json            以 JSON 形式输出，方便脚本调用
   --verbose         把服务端原始返回也打出来
 
-先把账号存起来（推荐）:
-  szunet config set -u 2023xxxx -p 你的密码
+先把账号存起来（推荐，密码输入时不显示）:
+  szunet config set
 
-也可以临时用参数或环境变量:
-  szunet login -u 2023xxxx -p 你的密码
+脚本里可以从管道传密码，不进命令行参数:
+  <输出密码的命令> | szunet config set -u 2023xxxx --password-stdin
+
+也可以临时用环境变量:
   SZUNET_USERNAME=2023xxxx SZUNET_PASSWORD=你的密码 szunet login
 
 说明: 本工具是第三方作品，与深圳大学无关。别和官方客户端同时用，会互相踢下线。
-`)
+`
 }
 
 func addCommonFlags(fs *flag.FlagSet, o *options) {
@@ -131,6 +138,7 @@ func addCommonFlags(fs *flag.FlagSet, o *options) {
 
 // resolveCredentials 按「命令行参数 > 环境变量 > 已保存的凭据」的顺序取账号密码。
 func resolveCredentials(o *options) (string, string, error) {
+	warnPasswordFlag(o)
 	user, pass := o.user, o.password
 
 	if user == "" {
@@ -152,12 +160,18 @@ func resolveCredentials(o *options) (string, string, error) {
 	}
 
 	if user == "" || pass == "" {
-		return "", "", fmt.Errorf(
-			"没有可用的账号密码。先跑一次 `szunet config set` 存起来，" +
-				"或者用 -u / -p 临时指定，也可以设环境变量 SZUNET_USERNAME 和 SZUNET_PASSWORD")
+		return "", "", errors.New(noCredentialsMessage)
 	}
 	return user, pass, nil
 }
+
+// 没有账号密码时的提示。用户第一次用就会看到，所以只推荐不会把密码留在
+// shell 历史里的做法，不再提 -p（见 warnPasswordFlag）。
+const (
+	noCredentialsMessage = "没有可用的账号密码。先跑一次 `szunet config set` 存起来（交互输入，密码不显示），" +
+		"也可以设环境变量 SZUNET_USERNAME 和 SZUNET_PASSWORD"
+	noSavedAccountHint = "提示: 本机没有保存账号。要登录先跑 `szunet config set` 把账号密码存起来。"
+)
 
 // pickZone 决定用哪个区域的协议。
 // 默认自动探测；用户在 --zone 里指定了就听用户的。
@@ -176,17 +190,41 @@ func pickZone(o *options) (portal.Zone, *portal.DetectResult) {
 	}
 }
 
-// authenticationZone keeps explicit user choices ahead of automatic probing.
-func authenticationZone(o *options, det *portal.DetectResult) portal.Zone {
+// explicitZone 返回用户用 --zone 明确指定的区域，没指定（或 auto）时返回空。
+func explicitZone(o *options) portal.Zone {
 	switch o.zone {
 	case "teaching", "srun":
 		return portal.ZoneTeaching
 	case "dorm", "dormitory", "drcom":
 		return portal.ZoneDorm
 	default:
-		return det.AuthenticationZone()
+		return ""
 	}
 }
+
+// authenticationZone keeps explicit user choices ahead of automatic probing.
+func authenticationZone(o *options, det *portal.DetectResult) portal.Zone {
+	if z := explicitZone(o); z != "" {
+		return z
+	}
+	return det.AuthenticationZone()
+}
+
+// probeForAuth 决定这次认证 / 注销走哪套协议。
+//
+// 用户已经用 --zone 指定时直接听用户的，不再白跑一遍完整探测：校外或者
+// 网络还没就绪（开机自启时很常见）时，那一轮探测要白等好几秒。
+// 这时返回的探测结果是 nil。
+func probeForAuth(o *options) (portal.Zone, *portal.DetectResult) {
+	if z := explicitZone(o); z != "" {
+		return z, nil
+	}
+	det := probeNetwork()
+	return authenticationZone(o, det), det
+}
+
+// probeNetwork 是认证前的完整探测，做成变量方便测试替换。
+var probeNetwork = portal.Probe
 
 func cmdLogin(args []string) {
 	fs := flag.NewFlagSet("login", flag.ExitOnError)
@@ -199,8 +237,7 @@ func cmdLogin(args []string) {
 		fail(err)
 	}
 
-	det := portal.Probe()
-	zone := authenticationZone(&o, det)
+	zone, det := probeForAuth(&o)
 
 	switch zone {
 	case portal.ZoneTeaching, portal.ZoneDorm:
@@ -211,6 +248,9 @@ func cmdLogin(args []string) {
 		if det != nil {
 			for _, n := range det.Notes {
 				fmt.Fprintln(os.Stderr, "· "+n)
+			}
+			for _, h := range cliNoteHints(det) {
+				fmt.Fprintln(os.Stderr, "· "+h)
 			}
 		}
 		fail(fmt.Errorf("判断不出你在哪个区。如果确定在校内，可以手动指定：" +
@@ -243,7 +283,9 @@ func loginByZone(zone portal.Zone, o *options, user, pass string) (*portal.Resul
 // attachAcIDCache 让客户端复用上次这张网成功的 ac_id，成功后写回缓存。
 //
 // ac_id 跟着"插哪个墙口 / 走哪条线路"变，所以缓存键用出口标识（网关优先），
-// 而不是写死一个值。换网后缓存命中不了，客户端会自动重新发现。
+// 而不是写死一个值。换网后缓存命中不了，客户端会自动重新发现；
+// 同一个网关后面换了接入点、缓存值被服务端拒掉时，客户端会通知这里删掉缓存，
+// 再重新发现一次。
 //
 // 只缓存"可信来源"的结果：猜出来的值不写盘（见 portal.AcIDSource），
 // 否则会把一次侥幸固化下来，下次在别的网络里继续用错值。
@@ -255,6 +297,10 @@ func attachAcIDCache(c *portal.SrunClient) {
 	}
 	c.OnAcIDResolved = func(id string) {
 		prefs.SetAcID(key, id)
+		_ = prefs.Save()
+	}
+	c.OnAcIDRejected = func(string) {
+		prefs.DeleteAcID(key)
 		_ = prefs.Save()
 	}
 }
@@ -270,7 +316,7 @@ func cmdLogout(args []string) {
 		fail(err)
 	}
 
-	zone := authenticationZone(&o, portal.Probe())
+	zone, _ := probeForAuth(&o)
 
 	switch zone {
 	case portal.ZoneTeaching:
@@ -364,7 +410,7 @@ func cmdStatus(args []string) {
 	// 没存账号时补一句怎么登录；但状态本身照报，不能把「没查到」当结论。
 	if credErr != nil && status != nil && !status.Online {
 		fmt.Println()
-		fmt.Println("提示: 本机没有保存账号。要登录先跑 `szunet config set`，或用 -u / -p 临时指定。")
+		fmt.Println(noSavedAccountHint)
 	}
 }
 
@@ -383,8 +429,7 @@ func cmdDetect(args []string) {
 	// 这东西跟着"插哪个墙口 / 走哪条线路"变，是校内认证最常见的
 	// 失败原因（报 Unknow ac-type），但界面上以前完全看不到它，
 	// 排查时只能靠猜。这里显式打出来，并说明它可不可信。
-	user, pass, _ := resolveCredentials(&o)
-	acID, acIDSource := detectAcID(&o, user, pass)
+	acID, acIDSource := acIDForDetect(&o, det)
 
 	if o.asJSON {
 		printJSON(map[string]any{
@@ -399,7 +444,7 @@ func cmdDetect(args []string) {
 			"srun_dns_ok":     det.SrunDNSOK,
 			"ac_id":           acID,
 			"ac_id_source":    string(acIDSource),
-			"ac_id_trusted":   acIDSource != portal.AcIDSourceGuess,
+			"ac_id_trusted":   acIDSource != "" && acIDSource != portal.AcIDSourceGuess,
 			"notes":           det.Notes,
 		})
 		return
@@ -419,7 +464,43 @@ func cmdDetect(args []string) {
 		for _, n := range det.Notes {
 			fmt.Println("· " + n)
 		}
+		for _, h := range cliNoteHints(det) {
+			fmt.Println("· " + h)
+		}
 	}
+}
+
+// cliNoteHints 给探测说明补上命令行版的具体做法。
+//
+// portal 的 Notes 是桌面版和命令行版共用的，只写两边都能照做的话；
+// --zone / --ac-id / --ip 这些只有命令行版有，在这里单独补。
+func cliNoteHints(det *portal.DetectResult) []string {
+	if det == nil {
+		return nil
+	}
+	var out []string
+	// 和 classify 里「按宿舍区处理；报 ac_id 或协议错误就改按教学区」那条说明配对。
+	if det.Probed && !det.InternetOK && det.SrunUsable && det.DormUsable {
+		out = append(out, "命令行版改按教学区登录：szunet login --zone teaching；还报 ac_id 错误就再加 --ac-id 指定接入点编号")
+	}
+	if !det.SrunDNSOK {
+		out = append(out, "命令行版也可以用 --ip 直接指定认证服务器 IP，绕开域名解析")
+	}
+	return out
+}
+
+// acIDForDetect 给 detect 算接入点编号。
+//
+// 只在深澜指纹明确（或者用户手填了）时才查，和桌面端一致：宿舍区走的是
+// 另一套协议，没有 ac_id 这回事；校外或代理把域名解析抢走时，兜底猜测
+// 要挨个等门户超时，以前 detect 因此要干等一分半，最后给出一个「猜的」1。
+// 不查时返回空编号和空来源。
+func acIDForDetect(o *options, det *portal.DetectResult) (string, portal.AcIDSource) {
+	if o.acID == "" && (det == nil || !det.SrunUsable) {
+		return "", ""
+	}
+	// 定 ac_id 只看网络，用不到账号密码。
+	return detectAcID(o, "", "")
 }
 
 // detectAcID 算一次接入点编号，并说明它是否可信。
@@ -438,6 +519,8 @@ func detectAcID(o *options, user, pass string) (string, portal.AcIDSource) {
 // describeAcID 把接入点编号和它的可信度讲成人话。
 func describeAcID(acID string, source portal.AcIDSource) string {
 	switch source {
+	case "":
+		return "没查（不在深澜网络，宿舍区和校外用不到 ac_id）"
 	case portal.AcIDSourceManual:
 		return acID + "（你手动指定的）"
 	case portal.AcIDSourceCache:
@@ -456,7 +539,8 @@ func cmdDiag(args []string) {
 	_ = fs.Parse(args)
 
 	user, pass, _ := resolveCredentials(&o)
-	rep := diagnose.Run(user, pass, o.srunHost, o.drcomHost)
+	// 命令行版的建议可以直接写 --ip / --zone；桌面版没有这些入口，走的是默认措辞。
+	rep := diagnose.RunWithOptions(user, pass, o.srunHost, o.drcomHost, diagnose.Options{CLIHints: true})
 
 	if o.asJSON {
 		out := map[string]any{
@@ -509,13 +593,17 @@ func cmdDiag(args []string) {
 		for _, n := range rep.Detect.Notes {
 			fmt.Println("  · " + n)
 		}
+		for _, h := range cliNoteHints(rep.Detect) {
+			fmt.Println("  · " + h)
+		}
 	}
 }
 
 func cmdConfig(args []string) {
 	if len(args) < 1 {
 		fmt.Println("用法:")
-		fmt.Println("  szunet config set -u 2023xxxx -p 你的密码   保存账号密码")
+		fmt.Println("  szunet config set                         保存账号密码（交互输入，密码不显示）")
+		fmt.Println("  szunet config set -u 2023xxxx --password-stdin   从管道读密码，适合脚本")
 		fmt.Println("  szunet config show                        看当前存在哪、存的什么账号")
 		fmt.Println("  szunet config delete                      删掉保存的账号密码")
 		os.Exit(2)
@@ -528,22 +616,26 @@ func cmdConfig(args []string) {
 		fs := flag.NewFlagSet("config set", flag.ExitOnError)
 		var o options
 		addCommonFlags(fs, &o)
+		passwordStdin := fs.Bool("password-stdin", false, "从标准输入读密码（一行），适合脚本")
 		_ = fs.Parse(args[1:])
+		warnPasswordFlag(&o)
 
-		user := o.user
-		if user == "" {
-			fmt.Print("校园卡号（6 位）: ")
-			reader := bufio.NewReader(os.Stdin)
-			line, _ := reader.ReadString('\n')
-			user = strings.TrimSpace(line)
+		// 账号和密码从同一个 reader 读，管道里一次喂两行也能读对。
+		in := bufio.NewReader(os.Stdin)
+		user, pass := o.user, o.password
+		if *passwordStdin {
+			if user == "" {
+				fail(fmt.Errorf("用 --password-stdin 时，账号要用 -u 给出"))
+			}
+			line, err := readLine(in)
+			if err != nil {
+				fail(fmt.Errorf("从标准输入读密码失败: %w", err))
+			}
+			pass = line
 		}
-
-		pass := o.password
-		if pass == "" {
-			fmt.Print("统一身份认证密码（输入时会显示在屏幕上）: ")
-			reader := bufio.NewReader(os.Stdin)
-			line, _ := reader.ReadString('\n')
-			pass = strings.TrimSpace(line)
+		user, pass, err := promptCredentials(in, os.Stdout, user, pass)
+		if err != nil {
+			fail(err)
 		}
 
 		if user == "" || pass == "" {

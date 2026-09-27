@@ -11,8 +11,7 @@ import (
 func TestWorkspaceRouteUsesExpandedLimit(t *testing.T) {
 	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
 	s := New(Options{})
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 	send := func(body string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodPost, "http://127.0.0.1/api/workspace", strings.NewReader(body))
 		r.Header.Set("Content-Type", "application/json")

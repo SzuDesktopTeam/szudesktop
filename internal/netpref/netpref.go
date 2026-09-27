@@ -4,8 +4,9 @@
 // 连哪个无线 AP 走，同一台笔记本在教学区可能是 1，接上路由器换个口就变成 12。
 //
 // 拿错就会报 "Unknow ac-type"。但我们也不想每次都去盲探一遍，所以把
-// 「哪张网 → 哪个 ac_id」记在本地：换网了值对不上，自然走重新发现；
-// 没换网就直接复用，省掉一轮请求。
+// 「哪张网 → 哪个 ac_id」记在本地：换网了键对不上，自然走重新发现；
+// 没换网就直接复用，省掉一轮请求。同一个网关后面换了接入点、缓存值被服务端
+// 拒掉时，调用方用 DeleteAcID 把它作废，再重新发现。
 //
 // 这里只存 ac_id 这种非敏感信息。账号密码不走这个包，见 internal/credential。
 package netpref
@@ -90,6 +91,14 @@ func (p *Prefs) SetAcID(netKey, acID string) {
 		p.AcID = map[string]string{}
 	}
 	p.AcID[netKey] = acID
+}
+
+// DeleteAcID 作废这张网的缓存。服务端说缓存的 ac_id 不对时用。
+func (p *Prefs) DeleteAcID(netKey string) {
+	if p == nil || p.AcID == nil {
+		return
+	}
+	delete(p.AcID, netKey)
 }
 
 // NetKey 把一份"网络标识"归一成缓存键。

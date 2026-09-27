@@ -1,4 +1,5 @@
 import {pixelIcon} from './pixel.mjs';
+import {esc} from './html.mjs';
 export const CALENDAR_URL='https://www.szu.edu.cn/xxgk/xl.htm';
 const day=86400000;
 // The school calendar is a Shenzhen date, regardless of the computer's timezone.
@@ -13,7 +14,6 @@ export function teachingWeek(terms,manual='',today=schoolDate()){
 }
 
 export function createAcademicUI({getState,api,toast}){
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let calendar=null,loading=false,error='';
  function summary(){
   const current=teachingWeek(calendar?.terms||[],getState().semester);

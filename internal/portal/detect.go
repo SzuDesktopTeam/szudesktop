@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -46,12 +47,16 @@ type DetectResult struct {
 //   - 没认证的教学区，只有教学门户能连上
 //
 // 所以先看外网通不通，通了就不用折腾了；不通再看哪个门户能连上。
+//
+// 各项探测互不依赖，同一阶段的并发跑：校外或网络异常时总耗时是最慢的那一项，
+// 而不是各项超时加起来（桌面端每 30 秒刷新一次状态，走的就是这里）。
 func Detect() *DetectResult {
 	r := &DetectResult{}
 
-	r.SrunDNSOK = dnsResolvable("net.szu.edu.cn")
-
-	r.InternetOK = internetReachable()
+	parallel(
+		func() { r.SrunDNSOK = dnsResolvable("net.szu.edu.cn") },
+		func() { r.InternetOK = internetReachable() },
+	)
 	if r.InternetOK {
 		r.Zone = ZoneOnline
 		r.Notes = append(r.Notes, "能正常访问外网，当前不需要认证")
@@ -63,26 +68,14 @@ func Detect() *DetectResult {
 		// 界面上的「断线诊断」走的就是 Probe()。
 		return r
 	}
-	r.Notes = append(r.Notes, "上不了外网，接下来判断你在哪个区")
-
-	r.DormPortalOK = reachable(DefaultDrcomHost + "/")
-	r.TeachPortalOK = reachable(DefaultSrunHost + "/")
 
 	// 光看"连不连得上"会判错区：宿舍区门户 172.30.255.42 在教学区也能连上
 	// （返回 200），但它的 /eportal/portal/login 是 404——也就是说教学区机器上
 	// 「两个门户都通」照样成立。以前这条规则会把教学区误判成宿舍区，
 	// 然后用 Dr.COM 协议去打 404。所以这里改用协议指纹：
 	// 谁真的提供了自己的认证接口，才算谁的地盘。
-	r.SrunUsable = srunUsable()
-	r.DormUsable = drcomUsable()
-	r.Probed = true
-
-	r.Zone = classify(r)
-
-	if !r.SrunDNSOK {
-		r.Notes = append(r.Notes, dnsWarning)
-	}
-
+	probePortals(r)
+	concludeProbe(r)
 	return r
 }
 
@@ -97,99 +90,124 @@ func Detect() *DetectResult {
 func Probe() *DetectResult {
 	r := &DetectResult{}
 
-	r.SrunDNSOK = dnsResolvable("net.szu.edu.cn")
-	r.InternetOK = internetReachable()
+	// 不提前返回，把探测做完。六项互不依赖，一起跑。
+	parallel(
+		func() { r.SrunDNSOK = dnsResolvable("net.szu.edu.cn") },
+		func() { r.InternetOK = internetReachable() },
+		func() { probePortals(r) },
+	)
+	concludeProbe(r)
+	return r
+}
 
-	// 不提前返回，把探测做完。
-	r.DormPortalOK = reachable(DefaultDrcomHost + "/")
-	r.TeachPortalOK = reachable(DefaultSrunHost + "/")
-	r.SrunUsable = srunUsable()
-	r.DormUsable = drcomUsable()
-	r.Probed = true
-
+// concludeProbe 按跑完的探测字段定区、写说明。Detect（未联网时）和 Probe 共用。
+//
+// Notes 会原样出现在桌面版的诊断里，所以这里只写两端都能照做的话，
+// 不写 --ip / --zone 这类命令行参数；命令行版在打印时自己补一句怎么指定。
+func concludeProbe(r *DetectResult) {
 	if r.InternetOK {
 		// 已经联网：不用认证，但把"掉线后会用哪套协议"讲清楚。
 		r.Zone = ZoneOnline
 		r.Notes = append(r.Notes, "能正常访问外网，当前不需要认证")
 		r.Notes = append(r.Notes, "下面是为「万一掉线」做的预判："+zoneFingerprintNote(r))
-		if !r.SrunDNSOK {
-			r.Notes = append(r.Notes, dnsWarning)
-		}
-		return r
+	} else {
+		r.Notes = append(r.Notes, "上不了外网，接下来判断你在哪个区")
+		r.Zone = classify(r)
 	}
-
-	r.Notes = append(r.Notes, "上不了外网，接下来判断你在哪个区")
-	r.Zone = classify(r)
 	if !r.SrunDNSOK {
 		r.Notes = append(r.Notes, dnsWarning)
 	}
-	return r
+}
+
+// parallel 并发跑几项互不依赖的探测，全部跑完才返回。
+// 每项只写自己那个字段，不会互相踩。
+func parallel(fns ...func()) {
+	var wg sync.WaitGroup
+	for _, fn := range fns {
+		wg.Add(1)
+		go func(fn func()) {
+			defer wg.Done()
+			fn()
+		}(fn)
+	}
+	wg.Wait()
+}
+
+// probePortals 跑门户连通性和两套协议指纹，四项并发。
+func probePortals(r *DetectResult) {
+	parallel(
+		func() { r.DormPortalOK = reachable(DefaultDrcomHost + "/") },
+		func() { r.TeachPortalOK = reachable(DefaultSrunHost + "/") },
+		func() { r.SrunUsable = srunUsable() },
+		func() { r.DormUsable = drcomUsable() },
+	)
+	r.Probed = true
+}
+
+// PredictDropZone 按门户连通性和协议指纹，给出「真要认证时走哪套协议」和依据。
+//
+// 这是判区规则的唯一出处：未联网时的 classify、联网时「万一掉线」的预判
+// （zoneFingerprintNote），以及 diagnose 里的建议都从这里取结论。以前三处各写
+// 一份，同一份诊断报告里一边说「按宿舍区处理」、一边说「判不出来」。
+//
+// 返回 ZoneOutside 表示两个门户都探不到，真掉线时判不出区。
+// 只看探测字段，不看外网通不通；调用方要自己确认 r.Probed。
+func PredictDropZone(r *DetectResult) (Zone, string) {
+	if r == nil {
+		return ZoneOutside, "没有探测结果"
+	}
+	switch {
+	case r.SrunUsable && !r.DormUsable:
+		return ZoneTeaching, "深澜握手成功、宿舍区没有 ePortal 接口"
+	case r.DormUsable && !r.SrunUsable:
+		return ZoneDorm, "ePortal 登录接口在、深澜握手失败"
+	case r.SrunUsable && r.DormUsable:
+		return ZoneDorm, "两套接口都有回应（宿舍区常见）"
+	case r.DormPortalOK && r.TeachPortalOK:
+		// 这是宿舍区未认证时最常见的情况，容易误判成教学区，所以排在门户规则第一个。
+		return ZoneDorm, "两个门户都能连上、认证接口都没指纹（宿舍区未认证时两个门户都通）"
+	case r.DormPortalOK:
+		return ZoneDorm, "只有宿舍门户能连上"
+	case r.TeachPortalOK:
+		return ZoneTeaching, "只有教学门户能连上"
+	default:
+		return ZoneOutside, "两个门户都连不上"
+	}
 }
 
 // classify 按探测结果定区。Detect 和 Probe 共用这一段，免得两边判据走偏。
 func classify(r *DetectResult) Zone {
+	zone, reason := PredictDropZone(r)
 	switch {
-	case r.SrunUsable && !r.DormUsable:
-		r.Notes = append(r.Notes, "深澜握手成功、宿舍区没有 ePortal 接口 → 判定教学区")
-		return ZoneTeaching
-	case r.DormUsable && !r.SrunUsable:
-		r.Notes = append(r.Notes, "ePortal 登录接口在、深澜握手失败 → 判定宿舍区")
-		return ZoneDorm
+	case zone == ZoneOutside:
+		r.Notes = append(r.Notes, reason+" → 不在校园网内，或者校园网本身故障")
 	case r.SrunUsable && r.DormUsable:
-		r.Notes = append(r.Notes,
-			"两套接口都有回应（宿舍区常见），按宿舍区处理；"+
-				"如果登录报 ac_id 或协议错误，用 --zone teaching 手动指定")
-		return ZoneDorm
-	case r.DormPortalOK && r.TeachPortalOK:
-		// 这是宿舍区未认证时最常见的情况，容易误判成教学区，所以放第一个判断。
-		r.Notes = append(r.Notes, "两个门户都能连上 → 判定宿舍区（宿舍区未认证时两个门户都通）")
-		return ZoneDorm
-	case r.DormPortalOK:
-		r.Notes = append(r.Notes, "只有宿舍门户能连上 → 判定宿舍区")
-		return ZoneDorm
-	case r.TeachPortalOK:
-		r.Notes = append(r.Notes, "只有教学门户能连上 → 判定教学区")
-		return ZoneTeaching
+		r.Notes = append(r.Notes, reason+" → 按宿舍区处理；如果登录报 ac_id 或协议错误，改按教学区手动指定")
 	default:
-		r.Notes = append(r.Notes, "两个门户都连不上 → 不在校园网内，或者校园网本身故障")
-		return ZoneOutside
+		r.Notes = append(r.Notes, reason+" → 判定"+zoneShortName(zone))
 	}
+	return zone
 }
 
 // zoneFingerprintNote 把指纹结论讲成人话，供联网状态下参考。
 func zoneFingerprintNote(r *DetectResult) string {
-	switch {
-	case r.SrunUsable && !r.DormUsable:
-		return "深澜握手正常，掉线后按「教学区」处理"
-	case r.DormUsable && !r.SrunUsable:
-		return "ePortal 接口正常，掉线后按「宿舍区」处理"
-	case r.SrunUsable && r.DormUsable:
-		return "两套接口都有回应，掉线后按「宿舍区」处理"
-	case r.DormPortalOK && r.TeachPortalOK:
-		return "两个门户都通但认证接口都没指纹，掉线后按「宿舍区」处理"
-	case r.DormPortalOK:
-		return "只有宿舍门户通，掉线后按「宿舍区」处理"
-	case r.TeachPortalOK:
-		return "只有教学门户通，掉线后按「教学区」处理"
-	default:
-		return "两个门户都探不到，真掉线时判不出区"
+	zone, reason := PredictDropZone(r)
+	if zone == ZoneOutside {
+		return reason + "，真掉线时判不出区"
 	}
+	return reason + "，掉线后按「" + zoneShortName(zone) + "」处理"
 }
 
-// FingerprintZone 只按「认证接口指纹」定区，不看外网通不通。
-//
-// 用途很明确：已经能上外网、但用户就是想让程序真的去认证一次的时候
-// （换账号、换设备、上一个人留下的会话），需要一个"到底该打哪套协议"
-// 的答案。这时候外网通不通没有参考价值，只有谁真的提供了认证接口才算数。
-//
-// 返回空字符串表示两套接口都没指纹 —— 那就不该瞎猜，直接告诉用户
-// "探不到校内认证门户"。
-func FingerprintZone() Zone {
-	r := Probe()
-	if !r.SrunUsable && !r.DormUsable {
-		return ""
+// zoneShortName 是判区说明里用的短名字。
+func zoneShortName(z Zone) string {
+	switch z {
+	case ZoneTeaching:
+		return "教学区"
+	case ZoneDorm:
+		return "宿舍区"
+	default:
+		return z.Label()
 	}
-	return r.AuthenticationZone()
 }
 
 // AuthenticationZone selects an authentication protocol from an existing probe.
@@ -214,16 +232,13 @@ func (r *DetectResult) AuthenticationZone() Zone {
 }
 
 const dnsWarning = "注意：net.szu.edu.cn 这个域名解析不出来。如果开着代理或 DoH，" +
-	"它可能把域名解析抢走了，可以先关掉代理，或者用 --ip 直接指定服务器 IP"
+	"它可能把域名解析抢走了，可以先关掉代理（或者在代理规则里让 net.szu.edu.cn 直连）再试"
 
 // internetReachable 检查是否真的能上外网。
 func internetReachable() bool {
 	client := &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			Proxy:           nil,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+		Timeout:   5 * time.Second,
+		Transport: probeTransport,
 	}
 	resp, err := client.Get(connectivityProbe)
 	if err != nil {
@@ -241,16 +256,7 @@ func internetReachable() bool {
 // 不跟随跳转是故意的：认证门户对未登录的请求一律 302 到登录页，
 // 跟随跳转反而会绕远路，甚至被系统代理截胡。
 func reachable(rawURL string) bool {
-	client := &http.Client{
-		Timeout: 4 * time.Second,
-		Transport: &http.Transport{
-			Proxy:           nil,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	client := noProxyClient(4 * time.Second)
 
 	resp, err := client.Get(rawURL)
 	if err != nil {
@@ -261,17 +267,25 @@ func reachable(rawURL string) bool {
 	return true
 }
 
-// noProxyClient 造一个明确不走系统代理的 HTTP 客户端。
+// probeTransport 是所有探测共用的连接层：不走代理、不保活。
+//
+// 探测每个地址只发一个请求，保活没有收益；以前每次探测都新建 Transport、
+// 又从不关空闲连接，桌面端每 30 秒刷新一次，连接只能等服务端来关。
+// 共用一个不保活的 Transport，请求结束连接就关。
+var probeTransport = &http.Transport{
+	Proxy:             nil,
+	TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+	DisableKeepAlives: true,
+}
+
+// noProxyClient 造一个明确不走系统代理、不跟随跳转的探测客户端。
 //
 // 开着代理时，net.szu.edu.cn 这类内网域名会被代理抢走解析，
 // 探测结果就不可信了。所以探测一律绕开代理。
 func noProxyClient(timeout time.Duration) *http.Client {
 	return &http.Client{
-		Timeout: timeout,
-		Transport: &http.Transport{
-			Proxy:           nil,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+		Timeout:   timeout,
+		Transport: probeTransport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},

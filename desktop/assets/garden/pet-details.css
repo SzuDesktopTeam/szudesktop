@@ -24,10 +24,3 @@
 .pet-frame-details{margin-top:14px;padding-top:11px;border-top:1px dashed #c8b78f}
 .pet-frame-details>summary{font-size:12px;font-weight:400;color:#786242}
 .pet-frame-details[open]>summary{margin-bottom:12px}
-[data-theme=night] .pet-personality{background:linear-gradient(120deg,#372b28,#2e2927)}
-[data-theme=night] .pet-traits>span{background:#354536;color:#d3d8af;border-color:#758266}
-[data-theme=night] .pet-action-book summary{color:#d7ba85}
-[data-theme=night] .pet-action-group{border-color:#69543f}
-[data-theme=night] .pet-action-group legend{color:#c6b18b}
-[data-theme=night] .pet-frame-strip figure{background:#39302b;border-color:#69543f}
-[data-theme=night] .pet-frame-strip figcaption,[data-theme=night] .pet-frame-strip small{color:#d7bd90}

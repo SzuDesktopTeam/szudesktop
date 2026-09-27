@@ -10,6 +10,7 @@ import (
 )
 
 func TestOnlineWithoutCampusDoesNotAuthenticate(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
 	s := New(Options{})
 	s.probe = func() *portal.DetectResult {
 		return &portal.DetectResult{Zone: portal.ZoneOnline, InternetOK: true, Probed: true}

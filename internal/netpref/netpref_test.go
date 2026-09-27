@@ -34,6 +34,35 @@ func TestPrefsRoundTrip(t *testing.T) {
 	}
 }
 
+// TestDeleteAcIDDropsOnlyThatNetwork 确认作废缓存只删被拒的那张网，而且能落盘。
+//
+// 缓存值被服务端拒掉（换了墙口 / AP，或者撞了别的网络的缓存键）时要作废，
+// 否则每次登录都拿着错值去撞 Unknow ac-type。
+func TestDeleteAcIDDropsOnlyThatNetwork(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("SZUNET_CONFIG_DIR", dir)
+
+	p := Load()
+	p.SetAcID("192.168.1.1", "5")
+	p.SetAcID("172.27.40.1", "12")
+	p.DeleteAcID("192.168.1.1")
+	p.DeleteAcID("没见过的网络") // 删不存在的键不该出错
+	if err := p.Save(); err != nil {
+		t.Fatalf("保存失败: %v", err)
+	}
+
+	again := Load()
+	if got := again.AcIDFor("192.168.1.1"); got != "" {
+		t.Fatalf("被拒的缓存应该删掉，实际还有 %q", got)
+	}
+	if got := again.AcIDFor("172.27.40.1"); got != "12" {
+		t.Fatalf("别的网络的缓存不该受影响，实际 %q", got)
+	}
+
+	var nilPrefs *Prefs
+	nilPrefs.DeleteAcID("x") // nil 也不能炸
+}
+
 // TestPrefsSurvivesCorruptFile 确认缓存文件坏掉时不影响正常认证。
 //
 // 这文件只是加速用的。被手动改坏、被同步工具截断，都不该让

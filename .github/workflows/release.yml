@@ -2,88 +2,79 @@ name: Build and Release
 
 on:
   push:
+    # main 上的提交也要测：squash 合并后的真实提交、直接推到 main 的提交，
+    # 以前都要等打 tag 才第一次被测，那时 tag 已经公开，只能删掉重打。
+    branches:
+      - main
     tags:
       - 'v*'
       - 'beta*'
   pull_request:
   workflow_dispatch:
 
+# 默认只读。只有最后的 release job 需要写权限（创建 Release、上传附件），在那里单独声明。
+# 以前顶层就是 contents: write：PR 和 tag 构建里执行 npm ci / electron-builder 全部依赖代码的
+# job 也拿着可写 token，而 checkout 默认还会把它留在 .git/config 里。
 permissions:
-  contents: write
+  contents: read
 
+# 同一个 PR 连推几次时取消旧的运行。main 上的提交和 tag 发布都不取消：
+# main 上每个提交都要有完整的测试与安装包结果，tag 半途取消会留下残缺的 Release。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# 第三方 action 一律固定到提交 SHA（行尾注释是对应版本），tag 可以被改指向；
+# 升级由 .github/dependabot.yml 提 PR。
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      # 打 tag 时最先核对：标签等于 internal/version/VERSION，CHANGELOG 里有这一节、
+      # 且正文没有候选版字样。几秒内就报清楚，而不是等全部构建跑完、
+      # 到上传附件时才因为文件名对不上失败。
+      - name: 发布前置检查（仅 tag）
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          # 不在 run: 里直接插值 ${{ }}，避免标签名成为脚本注入面
+          TAG: ${{ github.ref_name }}
+        run: python desktop/release_notes.py "$TAG" --release -o "$RUNNER_TEMP/notes.md"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '22'
       - name: 同步桌面资源
         run: python desktop/sync-assets.py
-      - name: 庭院规则回归
-        run: node desktop/check-ui.mjs
-      - name: 庭院奖励回归
-        run: |
-          node desktop/check-rewards.mjs
-          node desktop/check-garden-progress.mjs
-      - name: Garden arcade and companion regression
-        run: |
-          node desktop/check-arcade.mjs
-          node desktop/check-garden-arcade.mjs
-          node desktop/check-arcade-ui.mjs
-          node desktop/check-garden-loop.mjs
-          node desktop/check-garden-path.mjs
-          node desktop/check-garden-loop-ui.mjs
-          node desktop/check-pet-dialogue.mjs
-          node desktop/check-pet-life.mjs
-          node desktop/check-pet-animation.mjs
-          node desktop/check-pet-player.mjs
-      - name: 校园服务与成绩导入回归
-        run: node desktop/check-campus.mjs
-      - name: College notices regression
-        run: node desktop/check-notices.mjs
-      - name: Session UI regression
-        run: node desktop/check-session-ui.mjs
-      - name: Academic calendar regression
-        run: |
-          node desktop/check-academic.mjs
-          node desktop/check-school.mjs
-          node desktop/check-booking.mjs
-      - name: Network and workspace UI regression
-        run: |
-          node desktop/check-network-ui.mjs
-          node desktop/check-workspace-ui.mjs
-          node desktop/check-productivity.mjs
-          node desktop/check-notebook.mjs
-          node desktop/check-interactions.mjs
-          node desktop/check-pet-commands.mjs
-          node desktop/check-pet-catalog.mjs
-      - name: Settings autostart UI regression
-        run: node desktop/check-autostart-ui.mjs
-      - name: Release check and feedback regression
-        run: |
-          node desktop/check-release-ui.mjs
-          node desktop/check-feedback.mjs
-          python desktop/check_licenses.py
-      - name: Electron sidecar 回归
-        run: |
-          node desktop/electron/check-sidecar.mjs
-          node desktop/electron/check-window-policy.mjs
-          node desktop/electron/check-pet-policy.mjs
-          node desktop/electron/check-pet-settings.mjs
-          node desktop/electron/check-desktop-settings.mjs
-          node desktop/electron/check-pet-view.mjs
-          node desktop/electron/check-school-policy.mjs
-          node desktop/electron/check-feishu-policy.mjs
-      - name: 琴房预约回归
-        run: node desktop/check-piano.mjs
-      - name: 发布说明抽取回归
-        run: python desktop/check_release_notes.py
+      # 自动发现 desktop/check-*.mjs、desktop/electron/check-*.mjs 与 desktop/check_*.py，
+      # 新增检查不用再改这里（以前手抄的清单和 README / CONTRIBUTING 已经对不上）。
+      - name: 前端、Electron 与发布脚本回归
+        run: node desktop/run-checks.mjs
+      # go.mod / go.sum 必须已经 tidy：没用到的依赖（曾挂着 tailscale 预发布版）有差异就失败。
+      # 放在 Linux 上跑，检出是 LF，不会因为行尾误报。
+      - name: 依赖清单整洁（go mod tidy -diff）
+        run: go mod tidy -diff
       - name: 静态检查
         run: go vet ./...
-      - name: 单元测试
-        run: go test ./...
+      # 实验 VPN 代码只在 campusvpn 标签下编译；不在这里编一次，它坏了也没人知道。
+      - name: 静态检查（-tags campusvpn）
+        run: go vet -tags campusvpn ./...
+      # 本地 HTTP 服务里有多处共享状态，-race 让数据竞争在 CI 里现形。
+      - name: 单元测试（-race）
+        run: go test -race ./...
+      # vpn_test.go 只在 campusvpn 标签下编译：残留系统代理的善后、断开与 busy 复位都靠它守着。
+      - name: 桌面服务单元测试（-tags campusvpn）
+        run: go test -tags campusvpn ./desktop/internal/ui/
 
   # F25：darwin 此前只被交叉编译、从不执行，而 szunet-darwin-* 是随发布分发的。
   # 这个 job 在 macOS 上真跑一遍凭据相关的代码，并已进入 release 的 needs——
@@ -92,11 +83,15 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/setup-python@v7.0.0
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
       # 必须先同步资源：desktop/internal/ui/assets/ 是生成物、不进仓库，
@@ -149,50 +144,70 @@ jobs:
           test "$got" = "v2"
           echo "F21 / F26 成立：无控制终端下 security -w 从标准输入读取，两行喂法可写入并读回一致"
 
+  # 五个平台的命令行版在一台 runner 上交叉编译（与 Makefile 的 cross 目标同一套参数），
+  # 每个产物旁边写一份同名 .sha256，和桌面版附件一样可以离线核对。
   build-cli:
     needs: test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { goos: linux,   goarch: amd64, suffix: linux-amd64 }
-          - { goos: linux,   goarch: arm64, suffix: linux-arm64 }
-          - { goos: darwin,  goarch: amd64, suffix: darwin-amd64 }
-          - { goos: darwin,  goarch: arm64, suffix: darwin-arm64 }
-          - { goos: windows, goarch: amd64, suffix: windows-amd64.exe }
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - name: 编译命令行版
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: '0'
+          cache: true
+          cache-dependency-path: go.sum
+      - name: 交叉编译命令行版
+        run: make cross
+      - name: 生成校验文件
+        working-directory: dist
         run: |
-          mkdir -p dist
-          go build -trimpath -ldflags "-s -w" -o dist/szunet-${{ matrix.suffix }} ./cmd/szunet
-      - uses: actions/upload-artifact@v7.0.1
+          for f in szunet-*; do
+            sha256sum "$f" > "$f.sha256"
+          done
+          cat ./*.sha256
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: szunet-${{ matrix.suffix }}
-          path: dist/*
+          name: szunet-cli
+          path: dist/szunet-*
           if-no-files-found: error
 
+  # Go 引擎只在这里构建一次：整机冒烟、便携包和安装包用的都是同一份字节。
   build-desktop-windows:
     needs: test
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/setup-python@v7.0.0
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - name: 构建 Windows 桌面版
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '22'
+      - name: 构建 Windows 桌面版（同步资源 + 编译 + 图标与版本信息）
         run: python desktop/build-windows.py
+      # 主平台是 Windows：DPAPI 凭据、开机自启登记的参数、实例锁、注册表 MIME 等
+      # *_windows.go 和 Windows 专属测试只有在这里才会编译、vet 和运行。
+      - name: Windows 静态检查
+        run: go vet ./...
+      - name: Windows 单元测试
+        run: go test ./...
+      # 同一套回归在 Windows 上再跑一遍：sidecar 进程树清理（taskkill /T）、系统 VerQueryValueW
+      # 读版本资源这类分支只在这里走；vendor 哈希核对也能抓住 Windows 检出变成 CRLF。
+      # desktop/electron/check-*.mjs（含 check-sidecar、check-packaging）只用 Node 内置模块，
+      # 不需要 npm ci，所以放在这里跑，安装包 job 里不再重复。
+      - name: Windows 上的回归
+        run: node desktop/run-checks.mjs
       - name: 整机冒烟
         run: python desktop/smoke_windows.py
       - name: 生成发布包
@@ -202,11 +217,12 @@ jobs:
         run: |
           $version = (Get-Content internal/version/VERSION -Raw).Trim()
           python desktop/check_licenses.py --portable "dist/szudesktop-$version-windows-amd64.zip"
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: szudesktop-windows-amd64
           path: |
             dist/szudesktop-windows-amd64.exe
+            dist/szudesktop-windows-amd64.exe.sha256
             dist/szudesktop-*-windows-amd64.zip
             dist/szudesktop-*-windows-amd64.zip.sha256
           if-no-files-found: error
@@ -214,49 +230,79 @@ jobs:
   # 最终 NSIS 安装包必须在干净 runner 完成已发布旧版升级/重开/卸载才可发布。
   # 本机镜像与缓存设置不进仓库；CI 从官方 npm/GitHub 下载依赖。
   build-desktop-electron-windows:
-    needs: test
+    needs: build-desktop-windows
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version-file: go.mod
-      - uses: actions/setup-python@v7.0.0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - uses: actions/setup-node@v6.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '22'
-      - name: 构建 Go sidecar
-        run: python desktop/build-windows.py
+          cache: npm
+          cache-dependency-path: desktop/electron/package-lock.json
+      # electron-builder 打包时下载的 Electron 运行时与 NSIS 等工具（一次一百多 MB）。
+      # tag 构建不用缓存：发布用的安装包一律从上游重新下载，不依赖 main 上写下的缓存。
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('desktop/electron/package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+      # 不在这里重新编译引擎：安装包里放的必须是上一个 job 通过整机冒烟的那一份。
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: szudesktop-windows-amd64
+          path: dist
+      - name: 核对引擎就是冒烟通过的那一份
+        shell: pwsh
+        run: |
+          $expected = ((Get-Content dist/szudesktop-windows-amd64.exe.sha256 -Raw).Trim() -split '\s+')[0]
+          $actual = (Get-FileHash dist/szudesktop-windows-amd64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "下载到的引擎 $actual 与冒烟 job 记录的 $expected 不一致" }
+          "SZU_ENGINE_SHA256=$expected" >> $env:GITHUB_ENV
       - name: 装 Electron 依赖
         run: npm ci
         working-directory: desktop/electron
-      - name: 打 Windows 安装包
+      - name: 打 Windows 安装包（复用已冒烟的引擎）
         run: node build.mjs --skip-sidecar
         working-directory: desktop/electron
+      - name: 安装包里的引擎与冒烟通过的一致
+        shell: pwsh
+        run: |
+          $packed = (Get-FileHash desktop/electron/release/win-unpacked/resources/szudesktop-windows-amd64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($packed -ne $env:SZU_ENGINE_SHA256) { throw "安装包里的引擎 $packed 不是冒烟通过的 $env:SZU_ENGINE_SHA256" }
       - name: 检查安装包资源中的许可文件
         run: python desktop/check_licenses.py --electron desktop/electron/release/win-unpacked
+      # 升级基线是最新公开版（现有用户真正会从它升级），版本与 SHA-256 固定在
+      # smoke_installer.py 里；这里按同一处取标签和附件名，不再各写一份。
       - name: 下载固定的公开旧版用于升级验收
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $tag, $asset = (python desktop/electron/smoke_installer.py --baseline).Trim() -split ' '
+          if (-not $tag -or -not $asset) { throw 'smoke_installer.py did not report an upgrade baseline' }
           $baselineDir = Join-Path $env:RUNNER_TEMP 'szu-upgrade-baseline'
           New-Item -ItemType Directory -Path $baselineDir -Force | Out-Null
-          gh release download beta0.9.1 --repo SzuDesktopTeam/szudesktop --pattern 'szuDesktop-Setup-0.9.1.exe' --pattern 'szuDesktop-Setup-0.9.1.exe.sha256' --dir $baselineDir
+          gh release download $tag --repo SzuDesktopTeam/szudesktop --pattern $asset --pattern "$asset.sha256" --dir $baselineDir
           if ($LASTEXITCODE -ne 0) { throw 'Published upgrade baseline download failed' }
-          "SZU_UPGRADE_INSTALLER=$(Join-Path $baselineDir 'szuDesktop-Setup-0.9.1.exe')" >> $env:GITHUB_ENV
+          "SZU_UPGRADE_INSTALLER=$(Join-Path $baselineDir $asset)" >> $env:GITHUB_ENV
       - name: 跨版本升级与安装版闭环验收（隔离目录与配置）
         run: python desktop/electron/smoke_installer.py
       - name: 保存安装验收证据（不作为发布附件）
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: electron-install-smoke-evidence
           path: desktop/electron/release/smoke-evidence/*
           if-no-files-found: warn
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: szudesktop-electron-windows
           path: |
@@ -270,47 +316,41 @@ jobs:
     needs: [build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos]
     if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/beta')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 整个 workflow 里只有这里能写仓库。
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
       # 发布说明必须来自 CHANGELOG.md 里对应版本的那一节。抽不到就在这里失败，
       # 附件一个都不会上传——beta0.7 那次只发了一行 compare 链接，就是因为没有这道关卡。
+      # --release：标签必须等于 VERSION，正文里也不能再留候选版字样（test job 已先查过一次）。
       - name: 从 CHANGELOG.md 抽取发布说明
         env:
           # 不在 run: 里直接插值 ${{ }}，避免标签名成为脚本注入面
           TAG: ${{ github.ref_name }}
-        run: python desktop/release_notes.py "$TAG" -o "$RUNNER_TEMP/notes.md"
-      - uses: actions/download-artifact@v8.0.1
+        run: python desktop/release_notes.py "$TAG" --release -o "$RUNNER_TEMP/notes.md"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: szudesktop-windows-amd64
           path: dist
-      - uses: actions/download-artifact@v8.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: szudesktop-electron-windows
           path: dist
-      - uses: actions/download-artifact@v8.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: szunet-windows-amd64.exe
+          name: szunet-cli
           path: dist
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: szunet-darwin-amd64
-          path: dist
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: szunet-darwin-arm64
-          path: dist
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: szunet-linux-amd64
-          path: dist
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: szunet-linux-arm64
-          path: dist
-      - uses: softprops/action-gh-release@v3.0.3
+      - name: 上传前核对全部校验文件
+        working-directory: dist
+        run: sha256sum --strict -c ./*.sha256
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           name: szuDesktop ${{ github.ref_name }}
           body_path: ${{ runner.temp }}/notes.md
@@ -318,13 +358,19 @@ jobs:
             dist/szuDesktop-Setup-*.exe
             dist/szuDesktop-Setup-*.exe.sha256
             dist/szudesktop-windows-amd64.exe
+            dist/szudesktop-windows-amd64.exe.sha256
             dist/szudesktop-${{ github.ref_name }}-windows-amd64.zip
             dist/szudesktop-${{ github.ref_name }}-windows-amd64.zip.sha256
             dist/szunet-windows-amd64.exe
+            dist/szunet-windows-amd64.exe.sha256
             dist/szunet-darwin-amd64
+            dist/szunet-darwin-amd64.sha256
             dist/szunet-darwin-arm64
+            dist/szunet-darwin-arm64.sha256
             dist/szunet-linux-amd64
+            dist/szunet-linux-amd64.sha256
             dist/szunet-linux-arm64
+            dist/szunet-linux-arm64.sha256
           fail_on_unmatched_files: true
           # 按 action 文档：提供了 body 时，body 在前，自动生成的 compare 链接追加在后
           generate_release_notes: true

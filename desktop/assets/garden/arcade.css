@@ -156,28 +156,9 @@
 .order-keepsakes .is-owned { border-color:#b9c395; background:#f1f3df; }
 .order-keepsakes .is-owned .sprite { filter:none; opacity:1; }
 .order-keepsakes .is-owned b { font-size:13px; color:#69804b; }
-[data-theme=night] .garden-arcade,[data-theme=night] .arcade-heading h2,[data-theme=night] .arcade-partner h3,[data-theme=night] .arcade-daily h3,[data-theme=night] .arcade-collection>summary,[data-theme=night] .orders-heading h2,[data-theme=night] .order-note h3 { color:#e3d4ad; }
-[data-theme=night] .arcade-table,[data-theme=night] .order-note { background:#383329; border-color:#78674d; }
-[data-theme=night] .arcade-heading>div>p:last-child,[data-theme=night] .arcade-board-top,[data-theme=night] .arcade-feedback,[data-theme=night] .arcade-partner p,[data-theme=night] .arcade-partner small,[data-theme=night] .arcade-daily p,[data-theme=night] .arcade-kind,[data-theme=night] .arcade-rules,[data-theme=night] .arcade-rules summary,[data-theme=night] .arcade-collection>p,[data-theme=night] .orders-heading p:last-child,[data-theme=night] .order-note>p,[data-theme=night] .order-materials strong,[data-theme=night] .order-materials small,[data-theme=night] .order-friendship,[data-theme=night] .order-payment>span,[data-theme=night] .orders-footer,[data-theme=night] .order-keepsakes { color:#d5c4a2; }
-[data-theme=night] .arcade-supply,[data-theme=night] .order-note.is-complete { background:#394330; border-color:#78845c; }
-[data-theme=night] .arcade-supply strong,[data-theme=night] .arcade-supply small,[data-theme=night] .order-materials .enough { color:#d5dfb0; }
-[data-theme=night] .order-materials .short,[data-theme=night] .order-note-top { color:#e0b680; }
-[data-theme=night] .order-keepsakes li { background:#3b382d; border-color:#75674d; }
 @media(max-width:1050px){.arcade-layout{grid-template-columns:minmax(0,1fr) 235px;gap:16px}.arcade-table{padding:15px}.arcade-side .card{padding:15px}.arcade-stickers{grid-template-columns:repeat(2,minmax(0,1fr))}.arcade-partner{gap:10px}.arcade-partner-portrait{width:54px;height:64px}.arcade-partner-portrait>.sprite{width:39px;height:49px}.orders-notes{gap:10px}.order-note{padding:14px 11px}.order-keepsakes ul{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:780px){.arcade-layout{grid-template-columns:minmax(0,1fr)}.arcade-table{max-width:530px;width:100%;justify-self:center;box-sizing:border-box}.arcade-side{grid-template-columns:1fr 1fr}.arcade-partner{grid-column:1/-1}.arcade-stickers{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-heading{align-items:start}.arcade-heading h2{font-size:30px}.arcade-scores>div{min-width:72px;padding:8px 10px}.arcade-scores strong{font-size:22px}.orders-notes{grid-template-columns:1fr}.order-note>p{min-height:0}.order-materials{display:flex;gap:18px;flex-wrap:wrap}.order-materials li{flex:1;min-width:140px}.order-note>button{width:auto;min-width:150px;align-self:flex-end}.orders-footer{align-items:start;flex-direction:column;gap:8px}}
 @media(max-width:480px){.arcade-heading{flex-direction:column;gap:13px}.arcade-scores{width:100%}.arcade-scores>div{flex:1;min-width:0}.arcade-side{grid-template-columns:1fr}.arcade-partner{grid-column:auto}.arcade-table{padding:11px}.arcade-board{padding:6px;border-width:3px}.arcade-grid{gap:6px}.arcade-controls{gap:10px}.arcade-directions button{width:35px;min-height:36px}.arcade-tools button{padding:6px 8px;font-size:12px}.orders-heading{align-items:start;gap:10px}.orders-heading h2{font-size:24px}.orders-tally{padding:5px 7px}.order-keepsakes ul{grid-template-columns:1fr 1fr;gap:8px}.order-keepsakes li{padding:7px;gap:7px}}
 @media(prefers-reduced-motion:reduce){.garden-arcade *{animation:none!important;transition:none!important}}
 
-[data-theme=night] .arcade-harvest-trail { border-color:#75654a; }
-[data-theme=night] .arcade-harvest-trail small,[data-theme=night] .arcade-harvest-trail b,[data-theme=night] .arcade-tile-guide,[data-theme=night] .arcade-tile-guide p,[data-theme=night] .arcade-trail-finish { color:#dac5a0; }
-[data-theme=night] .arcade-harvest-trail strong { color:#dce3b4; }
-[data-theme=night] .arcade-tile-guide li { background:#454034; border-color:#807052; }
-[data-theme=night] .arcade-tile-guide b { color:#f2d794; }
-[data-theme=night] .arcade-heading h2 { color:#436144; }
-[data-theme=night] .arcade-heading>div>p:last-child { color:#766344; }
-[data-theme=night] .arcade-side .card { background:#383329; border-color:#78674d; }
-[data-theme=night] .arcade-table button { background:#e8d6ae; color:#513c29; border-color:#b99a64; }
-[data-theme=night] .arcade-tile-guide summary { color:#dac5a0; }
-[data-theme=night] .arcade-reward-value>strong { color:#ebc877; }
-[data-theme=night] .arcade-reward-value>span { color:#e4b8a6; }
 @media(max-width:480px){.arcade-harvest-trail{gap:4px}.arcade-harvest-trail .arcade-tile-art{width:31px;height:31px}.arcade-trail-current,.arcade-trail-next{gap:4px}.arcade-harvest-trail strong{font-size:11px}.arcade-harvest-trail small,.arcade-harvest-trail b{font-size:10px}.arcade-tile-guide ol{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-tile strong{padding:1px 2px}}

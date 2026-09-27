@@ -154,8 +154,7 @@ func TestBookingRoomsSanitizesImplausibleTypeInsteadOfFailing(t *testing.T) {
 	s.booking.client.Transport = calendarTransport(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
 	})
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "http://127.0.0.1/api/booking/rooms", nil))
 	if w.Code != http.StatusOK {

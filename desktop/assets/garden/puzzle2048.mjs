@@ -2,6 +2,7 @@
 // Source: https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc
 // Original files: js/game_manager.js, js/grid.js, js/tile.js.
 // Copyright (c) 2014 Gabriele Cirulli. MIT; see licenses/2048-MIT.txt.
+import {CROPS} from './garden-loop.mjs';
 export const PUZZLE_MILESTONES=[128,256,512,1024,2048];
 const DIRECTIONS=['up','right','down','left'];
 const emptyBoard=()=>Array(16).fill(0);
@@ -47,7 +48,7 @@ export function normalizePuzzle(raw,seed){
   undo:raw.undo?snapshot(raw.undo):null,
   earnedDay:typeof raw.earnedDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.earnedDay)?raw.earnedDay:'',
   qualifiedDay:typeof raw.qualifiedDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.qualifiedDay)?raw.qualifiedDay:'',
-  supplyClaim:raw.supplyClaim&&raw.supplyClaim.day===raw.earnedDay&&/^\d{4}-\d{2}-\d{2}$/.test(raw.supplyClaim.day)&&['radish','strawberry','blueberry','lychee'].includes(raw.supplyClaim.crop)&&raw.supplyClaim.quantity===1?{day:raw.supplyClaim.day,crop:raw.supplyClaim.crop,quantity:1}:null,
+  supplyClaim:raw.supplyClaim&&raw.supplyClaim.day===raw.earnedDay&&/^\d{4}-\d{2}-\d{2}$/.test(raw.supplyClaim.day)&&Object.hasOwn(CROPS,raw.supplyClaim.crop)&&raw.supplyClaim.quantity===1?{day:raw.supplyClaim.day,crop:raw.supplyClaim.crop,quantity:1}:null,
  };
 }
 function lineIndexes(direction,line){
