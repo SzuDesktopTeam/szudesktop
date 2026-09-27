@@ -9,6 +9,24 @@ import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
 import {PET_CLIPS} from './pet-animation.mjs';
 import {TOKEN_HEADER} from './listen-url.mjs';
 
+// 冒烟里对页面执行脚本都要有上限：渲染进程崩溃或页面卡死时 executeJavaScript 永远不返回，
+// 以前只会表现为“报告一直没出现”。超时后带上窗口与渲染进程状态报错，写进失败报告。
+const goneRenderers=new WeakMap();
+function watchRenderer(win){
+  const wc=win.webContents;
+  if(!goneRenderers.has(wc)){goneRenderers.set(wc,null);wc.on('render-process-gone',(_e,details)=>goneRenderers.set(wc,details));}
+}
+function evalWithin(win,label,source,ms=15000){
+  watchRenderer(win);
+  let timer;
+  const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{
+    const wc=win.webContents,gone=goneRenderers.get(wc);
+    const state={destroyed:win.isDestroyed(),visible:!win.isDestroyed()&&win.isVisible(),loading:!wc.isDestroyed()&&wc.isLoading(),crashed:!wc.isDestroyed()&&wc.isCrashed(),gone:gone?`${gone.reason}/${gone.exitCode}`:null};
+    reject(Error(`${label} 窗口执行脚本 ${ms/1000} 秒未返回：${JSON.stringify(state)}；脚本开头 ${String(source).slice(0,80)}`));
+  },ms);});
+  return Promise.race([win.webContents.executeJavaScript(source),timeout]).finally(()=>clearTimeout(timer));
+}
+
 async function until(read, message) {
   const end=Date.now()+6000;
   while(Date.now()<end){if(await read())return;await new Promise(r=>setTimeout(r,50));}
@@ -29,7 +47,7 @@ function personalAfterMigration(data){
 // 主进程直接调本机服务要带 sidecar 交来的凭据；页面里的请求靠首次加载换来的 Cookie。
 const localApi=(baseUrl,token)=>(endpoint,options={})=>fetch(baseUrl+endpoint,{...options,headers:{...options.headers,[TOKEN_HEADER]:token}});
 async function checkBackup(mainWin,baseUrl,token,evidenceDir){
-  const main=source=>mainWin.webContents.executeJavaScript(source);
+  const main=source=>evalWithin(mainWin,'主',source);
   const api=localApi(baseUrl,token);
   const snapshot=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return r.json();};
   const seed=await snapshot();
@@ -109,8 +127,8 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   assert.ok(petWin&&!petWin.isDestroyed()&&petWin.isVisible(),'pet window exists');
   assert.ok(tray&&!tray.isDestroyed(),'packaged tray icon loads');
   assert.ok(petWin.isAlwaysOnTop(),'pet stays on top');
-  const main=source=>mainWin.webContents.executeJavaScript(source);
-  const pet=source=>petWin.webContents.executeJavaScript(source);
+  const main=source=>evalWithin(mainWin,'主',source);
+  const pet=source=>evalWithin(petWin,'桌宠',source);
   const menu=label=>getMenu().items.find(item=>item.label===label);
   const sizeItems=()=>menu('宠物大小').submenu.items;
   await main("document.querySelector('#guide[open] button')?.click()");
