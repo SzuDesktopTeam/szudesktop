@@ -22,9 +22,9 @@ function sceneFixture(){
  let current=null;
  const mounts=[],nodes=new Map(),state=createState();state.preferences.homeSkin='lake';
  const context=vm.createContext({
-  state,page:'home',revision:1,pages:{home:'今日',garden:'庭院'},pageIcons:{},Date,
+  state,page:'home',studyTab:'focus',revision:1,pages:{home:'今日',garden:'庭院',study:'学习',services:'校园服务'},pageIcons:{},Date,
   sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},
-  document:{body:{dataset:{}},querySelector:()=>current},
+  document:{body:{dataset:{}},activeElement:null,querySelector:selector=>selector==='[data-home-scene]'?current:null},
   api:async()=>({revision:2}),
   loadSceneRenderer:async()=>({mountHomeScene(host,options){
    const instance={host,options,destroyed:0,destroy(){this.destroyed++}};
@@ -33,7 +33,8 @@ function sceneFixture(){
  });
  const main={set innerHTML(_html){
   if(current)current.isConnected=false;
-  current=context.page==='home'&&context.state.preferences.homeSkin!=='pixel'?{
+  // Every room now has the same live campus window, not just the home page.
+  current=context.state.preferences.homeSkin!=='pixel'?{
    dataset:{homeScene:context.state.preferences.homeSkin},isConnected:true,
    querySelector:()=>({textContent:''}),
    replaceWith(host){this.isConnected=false;host.isConnected=true;current=host},
@@ -48,6 +49,30 @@ function sceneFixture(){
  }};
 }
 const sceneTick=()=>new Promise(resolve=>setImmediate(resolve));
+await check('page repaints reattach the actual notebook editor with draft, selection and scroll intact',()=>{
+ const state=createState(),nodes=new Map(),focusCalls=[],mounts=[];
+ let noteHost,visibleNotebook;
+ const body={dataset:{}},editor={value:'第一段还没保存\n第二段继续写',selectionStart:3,selectionEnd:9,selectionDirection:'backward',scrollTop:67,
+  get isConnected(){return noteHost.isConnected},focus(options){assert.ok(this.isConnected);focusCalls.push(options);context.document.activeElement=this}};
+ noteHost={isConnected:true,contains:el=>el===editor};visibleNotebook=noteHost;
+ const main={set innerHTML(_html){
+  visibleNotebook.isConnected=false;context.document.activeElement=body;
+  visibleNotebook={isConnected:true,contains:()=>false,replaceWith(original){this.isConnected=false;original.isConnected=true;visibleNotebook=original}};
+ }};
+ const context=vm.createContext({state,page:'study',studyTab:'notes',pages:{study:'学习书屋'},pageIcons:{},Date,
+  sprite:()=>'',pageHTML:()=>'<section data-notebook>new placeholder</section>',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},
+  notebookUI:{mount(root){assert.equal(root,main);mounts.push(visibleNotebook)}},
+  document:{body,activeElement:editor,querySelector:selector=>selector==='[data-notebook]'?visibleNotebook:null,getElementById:id=>id==='main'?main:null},
+  $:selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector),
+ });
+ vm.runInContext(section('function render(){','function pageHTML('),context);
+ for(let i=0;i<3;i++)context.render();
+ assert.equal(visibleNotebook,noteHost,'must reattach the original notebook, not reconstruct it from saved text');
+ assert.equal(context.document.activeElement,editor);assert.equal(editor.value,'第一段还没保存\n第二段继续写');
+ assert.deepEqual([editor.selectionStart,editor.selectionEnd,editor.selectionDirection,editor.scrollTop],[3,9,'backward',67]);
+ assert.equal(mounts.length,3);assert.ok(mounts.every(host=>host===noteHost));
+ assert.equal(focusCalls.length,3);assert.ok(focusCalls.every(options=>options.preventScroll===true));
+});
 await check('home repaints and successful task saves keep the same scene and canvas',async()=>{
  const f=sceneFixture();f.render();await sceneTick();const host=f.host(),canvas=host.canvas;
  for(let i=0;i<3;i++)f.render();
@@ -58,14 +83,17 @@ await check('home repaints and successful task saves keep the same scene and can
  release({revision:2});await save;await sceneTick();
  assert.equal(f.context.state.todos.length,1);assert.equal(f.host(),host);assert.equal(f.host().canvas,canvas);assert.equal(f.mounts.length,1);
 });
-await check('skin, motion and page changes release the old scene while returning mounts a fresh one',async()=>{
+await check('moving between rooms reuses the campus canvas; skin, motion and pixel changes release it',async()=>{
  const f=sceneFixture();f.render();await sceneTick();const first=f.host();
  f.render('bookshop');await sceneTick();assert.equal(f.mounts[0].destroyed,1);assert.notEqual(f.host(),first);assert.equal(f.mounts.length,2);
  f.context.state.preferences.motion=false;f.render();await sceneTick();
  assert.equal(f.mounts[1].destroyed,1);assert.equal(f.mounts[2].options.motion,false);
- f.render('bookshop','garden');assert.equal(f.host(),null);assert.equal(f.mounts[2].destroyed,1);
- f.render('bookshop');await sceneTick();assert.equal(f.mounts.length,4);
- f.render('pixel');assert.equal(f.host(),null);assert.equal(f.mounts[3].destroyed,1);
+ const room=f.host(),canvas=room.canvas;
+ for(const page of ['garden','study','services','home']){
+  f.render('bookshop',page);await sceneTick();assert.equal(f.host(),room);assert.equal(f.host().canvas,canvas);assert.equal(f.mounts[2].destroyed,0);assert.equal(f.mounts.length,3);
+ }
+ f.render('pixel','study');assert.equal(f.host(),null);assert.equal(f.mounts[2].destroyed,1);
+ f.render('bookshop','study');await sceneTick();assert.equal(f.mounts.length,4);assert.notEqual(f.host(),room);
 });
 await check('pending scene imports and late mounts cannot revive a replaced view',async()=>{
  const f=sceneFixture(),imports=[];const loader=f.context.loadSceneRenderer;
@@ -347,7 +375,7 @@ function formFixture(){
  vm.runInContext(section("document.addEventListener('click'","document.addEventListener('input'"),context);
  return {context,nodes,writes,messages,reactions,draft,date,todoForm,focusPanel,weekPanel,get fullRenders(){return fullRenders},
   click:(action,extra={})=>{listeners.click({target:{closest:()=>({dataset:{action,...extra}})},preventDefault(){}});return pending;},
-  submit:form=>{listeners.submit({target:form,preventDefault(){}});return pending;},
+  submit:form=>{form.closest=()=>null;listeners.submit({target:form,preventDefault(){}});return pending;},
  };
 }
 

@@ -1,8 +1,18 @@
 const {contextBridge, ipcRenderer} = require('electron');
+let beforeQuit=null;
+ipcRenderer.on('szu:prepare-quit',async(_event,id)=>{
+  try{if(beforeQuit)await beforeQuit();ipcRenderer.send('szu:quit-prepared',{id,ok:true});}
+  catch(error){ipcRenderer.send('szu:quit-prepared',{id,ok:false,message:String(error?.message||'笔记尚未保存').slice(0,240)});}
+});
 const petCommands = new Set(['pat', 'feed', 'play', 'chat', 'sleep', 'garden', 'farm', 'study', 'home']);
 contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   shell: 'electron',
   quit: () => ipcRenderer.invoke('szu:quit'),
+  onBeforeQuit: (callback) => {
+    if(typeof callback!=='function')return ()=>{};
+    beforeQuit=callback;
+    return ()=>{if(beforeQuit===callback)beforeQuit=null;};
+  },
   // 大小来自主进程统一设置；滑杆、菜单和滚轮共享同一数值。
   petScale: () => ipcRenderer.invoke('szu:pet-scale-get'),
   setPetScale: (value) => ipcRenderer.invoke('szu:pet-scale-set', value),
@@ -38,6 +48,7 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
     ipcRenderer.send('szu:pet-result',payload);
   },
   openSchool: (target) => ipcRenderer.invoke('szu:school-open', target),
+  openFeishu: (url) => ipcRenderer.invoke('szu:feishu-open', url),
   syncSchool: (business) => ipcRenderer.invoke('szu:school-sync', business),
   clearSchool: () => ipcRenderer.invoke('szu:school-clear'),
 }));

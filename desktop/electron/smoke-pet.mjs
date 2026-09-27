@@ -150,12 +150,19 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   trace('feed');
   getPetMenu().getMenuItemById('feed').click();
   await until(async()=>{
-    if(canFeed)return pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(active(await game()).say.slice(0,60))}`);
+    if(canFeed){
+      const current=await game();
+      // The previous action's bubble also matches its previous saved line.
+      // Wait for this meal to commit before comparing its personality text.
+      if(current.food!==beforeFeed.food-1)return false;
+      return pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(active(current).say.slice(0,60))}`);
+    }
     return pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)");
   },'feed result was not shown');
   assert.equal((await game()).food,beforeFeed.food-(canFeed?1:0),'food changes only after a valid meal');
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
+  trace('companion-menu-selection');
   const companionSpecies=companions.map(p=>p.species);
   assert.ok(AVAILABLE_PETS.every(id=>companionSpecies.includes(id)),'every default companion is available');
   assert.ok(companionSpecies.every(id=>Object.hasOwn(PETS,id)),'old companions still have registered artwork');
@@ -174,9 +181,14 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   }
   getPetMenu().getMenuItemById('garden').click();
   await until(()=>main(`document.querySelectorAll('.companion-choice').length===${companions.length}`),'companion picker did not render the saved roster');
+  // navigate() renders before its async command finishes. Its result confirms
+  // that the main window has released the command lock and accepts the click.
+  await until(()=>pet("document.querySelector('#bubble-text').textContent==='伙伴小屋已打开'"),'garden menu command did not complete');
   for(const species of ['pingu','skipper','chestnut',DEFAULT_PET]){
+    trace('garden-selection-'+species);
     const index=companionSpecies.indexOf(species),sprite=PETS[species].sprite;
     assert.ok(index>=0,'garden includes '+species);
+    await until(()=>main(`document.querySelector('.companion-choice[data-index="${index}"]')?.disabled===false`),'companion picker is still saving');
     await main(`document.querySelector('.companion-choice[data-index="${index}"]').click()`);
     await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'garden selection did not update desktop: '+species);
     assert.equal((await game()).active,index,'garden selection persists '+species);

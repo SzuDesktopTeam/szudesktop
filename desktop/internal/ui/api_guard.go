@@ -10,7 +10,7 @@ import (
 
 // protectAPI rejects browser requests from other origins, including other local
 // ports. Host validation also prevents DNS rebinding to this loopback service.
-// Non-browser local clients may omit Origin; POST still requires JSON.
+// Non-browser local clients may omit Origin; POST and PUT still require JSON.
 func protectAPI(next http.HandlerFunc, methods ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
@@ -46,7 +46,7 @@ func protectAPI(next http.HandlerFunc, methods ...string) http.HandlerFunc {
 			http.Error(w, "不支持的方法", http.StatusMethodNotAllowed)
 			return
 		}
-		if r.Method == http.MethodPost {
+		if r.Method == http.MethodPost || r.Method == http.MethodPut {
 			mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 			if err != nil || mediaType != "application/json" {
 				http.Error(w, "请求必须使用 JSON", http.StatusUnsupportedMediaType)
@@ -56,6 +56,8 @@ func protectAPI(next http.HandlerFunc, methods ...string) http.HandlerFunc {
 		limit := int64(1 << 20)
 		if r.URL.Path == "/api/workspace" {
 			limit = workspaceMaxBytes
+		} else if r.URL.Path == "/api/notebook" {
+			limit = notebookMaxBytes
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, limit)
 		next(w, r)

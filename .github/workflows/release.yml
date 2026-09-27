@@ -55,6 +55,7 @@ jobs:
           node desktop/check-network-ui.mjs
           node desktop/check-workspace-ui.mjs
           node desktop/check-productivity.mjs
+          node desktop/check-notebook.mjs
           node desktop/check-interactions.mjs
           node desktop/check-pet-commands.mjs
           node desktop/check-pet-catalog.mjs
@@ -74,6 +75,7 @@ jobs:
           node desktop/electron/check-desktop-settings.mjs
           node desktop/electron/check-pet-view.mjs
           node desktop/electron/check-school-policy.mjs
+          node desktop/electron/check-feishu-policy.mjs
       - name: 琴房预约回归
         run: node desktop/check-piano.mjs
       - name: 发布说明抽取回归

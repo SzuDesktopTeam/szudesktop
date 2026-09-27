@@ -13,7 +13,7 @@ const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {
 function fixture(){
  const calls=[],toasts=[],jobs=new Map(),controls=[{disabled:false,isConnected:true}];let click;
  const context=vm.createContext({
-  busy:false,page:'services',state:null,
+  busy:false,page:'services',state:null,notebookUI:{leave:async()=>{}},
   document:{querySelectorAll:()=>controls,addEventListener:(_,fn)=>{click=fn}},
   schoolUI:{click:async()=>false,sync:()=>{}},
   officialUI:{click:async()=>false},
@@ -26,6 +26,42 @@ function fixture(){
  return {context,calls,toasts,controls,jobs,click(action,extra={}){click({target:{closest:()=>({dataset:{action,...extra}})},preventDefault(){}})}};
 }
 let count=0;async function check(name,fn){await fn();count++;console.log('PASS',name)}
+function noteNavigationFixture(){
+ const toasts=[],events=[],history=[],draft={value:'尚未落盘的课堂问题',selectionStart:2,selectionEnd:7};
+ const notebook={draft},main={focus(){events.push('focus-main')}},gate={};
+ gate.promise=new Promise((resolve,reject)=>{gate.resolve=()=>{gate.saved=true;resolve()};gate.reject=reject});
+ const context=vm.createContext({page:'study',studyTab:'notes',pages:{home:'今日',study:'学习',garden:'庭院'},
+  document:{activeElement:draft,querySelector:selector=>selector==='[data-notebook]'?notebook:null},
+  notebookUI:{leave:()=>{events.push('leave');return gate.promise}},
+  history:{replaceState:(_state,_unused,hash)=>history.push(hash)},window:{scrollTo(){events.push('scroll')}},
+  render(){assert.equal(gate.saved,true,'render must not run before the notebook save resolves');events.push('render')},
+  $:selector=>{assert.equal(selector,'#main');return main},toast:message=>toasts.push(message),
+ });
+ const at=source.indexOf('let navigating=false;'),to=source.indexOf('let notifiedFocus=',at);
+ assert.ok(at>=0&&to>at);vm.runInContext(source.slice(at,to),context);
+ return {context,toasts,events,history,draft,gate};
+}
+await check('leaving course notes waits for the real navigation save gate before changing page or history',async()=>{
+ const f=noteNavigationFixture(),pending=f.context.navigate('home');
+ await tick();assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.deepEqual(f.history,[]);assert.deepEqual(f.events,['leave']);
+ assert.equal(await f.context.navigate('garden'),false,'a second click must not bypass the pending save');
+ assert.match(f.toasts.at(-1),/正在保存笔记并切换页面/,'重复导航需解释等待原因');
+ assert.equal(f.draft.value,'尚未落盘的课堂问题');assert.equal(f.context.document.activeElement,f.draft);
+ f.gate.resolve();assert.equal(await pending,true);assert.equal(f.context.page,'home');assert.deepEqual(f.history,['#home']);assert.deepEqual(f.events,['leave','render','scroll','focus-main']);
+});
+await check('failed note saves keep the original page, subtab and local draft, then allow a retry',async()=>{
+ const f=noteNavigationFixture(),pending=f.context.navigate('study','focus');
+ f.gate.reject(Error('笔记保存失败，请保留草稿'));assert.equal(await pending,false);
+ assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.deepEqual(f.history,[]);assert.deepEqual(f.events,['leave']);
+ assert.equal(f.draft.value,'尚未落盘的课堂问题');assert.deepEqual([f.draft.selectionStart,f.draft.selectionEnd],[2,7]);assert.equal(f.context.document.activeElement,f.draft);assert.deepEqual(f.toasts,['笔记保存失败，请保留草稿']);
+ f.context.notebookUI.leave=async()=>{f.gate.saved=true;f.events.push('leave-retry')};
+ assert.equal(await f.context.navigate('study','focus'),true);assert.equal(f.context.studyTab,'focus');assert.deepEqual(f.history,['#study']);
+});
+await check('switching from notes to another study tool also waits before replacing the editor',async()=>{
+ const f=noteNavigationFixture(),pending=f.context.navigate('study','grades');
+ assert.equal(f.context.studyTab,'notes');assert.equal(f.events.includes('render'),false);
+ f.gate.resolve();assert.equal(await pending,true);assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'grades');assert.equal(f.events.filter(x=>x==='render').length,1);
+});
 await check('a pending public venue query allows navigation and a separate write',async()=>{
  const f=fixture(),pending=deferred();f.jobs.set('booking-rooms',pending);
  f.click('booking-rooms');await tick();
@@ -41,6 +77,8 @@ await check('write actions still serialize and public action names cannot bypass
  f.click('campus-session-save');await tick();
  f.click('campus-session-clear');f.click('booking-rooms');f.click('navigate',{page:'home'});await tick();
  assert.deepEqual(f.calls,['campus-session-save']);assert.equal(f.context.page,'services');
+ assert.equal(f.toasts.length,3,'被写锁阻止的按钮和导航都应显示反馈');
+ assert.ok(f.toasts.every(message=>message.includes('正在保存或处理上一项操作')));
  assert.equal(f.context.busy,true);pending.resolve();await tick();assert.equal(f.context.busy,false);
 });
 await check('remembering a notice source is serialized as a preference write',async()=>{
@@ -102,7 +140,7 @@ await check('startup retrieves the version without waiting for the campus networ
  for(const failHealth of [false,true]){
   const paths=[],health=deferred(),versions=[],events=[];
   const context=vm.createContext({api:async path=>{paths.push(path);if(path==='/api/workspace')return {revision:1,data:{preferences:{onboarded:true}}};if(path==='/api/credential')return {saved:false};assert.equal(path,'/api/health');await health.promise;if(failHealth)throw Error('暂不可用');return {app_version:'beta0.8.0'};},normalize:x=>x,render(){events.push('render')},refresh(){events.push('network-start');return new Promise(()=>{})},stampVersion:v=>versions.push(v),
-   campusUI:{loadSession(){},loadCas(){},loadSources(){}},schoolUI:{load(){}},pianoUI:{load(){}},academicUI:{load(){}},$:()=>{assert.fail('健康信息失败不能让已加载的庭院报错')},revision:0,state:null,saved:false,workspaceReady:false});
+   notebookUI:{load:async()=>{}},campusUI:{loadSession(){},loadCas(){},loadSources(){}},schoolUI:{load(){}},pianoUI:{load(){}},academicUI:{load(){}},$:()=>{assert.fail('健康信息失败不能让已加载的庭院报错')},revision:0,state:null,saved:false,workspaceReady:false});
   await vm.runInContext(`(async()=>{${source.slice(at)}})()`,context);
   assert.deepEqual(paths,['/api/workspace','/api/credential','/api/health']);assert.deepEqual(events,['render','network-start']);assert.equal(context.workspaceReady,true);assert.deepEqual(versions,[]);
   health.resolve();await tick();assert.deepEqual(versions,failHealth?[]:['beta0.8.0']);
