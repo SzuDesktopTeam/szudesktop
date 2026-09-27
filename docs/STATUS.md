@@ -2788,7 +2788,7 @@ Windows Go 预览已按本轮源码重建，150 个资源同步通过。中英�
 
 ## 64. 日常入口与书屋精修（2026-09-27，源码未发布）
 
-在已合并的 [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20)、`main@3f9e02f` 基础上继续打磨。版本仍为 `beta0.9.3`，公开最新安装包仍是 `beta0.9.2`。本轮不创建发布标签；前序安装包的字节数与校验值只对应第 63 节内容。
+在已合并的 [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20)、`main@3f9e02f` 基础上继续打磨。本轮变更见 [PR #21](https://github.com/SzuDesktopTeam/szudesktop/pull/21)。版本仍为 `beta0.9.3`，公开最新安装包仍是 `beta0.9.2`。本轮不创建发布标签；前序安装包的字节数与校验值只对应第 63 节内容。
 
 ### 64.1 已落地的使用体验
 
@@ -2809,15 +2809,15 @@ Windows Go 预览已按本轮源码重建，150 个资源同步通过。中英�
 
 已使用合成课程与笔记进行真实 UI 走查：常规桌面及 420px 下查看首页与笔记，420px 视口中文档宽度为 405px，无水平溢出；检查暖阳／暮色和像素庭院／雨后书屋。大纲正确选中标题，笔记移入未分类再移回课程后正文保留，首页继续入口回到对应笔记；设置导出的整本 JSON 实际落入 Downloads，内容为合成测试数据。校园网页已查看外网状态与校园认证的独立显示；进入公告分区触发自动读取，现场学校请求失败会明确提示并保留原页入口，不把这次失败计为真实公告或学校账号业务通过。
 
-[本轮首页实际截图](screenshot-home-daily-preview.png)使用隔离测试存档。中英文 README 已引用；课程笔记截图仍保留第 63 节原图，明确标注尚不包含本轮大纲等控件。
+最后在打包窗口截图中发现欢迎标题出现孤立短行，已缩短文案并调整字号；1024px 复查为自然两行、无横向溢出，之后重新构建候选。[本轮首页实际截图](screenshot-home-daily-preview.png)使用隔离测试存档。中英文 README 已引用；课程笔记截图仍保留第 63 节原图，明确标注尚不包含本轮大纲等控件。
 
 **最终候选已构建并实际运行。** Go 内嵌的 155 个资源与源码一致；NSIS 附带后台和 ZIP 中的程序均与下表 Go 文件逐字节相同，两个校验文件匹配。解包确认 `version=0.9.3`、`szuVersion=beta0.9.3`，检查的 6 个外壳模块与源码一致。
 
 | 本轮本地候选文件 | 字节数 | SHA-256 |
 |---|---:|---|
-| `dist/szudesktop-windows-amd64.exe` | 14362112 | `772f1f9558a3b78c0a870631fc4e2c133665900267f81100e35fa6f331065a2c` |
-| `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 8219615 | `dbfcfe8f5babda549f0f94de4cc3c3232b62fc6e5c858d549cffe1c58df06565` |
-| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118656335 | `61bbda9eb9534ff147331f2774338345d10ec6f4fb856692bbb0c8d1acb1e454` |
+| `dist/szudesktop-windows-amd64.exe` | 14362112 | `1f3c7acd22f5e9b1d7109b2dcd9b1e17aff2b968676ca3f37d6a1df0abcde019` |
+| `dist/szudesktop-beta0.9.3-windows-amd64.zip` | 8219611 | `e75d682ac498716b206b5c56c44cba1e12a0ee975b36dda8d2935ff5ae3beaea` |
+| `desktop/electron/release/szuDesktop-Setup-0.9.3.exe` | 118656081 | `439046db98cddbb53f2a955a0ad81b697d46fa0cc6a7a7fccb013d0419a7c097` |
 
 打包程序使用独立测试存档完成真实启动与正常退出，自有后台进程随退出消失，主窗口控制台错误为 0。证据保留在忽略目录 `.scratch_probe/polish-beta093-mlpk9d7y`；未修改真实安装或用户存档。本机没有执行 NSIS 安装升级，相关远端检查与合并结果由本轮 PR 提供。发布说明 12 项检查和许可证来源检查通过；本轮没有创建发布标签或更新公开附件。
 

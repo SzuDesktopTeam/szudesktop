@@ -219,7 +219,7 @@ body[data-page=home] .home-skin-picker { margin-bottom:12px; }
 body[data-page=home][data-home-skin] .campus-home { display:grid; grid-template-columns:minmax(285px,.86fr) minmax(0,1.8fr); min-height:410px; border-color:var(--world-line); box-shadow:0 5px 0 var(--world-shadow); }
 body[data-home-skin] .campus-home .home-letter { grid-column:1; grid-row:1; display:flex; flex-direction:column; align-items:flex-start; padding:29px 26px 20px; background:var(--world-paper); border-right:1px solid var(--world-line); }
 body[data-home-skin] .campus-home .home-letter .eyebrow { font:12px/1.8 var(--body); color:var(--world-muted); margin:0 0 20px; }
-body[data-home-skin] .campus-home .home-letter h1 { font:36px/1.42 var(--pixel); color:var(--world-ink); letter-spacing:.01em; margin:0 0 14px; }
+body[data-home-skin] .campus-home .home-letter h1 { font:32px/1.42 var(--pixel); color:var(--world-ink); letter-spacing:.01em; margin:0 0 14px; }
 body[data-home-skin] .campus-home .home-letter h1 br { display:initial; }
 body[data-home-skin] .campus-home .home-description { font:14px/1.9 var(--body); color:var(--world-muted); margin:0 0 21px; }
 body[data-home-skin] .campus-home .home-description br { display:initial; }
