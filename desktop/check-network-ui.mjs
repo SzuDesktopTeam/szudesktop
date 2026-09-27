@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {networkBadge,networkSummary,networkBadgeHTML,networkSummaryHTML,networkTone} from './assets/garden/network-status.mjs';
+import {networkBadge,networkSummary,networkBadgeHTML,networkSummaryHTML,networkTone,networkLoginHint} from './assets/garden/network-status.mjs';
 
 const connected={internet_ok:true,zone_label:'当前已联网',online_known:true,online:true,app_version:'beta9.9.9'};
 assert.match(networkSummary(connected),/出口已在线/);
@@ -14,8 +14,8 @@ const app=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8'
 const stamp=app.slice(app.indexOf('function stampVersion('),app.indexOf('async function refresh(){'));
 const refresh=app.slice(app.indexOf('async function refresh(){'),app.indexOf('\nfunction networkResult'));
 const meta={content:''};
-const nodes={'#network-summary':{innerHTML:'',dataset:{}},'#network-badge':{innerHTML:'',dataset:{}},'#app-badge':{textContent:'非官方应用'},'#about-version':{textContent:''}};
-const ctx=vm.createContext({networkSummaryHTML,networkBadgeHTML,networkTone,$:s=>nodes[s],document:{querySelector:()=>meta,getElementById:()=>null},releaseUI:{},feedbackUI:{},api:async()=>connected});
+const nodes={'#network-summary':{innerHTML:'',dataset:{}},'#network-badge':{innerHTML:'',dataset:{}},'#app-badge':{textContent:'非官方应用'},'#about-version':{textContent:''},'.network-login > summary small':{textContent:''}};
+const ctx=vm.createContext({networkSummaryHTML,networkBadgeHTML,networkTone,networkLoginHint,$:s=>nodes[s],document:{querySelector:()=>meta,getElementById:()=>null},releaseUI:{},feedbackUI:{},api:async()=>connected});
 vm.runInContext('let net=null,saved=false,probing=false,appVersion="";'+stamp+refresh,ctx);
 assert.equal(await vm.runInContext('refresh()',ctx),true);
 assert.equal(meta.content,'beta9.9.9');
@@ -24,6 +24,11 @@ assert.equal(nodes['#about-version'].textContent,'szuDesktop beta9.9.9 · 荔枝
 assert.equal(vm.runInContext('appVersion',ctx),'beta9.9.9');
 assert.match(nodes['#network-summary'].innerHTML,/出口已在线/);
 assert.equal(nodes['#network-badge'].dataset.tone,'success');
+assert.match(nodes['.network-login > summary small'].textContent,/当前外网可用/);
+ctx.api=async()=>({...connected,internet_ok:false});
+await vm.runInContext('refresh()',ctx);
+assert.match(nodes['.network-login > summary small'].textContent,/填写账号/);
+assert.doesNotMatch(nodes['.network-login > summary small'].textContent,/外网可用/);
 ctx.api=async()=>({internet_ok:true,zone_label:'当前已联网',online_known:true,online:true});
 assert.equal(await vm.runInContext('refresh()',ctx),true);
 assert.equal(nodes['#app-badge'].textContent,'beta9.9.9 · 非官方应用');
@@ -36,6 +41,7 @@ assert.match(nodes['#network-badge'].innerHTML,/状态未确认/);
 assert.equal(nodes['#network-badge'].dataset.tone,'muted');
 assert.doesNotMatch(nodes['#network-summary'].innerHTML,/data-tone="success"/);
 assert.equal(vm.runInContext('net',ctx),null);
+assert.match(nodes['.network-login > summary small'].textContent,/状态待确认/);
 let click,work,message;
 const pendingCtx=vm.createContext({busy:false,probing:true,officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},document:{addEventListener:(_,handler)=>{click=handler}},run:fn=>{work=fn()},toast:t=>{message=t},refresh:()=>{throw Error('duplicate refresh')}});
 vm.runInContext(app.slice(app.indexOf("document.addEventListener('click'"),app.indexOf("document.addEventListener('submit'")),pendingCtx);

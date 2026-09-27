@@ -35,8 +35,8 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   seed.data.courses=[{code:'backup-course',name:'合成课程',credit:2,point:3.5}];
   const saved=await fetch(baseUrl+'/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
   assert.ok(saved.ok,'synthetic backup fixture saved');
-  await mainWin.loadURL(baseUrl+'/?smoke=backup#settings');
-  await until(()=>main("document.querySelector('#display-name')?.value==='备份验收'"),'backup fixture not loaded');
+  await mainWin.loadURL(baseUrl+'/?smoke=backup#settings/data');
+  await until(()=>main("location.hash==='#settings/data' && Boolean(document.querySelector('#import-file') && document.querySelector('[data-action=\"export\"]'))"),'backup settings section not loaded');
   const file=path.join(evidenceDir,'workspace-backup.json');
   let completed=false,downloadState='';
   const onDownload=(_event,item)=>{
@@ -59,8 +59,13 @@ async function checkBackup(mainWin,baseUrl,evidenceDir){
   for(const key of ['coins','food','seeds','stock','plots','stats'])assert.deepEqual(backup.game[key],seed.data.game[key],'export preserves garden '+key);
   assert.equal(backup.password,undefined);
   assert.equal(backup.account,undefined);
+  await until(()=>main("Boolean(document.querySelector('[data-action=\"settingsTab\"][data-tab=\"appearance\"]:not(:disabled)'))"),'appearance settings navigation is not ready');
+  await main("document.querySelector('[data-action=\"settingsTab\"][data-tab=\"appearance\"]').click()");
+  await until(()=>main("document.querySelector('#display-name')?.value==='备份验收'"),'backup fixture not loaded into appearance settings');
   await main("document.querySelector('#display-name').value='恢复前';document.querySelector('#profile-form').requestSubmit()");
   await until(async()=>(await snapshot()).data.profile.name==='恢复前','profile change not saved');
+  await until(()=>main("Boolean(document.querySelector('[data-action=\"settingsTab\"][data-tab=\"data\"]:not(:disabled)'))"),'profile save did not unlock data settings navigation');
+  await main("document.querySelector('[data-action=\"settingsTab\"][data-tab=\"data\"]').click()");
   const ready=()=>until(()=>main("Boolean(document.querySelector('#import-file') && !document.querySelector('#import-file').disabled)"),'backup controls did not become ready');
   const importFile=async(data=backup)=>{
     // A disk write may be visible before the renderer consumes its response.
@@ -206,9 +211,9 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   mainWin.setSize(...mainSize);
   getPetMenu().getMenuItemById('farm').click();
   trace('farm');
-  await until(()=>main("location.hash==='#garden' && Boolean(document.querySelector('#seed-choice'))"),'farm menu did not select the farm');
+  await until(()=>main("location.hash==='#garden/farm' && Boolean(document.querySelector('#seed-choice'))"),'farm menu did not select the farm');
   getPetMenu().getMenuItemById('study').click();
-  await until(()=>main("location.hash==='#study'"),'study menu did not navigate');
+  await until(()=>main("location.hash==='#study/focus'"),'study menu did not navigate');
   getPetMenu().getMenuItemById('home').click();
   await until(()=>main("location.hash==='#home'"),'main menu did not restore home');
   await until(()=>mainWin.isVisible(),'pet menu cannot restore main window');
@@ -219,6 +224,8 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
   const originalPreferences=await preferences();
   const setMotion=async value=>{
     await main("document.querySelector('[data-action=\"navigate\"][data-page=\"settings\"]').click()");
+    await until(()=>main("Boolean(document.querySelector('[data-action=\"settingsTab\"][data-tab=\"appearance\"]:not(:disabled)'))"),'appearance settings navigation is not ready');
+    await main("document.querySelector('[data-action=\"settingsTab\"][data-tab=\"appearance\"]').click()");
     await until(()=>main("Boolean(document.querySelector('#profile-form input[name=motion]') && !document.querySelector('#profile-form button').disabled)"),'animation setting is not ready');
     await main(`(()=>{const form=document.querySelector('#profile-form');form.querySelector('input[name=motion]').checked=${JSON.stringify(value)};form.requestSubmit();})()`);
     await until(async()=>(await preferences()).motion===value,'animation preference did not save');
@@ -299,6 +306,8 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,sc
     assert.equal(sizeItems().filter(item=>item.checked).length,1);
   }
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"settings\"]').click()");
+  await until(()=>main("Boolean(document.querySelector('[data-action=\"settingsTab\"][data-tab=\"desktop\"]:not(:disabled)'))"),'desktop settings navigation is not ready');
+  await main("document.querySelector('[data-action=\"settingsTab\"][data-tab=\"desktop\"]').click()");
   await until(()=>main("document.querySelector('#pet-scale')?.value==='1.5'"),'settings slider did not bind after rendering');
   for(const scale of [0.4,2,1.7]){
     await main(`(()=>{const input=document.querySelector('#pet-scale');input.value='${scale}';input.dispatchEvent(new Event('change',{bubbles:true}));})()`);

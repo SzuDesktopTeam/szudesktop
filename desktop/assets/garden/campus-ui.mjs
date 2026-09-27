@@ -22,7 +22,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
  // 学校系统（ehall）在线读取相关状态。会话本身不放在这里，只由后端保管。
  let sessionSaved=false,sessionDesc='',sessionErr='',sessionBusy=false,onlineScore=null,onlineErr='',onlineBusy=false,onlineLevel='undergrad';
  let preferredLevel;
- function syncStudentLevel(){const next=getState()?.preferences?.studentLevel||'undergrad';if(preferredLevel===undefined){preferredLevel=next;if(next==='graduate'){onlineLevel=next;gradeLevel=next}}else if(next!==preferredLevel){preferredLevel=next;onlineLevel=next;gradeLevel=next;preview=null;onlineScore=null;onlineErr=''}}
+ function syncStudentLevel(){const next=getState()?.preferences?.studentLevel||'undergrad';if(preferredLevel===undefined){preferredLevel=next;if(next==='graduate'){onlineLevel=next;gradeLevel=next}}else if(next!==preferredLevel){preferredLevel=next;onlineLevel=next;gradeLevel=next;preview=null;onlineScore=null;onlineErr='';sessionErr=''}}
  // 统一身份认证（本科）应用内登录的状态。与上面粘 Cookie 是两条独立入口，
  // 后端优先用 CAS 会话，没有才回落到 Cookie。
  let casLogged=false,casErr='',casBusy=false,casChallenge='',casImage='',casNeedCaptcha=false;
@@ -73,7 +73,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
    <li>按 <kbd>F12</kbd> 打开开发者工具，切到「网络 / Network」标签页。</li>
    <li>先进入所需的本科或研究生成绩页面，再刷新；选取该成绩业务发往 <code>ehall.szu.edu.cn</code> 的请求。不同业务可能需要不同的登录状态。</li>
    <li>在右侧「标头 / Headers」里找到「请求标头 / Request Headers」中的 <code>Cookie</code>，把冒号后面的整串值复制下来。</li>
-   <li>粘贴到下面输入框并点保存，选择本科或研究生，然后点「验证登录状态」。</li>
+   <li>粘贴到下面输入框并点保存，确认页面上方的「我的培养层次」，然后点「验证登录状态」。</li>
   </ol>
   <p class="muted">这段内容等同于你在这台电脑上的登录凭证。它只保存在本机（${sessionSaved?'已加密':'保存后加密'}），点「清除登录状态」只删除本机副本，不会注销浏览器或撤销学校会话；退出学校登录请在官方页面操作。安全存储不可用时会拒绝保存。请不要把它发给任何人，也不要粘到聊天窗口里。</p></details>`;
  }
@@ -96,7 +96,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   <div class="actions">${link('https://ehall.szu.edu.cn/','学校办事大厅')}${link('https://cjzm.szu.edu.cn/gztcyUI/','本科成绩证明')}${link('https://gra.szu.edu.cn/info/1092/3484.htm','研究生成绩单指南')}</div>
   <details open><summary>从学校系统直接读取（可选）${unverifiedBadge()}</summary>
   <p class="muted">在线读取尚未完成真实成绩验收。保存学校登录状态后，可尝试读取所选业务；账号权限和会话需分别验证。</p>
-  ${globalThis.szuDesktop?.openSchool?'<p class="muted">在上方选择本科或研究生成绩，完成学校登录并读取本次登录，再点击下面的「读取成绩」。</p>':`<details><summary>便携版备用登录</summary>
+  ${globalThis.szuDesktop?.openSchool?'<p class="muted">在上方完成学校登录并读取本次登录，再点击下面的「读取成绩」。读取范围跟随「我的培养层次」。</p>':`<details><summary>便携版备用登录</summary>
   <div id="session-status" aria-live="polite">${sessionHTML()}</div>
   <div id="cas-status" aria-live="polite">${casStatusHTML()}</div>
   <form id="cas-login-form" autocomplete="off">
@@ -116,7 +116,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   <div class="actions">${button('保存登录状态','session-save','class="primary"')}${button('验证登录状态','session-check')}${button('清除登录状态','session-clear')}</div>
   ${howtoHTML()}
 </details>`}
-  <div class="actions" style="margin-top:10px"><label for="online-score-level">读取哪一份成绩</label><select id="online-score-level"><option value="undergrad" ${onlineLevel==='undergrad'?'selected':''}>本科</option><option value="graduate" ${onlineLevel==='graduate'?'selected':''}>研究生</option></select>${button('读取成绩','online-score')}</div>
+  <div class="actions" style="margin-top:10px"><span class="badge" data-tone="info">当前读取：${onlineLevel==='graduate'?'研究生':'本科'}成绩</span>${button('读取成绩','online-score')}</div>
   <div id="online-score" aria-live="polite">${onlineScoreHTML()}</div>
   <p class="notice">只查询成绩，不提交预约、选课或评教。登录状态过期时会明确报错，不会显示成「没有成绩」。</p></details>
   <details><summary>批量导入成绩表</summary><p class="muted">从学校成绩表或 Excel 复制包含表头的多行内容，或选择 CSV / TSV 文件。当前不直接解析 PDF、图片和 XLSX，也没有后台自动同步。</p>
@@ -137,6 +137,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   if(await notices.click(action))return true;
   if(!action.startsWith('campus-'))return false;
   const a=action.slice(7);
+  if(a==='session-check'||a==='online-score')syncStudentLevel();
   if(a==='session-save'){
    // 主动把输入框清掉：这段内容留在页面上没有任何好处。
    const box=document.querySelector('#session-cookie'),raw=box?box.value:'';
@@ -211,8 +212,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render}) {
   if(form.id!=='campus-reminder-form')return false;const next=structuredClone(getState());next.reminders=next.reminders||[];if(next.reminders.length>=50)throw Error('最多保留 50 条提醒，请先移除已结束的提醒');next.reminders.push(makeStudyReminder(values));await commit(next,{formId:form.id,values});toast('已保存本机提醒，学校预约状态不变');return true}
  function input(e){if(e.target.id==='grade-text'){gradeText=e.target.value;preview=null;const el=document.querySelector('#grade-preview');if(el)el.innerHTML=''}}
  async function change(e){if(booking.change(e))return;if(await notices.change(e))return;const el=e.target;
-  if(el.id==='online-score-level'){onlineLevel=el.value;onlineScore=null;onlineErr='';sessionErr='';refreshScoreBox();refreshSessionBox()}
-  else if(el.id==='grade-level'){gradeLevel=el.value;preview=null;document.querySelector('#grade-preview').innerHTML=''}
+  if(el.id==='grade-level'){gradeLevel=el.value;preview=null;document.querySelector('#grade-preview').innerHTML=''}
   else if(el.id==='grade-file'&&el.files[0]){const file=el.files[0];if(file.size>300000)throw Error('文件不能超过 300 KB');if(!/\.(csv|tsv|txt)$/i.test(file.name))throw Error('请使用 CSV / TSV / TXT 文件');const bytes=await file.arrayBuffer();try{gradeText=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{gradeText=new TextDecoder('gb18030',{fatal:true}).decode(bytes)}preview=null;document.querySelector('#grade-text').value=gradeText;document.querySelector('#grade-preview').innerHTML='';toast('文件已读取，请点击预览导入')}
   else if(el.id==='grade-filter-level'){filterLevel=el.value;render()}
   else if(el.id==='grade-filter-term'){filterTerm=el.value;render()}

@@ -55,18 +55,31 @@ body[data-home-skin] footer,body[data-home-skin] .footer-links a,body[data-home-
 body[data-home-skin][data-theme=night] footer,body[data-home-skin][data-theme=night] .footer-links a,body[data-home-skin][data-theme=night] .footer-links .quiet { color:#eef2dc; }
 body[data-home-skin] #activity-bar { border:1px solid var(--world-wood-dark); border-bottom:0; background:var(--world-soft); color:var(--world-ink); padding:8px 18px; font-size:14px; }
 
+.settings-layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:start; gap:20px; }
+.settings-layout > .card { min-width:0; }
+.settings-scenery .skin-choices { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.settings-scenery .home-skin-picker { border:0; padding:0; margin-top:20px; }
+.settings-about { grid-column:1/-1; }
+.settings-details { border-block:1px solid var(--world-line); margin:18px 0; padding:12px 0; }
+.settings-details summary { color:var(--world-ink); cursor:pointer; font-size:13px; }
+.settings-details p { margin:12px 0 0; }
+@media(max-width:700px) { .settings-layout { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:650px) {
+ body[data-home-skin] .subnav.workspace-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
 /* A compact room threshold, not another hero competing with the work below. */
-body[data-home-skin] .campus-room.pagehead { display:grid; grid-template-columns:minmax(0,1fr) minmax(245px,32%); gap:0 34px; align-items:center; min-height:168px; margin:0 0 23px; padding:0 0 23px; border-bottom:1px solid var(--world-line); }
+body[data-home-skin] .campus-room.pagehead { display:grid; grid-template-columns:minmax(0,1fr) 188px; gap:0 24px; align-items:center; min-height:110px; margin:0 0 16px; padding:0 0 15px; border-bottom:1px solid var(--world-line); }
 .campus-room-copy { min-width:0; padding:0; }
-.campus-room-location { display:flex; align-items:center; gap:8px; margin-bottom:13px; font:11px/1.6 var(--body); color:var(--world-muted); }
+.campus-room-location { display:flex; align-items:center; gap:8px; margin-bottom:4px; font:11px/1.6 var(--body); color:var(--world-muted); }
 .campus-room-location > button { display:inline-flex; align-items:center; gap:5px; padding:0; min-height:25px; background:none; border:0; box-shadow:none; font:11px/1.6 var(--body); color:var(--world-ink); }
 .campus-room-location > button:hover { text-decoration:underline; text-underline-offset:3px; }
 .campus-room-location .item-icon { width:14px; height:14px; flex-basis:14px; }
 .campus-room-location > span:last-child { color:var(--world-accent); }
 body[data-home-skin] .campus-room .eyebrow { font:11px/1.6 var(--body); color:var(--world-muted); letter-spacing:.5px; margin:0 0 5px; }
-body[data-home-skin] .campus-room h1 { font:32px/1.25 var(--pixel); color:var(--world-ink); margin:0 0 9px; }
+body[data-home-skin] .campus-room h1 { font:28px/1.3 var(--pixel); color:var(--world-ink); margin:0 0 5px; }
 body[data-home-skin] .campus-room .muted { font:13px/1.75 var(--body); max-width:52ch; margin:0; }
-.campus-room-window { position:relative; min-width:0; height:157px; align-self:center; border:5px solid var(--world-paper); outline:1px solid var(--world-line); background:#91ac79 url(campus.png) 50% 43% / cover; box-shadow:0 4px 0 var(--world-line); border-radius:32px 32px 2px 2px; }
+.campus-room-window { position:relative; min-width:0; height:96px; align-self:center; border:5px solid var(--world-paper); outline:1px solid var(--world-line); background:#91ac79 url(campus.png) 50% 43% / cover; box-shadow:0 4px 0 var(--world-line); border-radius:24px 24px 2px 2px; }
 .campus-room-window::after { content:""; position:absolute; inset:0; border:1px solid #4d75622e; border-radius:26px 26px 0 0; pointer-events:none; }
 .campus-room-window .home-scene { border-radius:26px 26px 0 0; }
 .campus-room-window .scene-loading { font-size:11px; padding:5px 8px; max-width:88%; }
@@ -74,7 +87,7 @@ body[data-home-skin] .campus-room .muted { font:13px/1.75 var(--body); max-width
 .campus-room-sill { position:absolute; bottom:-13px; right:11px; display:flex; align-items:flex-end; gap:9px; padding:0 10px 2px; border-bottom:5px solid var(--world-wood); z-index:1; pointer-events:none; }
 .campus-room-sill .room-object { width:29px; height:29px; filter:drop-shadow(1px 2px #28433535); }
 .campus-room-sill .room-object:nth-child(2) { width:24px;height:24px; }
-.campus-room-actions { grid-column:1/-1; margin-top:21px; padding-top:15px; border-top:1px dashed var(--world-line); }
+.campus-room-actions { grid-column:1/-1; margin-top:12px; padding-top:10px; border-top:1px dashed var(--world-line); }
 body[data-home-skin] .campus-room-actions .garden-tools { display:flex; align-items:center; flex-direction:row; flex-wrap:wrap; gap:10px; }
 body[data-home-skin] .campus-room-actions .wallet { margin-right:auto; justify-content:flex-start; }
 body[data-home-skin] .campus-room-actions .wallet span { font:13px/1.5 var(--body); color:var(--world-ink); background:var(--world-soft); border:0; box-shadow:none; padding:6px 9px; }
@@ -125,10 +138,8 @@ body[data-home-skin] .home-shortcuts button { background:var(--world-paper); bor
 @media(min-width:1221px) and (max-width:1290px) { body[data-home-skin] .mast,body[data-home-skin] .shell { margin-left:24px;margin-right:24px; } }
 @media(max-width:850px) {
  body[data-home-skin] main { padding:20px; }
- body[data-home-skin] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 230px; gap:0 22px; min-height:145px; }
- .campus-room-window { height:144px; }
- body[data-home-skin] .campus-room h1 { font-size:29px; }
- .campus-room-location { margin-bottom:9px; }
+ body[data-home-skin] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 156px; gap:0 20px; }
+ body[data-home-skin] .campus-room h1 { font-size:28px; }
  body[data-home-skin] nav button { font-size:16px; }
  .campus-scene-link { min-width:130px; padding:7px 9px;gap:6px; }
  .campus-scene-link strong { font-size:14px; }
@@ -144,8 +155,8 @@ body[data-home-skin] .home-shortcuts button { background:var(--world-paper); bor
  body[data-home-skin] nav { padding:6px;gap:4px; }
  body[data-home-skin] nav button { min-height:37px;font-size:15px;padding:7px 4px; }
  body[data-home-skin] main { padding:17px 14px 22px; }
- body[data-home-skin] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 140px;gap:0 15px; min-height:133px; margin-bottom:18px;padding-bottom:19px; }
- .campus-room-window { height:125px;border-width:4px;border-radius:24px 24px 2px 2px; }
+ body[data-home-skin] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 112px;gap:0 14px; min-height:110px; margin-bottom:14px;padding-bottom:15px; }
+ .campus-room-window { height:96px;border-width:4px;border-radius:24px 24px 2px 2px; }
  .campus-room-window .home-scene,.campus-room-window::after { border-radius:19px 19px 0 0; }
  body[data-home-skin] .campus-room h1 { font-size:26px;line-height:1.4;margin-bottom:7px; }
  body[data-home-skin] .campus-room .eyebrow { display:none; }
@@ -156,7 +167,7 @@ body[data-home-skin] .home-shortcuts button { background:var(--world-paper); bor
  .campus-room-sill { right:5px;gap:5px;padding:0 5px 2px; }
  .campus-room-sill .room-object { width:24px;height:24px; }
  .campus-room-sill .room-object:nth-child(2) { width:20px;height:20px; }
- .campus-room-actions { margin-top:18px;padding-top:12px; }
+ .campus-room-actions { margin-top:12px;padding-top:10px; }
  body[data-home-skin][data-page=study][data-study-tab=notes] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 112px; gap:0 14px; margin-bottom:14px; }
  body[data-home-skin][data-page=study][data-study-tab=notes] .campus-room h1 { font-size:25px; }
  body[data-home-skin] .subnav,body[data-home-skin][data-page=garden] .subnav { gap:3px;padding:4px;margin-bottom:18px; }
@@ -171,7 +182,7 @@ body[data-home-skin] .home-shortcuts button { background:var(--world-paper); bor
 }
 @media(max-width:420px) {
  body[data-home-skin] .campus-room.pagehead { grid-template-columns:minmax(0,1fr) 108px;gap:0 12px; }
- .campus-room-window { height:111px; }.campus-room-sill .room-object { width:20px;height:20px; }
+ .campus-room-window { height:96px; }.campus-room-sill .room-object { width:20px;height:20px; }
  .campus-room-sill .room-object:nth-child(2) { width:17px;height:17px; }
  .campus-room-location .item-icon { display:none; }
  body[data-home-skin] .campus-room h1 { font-size:24px; }
@@ -281,4 +292,52 @@ body[data-home-skin] .home-companions > summary { padding:11px 3px; border-botto
  .home-next-strip { grid-template-columns:1fr; gap:11px; margin-top:13px; }
  body[data-home-skin] .home-next-strip .notebook-summary,body[data-home-skin] .home-next-strip .garden-next { min-height:100px; }
  body[data-home-skin] .campus-home .home-pet-note { bottom:145px; }
+}
+
+/* Courtyard components use the same paper and ink in every light setting.
+   Earlier component night rules paired pale text with dark panels; updating
+   only the shared card background left that text unreadable on warm paper.
+   Keep the game board and its numbered crop tiles in their own artwork palette. */
+body[data-home-skin] :is(.garden-next,.garden-projects,.pet-personality,.journey-card,.arcade-table,.arcade-side .card,.garden-orders,.order-note) {
+ background:var(--world-paper); border-color:var(--world-line); color:var(--world-ink);
+}
+body[data-home-skin] :is(.focus-garden-note,.garden-project-strip,.project-count,.project-owned>div,.pet-traits>span,.pet-frame-strip figure,.journey-feature,.keepsake-shelf>span,.arcade-scores>div,.arcade-partner-portrait,.arcade-supply,.arcade-tile-guide li,.arcade-sticker>span,.order-note.is-complete,.order-keepsakes li,.orders-tally) {
+ background:var(--world-soft); border-color:var(--world-line); color:var(--world-ink);
+}
+body[data-home-skin] .garden-next { border-left-color:var(--world-accent); }
+body[data-home-skin] .garden-project-strip { box-shadow:inset 3px 0 var(--world-accent-hi); }
+body[data-home-skin] .focus-garden-note { border-left-color:var(--world-accent-hi); }
+body[data-home-skin] :is(.garden-next strong,.project-heading h2,.project-copy h3,.project-owned strong,.pet-personality h2,.pet-action-book summary,.journey-card h2,.journey-feature h3,.journey-list strong,.keepsakes h2,.keepsake-shelf strong,.arcade-heading h2,.arcade-partner h3,.arcade-daily h3,.arcade-collection>summary,.arcade-supply strong,.arcade-harvest-trail strong,.arcade-tile-guide b,.arcade-sticker.is-earned strong,.orders-heading h2,.order-note h3,.order-note.is-complete h3,.order-materials strong,.order-keepsakes strong) {
+ color:var(--world-ink);
+}
+body[data-home-skin] :is(.garden-next p,.project-heading .eyebrow,.project-copy>p,.project-materials li,.project-bottom>span,.project-owned small,.project-finished,.garden-project-strip p,.pet-personality>p,.pet-personality>small,.pet-action-group legend,.pet-frame-strip figcaption,.pet-frame-strip small,.pet-frame-details>summary,.journey-card .eyebrow,.journey-feature small,.journey-list small,.keepsake-shelf small) {
+ color:var(--world-muted);
+}
+body[data-home-skin] .garden-project-strip small { color:var(--world-ink); }
+body[data-home-skin] :is(.project-copy .project-requirement.is-met,.pet-traits>span,.journey-stamp,.order-materials .enough,.orders-tally b,.order-keepsakes .is-owned b) {
+ color:var(--world-accent);
+}
+body[data-home-skin] :is(.project-bottom,.project-owned,.pet-action-book,.pet-action-group,.pet-frame-details,.journey-stamp,.journey-list li,.arcade-partner .arcade-partner-say,.arcade-harvest-trail,.arcade-rules,.order-materials li,.order-payment,.order-keepsakes) {
+ border-color:var(--world-line);
+}
+body[data-home-skin] :is(.project-owned .quiet,.garden-project-strip>.quiet) { color:var(--world-accent); }
+body[data-home-skin] :is(.project-owned .quiet:hover,.garden-project-strip>.quiet:hover) {
+ color:var(--world-ink); background:var(--world-paper); border-color:var(--world-line);
+}
+body[data-home-skin] .garden-arcade { color:var(--world-ink); }
+body[data-home-skin] :is(.arcade-heading .eyebrow,.arcade-heading>div>p:last-child,.arcade-board-top,.arcade-feedback,.arcade-partner p,.arcade-partner small,.arcade-daily p,.arcade-kind,.arcade-collection>p,.arcade-collection>summary>span,.arcade-supply small,.arcade-reward-value>span,.arcade-harvest-trail small,.arcade-harvest-trail b,.arcade-trail-finish,.arcade-tile-guide,.arcade-tile-guide p,.arcade-tile-guide summary,.arcade-rules,.arcade-rules summary,.arcade-sticker,.arcade-sticker small,.arcade-scores small) {
+ color:var(--world-muted);
+}
+body[data-home-skin] :is(.arcade-scores strong,.arcade-reward-value>strong,.order-payment strong) { color:#85602b; }
+body[data-home-skin] :is(.orders-heading .eyebrow,.orders-heading p:last-child,.order-note-top,.order-note-top small,.order-note>p,.order-materials small,.order-friendship,.order-payment>span,.orders-footer,.orders-footer>span,.order-keepsakes,.order-keepsakes summary span,.order-keepsakes small) {
+ color:var(--world-muted);
+}
+body[data-home-skin] :is(.garden-arcade .arcade-feedback.is-won,.garden-orders .order-note.is-complete h3) { color:var(--world-accent); }
+body[data-home-skin] :is(.garden-arcade .arcade-feedback.is-over,.garden-orders .order-materials .short) { color:#925133; }
+body[data-home-skin] :is(.arcade-sticker.is-earned>span,.order-keepsakes .is-owned,.order-note.is-complete,.order-note.is-ready) { border-color:var(--world-accent-hi); }
+body[data-home-skin] .arcade-sticker.is-earned>span { box-shadow:inset 0 0 0 3px var(--world-paper); }
+body[data-home-skin] .arcade-table button { color:var(--world-ink); background:var(--world-paper); border-color:var(--world-line); }
+body[data-home-skin] .arcade-table button:hover:not(:disabled) { background:var(--world-soft); border-color:var(--world-accent-hi); }
+body[data-home-skin] .arcade-table button:disabled {
+ color:var(--world-muted); background:var(--world-soft); border-color:var(--world-line); opacity:.58; box-shadow:none; cursor:not-allowed;
 }

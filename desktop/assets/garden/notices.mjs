@@ -13,7 +13,7 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource}){
   if(error)return `<p role="status" class="notice error">${esc(error)}</p>`;
   if(!feed)return '<p class="muted">正在准备所选学院的公告，也可以直接查看原页。</p>';
   const sorted=[...feed.items].sort((a,b)=>b.date.localeCompare(a.date));
-  return `<p class="notice">${esc(feed.source)} · ${feed.stale?'上次读取的内容':'读取于 '+esc(new Date(feed.fetched_at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${feed.message?' · '+esc(feed.message):''}</p><ul class="campus-notices">${sorted.slice(0,12).map(x=>`<li><time>${esc(x.date)}</time><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a></li>`).join('')}</ul>`;
+  return `<p class="notice">${esc(feed.source)} · ${feed.stale?'上次读取的内容':'读取于 '+esc(new Date(feed.fetched_at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${feed.message?' · '+esc(feed.message):''}</p>${sorted.length?'':'<p class="empty" role="status">这个栏目本次没有可显示的公告。可以查看原页确认最新通知。</p>'}<ul class="campus-notices">${sorted.slice(0,12).map(x=>`<li><time>${esc(x.date)}</time><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a></li>`).join('')}</ul>`;
  }
  function content(){
   const chosen=current();

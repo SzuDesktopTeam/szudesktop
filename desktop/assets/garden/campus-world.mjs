@@ -18,7 +18,7 @@ export function campusRoomHeader({page,title,eyebrow='',description='',skin='pix
  const scenery=homeSkinDetails(selected);
  const landscape=selected==='pixel'?'':`<div class="home-scene campus-room-scene" data-home-scene="${selected}" role="img" aria-label="${esc(scenery.description)}"><p class="scene-loading" role="status">窗外的荔园正在展开…</p></div>`;
  return `<header class="campus-room pagehead" data-room="${esc(page)}">
-  <div class="campus-room-copy"><div class="campus-room-location"><button type="button" data-action="navigate" data-page="home" aria-label="回到庭院首页">${sprite('i-cottage','item-icon')}庭院</button><span aria-hidden="true">/</span><span>${room.name}</span></div><p class="eyebrow">${esc(eyebrow||room.detail)}</p><h1>${esc(title||room.name)}</h1><p class="muted">${esc(description||room.detail)}</p></div>
+  <div class="campus-room-copy"><div class="campus-room-location"><button type="button" data-action="navigate" data-page="home" aria-label="回到庭院首页">${sprite('i-cottage','item-icon')}庭院</button><span aria-hidden="true">/</span><span>${room.name}</span></div><h1>${esc(title||room.name)}</h1><p class="muted">${esc(description||room.detail)}</p></div>
   <div class="campus-room-window" aria-label="${esc(scenery.name)}的窗景">${landscape}<span class="campus-window-label">${esc(scenery.name)}</span><div class="campus-room-sill" aria-hidden="true">${room.objects.map(id=>sprite(id,'room-object')).join('')}</div></div>
   ${right?`<div class="campus-room-actions">${right}</div>`:''}
  </header>`;

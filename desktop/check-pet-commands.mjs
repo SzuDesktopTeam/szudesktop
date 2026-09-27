@@ -21,7 +21,7 @@ function fixture(){
   act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},
   $:selector=>selector==='.companion-dialog'?dialog:selector==='#companion-tip'?footer.tip:null,
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
-  navigate:async(page,tab)=>{context.page=page;if(page==='study'&&tab)context.studyTab=tab;return true},
+  navigate:async(page,tab)=>{context.page=page;if(page==='study'&&tab)context.studyTab=tab;if(page==='garden'&&tab)context.gardenTab=tab;return true},
   szuDesktop:{petResult:result=>results.push({...result})},
   api:async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:context.revision+1}},
  });

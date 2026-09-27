@@ -11,7 +11,7 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .pet-layout { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:start; gap:20px; }
 .pet-sidebar { display:grid; gap:18px; min-width:0; }
 .pet-living .card-head { margin-bottom:14px; }
-.pet-living .petroom { height:312px; margin-bottom:18px; background:repeating-linear-gradient(90deg,transparent 0 57px,#aa825823 57px 59px),linear-gradient(#e5d1a8 0 68%,#946c40 68% 70%,#c89e6d 70%); border:3px solid #916638; }
+.pet-living .petroom { height:248px; margin-bottom:18px; background:repeating-linear-gradient(90deg,transparent 0 57px,#aa825823 57px 59px),linear-gradient(#e5d1a8 0 68%,#946c40 68% 70%,#c89e6d 70%); border:3px solid #916638; }
 .pet-living .petroom::before { height:30%; }
 .pet-living .petroom::after { width:168px; height:36px; left:calc(50% - 84px); bottom:14px; background:#b57469; border:5px solid #ecd29a; box-shadow:0 3px #8f604247; }
 .pet-living .petroom > .sprite { width:138px; height:155px; margin-bottom:27px; }
@@ -250,3 +250,6 @@ body[data-theme=night] .farm-companion>div{background:#393b32ef;border-color:#a4
 body[data-theme=night] .farm-companion strong{color:#edc994}
 body[data-theme=night] .farm-companion p{color:#ece7cc}
 @media(max-width:600px){.farm-companion{left:12px;right:12px;top:44px;gap:7px}.farm-companion>.sprite{width:39px;height:50px}.farm-companion>div{padding:5px 8px}.farm-companion p{font-size:11px;line-height:1.5}.farm-landscape:has(.farm-companion){padding-top:149px}}
+
+/* Keep the chosen activity first; suggestions follow after it. */
+.garden-brief { margin-top:20px; }

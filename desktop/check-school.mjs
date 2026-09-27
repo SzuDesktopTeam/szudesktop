@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {createSchoolUI,timetableHTML,undergradTimetableHTML} from './assets/garden/school.mjs';
+import {createSchoolWindowUI} from './assets/garden/school-window.mjs';
 const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{innerHTML:'',value:'',disabled:false,reset(){this.value=''}});return nodes.get(id)};
 globalThis.document={getElementById:node,querySelector:node};
 const sample={entries:[{name:'<img src=x>',day:2,start:3,end:4,weeks:'1–16周（单）',room:'测试教室'}],unscheduled:[{name:'待排课程'}],term:'测试学期',fetched_at:'2026-09-20T00:00:00Z'};
@@ -51,5 +52,41 @@ await check('installed graduate view exposes query failures without a login card
   assert.equal(visible.get('school-timetable').innerHTML,'');assert.match(installed.timetableCard('graduate'),/id="school-query-status"/);
   assert.doesNotMatch(installed.timetableCard('graduate'),/学校当前学期没有返回|登录后点击「读取我的课表」/);
  }finally{globalThis.document=beforeDocument;delete globalThis.szuDesktop}
+});
+
+await check('undergraduate query shows pending, prevents duplicate reads and recovers after an error',async()=>{
+ let finish,reject,requests=0;
+ const undergraduate=createSchoolUI({toast(){},api:()=>{requests++;return new Promise((resolve,fail)=>{finish=resolve;reject=fail})}});
+ const first=undergraduate.click('school-undergrad');
+ assert.match(node('undergrad-timetable').innerHTML,/正在读取学校本科课表/);
+ assert.doesNotMatch(node('undergrad-timetable').innerHTML,/尚未读取/);
+ assert.equal(node('[data-action="school-undergrad"]').disabled,true);
+ await undergraduate.click('school-undergrad');assert.equal(requests,1);
+ reject(Error('读取超时，请重试'));await first;
+ assert.match(node('undergrad-timetable').innerHTML,/读取超时，请重试/);
+ assert.equal(node('[data-action="school-undergrad"]').disabled,false);
+ const retry=undergraduate.click('school-undergrad');
+ finish({term:'测试学期',fetched_at:sample.fetched_at,courses:[]});await retry;
+ assert.match(node('undergrad-timetable').innerHTML,/学校该学期返回空课表/);
+ assert.doesNotMatch(node('undergrad-timetable').innerHTML,/读取超时|正在读取/);
+});
+await check('official login and session import follow the displayed academic page',async()=>{
+ const previousDocument=globalThis.document,previousDesktop=globalThis.szuDesktop;
+ const actions=[],status={textContent:'',classList:{toggle(){}}};
+ globalThis.document={getElementById:id=>id==='official-status'?status:null,querySelectorAll:()=>[]};
+ globalThis.szuDesktop={openSchool:async target=>actions.push(['open',target]),syncSchool:async target=>{actions.push(['sync',target]);return {message:'测试登录状态'}},clearSchool:async()=>({message:'已清除'})};
+ try{
+  let sessionChanges=0;const officialUI=createSchoolWindowUI({onSessionChanged:async()=>{sessionChanges++}});
+  for(const [target,label] of [['undergrad','本科课表'],['graduate','研究生课表'],['undergrad-scores','本科成绩'],['graduate-scores','研究生成绩']]){
+   const html=officialUI.card(false,target);
+   assert.match(html,new RegExp(label));assert.doesNotMatch(html,/official-business|<select/);
+   await officialUI.click('official-open');assert.deepEqual(actions.at(-1),['open',target]);
+   await officialUI.click('official-sync');assert.deepEqual(actions.at(-1),['sync',target]);
+  }
+  assert.equal(sessionChanges,4);
+  assert.doesNotMatch(officialUI.card(false,'undergrad'),/测试登录状态/,'switching academic pages clears the previous business status');
+  officialUI.card(true);await officialUI.click('official-booking');assert.deepEqual(actions.at(-1),['open','booking']);
+  await officialUI.click('official-clear');assert.equal(sessionChanges,5);
+ }finally{globalThis.document=previousDocument;if(previousDesktop===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previousDesktop}
 });
 console.log(`${count} school checks passed`);
