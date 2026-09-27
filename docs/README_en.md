@@ -27,7 +27,7 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** Building on the scenes merged in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), the beta0.9.3 source now adds **course notes, Feishu course-document integration and a courtyard environment across the application**. Implementation, acceptance and remaining work are kept in [STATUS section 63](STATUS.md#63-课程笔记飞书共学与全局庭院2026-09-27源码未发布). Sections 61–62 preserve earlier scene verification. Candidate installers in section 60 belong to the earlier 2048 artwork version and do not contain this notebook.
+**These changes are not publicly released; the download above remains beta0.9.2.** The current changes are in [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20). Building on the scenes merged in [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19), the beta0.9.3 source now adds **course notes, Feishu course-document integration and a courtyard environment across the application**. Implementation, acceptance and remaining work are kept in [STATUS section 63](STATUS.md#63-课程笔记飞书共学与全局庭院2026-09-27源码未发布). Sections 61–62 preserve earlier scene verification. Candidate installers in section 60 belong to the earlier 2048 artwork version and do not contain this notebook.
 
 ### From the courtyard to your study desk
 
