@@ -9,10 +9,10 @@ function test(name,fn){tests.push([name,fn])}
 // 设置页必须真的给出开机自启的入口和状态位置，否则后端接通了用户也看不到。
 test('settings page exposes the autostart card',()=>{
   const at=app.indexOf('function settings(){');
-  const settings=app.slice(at,app.indexOf('\n',at));
+  const settings=app.slice(at,app.indexOf('function loadPetScale(){',at));
   assert.match(settings,/id="autostart-state"/);
   assert.match(settings,/btn\('读取中…','autostart'\)/);
-  assert.match(settings,/只支持 Windows/);
+  assert.match(settings,/登录 Windows 时/);
   assert.match(app,/autostart:'i-signal'/,'开机自启按钮没有图标');
 });
 

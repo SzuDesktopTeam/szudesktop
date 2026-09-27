@@ -5,7 +5,8 @@ const nodes=new Map();
 const node=id=>{if(!nodes.has(id))nodes.set(id,{innerHTML:'',value:''});return nodes.get(id)};
 globalThis.document={querySelector:node,getElementById:node};
 let response={level:'undergrad',label:'本科',items:[],fetched:0,full:false},calls=[];
-const ui=createCampusUI({getState:createState,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async(path)=>{calls.push(path);if(path.startsWith('/api/scores'))return response;return {saved:true,store_desc:'测试加密存储',message:'可访问'}}});
+const state=createState();
+const ui=createCampusUI({getState:()=>state,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async(path)=>{calls.push(path);if(path.startsWith('/api/scores'))return response;return {saved:true,store_desc:'测试加密存储',message:'可访问'}}});
 let count=0;
 const check=async(name,fn)=>{await fn();count++;console.log('PASS',name)};
 await check('explicit empty results render without a crash',async()=>{
@@ -29,8 +30,9 @@ await check('partial metadata stays visibly partial',async()=>{
  assert.match(node('#online-score').innerHTML,/总计 80 条记录/);assert.match(node('#online-score').innerHTML,/尚未取全/);
 });
 await check('changing academic level clears old grades and probes selected business',async()=>{
- await ui.change({target:{id:'online-score-level',value:'graduate'}});
- assert.doesNotMatch(node('#online-score').innerHTML,/&lt;img/);
+ state.preferences.studentLevel='graduate';
+ const html=ui.grades();assert.doesNotMatch(html,/&lt;img/);
+ assert.doesNotMatch(html,/id="online-score-level"/);assert.match(html,/当前读取：研究生成绩/);
  await ui.click('campus-session-check',{});assert.equal(calls.at(-1),'/api/session/check?level=graduate');
  await ui.click('campus-online-score',{});assert.equal(calls.at(-1),'/api/scores?level=graduate');
  assert.match(ui.grades(),/value="graduate" selected/);
@@ -51,8 +53,25 @@ await check('new and excluded course totals remain empty while an actual zero GP
 });
 await check('academic identity defaults initialize after state arrives and follow later preference changes',async()=>{
  let state;const view=createCampusUI({getState:()=>state,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async()=>({})});
- state=createState();state.preferences.studentLevel='graduate';assert.match(view.grades(),/id="online-score-level"><option value="undergrad" >本科<\/option><option value="graduate" selected/);
- state.preferences.studentLevel='undergrad';assert.match(view.grades(),/id="online-score-level"><option value="undergrad" selected/);
+ state=createState();state.preferences.studentLevel='graduate';assert.match(view.grades(),/当前读取：研究生成绩/);
+ state.preferences.studentLevel='undergrad';assert.match(view.grades(),/当前读取：本科成绩/);
  assert.doesNotMatch(view.services('notices'),/图书馆与自习提醒|常用联系与入口/);assert.match(view.services('directory'),/常用联系与入口/);assert.doesNotMatch(view.services('directory'),/学校公告/);
+});
+
+await check('both installed and portable score queries follow the global academic level without a second choice',async()=>{
+ const previousDesktop=globalThis.szuDesktop;
+ try{
+  for(const installed of [false,true]){
+   if(installed)globalThis.szuDesktop={openSchool(){}};else delete globalThis.szuDesktop;
+   const current=createState(),requests=[];
+   const view=createCampusUI({getState:()=>current,commit:async()=>{},toast(){},confirm:async()=>true,render(){},api:async path=>{requests.push(path);return path.startsWith('/api/scores')?{label:'测试',items:[],fetched:0}:{message:'可访问'}}});
+   for(const level of ['graduate','undergrad']){
+    current.preferences.studentLevel=level;
+    await view.click('campus-online-score',{});assert.equal(requests.at(-1),'/api/scores?level='+level);
+    await view.click('campus-session-check',{});assert.equal(requests.at(-1),'/api/session/check?level='+level);
+    assert.doesNotMatch(view.grades(),/id="online-score-level"/);
+   }
+  }
+ }finally{if(previousDesktop===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previousDesktop}
 });
 console.log(`${count} session UI checks passed`);

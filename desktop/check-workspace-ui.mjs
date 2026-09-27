@@ -7,6 +7,10 @@ import {ordersView} from './assets/garden/arcade-ui.mjs';
 import {reservedStock,sellableStock} from './assets/garden/garden-loop.mjs';
 import {cropPurpose,readyOrders} from './assets/garden/garden-path.mjs';
 import {projectScene} from './assets/garden/garden-loop-ui.mjs';
+import {homeSkinPicker} from './assets/garden/home-skins.mjs';
+import {createReleaseUI} from './assets/garden/release-ui.mjs';
+import {createFeedbackUI} from './assets/garden/feedback.mjs';
+import {readRoute,routeHash} from './assets/garden/routes.mjs';
 
 // Exercise the actual page handlers with an isolated DOM and workspace API.
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
@@ -17,6 +21,22 @@ function section(start,end){
 }
 let checks=0;
 async function check(name,fn){await fn();checks++;console.log('PASS',name)}
+
+await check('home harvest counter and invitation update together as a crop matures without repainting drafts',()=>{
+ let now=new Date(2026,8,27,12).getTime();
+ class Clock extends Date{static now(){return now}}
+ const state=createState(now),counter={textContent:''},harvest={textContent:''},bar={},draft={value:'还没提交的小事'};
+ const context=vm.createContext({state,page:'home',busy:false,exiting:false,Date:Clock,refreshDay(){},paintGardenPath(){},tickFarm(){},
+  document:{activeElement:draft,querySelector:selector=>selector==='[data-home-ready]'?counter:null,querySelectorAll:()=>[]},
+  $:selector=>({'#home-harvest-label':harvest,'#activity-bar':bar}[selector]),
+ });
+ vm.runInContext(section('function clocks(){','function paintDay('),context);
+ context.clocks();assert.equal(counter.textContent,'0');assert.match(harvest.textContent,/去看看/);
+ now=state.game.plots[0].ready;context.clocks();
+ assert.equal(counter.textContent,'1');assert.match(harvest.textContent,/1 块田可以收获/);
+ assert.equal(context.document.activeElement,draft);assert.equal(draft.value,'还没提交的小事');
+ state.game.plots[0]=null;context.clocks();assert.equal(counter.textContent,'0');assert.match(harvest.textContent,/去看看/);
+});
 
 function sceneFixture(){
  let current=null;
@@ -358,6 +378,32 @@ await check('campus service sections do not mount unrelated forms or booking too
  }
 });
 
+await check('settings sections retain appearance, desktop controls, both backups and update tools in their own rooms',()=>{
+ const context=vm.createContext({state:createState(),saved:true,appVersion:'beta0.9.3',settingsTab:'appearance',head:()=>'',sprite:()=>'',esc:String,homeSkinPicker,
+  btn:(text,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${text}</button>`,
+  desktopUI:{card:()=>'<section id="desktop-options"></section>'},
+  releaseUI:createReleaseUI({getVersion:()=> 'beta0.9.3',api:()=>assert.fail('rendering settings must not check updates automatically')}),
+  feedbackUI:createFeedbackUI({getVersion:()=> 'beta0.9.3',getMode:()=> 'browser',toast(){}}),exitHint:()=> '退出方式',
+ });
+ vm.runInContext(section('function sectionNav(','function servicesPage(')+section('function settings(){','function loadPetScale(){'),context);
+ for(const [tab,required] of Object.entries({
+  appearance:[/class="home-skin-picker" open/,/id="profile-form"/,/id="theme"/],
+  desktop:[/id="autostart-state"/,/data-action="autostart"/],
+  data:[/data-action="export"/,/data-action="notebookBackup"/,/id="import-file"/,/data-action="forget"/],
+  about:[/id="release-panel"/,/data-action="release-check"/,/id="feedback-panel"/,/data-action="feedback-copy"/,/data-action="shutdown"/,/beta0.9.3/],
+ })){
+  context.settingsTab=tab;const html=context.settings();
+  assert.match(html,new RegExp(`data-tab="${tab}" aria-pressed="true"`));
+  for(const pattern of required)assert.match(html,pattern,`${tab} must keep ${pattern}`);
+  if(tab!=='appearance')assert.doesNotMatch(html,/id="profile-form"/);
+  if(tab!=='data')assert.doesNotMatch(html,/id="import-file"|data-action="notebookBackup"/);
+  if(tab!=='about')assert.doesNotMatch(html,/id="release-panel"|id="feedback-panel"|data-action="shutdown"/);
+  if(tab!=='desktop')assert.doesNotMatch(html,/id="autostart-state"|id="pet-scale"/);
+ }
+ context.settingsTab='desktop';context.szuDesktop={shell:'electron'};
+ const installed=context.settings();assert.match(installed,/id="desktop-options"/);assert.match(installed,/id="pet-scale"/);assert.doesNotMatch(installed,/id="autostart-state"/,'installed Windows startup is owned by the Electron desktop preferences');
+});
+
 function formFixture(){
  const listeners={},nodes=new Map(),writes=[],messages=[],reactions=[];
  const draft={value:'还没添加的想法',isConnected:true,selectionStart:2,selectionEnd:5};
@@ -451,5 +497,37 @@ await check('failed animation preference saves do not tell the desktop pet they 
  const form={id:'profile-form',elements:{name:{value:'庭院同学'},college:{value:''},theme:{value:'day'},motion:{type:'checkbox',checked:!originalMotion,value:'on'}}};
  await assert.rejects(()=>f.submit(form),/workspace write failed/);
  assert.equal(notifications.length,0);assert.equal(f.context.state.preferences.motion,originalMotion);assert.equal(f.fullRenders,0);assert.equal(f.messages.length,0);
+});
+
+await check('settings navigation keeps the original unsaved profile form in memory and same-room clicks do not repaint',async()=>{
+ const state=createState(),nodes=new Map(),form={id:'profile-form',name:'还没保存的昵称',college:'一段草稿',theme:'night',motion:false};
+ const savedProfile=structuredClone(state.profile);let visible=form,repaints=0;
+ const main={focus(){},set innerHTML(_html){repaints++;visible=context.page==='settings'&&context.settingsTab==='appearance'?{replaceWith(original){visible=original}}:null}};
+ const context=vm.createContext({state,page:'settings',settingsTab:'appearance',studyTab:'notes',serviceTab:'spaces',gardenTab:'pet',settingsProfileDraft:null,busy:false,
+  pages:{settings:'设置',home:'今日'},pageIcons:{},readRoute,routeHash,Date,sprite:()=>'',pageHTML:()=>'',paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},
+  notebookUI:{leave:()=>assert.fail('settings navigation must not trigger the notebook save gate')},
+  desktopUI:{load(){}},loadAutostart(){},loadPetScale(){},window:{scrollTo(){}},history:{replaceState(){},pushState(){}},
+  document:{body:{dataset:{}},activeElement:null,querySelector:()=>null,getElementById:id=>id==='profile-form'?visible:null},
+  $:selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector),toast:message=>assert.fail(message),
+ });
+ vm.runInContext(section('function render(){','function pageHTML(')+section('let navigating=false;','let notifiedFocus='),context);
+ await context.navigate('settings','appearance');assert.equal(repaints,0);assert.equal(visible,form);
+ for(const tab of ['desktop','data','about']){
+  await context.navigate('settings',tab);assert.equal(visible,null);assert.equal(context.settingsProfileDraft,form);
+  await context.navigate('settings','appearance');assert.equal(visible,form);
+ }
+ await context.navigate('home');await context.navigate('settings','appearance');assert.equal(visible,form);
+ assert.deepEqual(form,{id:'profile-form',name:'还没保存的昵称',college:'一段草稿',theme:'night',motion:false});
+ assert.deepEqual(state.profile,savedProfile,'changing rooms must not silently save the profile draft');
+});
+await check('saving a profile clears its in-memory form only after the write succeeds',async()=>{
+ const f=formFixture(),form={id:'profile-form',elements:{name:{value:'  新名字  '},college:{value:'  新学院  '},theme:{value:'night'},motion:{type:'checkbox',checked:false,value:'on'}}};
+ f.context.page='settings';f.context.settingsTab='appearance';f.context.settingsProfileDraft=form;
+ const previous=structuredClone(f.context.state.profile),save=f.context.api;
+ f.context.api=async()=>{throw Error('写入失败')};await assert.rejects(f.submit(form),/写入失败/);
+ assert.equal(f.context.settingsProfileDraft,form);assert.deepEqual(f.context.state.profile,previous);assert.equal(f.fullRenders,0);
+ f.context.api=save;await f.submit(form);
+ assert.equal(f.context.settingsProfileDraft,null);assert.equal(f.context.state.profile.name,'新名字');assert.equal(f.context.state.profile.college,'新学院');
+ assert.equal(f.context.state.preferences.theme,'night');assert.equal(f.context.state.preferences.motion,false);assert.equal(f.fullRenders,1);
 });
 console.log(`${checks} workspace UI checks passed`);

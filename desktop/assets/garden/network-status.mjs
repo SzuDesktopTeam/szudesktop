@@ -6,6 +6,7 @@ export function networkBadge(status) {
 }
 
 export const networkTone=status=>!status?'muted':status.internet_ok?'success':'error';
+export const networkLoginHint=status=>!status?'连接状态待确认，可展开检查账号':status.internet_ok?'当前外网可用，按需展开':'填写账号，连接校园网络';
 export const networkBadgeHTML=status=>pixelIcon(!status?'i-compass':status.internet_ok?'i-signal':'i-disconnect')+`<span>${networkBadge(status)}</span>`;
 
 export function networkSummaryHTML(status,error='') {

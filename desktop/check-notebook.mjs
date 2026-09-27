@@ -74,4 +74,29 @@ await test('设置页备份先等笔记载入，随后直接导出现有草稿�
  draft.body='冲突后仍需带走的新草稿';await context.backup();assert.equal(reads,1);assert.equal(exports[1].body,'冲突后仍需带走的新草稿');
  loaded=false;context.load=async()=>null;context.loadError='本机笔记读取失败';await assert.rejects(context.backup(),/本机笔记读取失败/);assert.equal(exports.length,2);
 });
+await test('切换笔记保持课程和笔记滚动位置，换课程时只复位笔记列表',()=>{
+ const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8'),from=source.indexOf('function paint({'),to=source.indexOf('function paintStatus(',from);assert.ok(from>=0&&to>from);
+ let context;
+ const makeHost=(courseTop,noteTop,noteLeft)=>({isConnected:true,nodes:{'.note-course-list':{scrollTop:courseTop,scrollLeft:21},'.note-list':{scrollTop:noteTop,scrollLeft:noteLeft}},replaceWith(){}});
+ const old=makeHost(180,390,560),next=makeHost(0,0,0);
+ context=vm.createContext({host:old,q:selector=>context.host.nodes[selector],document:{createElement:()=>({firstElementChild:next})},view:()=>'',bind(){},paintStatus(){}});
+ vm.runInContext(source.slice(from,to),context);context.paint();assert.equal(context.host,next);assert.equal(next.nodes['.note-course-list'].scrollTop,180);assert.equal(next.nodes['.note-list'].scrollTop,390);assert.equal(next.nodes['.note-list'].scrollLeft,560);
+ context.host=makeHost(240,410,720);const replacement=makeHost(0,0,0);context.document.createElement=()=>({firstElementChild:replacement});context.paint({resetList:true});assert.equal(replacement.nodes['.note-course-list'].scrollTop,240);assert.equal(replacement.nodes['.note-course-list'].scrollLeft,21);assert.equal(replacement.nodes['.note-list'].scrollTop,0);assert.equal(replacement.nodes['.note-list'].scrollLeft,0);
+});
+await test('正文输入更新侧栏时保持两个方向滚动，不重建正在输入的编辑器',()=>{
+ const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8'),from=source.indexOf('function paintList('),to=source.indexOf('function summaryHTML(',from);assert.ok(from>=0&&to>from);
+ const nodes={'.note-list':{scrollTop:220,scrollLeft:480},'[data-note-search-summary]':{},'[data-note-search-context]':{}},draft={body:'正在输入的正文'};
+ const fresh=()=>({scrollTop:0,scrollLeft:0,replaceWith(next){nodes['.note-list']=next}});nodes['.note-list'].replaceWith=function(next){nodes['.note-list']=next};
+ const context=vm.createContext({q:selector=>nodes[selector],document:{createElement:()=>({querySelector:fresh})},noteList:()=>'',searchSummaryHTML:()=> '找到 1 页',searchContextHTML:()=> '当前页不匹配',activeNote:()=>draft,editor(){assert.fail('不应重建正在输入的正文')}});
+ vm.runInContext(source.slice(from,to),context);context.paintList();assert.equal(nodes['.note-list'].scrollTop,220);assert.equal(nodes['.note-list'].scrollLeft,480);assert.equal(nodes['[data-note-search-summary]'].innerHTML,'找到 1 页');assert.equal(draft.body,'正在输入的正文');
+ context.paintList({reset:true});assert.equal(nodes['.note-list'].scrollTop,0);assert.equal(nodes['.note-list'].scrollLeft,0);
+});
+await test('搜索无匹配明确告知当前页状态，清除搜索不会保存或切换现有草稿',async()=>{
+ const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8'),from=source.indexOf('function searchSummaryHTML('),to=source.indexOf('function noteList(',from);assert.ok(from>=0&&to>from);
+ const draft={id:'current',body:'尚未保存的长文'},search={value:'查不到',focus(){}},events=[];
+ const context=vm.createContext({query:'查不到',filtered:()=>[],activeNote:()=>draft,button:label=>`<button>${label}</button>`,q:selector=>selector==='#note-search'?search:selector==='.note-list-item.selected'?{scrollIntoView:()=>events.push('reveal')}:null,paintList:options=>events.push(options.reset),flush(){assert.fail('清除搜索不需要保存草稿')}});
+ vm.runInContext(source.slice(from,to),context);assert.match(context.searchSummaryHTML(),/找到 0 页/);assert.match(context.searchSummaryHTML(),/清除搜索/);assert.match(context.searchContextHTML(),/这页不在搜索结果中/);
+ const actionFrom=source.indexOf('async function actionRun('),actionTo=source.indexOf('function paintFeishu(',actionFrom);vm.runInContext(source.slice(actionFrom,actionTo),context);await context.actionRun('clear-search');assert.equal(context.query,'');assert.equal(search.value,'');assert.equal(context.searchContextHTML(),'');assert.equal(draft.body,'尚未保存的长文');assert.deepEqual(events,[true,'reveal']);
+ const inputFrom=source.indexOf('function input('),inputTo=source.indexOf('function keydown(',inputFrom);vm.runInContext(source.slice(inputFrom,inputTo),context);context.input({target:{id:'note-search',value:'另一个词'}});assert.equal(context.query,'另一个词');assert.equal(draft.body,'尚未保存的长文');assert.equal(events.at(-1),true);
+});
 process.stdout.write(`${checks} notebook checks passed.\n`);

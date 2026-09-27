@@ -5,6 +5,7 @@ import {createDesktopOptions} from './assets/garden/desktop-options.mjs';
 import {todoView} from './assets/garden/productivity.mjs';
 import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
+import {readRoute,routeHash} from './assets/garden/routes.mjs';
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const start=source.indexOf('async function run('),end=source.indexOf("document.addEventListener('submit'",start);
 assert.ok(start>=0&&end>start);
@@ -30,17 +31,28 @@ function noteNavigationFixture(){
  const toasts=[],events=[],history=[],draft={value:'尚未落盘的课堂问题',selectionStart:2,selectionEnd:7};
  const notebook={draft},main={focus(){events.push('focus-main')}},gate={};
  gate.promise=new Promise((resolve,reject)=>{gate.resolve=()=>{gate.saved=true;resolve()};gate.reject=reject});
- const context=vm.createContext({page:'study',studyTab:'notes',pages:{home:'今日',study:'学习',garden:'庭院'},
+ const location={hash:'#study/notes'},methods=[];
+ const writeHistory=method=>(_state,_unused,hash)=>{history.push(hash);methods.push(method);location.hash=hash};
+ const context=vm.createContext({state:{},busy:false,page:'study',studyTab:'notes',serviceTab:'spaces',gardenTab:'pet',settingsTab:'appearance',readRoute,routeHash,location,pages:{home:'今日',study:'学习',garden:'庭院',services:'服务',settings:'设置'},
   document:{activeElement:draft,querySelector:selector=>selector==='[data-notebook]'?notebook:null},
   notebookUI:{leave:()=>{events.push('leave');return gate.promise}},
-  history:{replaceState:(_state,_unused,hash)=>history.push(hash)},window:{scrollTo(){events.push('scroll')}},
+  history:{replaceState:writeHistory('replace'),pushState:writeHistory('push')},window:{scrollTo(){events.push('scroll')}},
   render(){assert.equal(gate.saved,true,'render must not run before the notebook save resolves');events.push('render')},
   $:selector=>{assert.equal(selector,'#main');return main},toast:message=>toasts.push(message),
  });
  const at=source.indexOf('let navigating=false;'),to=source.indexOf('let notifiedFocus=',at);
  assert.ok(at>=0&&to>at);vm.runInContext(source.slice(at,to),context);
- return {context,toasts,events,history,draft,gate};
+ return {context,toasts,events,history,methods,draft,gate};
 }
+await check('all room links survive refresh, accept older page links and reject unknown sections',()=>{
+ for(const [page,tabs] of Object.entries({study:['notes','focus','timetable','grades'],services:['spaces','notices','directory','piano'],garden:['pet','farm','market','arcade','journal'],settings:['appearance','desktop','data','about']})){
+  assert.deepEqual(readRoute('#'+page),{page,tab:tabs[0]});
+  for(const tab of tabs)assert.deepEqual(readRoute(routeHash({page,tab})),{page,tab});
+  assert.deepEqual(readRoute('#'+page+'/missing'),{page,tab:tabs[0]});
+ }
+ assert.deepEqual(readRoute('#unknown'),{page:'home',tab:undefined});
+ assert.equal(routeHash({page:'home'}),'#home');
+});
 await check('leaving course notes waits for the real navigation save gate before changing page or history',async()=>{
  const f=noteNavigationFixture(),pending=f.context.navigate('home');
  await tick();assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.deepEqual(f.history,[]);assert.deepEqual(f.events,['leave']);
@@ -55,12 +67,57 @@ await check('failed note saves keep the original page, subtab and local draft, t
  assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.deepEqual(f.history,[]);assert.deepEqual(f.events,['leave']);
  assert.equal(f.draft.value,'尚未落盘的课堂问题');assert.deepEqual([f.draft.selectionStart,f.draft.selectionEnd],[2,7]);assert.equal(f.context.document.activeElement,f.draft);assert.deepEqual(f.toasts,['笔记保存失败，请保留草稿']);
  f.context.notebookUI.leave=async()=>{f.gate.saved=true;f.events.push('leave-retry')};
- assert.equal(await f.context.navigate('study','focus'),true);assert.equal(f.context.studyTab,'focus');assert.deepEqual(f.history,['#study']);
+ assert.equal(await f.context.navigate('study','focus'),true);assert.equal(f.context.studyTab,'focus');assert.deepEqual(f.history,['#study/focus']);
 });
 await check('switching from notes to another study tool also waits before replacing the editor',async()=>{
  const f=noteNavigationFixture(),pending=f.context.navigate('study','grades');
  assert.equal(f.context.studyTab,'notes');assert.equal(f.events.includes('render'),false);
  f.gate.resolve();assert.equal(await pending,true);assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'grades');assert.equal(f.events.filter(x=>x==='render').length,1);
+});
+await check('room section changes record history, return to the top and focus the new content',async()=>{
+ const f=noteNavigationFixture();f.gate.resolve();f.context.document.querySelector=()=>null;
+ for(const [page,tab] of [['services','notices'],['services','directory'],['garden','farm'],['garden','market'],['settings','data']]){
+  assert.equal(await f.context.navigate(page,tab),true);
+  assert.equal(f.context.location.hash,'#'+page+'/'+tab);
+  assert.deepEqual(f.events.slice(-3),['render','scroll','focus-main']);
+ }
+ assert.deepEqual(f.methods,['push','push','push','push','push']);
+ assert.equal(f.context.settingsTab,'data');
+ await f.context.navigate('settings','data');assert.equal(f.methods.at(-1),'replace','clicking the current section must not duplicate browser history');
+});
+await check('back navigation uses the same notebook save gate and restores the address on failure',async()=>{
+ const f=noteNavigationFixture();f.context.location.hash='#garden/farm';
+ const pending=f.context.followHashRoute();await tick();
+ assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.deepEqual(f.events,['leave']);
+ f.gate.reject(Error('请保留笔记草稿'));await pending;
+ assert.equal(f.context.page,'study');assert.equal(f.context.gardenTab,'pet');assert.equal(f.context.location.hash,'#study/notes');
+ assert.equal(f.draft.value,'尚未落盘的课堂问题');assert.deepEqual(f.methods,['replace']);
+ f.context.notebookUI.leave=async()=>{f.gate.saved=true};f.context.location.hash='#garden/farm';
+ await f.context.followHashRoute();assert.equal(f.context.page,'garden');assert.equal(f.context.gardenTab,'farm');assert.equal(f.context.location.hash,'#garden/farm');
+ assert.deepEqual(f.methods,['replace','replace'],'following back/forward must not push another entry');
+});
+await check('a busy write cannot be bypassed by changing the address hash',async()=>{
+ const f=noteNavigationFixture();f.context.busy=true;f.context.location.hash='#settings/data';
+ await f.context.followHashRoute();assert.equal(f.context.page,'study');assert.equal(f.context.location.hash,'#study/notes');assert.deepEqual(f.events,[]);assert.match(f.toasts.at(-1),/正在保存/);
+});
+await check('skip to main keeps native anchor focus and scroll without leaving the current room',async()=>{
+ const index=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ assert.match(index,/href="#main"[^>]*>跳到正文/);
+ for(const busy of [false,true]){
+  const f=noteNavigationFixture(),main={id:'main',scrollTop:137};
+  f.context.busy=busy;f.context.document.activeElement=main;f.context.location.hash='#main';
+  await f.context.followHashRoute();
+  assert.equal(f.context.page,'study');assert.equal(f.context.studyTab,'notes');assert.equal(f.context.location.hash,'#study/notes');
+  assert.equal(f.context.document.activeElement,main);assert.equal(main.scrollTop,137);
+  assert.deepEqual(f.events,[],'skip link must not save notes, repaint or override the native scroll');
+  assert.deepEqual(f.toasts,[]);assert.deepEqual(f.methods,['replace']);
+ }
+});
+await check('all section buttons use navigation instead of replacing the page directly',()=>{
+ const f=fixture(),routes=[];f.context.navigate=(page,tab)=>routes.push([page,tab]);f.context.render=()=>assert.fail('sections must use the shared navigation gate');
+ for(const [action,page,tab] of [['studyTab','study','grades'],['serviceTab','services','notices'],['gardenTab','garden','farm'],['settingsTab','settings','about']]){
+  f.click(action,{tab});assert.deepEqual(routes.at(-1),[page,tab]);
+ }
 });
 await check('continue latest note waits for selection and save before navigating to notes',async()=>{
  const f=fixture(),pending=deferred(),events=[];f.context.page='home';
@@ -277,5 +334,15 @@ await check('desktop preference failures remain retryable even when the status r
   if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;
   if(previousShell===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previousShell;
  }
+});
+
+await check('same-farm navigation repaints a newly selected target without adding history',async()=>{
+ const f=noteNavigationFixture();f.gate.resolve();f.context.page='garden';f.context.gardenTab='farm';f.context.selectedPlot=0;
+ f.context.location.hash='#garden/farm';f.context.document.querySelector=()=>null;
+ const rendered=[];f.context.render=()=>rendered.push(f.context.selectedPlot);
+ f.context.selectedPlot=4;
+ assert.equal(await f.context.navigate('garden','farm'),true);
+ assert.deepEqual(rendered,[4],'routeGarden updates the target before navigating, so the current farm must repaint');
+ assert.deepEqual(f.methods,['replace']);assert.equal(f.context.location.hash,'#garden/farm');
 });
 console.log(`${count} interaction checks passed`);

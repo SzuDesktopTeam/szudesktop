@@ -27,13 +27,23 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** [PR #20](https://github.com/SzuDesktopTeam/szudesktop/pull/20) has merged, delivering **course notes, Feishu course-document integration and a courtyard environment across the application**. [PR #21](https://github.com/SzuDesktopTeam/szudesktop/pull/21) further refines the beta0.9.3 home, notes and campus entry points; progress and verification are recorded in [STATUS section 64](STATUS.md#64-日常入口与书屋精修2026-09-27源码未发布). Frontend and Electron checks and the specified UI paths have passed; the final candidates have been rebuilt and checked, and the packaged program has passed actual startup and normal shutdown. Remote checks and merge history accompany this change's PR. The section 63 candidate predates these changes, and no new release tag is being published.
+**These changes are not publicly released; the download above remains beta0.9.2.** Course notes, Feishu document entry points, courtyard environments and the daily desk are already in the source. This iteration improves page layout, dusk readability and section navigation. Issues and verification stay in [STATUS section 65](STATUS.md#65-全应用界面与状态一致性2026-09-27源码未发布). Real school transactions and Feishu collaboration retain their existing acceptance limits.
+
+### One courtyard, across every page
+
+Compact room windows replace oversized headers and repeated labels. The garden shows the selected pet, farm or game before suggestions; pet care controls appear above the room. Dusk uses consistent warm paper and readable ink across projects, the action book, 2048 and orders, fixing pale text on pale cards.
+
+Settings has four sections: **Appearance / Desktop companion / Backups and privacy / About and updates**. Narrow windows use two-column section controls, and unsaved profile edits survive section changes without being saved automatically. Timetable, notices, farm and settings sections survive refresh and browser back/forward. Notes show result counts and a clear-search action while retaining the current draft; long course shelves and note lists scroll independently.
+
+School login and online grades follow one undergraduate/postgraduate choice. Timetable reads show pending and retry states; calendar failures stop displaying a loading message, and empty notices have an explicit explanation. These are interface improvements, not evidence of successful real-account or booking acceptance.
+
+![Four-section settings and the shared courtyard window, using an isolated test profile](screenshot-settings-system-preview.png)
 
 ### Pick up where you left off
 
 On wide windows, the study-desk entrance and courtyard landscape sit side by side; narrow windows stack them. The welcome area shows **unfinished tasks, accumulated focus minutes and harvest-ready plots** from local records. The latest note and next garden activity appear together, so returning to a page or taking care of something nearby takes fewer steps.
 
-This iteration was viewed at regular desktop width and 420px, in daylight and dusk, using Pixel Courtyard and After-rain Bookshop. Home and notes showed no horizontal overflow. Outline navigation, moving notes between courses and unfiled, continuing the latest page and exporting a backup from Settings were exercised with synthetic content. Build delivery remains tracked in STATUS section 64.2.
+The preceding PR #21 was viewed at regular desktop width and 420px, in daylight and dusk, using Pixel Courtyard and After-rain Bookshop. Home and notes showed no horizontal overflow. Outline navigation, moving notes between courses and unfiled, continuing the latest page and exporting a backup from Settings were exercised with synthetic content. Build delivery remains tracked in STATUS section 64.2.
 
 ![The study-desk entrance and courtyard in the running home view, using an isolated test profile](screenshot-home-daily-preview.png)
 

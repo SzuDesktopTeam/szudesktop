@@ -71,4 +71,12 @@ await check('a saved unsupported college stays an official link without an autom
  await first.enter();assert.equal(requests.length,1);assert.match(first.card(),/打开学院官网/);
  assert.doesNotMatch(first.card(),/data-action="notice-read"/);
 });
+
+await check('an empty successful feed explains its scope and keeps the original page available',async()=>{
+ const empty=createNoticesUI({api:async path=>path.endsWith('/notice-sources')?{sources}:{...response('undergrad'),items:[]}});
+ await empty.enter();
+ assert.match(empty.card(),/这个栏目本次没有可显示的公告/);assert.match(empty.card(),/查看原页确认最新通知/);
+ assert.match(empty.card(),/href="https:\/\/jwb.szu.edu.cn\/index\/jwtz.htm"/);
+ assert.doesNotMatch(empty.card(),/正在读取教务部|正在准备所选学院/);
+});
 console.log(`${count} notice checks passed`);

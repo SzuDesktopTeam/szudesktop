@@ -27,4 +27,23 @@ test('first load refreshes stale calendar and preserves manual mode',()=>{
  assert.equal(button.disabled,false);
  assert.match(ui.card(),/value="2026-09-14"/);
 });
+
+let failFirst=true;
+const recovering=createAcademicUI({getState:()=>({semester:''}),toast(){},api:async()=>{if(failFirst)throw Error('学校连接超时');return {terms,stale:false,checked_at:new Date().toISOString()}}});
+await recovering.load();
+test('first calendar failure ends the loading state and offers recovery',()=>{
+ const html=recovering.card();
+ assert.match(html,/暂时无法显示教学周/);assert.match(html,/读取失败/);assert.match(html,/学校连接超时/);
+ assert.doesNotMatch(html,/正在读取校历…|>官方校历<|等待学校发布下一学期校历/);
+ assert.equal(button.disabled,false);
+});
+failFirst=false;await recovering.load(true);
+test('a retry restores official calendar status',()=>{
+ assert.match(recovering.card(),/>官方校历</);assert.doesNotMatch(recovering.card(),/暂时无法显示教学周|读取失败|学校连接超时/);
+});
+failFirst=true;await recovering.load(true);
+test('a failed refresh retains dates and labels the displayed calendar as cached',()=>{
+ assert.match(recovering.card(),/>缓存校历</);assert.match(recovering.card(),/学校连接超时/);
+ assert.doesNotMatch(recovering.card(),/正在读取校历…|暂时无法显示教学周/);
+});
 console.log(`${count} academic checks passed`);
