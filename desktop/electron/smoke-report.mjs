@@ -2,6 +2,7 @@
 // 从不碰用户的账号。这里收集页面和宠物窗的报错，界面就绪后跑 smoke-pet.mjs 的真实交互，
 // 把结果或失败现场写进报告；失败报告写盘前抹掉会话凭据。
 import {mkdirSync,renameSync,writeFileSync} from 'node:fs';
+import {Worker} from 'node:worker_threads';
 import path from 'node:path';
 import {redactToken} from './listen-url.mjs';
 
@@ -14,6 +15,20 @@ export function smokeMode(env){
 }
 export function createSmokeRecorder({enabled=false,report=null,profile=null,screenshot=null,quitAfterReport=false}={}){
   const errors=[];
+  // 看门狗：独立线程每秒检查主进程心跳。主进程事件循环卡住超过 20 秒时，定时器和超时都不会触发，
+  // 以前只表现为“报告没出现”；这里由看门狗直接写失败报告，带上当时的冒烟阶段。
+  if(enabled&&report){
+    const beat=new Int32Array(new SharedArrayBuffer(4));
+    const stageFile=path.join(path.dirname(report),'pet-progress.json');
+    const worker=new Worker(`const {workerData:{beat,report,stageFile}}=require('node:worker_threads');const fs=require('node:fs');
+let last=Atomics.load(beat,0),same=0;
+setInterval(()=>{const now=Atomics.load(beat,0);if(now!==last){last=now;same=0;return;}if(++same<20)return;
+let stage=null;try{stage=JSON.parse(fs.readFileSync(stageFile,'utf8')).stage}catch{}
+try{fs.writeFileSync(report+'.tmp',JSON.stringify({error:'Electron 主进程事件循环卡住超过 20 秒',stage},null,2));fs.renameSync(report+'.tmp',report)}catch{}
+process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
+    worker.unref();
+    const timer=setInterval(()=>Atomics.add(beat,0,1),500);timer.unref?.();
+  }
   const wantsShot=()=>Boolean(screenshot&&path.isAbsolute(screenshot));
   // 只在冒烟模式下记录，最多 10 条；返回是否记下，调用方据此决定要不要另外打印。
   function record(message){
