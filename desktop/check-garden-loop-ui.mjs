@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import {readFileSync,readdirSync} from 'node:fs';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createState} from './assets/garden/engine.mjs';
 import {PROJECTS} from './assets/garden/garden-loop.mjs';
 import {projectView,projectStrip,projectScene} from './assets/garden/garden-loop-ui.mjs';
@@ -64,5 +67,24 @@ check('pet actions remain playable while frame timing is tucked inside another d
  assert.equal((html.match(/data-action="petPreview"/g)||[]).length,PET_ACTIONS.length);
  assert.match(html,/<details class="pet-frame-details"><summary>细看/);
  assert.doesNotMatch(html,/一起玩 2048/);
+});
+check('garden images stay small enough to ship inside the exe',()=>{
+ // Every garden image, in any subfolder, is embedded in the Go sidecar and the
+ // installer. The painted courtyard is a 256-colour palette PNG (about 0.95 MB,
+ // PSNR ≥ 35 dB against the 2.8 MB true-colour original); a new true-colour
+ // drop or a large JPEG/WebP fails here. Re-encoding dropped the original's
+ // C2PA content-credentials chunk (caBX), whose hash binding no longer held;
+ // the image's origin is recorded in docs/STATUS.md.
+ const dir=new URL('./assets/garden/',import.meta.url),root=fileURLToPath(dir),images=[];
+ const walk=folder=>{for(const entry of readdirSync(join(root,folder),{withFileTypes:true})){const name=folder?folder+'/'+entry.name:entry.name;if(entry.isDirectory())walk(name);else if(/\.(png|jpe?g|webp|gif|avif|bmp)$/i.test(entry.name))images.push(name)}};
+ walk('');
+ assert.ok(images.includes('courtyard.png')&&images.includes('campus.png'),'the walk finds the garden images');
+ for(const name of images){
+  const image=readFileSync(join(root,name));
+  assert.ok(image.length<=1024*1024,name+' is '+image.length+' bytes; quantize it or shrink it before shipping');
+  if(/\.png$/i.test(name)&&image.length>256*1024)assert.equal(image[25],3,name+' should be a palette PNG');
+ }
+ const courtyard=readFileSync(new URL('courtyard.png',dir));
+ assert.deepEqual([courtyard.readUInt32BE(16),courtyard.readUInt32BE(20)],[1536,1024],'the farm backdrop keeps its full width for cover scaling');
 });
 console.log(`${passed} garden loop UI checks passed`);

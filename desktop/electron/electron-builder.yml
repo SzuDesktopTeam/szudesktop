@@ -4,7 +4,19 @@ directories:
   output: release
   buildResources: build
 files:
+  # 主进程入口与它按职责拆出的模块；check-packaging 会沿 main.mjs 的 import 核对这里没有漏项。
   - main.mjs
+  - app-paths.mjs
+  - smoke-report.mjs
+  - quit-coordinator.mjs
+  - main-window.mjs
+  - engine-monitor.mjs
+  - desktop-preferences.mjs
+  - focus-reminders.mjs
+  - pet-controller.mjs
+  - tray-menu.mjs
+  - official-windows.mjs
+  - ipc-routes.mjs
   - sidecar.mjs
   - listen-url.mjs
   - external-url.mjs
@@ -32,22 +44,12 @@ files:
   - pet-render.mjs
   - pet-preload.cjs
   - package.json
+# 庭院引擎（resources/garden-engine.mjs）及其相对依赖不在这里手写：
+# build.mjs 用 garden-engine-deps.mjs 按静态 import 图算出后追加进 extraResources。
 extraResources:
-  - from: ../assets/garden/engine.mjs
-    to: garden-engine.mjs
-  - from: ../assets/garden/pet-catalog.mjs
-    to: pet-catalog.mjs
-  - from: ../assets/garden/pet-dialogue.mjs
-    to: pet-dialogue.mjs
-  - from: ../assets/garden/puzzle2048.mjs
-    to: puzzle2048.mjs
-  - from: ../assets/garden/garden-orders.mjs
-    to: garden-orders.mjs
-  - from: ../assets/garden/garden-loop.mjs
-    to: garden-loop.mjs
   - from: ../../dist/szudesktop-windows-amd64.exe
     to: szudesktop-windows-amd64.exe
-  # 托盘图标：打包后 main.mjs 从 process.resourcesPath 解析。
+  # 托盘图标：打包后 app-paths.mjs 从 process.resourcesPath 解析。
   - from: ../assets/szudesktop.ico
     to: szudesktop.ico
   - from: ../../LICENSE
@@ -62,6 +64,10 @@ extraResources:
     to: licenses/Three-MIT.txt
   - from: ../assets/garden/vendor/sakura/LICENSE.txt
     to: licenses/Sakura-Crossing-MIT.txt
+# 界面只有简体中文；Chromium 语言包只留 zh-CN 和兜底的 en-US（其余 53 个约 48MB）。
+electronLanguages:
+  - zh-CN
+  - en-US
 win:
   target: nsis
   icon: ../assets/szudesktop.ico
@@ -69,4 +75,6 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
+  # 真正卸载时删除本应用登记的开机自启项；升级时保留用户的选择。
+  include: installer.nsh
   artifactName: szuDesktop-Setup-${version}.exe

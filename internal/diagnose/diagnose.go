@@ -19,21 +19,39 @@ type Report struct {
 	Advices   []string
 }
 
-// Run 执行一次诊断。
+// Options 控制诊断建议的措辞。
+type Options struct {
+	// CLIHints 为真时，建议里可以出现 --ip / --zone 这类命令行参数。
+	//
+	// 默认不给：桌面版没有指定认证服务器 IP 的入口，选区在登录页的
+	// 「所在区域」里。把一条执行不了的命令行建议摆在桌面诊断里，
+	// 用户只能卡住或者另装命令行版。
+	CLIHints bool
+}
+
+// probe 是网络探测入口，做成变量方便测试换成固定结果。
+var probe = portal.Probe
+
+// Run 执行一次诊断，给出桌面版也能照做的建议。
 // username / password 为空时跳过在线状态查询，只做网络侧探测。
 //
 // 这里用 portal.Probe() 而不是 portal.Detect()：诊断要回答的是
 // "万一下一秒掉线，程序会认为我在哪个区"，这个答案在已经联网时
 // 只有把探测跑完才知道。用 Detect() 会因为提前返回而给出假的"探不到"。
 func Run(username, password, srunHost, drcomHost string) *Report {
+	return RunWithOptions(username, password, srunHost, drcomHost, Options{})
+}
+
+// RunWithOptions 同 Run，按 opts 调整建议的措辞。命令行版用它打开 CLIHints。
+func RunWithOptions(username, password, srunHost, drcomHost string, opts Options) *Report {
 	r := &Report{}
-	r.Detect = portal.Probe()
+	r.Detect = probe()
 
 	if r.Detect.Zone == portal.ZoneOnline {
 		r.Advices = append(r.Advices, "当前能正常上外网。如果只是想上网，不用做任何事")
 		// 已经在线时不会去认证，但掉线重登走的正是这套判区，
 		// 所以把预判结论单独报出来，让人现在就能确认。
-		r.Advices = append(r.Advices, fingerprintAdvice(r.Detect))
+		r.Advices = append(r.Advices, fingerprintAdvice(r.Detect, opts))
 		return r
 	}
 
@@ -57,7 +75,7 @@ func Run(username, password, srunHost, drcomHost string) *Report {
 		}
 	}
 
-	r.Advices = advices(r)
+	r.Advices = advices(r, opts)
 	return r
 }
 
@@ -65,23 +83,33 @@ func Run(username, password, srunHost, drcomHost string) *Report {
 //
 // 已经在线时区域探测会短路，判区结果看不见，而掉线重登恰恰要用它，
 // 所以单独做一条说明，方便在线状态下也能验判区对不对。
-func fingerprintAdvice(d *portal.DetectResult) string {
+//
+// 结论取自 portal.PredictDropZone，和同一份报告里 Notes 的预判是同一条规则，
+// 不会一边说「按宿舍区处理」、一边说「判不出来」。
+func fingerprintAdvice(d *portal.DetectResult, opts Options) string {
 	if d == nil {
 		return ""
 	}
-	var zone string
-	switch {
-	case d.SrunUsable && !d.DormUsable:
-		zone = "教学区（深澜）"
-	case d.DormUsable && !d.SrunUsable:
-		zone = "宿舍区（Dr.COM）"
-	case d.SrunUsable && d.DormUsable:
-		zone = "两套都有回应，按宿舍区处理；不对就用 --zone teaching"
-	default:
-		zone = "两套接口都没回应，判不出来"
+	head := fmt.Sprintf("协议指纹：深澜握手=%s、ePortal 登录接口=%s",
+		boolCN(d.SrunUsable), boolCN(d.DormUsable))
+
+	zone, reason := portal.PredictDropZone(d)
+	if zone != portal.ZoneTeaching && zone != portal.ZoneDorm {
+		return head + " → " + reason + "，真掉线时判不出区"
 	}
-	return fmt.Sprintf("协议指纹：深澜握手=%s、ePortal 登录接口=%s → 真掉线时按「%s」的协议登录",
-		boolCN(d.SrunUsable), boolCN(d.DormUsable), zone)
+	out := head + " → 真掉线时按「" + zone.Label() + "」的协议登录（" + reason + "）"
+	if d.SrunUsable && d.DormUsable {
+		out += "；如果登录报 ac_id 或协议错误，" + manualTeachingHint(opts)
+	}
+	return out
+}
+
+// manualTeachingHint 告诉用户怎么改成按教学区登录，按调用端给出能照做的说法。
+func manualTeachingHint(opts Options) string {
+	if opts.CLIHints {
+		return "用 --zone teaching 手动指定"
+	}
+	return "在登录页的「所在区域」里改选教学区"
 }
 
 func boolCN(v bool) string {
@@ -93,7 +121,7 @@ func boolCN(v bool) string {
 
 // advices 根据探测结果生成排查建议。
 // 这些建议对应的是最常见的几种"连不上"，按出现频率排。
-func advices(r *Report) []string {
+func advices(r *Report, opts Options) []string {
 	var out []string
 
 	if r.Online != nil && r.Online.Online {
@@ -123,8 +151,12 @@ func advices(r *Report) []string {
 	}
 
 	if !r.Detect.SrunDNSOK {
-		out = append(out, "net.szu.edu.cn 这个域名解析不出来。开着代理或 DoH 时很常见，"+
-			"先关掉代理再试，或者用 --ip 直接指定服务器地址")
+		dns := "net.szu.edu.cn 这个域名解析不出来。开着代理或 DoH 时很常见，" +
+			"先关掉代理（或者在代理规则里让 net.szu.edu.cn 直连）再试"
+		if opts.CLIHints {
+			dns += "，也可以用 --ip 直接指定服务器地址"
+		}
+		out = append(out, dns)
 	}
 
 	return out

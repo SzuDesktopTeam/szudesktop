@@ -3,6 +3,7 @@ package vpn
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 )
@@ -132,9 +133,14 @@ func (c *Client) loginByTwfId(twfId string) error {
 		c.setState(StateBroken, err.Error())
 		return err
 	}
+	token, err := buildToken(agent, twfId)
+	if err != nil {
+		c.setState(StateBroken, err.Error())
+		return err
+	}
 	c.mu.Lock()
 	c.twfId = twfId
-	c.token = (*[48]byte)([]byte(agent + twfId))
+	c.token = token
 	c.mu.Unlock()
 
 	ip, conn, err := queryIp(c.Server, c.token)
@@ -150,6 +156,21 @@ func (c *Client) loginByTwfId(twfId string) error {
 	logf("ok", "分配到内网 IP %s", net.IP(ip).String())
 	c.setState(StateConnecting, "")
 	return nil
+}
+
+// buildToken 把 ECAgent token（32 字节）和 TWFID（16 字节）拼成隧道用的 48 字节 token。
+//
+// TWFID 是从登录响应里用正则抠出来的，长度由服务端说了算。以前直接把拼好的
+// 切片转成 *[48]byte：不足 48 字节会 panic，超过则悄悄截断成一个错 token。
+// 网关一升级就可能出现，所以长度不对时给明确的错误。
+func buildToken(agent, twfId string) (*[48]byte, error) {
+	if len(agent) != 32 || len(twfId) != 16 {
+		return nil, fmt.Errorf("VPN 服务端返回的会话标识长度不对（ECAgent %d 字节、TWFID %d 字节，应为 32 和 16），网关协议可能变了",
+			len(agent), len(twfId))
+	}
+	var token [48]byte
+	copy(token[:], agent+twfId)
+	return &token, nil
 }
 
 // AssignedIP 返回登录后分配的内网 IP（未登录返回 nil）。
@@ -179,6 +200,26 @@ func (c *Client) Start(parent context.Context) error {
 	ipStack := setupStack(ip, endpoint)
 	ipRev := [4]byte{ip[3], ip[2], ip[1], ip[0]}
 
+	// shutdown 收尾：停掉两条流和 SOCKS 服务，关掉数据通道，等协程全部退出，
+	// 最后关掉 gVisor 协议栈。每次 Start 都会新建一个栈，以前从不释放，
+	// 它和里面的 TCP 处理协程在 Stop 之后一直留在进程里，反复重连内存一直涨。
+	shutdown := func(ln net.Listener) {
+		cancel()
+		if ln != nil {
+			ln.Close()
+		}
+		c.keep.closeAll()
+		c.mu.Lock()
+		if c.queryConn != nil {
+			c.queryConn.Close()
+			c.queryConn = nil
+		}
+		c.mu.Unlock()
+		c.wg.Wait()
+		ipStack.Close()
+		ipStack.Wait()
+	}
+
 	// 收发两条流守护（断线自动重连）
 	c.wg.Add(2)
 	go func() {
@@ -192,8 +233,7 @@ func (c *Client) Start(parent context.Context) error {
 
 	ln, err := net.Listen("tcp", c.SocksBind)
 	if err != nil {
-		cancel()
-		c.keep.closeAll()
+		shutdown(nil)
 		c.setState(StateBroken, "SOCKS5 端口监听失败："+err.Error())
 		return err
 	}
@@ -209,20 +249,13 @@ func (c *Client) Start(parent context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		ln.Close()
-		c.keep.closeAll()
-		c.mu.Lock()
-		if c.queryConn != nil {
-			c.queryConn.Close()
-		}
-		c.mu.Unlock()
-		c.wg.Wait()
+		shutdown(ln)
 		logf("info", "VPN 已停止")
 		c.setState(StateIdle, "")
 		return nil
 	case err := <-serveErr:
-		ln.Close()
-		c.keep.closeAll()
+		// SOCKS 服务自己挂了：两条流还在跑，也要一起停掉，不然它们会一直重连。
+		shutdown(ln)
 		c.setState(StateBroken, err.Error())
 		return err
 	}

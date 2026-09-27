@@ -146,8 +146,7 @@ func TestBookingTransportFailuresExplainObservedCause(t *testing.T) {
 // 带一条没人验收过的写操作通路（STATUS.md F23）。
 func TestBookingWriteEndpointsAreNotServed(t *testing.T) {
 	s := &Server{booking: newBookingService()}
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 
 	for _, path := range []string{"/api/booking/session", "/api/booking/history", "/api/booking/prepare", "/api/booking/commit"} {
 		for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
@@ -165,8 +164,7 @@ func TestBookingWriteEndpointsAreNotServed(t *testing.T) {
 // 只读的两个端点必须还在：删死代码不能顺手删掉已实测可用的功能。
 func TestBookingReadOnlyEndpointsStillServed(t *testing.T) {
 	s := bookingFixture(t)
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 
 	for _, path := range []string{"/api/booking/rooms", "/api/booking/availability"} {
 		r := httptest.NewRequest(http.MethodGet, "http://127.0.0.1"+path+"?room=1&date=2026-09-22", nil)

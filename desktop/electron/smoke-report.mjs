@@ -1,0 +1,71 @@
+// 安装包冒烟模式：只在 SZU_SMOKE_REPORT 与 SZUNET_CONFIG_DIR 都是绝对路径时开启，使用独立的配置目录，
+// 从不碰用户的账号。这里收集页面和宠物窗的报错，界面就绪后跑 smoke-pet.mjs 的真实交互，
+// 把结果或失败现场写进报告；失败报告写盘前抹掉会话凭据。
+import {mkdirSync,renameSync,writeFileSync} from 'node:fs';
+import path from 'node:path';
+import {redactToken} from './listen-url.mjs';
+
+export const SMOKE_ERROR_LIMIT=10;
+export function smokeMode(env){
+  const report=env.SZU_SMOKE_REPORT;
+  const enabled=Boolean(report&&path.isAbsolute(report)&&env.SZUNET_CONFIG_DIR&&path.isAbsolute(env.SZUNET_CONFIG_DIR));
+  return {enabled,report,profile:enabled?path.join(env.SZUNET_CONFIG_DIR,'electron-profile'):null,
+    screenshot:env.SZU_SMOKE_SCREENSHOT,quitAfterReport:env.SZU_SMOKE_QUIT_AFTER_REPORT==='1'};
+}
+export function createSmokeRecorder({enabled=false,report=null,profile=null,screenshot=null,quitAfterReport=false}={}){
+  const errors=[];
+  const wantsShot=()=>Boolean(screenshot&&path.isAbsolute(screenshot));
+  // 只在冒烟模式下记录，最多 10 条；返回是否记下，调用方据此决定要不要另外打印。
+  function record(message){
+    if(!enabled||errors.length>=SMOKE_ERROR_LIMIT)return false;
+    errors.push(message);
+    return true;
+  }
+  function watch(webContents,{preload,console:consoleLabel}){
+    if(!enabled)return;
+    webContents.on('preload-error',(_event,_file,error)=>{record(preload+error.message);});
+    webContents.on('console-message',details=>{if(details.level==='error')record(consoleLabel+details.message);});
+  }
+  // petRuntime 在界面就绪之后才取值：宠物窗、托盘和当前缩放以那一刻为准。
+  async function writeReport({app,mainWin,handle,petRuntime}){
+    if(!enabled)return;
+    const deadline=Date.now()+15000;
+    let rendered=false;
+    while(Date.now()<deadline){
+      rendered=await mainWin.webContents.executeJavaScript(`Boolean(document.querySelector('#nav [data-action="navigate"]') && document.querySelector('#main #network-summary') && window.szuDesktop?.shell === 'electron')`);
+      if(rendered)break;
+      await new Promise(r=>setTimeout(r,100));
+    }
+    if(!rendered)throw Error('安装版主界面或隔离接口没有就绪');
+    const response=await fetch(handle.baseUrl+'/api/health',{signal:AbortSignal.timeout(5000)});
+    if(!response.ok)throw Error('安装版引擎健康检查失败');
+    const status=await response.json();
+    const {checkPetRuntime}=await import('./smoke-pet.mjs');
+    const pet=await checkPetRuntime({mainWin,...petRuntime(),evidenceDir:path.dirname(report),baseUrl:handle.baseUrl,token:handle.token});
+    if(errors.length)throw Error(errors.join('; '));
+    if(wantsShot()){
+      await mainWin.webContents.executeJavaScript('document.fonts.ready.then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))');
+      const shot=await mainWin.webContents.capturePage();
+      writeFileSync(screenshot,shot.toPNG());
+    }
+    mkdirSync(path.dirname(report),{recursive:true});
+    writeFileSync(report+'.tmp',JSON.stringify({version:status.app_version,packageVersion:app.getVersion(),electron:process.versions.electron,
+      appPid:process.pid,sidecarPid:handle.owned?handle.child.pid:null,owned:handle.owned,
+      baseUrl:handle.baseUrl,title:mainWin.getTitle(),rendered,pet},null,2));
+    renameSync(report+'.tmp',report);
+    if(quitAfterReport)app.quit();
+  }
+  // 启动失败：尽量带上页面现场，整份报告写盘前抹掉会话凭据（页面地址、loadURL 的报错都可能含有它）。
+  async function writeFailure(error,mainWin,token){
+    const failure={error:error.message,consoleErrors:errors};
+    try{
+      if(mainWin&&!mainWin.isDestroyed()){
+        failure.page=await mainWin.webContents.executeJavaScript(`({url:location.href,shell:window.szuDesktop?.shell,navCount:document.querySelectorAll('#nav [data-action="navigate"]').length,mainText:document.querySelector('#main')?.innerText.slice(0,1500)})`);
+        failure.moduleType=await mainWin.webContents.executeJavaScript(`fetch('/assets/garden/app.mjs').then(r=>({status:r.status,type:r.headers.get('content-type')}))`);
+        if(wantsShot())writeFileSync(screenshot,(await mainWin.webContents.capturePage()).toPNG());
+      }
+    }catch(snapshotError){failure.snapshotError=snapshotError.message;}
+    mkdirSync(path.dirname(report),{recursive:true});writeFileSync(report,redactToken(JSON.stringify(failure,null,2),token));
+  }
+  return {enabled,profile,errors,record,watch,writeReport,writeFailure};
+}

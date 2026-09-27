@@ -1,6 +1,6 @@
 import {pixelIcon} from './pixel.mjs';
 import {unverifiedBadge} from './labels.mjs';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 const official='https://ehall.szu.edu.cn/yjsxk';
 const schoolIcons={challenge:'i-key',read:'i-book',clear:'i-shield',undergrad:'i-book'};
 const action=(label,key,extra='')=>`<button data-action="school-${key}" ${extra}>${pixelIcon(schoolIcons[key])}${label}</button>`;

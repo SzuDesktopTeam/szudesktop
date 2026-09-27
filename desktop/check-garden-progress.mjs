@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {act,createState,normalize,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite,AVAILABLE_PETS} from './assets/garden/engine.mjs';
+import {act,createState,normalize,recoverSave,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,QUESTS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite,AVAILABLE_PETS,activePet,dayKey} from './assets/garden/engine.mjs';
 import {actionReward} from './assets/garden/rewards.mjs';
 
 const now=new Date(2026,8,27,12).getTime();
@@ -206,6 +206,154 @@ test('migration and backup cannot re-open already paid reward claims',()=>{
  for(const action of [{type:'gift'},{type:'quest',id:'harvest'},{type:'achievement',id:'harvest'},{type:'focusClaim'},{type:'harvest',index:0}])assert.throws(()=>act(saved,action,now+120000));
  assert.equal(saved.game.coins,coins);assert.equal(saved.game.focusHistory.length,1);
  assert.deepEqual(roundTrip(saved,now+120000),saved);
+});
+
+// One save per published version, each produced by that version's own engine
+// (gift, harvest, watered strawberry, pat, feed, finished todo, rename, running focus).
+const RELEASED_SAVES={"beta0.7.3":{"schema":2,"profile":{"name":"","college":""},"preferences":{"theme":"day","motion":true,"onboarded":false},"todos":[{"id":"fixture-todo","text":"复习线性代数","done":true,"rewarded":true}],"courses":[],"reminders":[],"semester":"","game":{"created":1789876800000,"last":1789876880000,"coins":60,"food":4,"seeds":{"radish":6,"strawberry":1,"blueberry":0,"lychee":0},"stock":{"radish":1,"strawberry":0,"blueberry":0,"lychee":0},"plots":[null,{"crop":"strawberry","planted":1789876863000,"ready":1789877088250,"watered":true},null,"locked","locked","locked"],"pet":{"name":"小团","xp":23,"bond":16,"hunger":99.9977777777778,"energy":89.97777777777773,"mood":89.97777777777773,"sleeping":false,"lastPat":1789876865000,"lastPlay":0},"daily":{"day":"2026-09-20","gift":true,"care":2,"plant":1,"harvest":1,"focus":0,"claimed":[]},"stats":{"harvest":1,"focus":0,"minutes":0,"planted":2,"tasks":1},"discovered":["radish"],"decor":[],"equipped":[],"achievements":[],"focus":{"end":1789878380000,"duration":25},"log":[{"time":1789876876000,"text":"吃饱啦，伙伴的亲密度和成长增加了。"},{"time":1789876865000,"text":"摸摸头，栗栗舒服地眯起了眼。"}]}},"beta0.8.0-0.9.1":{"schema":3,"profile":{"name":"","college":""},"preferences":{"theme":"day","motion":true,"onboarded":false},"todos":[{"id":"fixture-todo","text":"复习线性代数","done":true,"rewarded":true}],"courses":[],"reminders":[],"semester":"","game":{"created":1789876800000,"last":1789876880000,"coins":60,"food":4,"seeds":{"radish":6,"strawberry":1,"blueberry":0,"lychee":0},"stock":{"radish":1,"strawberry":0,"blueberry":0,"lychee":0},"plots":[null,{"crop":"strawberry","planted":1789876863000,"ready":1789877088250,"watered":true},null,"locked","locked","locked"],"pets":[{"species":"libao","name":"小团","xp":23,"bond":16,"hunger":99.9977777777778,"energy":89.97777777777773,"mood":89.97777777777773,"sleeping":false,"lastPat":1789876865000,"lastPlay":0,"say":"以后我就叫这个名字啦。","saidAt":1789876879000},{"species":"chestnut","name":"栗栗","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"喵，我在这儿呢。","saidAt":1789876800000}],"active":0,"daily":{"day":"2026-09-20","gift":true,"care":2,"plant":1,"harvest":1,"focus":0,"claimed":[]},"stats":{"harvest":1,"focus":0,"minutes":0,"planted":2,"tasks":1},"discovered":["radish"],"decor":[],"equipped":[],"achievements":[],"focus":{"end":1789878380000,"duration":25},"log":[{"time":1789876876000,"text":"吃饱啦，伙伴的亲密度和成长增加了。"},{"time":1789876865000,"text":"摸摸头，荔宝舒服地眯起了眼。"}]}},"beta0.9.2":{"schema":3,"profile":{"name":"","college":""},"preferences":{"theme":"day","motion":true,"onboarded":false},"todos":[{"id":"fixture-todo","text":"复习线性代数","done":true,"rewarded":true}],"courses":[],"reminders":[],"semester":"","game":{"created":1789876800000,"last":1789876880000,"coins":60,"food":4,"seeds":{"radish":6,"strawberry":1,"blueberry":0,"lychee":0},"stock":{"radish":1,"strawberry":0,"blueberry":0,"lychee":0},"plots":[null,{"crop":"strawberry","planted":1789876863000,"ready":1789877088250,"watered":true},null,"locked","locked","locked"],"pets":[{"species":"libao","name":"小团","xp":23,"bond":16,"hunger":99.9977777777778,"energy":89.97777777777773,"mood":89.97777777777773,"sleeping":false,"lastPat":1789876865000,"lastPlay":0,"say":"以后我就叫这个名字啦。","saidAt":1789876879000},{"species":"chestnut","name":"栗栗","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"喵，我在这儿呢。","saidAt":1789876800000},{"species":"egret","name":"小白","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"湖边的风很舒服，陪你坐一会儿。","saidAt":1789876800000},{"species":"turtle","name":"阿青","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"不着急，我们一步一步来。","saidAt":1789876800000}],"active":0,"daily":{"day":"2026-09-20","gift":true,"care":2,"plant":1,"harvest":1,"focus":0,"claimed":[]},"stats":{"harvest":1,"focus":0,"minutes":0,"planted":2,"tasks":1},"discovered":["radish"],"decor":[],"equipped":[],"achievements":[],"focus":{"end":1789878380000,"duration":25},"log":[{"time":1789876876000,"text":"吃饱啦，伙伴的亲密度和成长增加了。"},{"time":1789876865000,"text":"摸摸头，荔宝舒服地眯起了眼。"}]}},"beta0.9.3":{"schema":3,"profile":{"name":"","college":""},"preferences":{"theme":"day","homeSkin":"pixel","motion":true,"onboarded":false,"noticeSource":"undergrad","studentLevel":"undergrad"},"todos":[{"id":"fixture-todo","text":"复习线性代数","done":true,"rewarded":true,"date":"2026-09-20","createdAt":1789876877000,"completedAt":1789876878000,"archived":false}],"courses":[],"reminders":[],"semester":"","game":{"created":1789876800000,"last":1789876880000,"coins":60,"food":4,"seeds":{"radish":6,"strawberry":1,"blueberry":0,"lychee":0},"stock":{"radish":1,"strawberry":0,"blueberry":0,"lychee":0},"plots":[null,{"crop":"strawberry","planted":1789876863000,"ready":1789877088250,"watered":true},null,"locked","locked","locked"],"pets":[{"species":"libao","name":"小团","xp":13,"bond":16,"hunger":99.9977777777778,"energy":89.97777777777773,"mood":89.97777777777773,"sleeping":false,"lastPat":1789876865000,"lastPlay":0,"say":"开始之前，我先把会滚的小东西拿远点。","saidAt":1789876880000,"dialogue":{"supply":1,"harvest":1,"plant":1,"water":1,"pat":1,"feed":1,"task":1,"focusStart":1}},{"species":"chestnut","name":"栗栗","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"喵。这个位置我试过了，可以坐。","saidAt":1789876800000,"dialogue":{}},{"species":"egret","name":"小白","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"湖边的风很舒服，陪你坐一会儿。","saidAt":1789876800000,"dialogue":{}},{"species":"pingu","name":"Pingu","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"Noot Noot！这块位置，可以留给我吗？","saidAt":1789876800000,"dialogue":{}},{"species":"skipper","name":"Skipper","xp":0,"bond":10,"hunger":79.95555555555559,"energy":84.97777777777773,"mood":84.97777777777773,"sleeping":false,"lastPat":0,"lastPlay":0,"say":"队长就位。今天的任务，我们一件一件来。","saidAt":1789876800000,"dialogue":{}}],"active":0,"puzzle":{"board":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,0],"score":0,"best":0,"rng":1906733524,"moves":0,"over":false,"won":false,"milestones":[],"undo":null,"earnedDay":"","qualifiedDay":"","supplyClaim":null},"orders":{"day":"2026-09-20","offers":[{"id":"2026-09-20:0","pet":"egret","title":"湖畔果篮","text":"准备一小篮，走到湖边时刚好歇一会儿。","needs":{"radish":2},"coins":9,"bonus":3},{"id":"2026-09-20:1","pet":"pingu","title":"摇摇晃晃的点心袋","text":"Noot！小袋子张开啦，给下午留一点好吃的。","needs":{"strawberry":2},"coins":27,"bonus":3},{"id":"2026-09-20:2","pet":"skipper","title":"今日补给清单","text":"队长已确认：补给要够，休息也不能少。","needs":{"radish":2,"strawberry":1},"coins":22,"bonus":4}],"completed":[],"total":0,"keepsakes":[]},"daily":{"day":"2026-09-20","gift":true,"care":2,"plant":1,"harvest":1,"focus":0,"claimed":[],"pats":[1],"todoRewards":1},"stats":{"harvest":1,"focus":0,"minutes":0,"planted":2,"tasks":1},"discovered":["radish"],"decor":[],"equipped":[],"achievements":[],"gardenLevel":1,"focus":{"startedAt":1789876880000,"end":1789878380000,"duration":25,"todoId":"","task":""},"focusHistory":[],"journey":{"days":["2026-09-20"],"claimed":[]},"log":[{"time":1789876876000,"text":"吃饱啦，伙伴的亲密度和成长增加了。"},{"time":1789876865000,"text":"摸摸头，荔宝舒服地眯起了眼。"}]}}};
+test('saves from every published version load under the current crop, goal and order tables',()=>{
+ for(const [version,save] of Object.entries(RELEASED_SAVES)){
+  const s=normalize(structuredClone(save),now),active=s.game.pets[s.game.active];
+  assert.equal(s.schema,3,version);assert.equal(s.game.coins,save.game.coins,version);assert.equal(active.name,'小团',version);
+  for(const crop of Object.keys(CROPS))assert.equal(s.game.seeds[crop],save.game.seeds[crop]||0,version+' '+crop);
+  assert.equal(s.game.plots[1].crop,'strawberry',version);assert.equal(s.todos[0].text,'复习线性代数',version);
+  assert.equal(s.game.orders.offers.length,3,version);assert.deepEqual(roundTrip(s),s,version);
+  assert.deepEqual(recoverSave(save,now),s,version+': a healthy save passes recovery unchanged');
+  const played=act(act(s,{type:'focusClaim'},now),{type:'harvest',index:1},now);
+  assert.equal(played.game.stats.focus,save.game.stats.focus+1,version);assert.equal(played.game.stock.strawberry,save.game.stock.strawberry+CROPS.strawberry.yield,version);
+ }
+});
+
+test('crops may be added but never removed: every crop a released save knows is still in CROPS',()=>{
+ // Strict loading still rejects a plot planted with an unknown crop (check-ui.mjs relies on it),
+ // so retiring a crop would push every save that planted it into lenient recovery.
+ for(const [version,save] of Object.entries(RELEASED_SAVES)){
+  const g=save.game,known=[...Object.keys(g.seeds),...Object.keys(g.stock),...g.plots.filter(p=>p&&p!=='locked').map(p=>p.crop),...g.discovered,...(g.orders?.offers||[]).flatMap(o=>Object.keys(o.needs)),...(g.puzzle?.supplyClaim?[g.puzzle.supplyClaim.crop]:[])];
+  assert.ok(known.length>=4,version);
+  for(const crop of known)assert.ok(Object.hasOwn(CROPS,crop),version+' still refers to the crop '+crop);
+ }
+});
+
+test('adding or retiring crops, daily goals and statistics keeps old saves readable',()=>{
+ const old=JSON.parse(JSON.stringify(act(createState(now),{type:'gift'},now)));
+ // Simulate a later release that adds a crop and a daily goal the old save has never seen.
+ CROPS.melon={name:'甜瓜',icon:'melon',time:600000,price:30,sell:50,yield:2,level:4,xp:30};QUESTS.order={name:'交付一份委托',target:1,reward:15};
+ try{
+  const s=normalize(old,now);
+  assert.equal(s.game.seeds.melon,0);assert.equal(s.game.stock.melon,0);assert.equal(s.game.daily.order,0);
+  assert.equal(s.game.daily.gift,true,'existing progress stays');assert.deepEqual(roundTrip(s),s);
+  s.game.discovered=['radish','strawberry','blueberry','lychee'];
+  assert.equal(achievementList(s.game).find(a=>a.id==='collection').done,false,'the collection follows the crop table');
+  assert.match(achievementList(s.game).find(a=>a.id==='collection').hint,/全部 5 种/);
+ assert.equal(settle(s,now+86400000).game.daily.order,0,'a new garden day starts every current goal at 0');
+ }finally{delete CROPS.melon;delete QUESTS.order}
+ // Keys from a retired crop, goal or statistic are dropped; keys the save lacks become 0.
+ const retired=structuredClone(old);retired.game.seeds.melon=3;retired.game.stock.melon=1;retired.game.daily.order=1;retired.game.stats.retired=5;
+ delete retired.game.stats.tasks;delete retired.game.daily.care;delete retired.game.seeds.lychee;
+ const s=normalize(retired,now);
+ assert.deepEqual(Object.keys(s.game.seeds),Object.keys(CROPS));assert.equal(s.game.seeds.lychee,0);assert.equal(s.game.stats.tasks,0);assert.equal(s.game.daily.care,0);
+ assert.equal(s.game.daily.order,undefined);assert.equal(s.game.stats.retired,undefined);assert.equal(s.game.stock.melon,undefined);
+ // Damaged values are still errors rather than silently becoming zero.
+ for(const damage of [g=>{g.seeds.radish=-1},g=>{g.stock.radish=1.5},g=>{g.daily.care='x'},g=>{g.stats.harvest=-2},g=>{g.seeds=null},g=>{g.plots[0].ready='soon'}]){
+  const broken=structuredClone(old);damage(broken.game);assert.throws(()=>normalize(broken,now),/格式错误|数值错误/);
+ }
+});
+
+test('a clock that ran days ahead and was corrected still opens, without a second daily gift',()=>{
+ const ahead=now+3*86400000,saved=JSON.parse(JSON.stringify(act(createState(now-86400000),{type:'gift'},ahead)));
+ assert.equal(saved.game.last,ahead);
+ const s=normalize(saved,now);
+ assert.equal(s.game.last,now);assert.equal(s.game.daily.day,dayKey(ahead),'the garden day never moves back');
+ assert.throws(()=>act(s,{type:'gift'},now),/领过/);assert.throws(()=>act(s,{type:'gift'},ahead),/领过/);
+ assert.equal(act(s,{type:'gift'},ahead+86400000).game.daily.gift,true);
+ assert.deepEqual(roundTrip(s),s);
+});
+
+test('after a clock correction, cooldowns, focus and crops keep their remaining time instead of freezing',()=>{
+ const ahead=now+8*3600000;let s=createState(now-60000);
+ s=act(s,{type:'plant',index:1,crop:'radish'},ahead);s=act(s,{type:'focusStart',minutes:5},ahead+20000);s=act(s,{type:'pat'},ahead+30000);
+ s=roundTrip(s,now);
+ assert.equal(s.game.last,now);assert.equal(activePet(s.game).lastPat,now);
+ assert.equal(s.game.plots[1].ready,now+30000);assert.equal(s.game.focus.end,now+290000);
+ assert.deepEqual(settle(s,now),s,'a corrected save is not shifted twice');
+ assert.throws(()=>act(s,{type:'pat'},now+5000),/10 秒/);s=act(s,{type:'pat'},now+10000);
+ assert.throws(()=>act(s,{type:'harvest',index:1},now+29000),/没有成熟/);s=act(s,{type:'harvest',index:1},now+30000);
+ assert.throws(()=>act(s,{type:'focusClaim'},now+289000),/没结束/);s=act(s,{type:'focusClaim'},now+290000);
+ assert.equal(s.game.stats.focus,1);assert.equal(s.game.stats.harvest,1);
+ // Across midnight the garden keeps tomorrow's day: nothing resets or repeats, and orders still deliver.
+ const late=new Date(2026,8,27,23,50).getTime(),next=late+3600000;
+ let t=act(createState(late),{type:'gift'},next);t=settle(t,late+60000);
+ assert.equal(t.game.daily.day,dayKey(next));assert.throws(()=>act(t,{type:'gift'},late+60000),/领过/);
+ const order=t.game.orders.offers[0];for(const [crop,n] of Object.entries(order.needs))t.game.stock[crop]=n;
+ t=act(t,{type:'orderDeliver',id:order.id},late+120000);assert.ok(t.game.orders.completed.includes(order.id));
+ assert.equal(settle(t,next+60000).game.daily.gift,true,'reaching the garden day does not reset it');
+ assert.equal(settle(t,next+86400000).game.daily.gift,false,'the following real day starts fresh');
+});
+
+test('lenient recovery keeps what it can from a damaged save and never throws',()=>{
+ for(const raw of [undefined,null,42,'save',[],{},{schema:9},{game:null},{schema:3,game:{plots:'x',coins:-1}}]){
+  const s=recoverSave(raw,now);assert.equal(s.schema,3);assert.deepEqual(roundTrip(s),s);
+ }
+ const cyclic={schema:3};cyclic.self=cyclic;assert.equal(recoverSave(cyclic,now).schema,3);
+ let good=act(act(createState(now),{type:'gift'},now),{type:'todoAdd',id:'keep',text:'保留的待办'},now);
+ good.game.coins=321;good.game.daily.harvest=1;good.game.pets[0].name='团团';good.game.pets[0].xp=140;good.game.plots[3]=null;
+ const damaged=JSON.parse(JSON.stringify(good));
+ damaged.game.plots[1]={crop:'melon',planted:now,ready:now+1};
+ damaged.game.pets.push({...damaged.game.pets[1],species:'dragon'});
+ damaged.game.daily.care='many';damaged.game.last=now+5*86400000;delete damaged.game.stats;
+ assert.throws(()=>normalize(damaged,now));
+ const s=recoverSave(damaged,now);
+ assert.equal(s.game.coins,321);assert.equal(s.game.pets[0].name,'团团');assert.equal(s.game.pets[0].xp,140);assert.equal(s.game.active,0);
+ assert.ok(!s.game.pets.some(p=>p.species==='dragon'));assert.equal(s.game.pets.length,good.game.pets.length);
+ assert.equal(s.game.plots[1],null,'a damaged crop leaves its unlocked plot empty');assert.equal(s.game.plots[3],null,'paid-for plots stay unlocked');
+ assert.equal(s.game.daily.gift,true,'the valid part of today stays, so the gift cannot be claimed twice');assert.equal(s.game.daily.care,0);assert.equal(s.game.daily.harvest,1);
+ assert.deepEqual(Object.keys(s.game.stats),Object.keys(createState(now).game.stats));
+ assert.equal(s.todos[0].text,'保留的待办');assert.deepEqual(roundTrip(s),s);
+ const legacy=structuredClone(RELEASED_SAVES['beta0.7.3']);legacy.game.coins=-5;
+ assert.throws(()=>normalize(legacy,now));
+ const migrated=recoverSave(legacy,now);assert.equal(migrated.game.pets[0].name,'小团');assert.equal(migrated.game.pets[0].species,'chestnut');assert.equal(migrated.game.coins,40);
+});
+
+test('a malformed daily date starts today afresh instead of blocking the save',()=>{
+ const good=JSON.parse(JSON.stringify(act(act(createState(now),{type:'gift'},now),{type:'pat'},now)));
+ for(const day of ['x','locked','2026-9-1','2026-02-30','']){
+  const broken=structuredClone(good);broken.game.daily.day=day;
+  const s=normalize(broken,now);
+  assert.equal(s.game.daily.day,dayKey(now),day);assert.equal(s.game.daily.care,0,day);assert.equal(s.game.coins,good.game.coins,day);
+  assert.equal(s.game.orders.offers.length,3,day);assert.deepEqual(roundTrip(s),s,day);
+  assert.equal(settle(normalize(broken,now),now).game.daily.day,dayKey(now),'the pet window loads it the same way');
+  const unchecked=structuredClone(s);unchecked.game.daily.day=day;
+  assert.equal(settle(unchecked,now+1000).game.daily.day,dayKey(now),'settle does not hand a bad date to the orders board');
+ }
+});
+
+test('a clock set back and restored keeps remaining time (a documented trade-off) but never repeats daily rewards',()=>{
+ // Timers keep their remaining time across a clock correction, so opening the app with the clock an
+ // hour behind and then restoring it shortens crop and focus waits by that hour. This is the
+ // intended behaviour (docs/STATUS.md 8.3 makes no anti-cheat promise); only daily rewards stay single.
+ let s=act(createState(now),{type:'gift'},now);s.game.gardenLevel=3;s.game.seeds.lychee=1;
+ s=act(s,{type:'plant',index:1,crop:'lychee'},now);s=act(s,{type:'focusStart',minutes:120},now);
+ s=roundTrip(s,now-3600000);
+ assert.equal(s.game.plots[1].ready,now,'the lychee keeps the full hour it had left');assert.equal(s.game.focus.end,now+3600000);
+ s=act(s,{type:'harvest',index:1},now+60000);assert.equal(s.game.stock.lychee,CROPS.lychee.yield);
+ s=act(s,{type:'focusClaim'},now+61*60000);assert.equal(s.game.stats.minutes,120);
+ assert.throws(()=>act(s,{type:'gift'},now+61*60000),/领过/);
+ assert.throws(()=>act(roundTrip(s,now-3600000),{type:'gift'},now-3600000),/领过/,'moving the clock back again does not reopen the gift');
+});
+
+test('lenient recovery of a large, badly damaged save only tries fields the save format has',()=>{
+ const big=createState(now);
+ big.todos=Array.from({length:500},(_,i)=>({id:'t'+i,text:'待办 '+i,done:false,rewarded:false,date:'',createdAt:now,completedAt:0,archived:false}));
+ big.courses=Array.from({length:300},(_,i)=>({name:'课程 '+i,credit:2,point:3.7,term:'2025-2026-1',code:'C'+i,level:'',grade:'A',source:'手动录入',included:true}));
+ big.game.focusHistory=Array.from({length:365},(_,i)=>({startedAt:now-(i+1)*86400000,endedAt:now-(i+1)*86400000+1500000,minutes:25,todoId:'',task:''}));
+ big.game.stats={harvest:'broken'};big.game.daily.care=-1;big.game.pets=[...big.game.pets,...Array(50).fill({species:'dragon'})];
+ for(let i=0;i<2000;i++){big.game.stats['extra'+i]=i;big.game.daily['extra'+i]=i;big.game.puzzle['extra'+i]=i}
+ assert.throws(()=>normalize(big,now));
+ const started=performance.now(),s=recoverSave(big,now),elapsed=performance.now()-started;
+ assert.equal(s.todos.length,500);assert.equal(s.courses.length,300);assert.equal(s.game.focusHistory.length,365);
+ assert.deepEqual(s.game.stats,createState(now).game.stats);assert.equal(s.game.daily.care,0);assert.equal(s.game.daily.gift,false);
+ assert.equal(s.game.pets.length,createState(now).game.pets.length);assert.deepEqual(roundTrip(s),s);
+ assert.ok(elapsed<5000,'recovery took '+Math.round(elapsed)+' ms; unknown keys must not each cost a full normalize');
 });
 
 console.log(`${checks} garden progress checks passed`);

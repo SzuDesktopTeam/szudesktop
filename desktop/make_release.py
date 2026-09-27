@@ -5,6 +5,8 @@
   README-快速开始.txt   给不写代码的人看的，说明首次体验与版本边界
   LICENSE               MIT
 
+旁边另写 ZIP 与单文件 EXE 各自的 .sha256（LF 换行，可直接 sha256sum -c）。
+
 这是与 Electron 安装版并行保留的便携包；两者使用同一份 Go 引擎与庭院资源。
 Electron 安装版由 desktop/electron/build.mjs 另行打包。
 默认发行版只提供官方 WebVPN 入口，不修改系统代理。
@@ -100,7 +102,7 @@ README = """szuDesktop __VERSION__ · 荔枝庭院（Windows x64 便携版）
 显示/隐藏伙伴与是否置顶会记住选择；隐藏后可从托盘恢复显示。
 若希望登录 Windows 时启动，可在设置中主动开启；默认不会登记自启，自动启动时不弹主窗口。
 完整退出请用宠物菜单「退出应用」、托盘「退出」或「设置 → 关于与更新 → 退出应用」。
-安装版正常退出前会先保存笔记；失败默认返回处理，明确放弃未保存修改后才退出。
+安装版正常退出前会先保存笔记和 2048 棋局；任何一项没保存住都默认返回处理，明确放弃未保存修改后才退出。
 """
 
 
@@ -158,6 +160,8 @@ def main():
     # 文本模式默认把 \n 翻成 \r\n，下载者用 Linux/macOS 的 sha256sum -c 会直接失败
     # （coreutils 不会去掉行尾的 \r，会当成文件名的一部分）。
     Path(out+".sha256").write_text(hashlib.sha256(Path(out).read_bytes()).hexdigest()+"  "+os.path.basename(out)+"\n", encoding="ascii", newline="\n")
+    # 单文件 EXE 也单独发布，同样要能离线核对（从镜像、网盘或同学那里拿到时）。
+    Path(EXE+".sha256").write_text(hashlib.sha256(exe_bytes).hexdigest()+"  "+os.path.basename(EXE)+"\n", encoding="ascii", newline="\n")
     # 打印清单 + 校验和，方便发布时贴出去
     print("->", out)
     print("   压缩前 %.1f MB / 压缩后 %.1f MB"

@@ -29,16 +29,21 @@ type DrcomClient struct {
 
 // NewDrcomClient 创建一个 Dr.COM 认证客户端。
 func NewDrcomClient(host, username, password string) *DrcomClient {
+	c := newDrcomClient(host, username, password)
+	c.http = newHTTPClient(c.Host, "", 10*time.Second)
+	return c
+}
+
+// newDrcomClient 只填字段，HTTP 客户端由调用方配（在线查询用不保活的那个）。
+func newDrcomClient(host, username, password string) *DrcomClient {
 	if host == "" {
 		host = DefaultDrcomHost
 	}
-	c := &DrcomClient{
+	return &DrcomClient{
 		Host:     strings.TrimRight(host, "/"),
 		Username: username,
 		Password: password,
 	}
-	c.http = newHTTPClient(c.Host, "", 10*time.Second)
-	return c
 }
 
 // SetServerIP 指定认证服务器的 IP。
@@ -74,22 +79,26 @@ func (c *DrcomClient) Login() (*Result, error) {
 	q.Set("lang", "zh-cn")
 	q.Set("v", "3685")
 
-	body, err := c.get(c.Host + "/eportal/portal/login?" + q.Encode())
+	// 查询串里是明文密码：get 已经把错误里的地址截掉了查询串，响应正文里
+	// 出现密码时也整段不给出；这里再按密码兜一次底。
+	body, err := c.get(c.Host+"/eportal/portal/login?"+q.Encode(), c.Password)
 	if err != nil {
-		return nil, fmt.Errorf("发送登录请求失败: %w", err)
+		return nil, scrubSecrets(fmt.Errorf("发送登录请求失败: %w", err), c.Password)
 	}
 
 	var resp drcomResp
 	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, fmt.Errorf("解析登录响应失败: %w", err)
+		return nil, scrubSecrets(fmt.Errorf("解析登录响应失败: %w", err), c.Password)
 	}
 
-	raw := truncate(string(body), 400)
+	// 先对完整正文查密码，再截断，见 withholdSecrets。
+	raw := truncate(withholdSecrets(string(body), c.Password), 400)
 
 	if rawToString(resp.Result) == "1" {
 		return &Result{OK: true, Message: "认证成功", Raw: raw}, nil
 	}
-	return &Result{OK: false, Message: friendlyDrcomMessage(resp.Msg), Raw: raw}, nil
+	// 认不出的提示会原样拼进 Message 显示在界面上，同样不能带出密码。
+	return &Result{OK: false, Message: friendlyDrcomMessage(withholdSecrets(resp.Msg, c.Password)), Raw: raw}, nil
 }
 
 // Logout 注销当前会话。
@@ -143,10 +152,12 @@ func (c *DrcomClient) Status() (*OnlineStatus, error) {
 }
 
 // get 发一个 GET 请求，并返回 JSONP 里的 JSON 部分。
-func (c *DrcomClient) get(rawURL string) ([]byte, error) {
+// 请求出错时，错误里的地址只保留到路径，见 redactRequestError；
+// secrets 是请求里带的机密，响应不是 JSONP 时不让它们随正文进错误，见 parseJSONP。
+func (c *DrcomClient) get(rawURL string, secrets ...string) ([]byte, error) {
 	resp, err := c.http.Get(rawURL)
 	if err != nil {
-		return nil, err
+		return nil, redactRequestError(err)
 	}
 	defer resp.Body.Close()
 
@@ -154,7 +165,7 @@ func (c *DrcomClient) get(rawURL string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parseJSONP(body)
+	return parseJSONP(body, secrets...)
 }
 
 // rawToString 把可能是字符串、也可能是数字的 JSON 字段统一成字符串。
@@ -178,7 +189,7 @@ func friendlyDrcomMessage(msg string) string {
 	case strings.Contains(msg, "已在线"), strings.Contains(msg, "在线"):
 		return "该账号已在线，无需重复认证"
 	case msg == "":
-		return "认证失败：服务端没有说明原因，加 --verbose 看原始返回"
+		return "认证失败：服务端没有说明原因，稍后重试一次；命令行版可以加 --verbose 看原始返回"
 	default:
 		return "认证失败：" + msg
 	}

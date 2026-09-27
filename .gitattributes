@@ -1,0 +1,30 @@
+# 文本在仓库里一律按 LF 存储，并在所有平台（包括 Windows）按 LF 检出。
+#
+# 为什么：go:embed 会把页面、脚本和第三方模块原样打进 exe。以前没有这个文件，
+# Windows 上 core.autocrlf=true 按 CRLF 检出，同一提交在 Linux 和 Windows 上
+# 编出的 exe 字节不同，随包的 three.js / Sakura 模块也对不上 vendor/SOURCE.json
+# 记录的 sha256（check_licenses.py 现在会逐个核对）。
+#
+# 已有的 Windows 工作副本不会自动改写；删掉对应文件后 `git checkout -- <路径>`，
+# 或整库重新检出一次即可。
+* text=auto eol=lf
+
+# PowerShell / 批处理保持 CRLF。calendar-ocr.ps1 会被嵌进 Windows 版交给 powershell.exe，
+# 与之前 Windows 构建里的字节保持一致。
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制素材显式声明，永不做换行转换。
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.exe binary

@@ -11,4 +11,9 @@ await ui.click('release-check');assert.equal(calls.at(-1),'/api/releases?channel
 ui.change({target:{id:'release-channel',value:'stable'}});assert.doesNotMatch(ui.card(),/发现新版本/);assert.equal(calls.length,1);
 response={available:false,message:'目前还没有正式版'};await ui.click('release-check');assert.match(ui.card(),/还没有正式版/);assert.equal(calls.at(-1),'/api/releases?channel=stable');
 failure=true;await ui.click('release-check');assert.match(ui.card(),/无法连接发布服务/);assert.doesNotMatch(ui.card(),/已是此渠道最新版本/);
-console.log('PASS release channels, numeric comparison, manual-only fetch and truthful failures');
+// 连不上 GitHub 时服务端沿用早先的结果并标 stale：页面照常给出结论，再用弱提示说明这是多久以前的结果（消息要转义）。
+failure=false;response={available:true,stale:true,version:'beta0.9.2',url:'https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.2',message:'GitHub 暂时不可用，显示的是 15 分钟前的检查结果。<b>'};
+await ui.click('release-check');assert.match(ui.card(),/已是此渠道最新版本/);assert.ok(ui.card().includes('<p class="muted">GitHub 暂时不可用，显示的是 15 分钟前的检查结果。&lt;b&gt;</p>'),ui.card());
+response={available:true,version:'beta0.9.2',url:'https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.2',message:'新鲜结果不显示附言'};
+await ui.click('release-check');assert.match(ui.card(),/已是此渠道最新版本/);assert.doesNotMatch(ui.card(),/新鲜结果不显示附言|暂时不可用/);
+console.log('PASS release channels, numeric comparison, manual-only fetch, stale results and truthful failures');

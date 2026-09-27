@@ -3,6 +3,7 @@ package ui
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -18,8 +19,9 @@ type workspaceSnapshot struct {
 	Data     json.RawMessage `json:"data"`
 }
 type workspaceStore struct {
-	mu   sync.Mutex
-	path string
+	mu     sync.Mutex
+	path   string
+	notice recoveryNotice // 从备份恢复过、还没告诉页面
 }
 
 func newWorkspaceStore() *workspaceStore {
@@ -32,23 +34,51 @@ func newWorkspaceStore() *workspaceStore {
 	}
 	return &workspaceStore{path: filepath.Join(dir, "workspace-v1.json")}
 }
-func (s *workspaceStore) read() (workspaceSnapshot, error) {
-	empty := workspaceSnapshot{Version: 1, Data: json.RawMessage(`null`)}
-	b, err := os.ReadFile(s.path)
-	if errors.Is(err, os.ErrNotExist) {
-		return empty, nil
+func (s *workspaceStore) file() storeFile[workspaceSnapshot] {
+	return storeFile[workspaceSnapshot]{
+		path:       s.path,
+		tmpPattern: ".workspace-*.tmp",
+		empty:      workspaceSnapshot{Version: 1, Data: json.RawMessage(`null`)},
+		parse:      parseWorkspace,
 	}
-	if err != nil {
-		return empty, err
-	}
+}
+
+func parseWorkspace(b []byte) (workspaceSnapshot, error) {
 	var v workspaceSnapshot
-	if err = json.Unmarshal(b, &v); err != nil {
-		return empty, errors.New("本机存档无法读取，原文件已保留，请先备份后再处理")
+	// 先只看版本号：更新的版本可能改了其他字段的类型，整份按 v1 解析会失败，
+	// 被当成损坏改名、再拿旧备份顶上，降级保护就落空了。
+	var head struct {
+		Version int `json:"version"`
+	}
+	if json.Unmarshal(b, &head) == nil && head.Version > 1 {
+		return v, errStoreIncompatible
+	}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return v, err
 	}
 	if v.Version != 1 {
-		return empty, errors.New("存档版本不兼容，原文件已保留")
+		return v, errors.New("存档版本号无效")
 	}
 	return v, nil
+}
+
+// load 读存档；主文件损坏而备份完好时自动恢复（recovered 为 true）。
+func (s *workspaceStore) load() (current workspaceSnapshot, raw []byte, recovered bool, err error) {
+	current, raw, recovered, err = s.file().load()
+	switch {
+	case errors.Is(err, errStoreIncompatible):
+		err = errors.New("存档版本不兼容，原文件已保留")
+	case errors.Is(err, errStoreCorrupt):
+		err = fmt.Errorf("本机存档无法读取，也没有可用的备份；原文件已保留在 %s，请先备份该文件后再处理", s.path)
+	case errors.As(err, new(*restoreError)):
+		err = fmt.Errorf("本机存档读取失败，%v。现有文件都没有改动，请关闭占用 %s 的同步盘或杀毒软件后重试", err, filepath.Dir(s.path))
+	}
+	return current, raw, recovered, err
+}
+
+func (s *workspaceStore) read() (workspaceSnapshot, error) {
+	current, _, _, err := s.load()
+	return current, err
 }
 func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 	s.workspace.mu.Lock()
@@ -63,11 +93,12 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer unlock()
-	current, err := s.workspace.read()
+	current, raw, recovered, err := s.workspace.load()
 	if err != nil {
 		writeAPIError(w, 500, err)
 		return
 	}
+	restored := s.workspace.notice.apply(w, r, recovered)
 	if r.Method == http.MethodGet {
 		writeJSON(w, current)
 		return
@@ -95,9 +126,13 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if incoming.Revision != current.Revision {
+		message := "另一个窗口更新了存档，请重新加载后继续"
+		if restored {
+			message = "存档文件损坏，已恢复到上一次成功保存的版本，请重新加载后继续"
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusConflict)
-		writeJSON(w, map[string]any{"ok": false, "message": "另一个窗口更新了存档，请重新加载后继续", "revision": current.Revision})
+		writeJSON(w, map[string]any{"ok": false, "message": message, "revision": current.Revision})
 		return
 	}
 	incoming.Revision++
@@ -110,27 +145,7 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, 500, err)
 		return
 	}
-	f, err := os.CreateTemp(filepath.Dir(s.workspace.path), ".workspace-*.tmp")
-	if err != nil {
-		writeAPIError(w, 500, err)
-		return
-	}
-	tmp := f.Name()
-	defer os.Remove(tmp)
-	if err = f.Chmod(0600); err == nil {
-		_, err = f.Write(b)
-	}
-	if err == nil {
-		err = f.Sync()
-	}
-	closeErr := f.Close()
-	if err == nil {
-		err = closeErr
-	}
-	if err == nil {
-		err = os.Rename(tmp, s.workspace.path)
-	}
-	if err != nil {
+	if err = s.workspace.file().save(raw, b); err != nil {
 		writeAPIError(w, 500, errors.New("存档未写入，原存档保留，请检查磁盘空间或权限"))
 		return
 	}

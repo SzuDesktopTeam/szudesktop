@@ -8,7 +8,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestBrowserSessionInvalidReplacementClearsOnlySelectedAccount(t *testing.T) {
@@ -105,5 +107,54 @@ func TestBrowserSessionRequiresBusinessResponse(t *testing.T) {
 				t.Fatalf("business validation: %v", err)
 			}
 		})
+	}
+}
+
+// 导入学校窗口会话时，两次学校校验不持锁：会话查询和退出时的清除都不用排队；
+// 校验途中被清除时，这次导入的结果作废，不能把会话复活。
+func TestBrowserSessionValidationRunsOutsideLock(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	entered, release := make(chan struct{}), make(chan struct{})
+	var once sync.Once
+	school := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == undergradTermPath {
+			once.Do(func() { close(entered); <-release })
+			w.Write([]byte(`{"code":"0","datas":{"dqxnxq":{"rows":[{"DM":"2026-2027-1"}]}}}`))
+			return
+		}
+		w.Write([]byte(`{"code":"0","datas":{"xskcb":{"rows":[],"totalSize":0}}}`))
+	}))
+	defer school.Close()
+	casTestBase, casTestEhall = school.URL, school.URL
+	s := &Server{cas: newCasService(), academic: newAcademicService(), session: &memSessionStore{}}
+	importSession := func() *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		body := `{"business":"undergrad","cookies":[{"name":"SESSION","value":"test-only","path":"/"}]}`
+		s.handleBrowserSession(w, httptest.NewRequest(http.MethodPost, "/api/academic/browser-session", strings.NewReader(body)))
+		return w
+	}
+	done := make(chan *httptest.ResponseRecorder)
+	go func() { done <- importSession() }()
+	<-entered
+	quick := make(chan struct{})
+	go func() {
+		s.handleCasSession(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/cas/session", nil))
+		s.handleBrowserSession(httptest.NewRecorder(), httptest.NewRequest(http.MethodDelete, "/api/academic/browser-session", nil))
+		close(quick)
+	}()
+	select {
+	case <-quick:
+	case <-time.After(5 * time.Second):
+		close(release)
+		t.Fatal("同步学校会话期间，会话查询或退出清除被锁住了")
+	}
+	close(release)
+	w := <-done
+	if w.Code != http.StatusConflict || s.cas.authenticated || s.cas.client != nil {
+		t.Fatalf("校验途中被清除后会话复活了：%d %s", w.Code, w.Body.String())
+	}
+	if w = importSession(); w.Code != 200 || !s.cas.authenticated || s.cas.client == nil {
+		t.Fatalf("没有打扰时导入应成功：%d %s", w.Code, w.Body.String())
 	}
 }

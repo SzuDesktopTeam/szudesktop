@@ -1,8 +1,10 @@
 import {execFileSync} from 'node:child_process';
-import {readFileSync, writeFileSync} from 'node:fs';
+import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {gardenEngineResources} from './garden-engine-deps.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const repoRoot=path.resolve(here,'..','..');
@@ -22,9 +24,18 @@ if(!process.argv.includes('--skip-sidecar')){
 
 // 3. 打包。不走 npx：Windows 上 Node 拒绝 execFileSync 直接 spawn .cmd（EINVAL），
 //    用当前 node 跑本地装好的 electron-builder CLI，等价于 npx electron-builder。
+//    庭院引擎的相对依赖由 garden-engine-deps.mjs 按静态 import 图算出，写进一份临时配置；
+//    临时配置 extends electron-builder.yml，electron-builder 合并时会把两边的 extraResources 拼接起来。
+const configDir=mkdtempSync(path.join(os.tmpdir(),'szu-electron-builder-'));
+const config=path.join(configDir,'electron-builder.json');
+const engine=gardenEngineResources();
+writeFileSync(config,JSON.stringify({extends:'file:'+path.join(here,'electron-builder.yml'),extraResources:engine},null,2));
+console.log('庭院引擎打包清单：'+engine.map(item=>item.to).join('、'));
 const ebCli=path.join(here,'node_modules','electron-builder','cli.js');
-execFileSync(process.execPath,[ebCli,'--win','--x64','--publish','never','--config','electron-builder.yml',
-  `--config.extraMetadata.version=${semver}`,`--config.extraMetadata.szuVersion=${ver}`],{cwd:here,stdio:'inherit'});
+try{
+  execFileSync(process.execPath,[ebCli,'--win','--x64','--publish','never','--config',config,
+    `--config.extraMetadata.version=${semver}`,`--config.extraMetadata.szuVersion=${ver}`],{cwd:here,stdio:'inherit'});
+}finally{rmSync(configDir,{recursive:true,force:true});}
 const installer=path.join(here,'release',`szuDesktop-Setup-${semver}.exe`);
 const digest=createHash('sha256').update(readFileSync(installer)).digest('hex');
 writeFileSync(installer+'.sha256',`${digest}  ${path.basename(installer)}\n`,'ascii');

@@ -1,24 +1,24 @@
 import {PETS} from './pet-catalog.mjs';
 import {orderKeepsakes,ORDER_KEEPSAKES} from './garden-orders.mjs';
-import {puzzleSupply} from './garden-loop.mjs';
+import {puzzleSupply,cropName} from './garden-loop.mjs';
 import {TILE_LEVELS,tileIdentity,tileArtwork} from './arcade-art.mjs';
+import {esc} from './html.mjs';
 
-const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const milestones=[128,256,512,1024,2048];
 const milestoneNames=['萝卜小能手','莓好的一局','蓝莓收藏家','荔枝大丰收','庭院合成家'];
 const milestoneCrops=['radish','strawberry','blueberry','lychee','lychee'];
-const cropNames={radish:'小萝卜',strawberry:'草莓',blueberry:'蓝莓',lychee:'荔枝'};
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const graphic=(crop,cropIcon)=>cropIcon?cropIcon(crop):'';
 const tile=value=>`<span class="arcade-tile" data-value="${value}" data-kind="${tileIdentity(value).kind}" data-digits="${String(value).length}" ${value?`title="${tileIdentity(value).name} · ${value}"`:'aria-hidden="true"'}>${value?`${tileArtwork(value)}<strong>${value}</strong>`:''}</span>`;
 const cells=board=>Array.from({length:4},(_,row)=>`<div class="arcade-row" role="row">${board.slice(row*4,row*4+4).map((value,col)=>`<div class="arcade-cell" role="gridcell" data-cell="${row*4+col}" aria-label="第 ${row+1} 行第 ${col+1} 列，${value?value+'，'+tileIdentity(value).name:'空格'}">${tile(value)}</div>`).join('')}</div>`).join('');
 const reduced=value=>value||globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const flights=new WeakMap();
 
-function dailyReward(game,cropIcon,day=today()){
+// The engine's garden day (game.daily.day) decides daily rewards; after a clock
+// correction it can stay ahead of the wall clock, so never read the clock here.
+function dailyReward(game,cropIcon,day=game.daily.day){
  const p=game.puzzle;
  const claimed=p.earnedDay===day,ready=p.qualifiedDay===day&&!claimed;
- const supply=claimed&&p.supplyClaim?.day===day?p.supplyClaim:puzzleSupply(game),name=cropNames[supply.crop];
+ const supply=claimed&&p.supplyClaim?.day===day?p.supplyClaim:puzzleSupply(game),name=cropName(supply.crop);
  return `<div class="arcade-reward-top"><span class="arcade-stamp ${claimed?'is-collected':''}" aria-hidden="true">${claimed?'✓':'128'}</span><div><h3>${claimed?'今天的种子备好啦':'为庭院备一颗种子'}</h3><p>${claimed?'带回农田，让这一局有新的收获。':'今天合出 128 或更大的数字，收下一份种植补给。'}</p></div></div><div class="arcade-supply">${graphic(supply.crop,cropIcon)}<div><strong>${name}种子 ×${supply.quantity}</strong><small>${claimed?'已放进种子袋':esc(supply.reason)}</small></div></div><div class="arcade-reward-value"><strong>8 <small>荔枝币</small></strong><span>＋2 伙伴亲密度</span></div><button type="button" class="arcade-claim ${ready?'primary':''}" ${ready?'':'disabled'}>${claimed?'今天已领取':ready?'领取种子与小礼':'合出 128 后可领取'}</button>${claimed?`<button type="button" class="arcade-plant primary" data-action="gardenRoute" data-tab="farm" data-crop="${esc(supply.crop)}">去种${name} →</button>`:''}<small class="arcade-kind">领取也算一次陪伴，伙伴成长 ＋3。每天一份，棋盘自动保留。</small>`;
 }
 export function stickerItems(game){return milestones.map((value,i)=>({id:'puzzle-'+value,value,name:milestoneNames[i],crop:milestoneCrops[i],owned:game.puzzle.milestones.includes(value)}));}
@@ -92,7 +92,8 @@ function animateMove(board,result){
  });
 }
 
-/** Call only after the state is saved. No optimistic rewards or pending writes. */
+/** 只按调用方给的 game 重绘，本身不写存档、不预发奖励。2048 走子先在本机绘制、停手约 600 ms 后合并保存；
+ * 新贴纸或当日达标立即保存，领奖、悔一步和重开前先存好积压的走子（见 app.mjs 的 flushPuzzle）。 */
 export function paintArcade(root,game,{result,reducedMotion=false}={}){
  const shell=root.matches?.('.garden-arcade')?root:root.querySelector('.garden-arcade');if(!shell)return;
  const p=game.puzzle,board=shell.querySelector('.arcade-board');clearFlight(board);

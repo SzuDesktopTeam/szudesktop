@@ -1,6 +1,6 @@
 import {petDefinition} from './pet-catalog.mjs';
 import {PET_ACTIONS,ACTION_LABELS,ACTION_GROUPS,animationClip,signatureLabel} from './pet-animation.mjs';
-const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 export function frameStrip(species,action='idle'){
  const clip=animationClip(species,action);
  return `<details class="pet-frame-details"><summary>细看这组小动作 · ${clip.frames.length} 帧</summary><p class="muted">${ACTION_LABELS[clip.action]} · ${(clip.duration/1000).toFixed(1)} 秒${clip.loop?'循环':''}</p><div class="pet-frame-strip">${clip.frames.map((f,i)=>`<figure><svg viewBox="${clip.viewBox}" aria-label="${ACTION_LABELS[clip.action]}第 ${i+1} 帧"><use href="#${f.id}"></use></svg><figcaption>${String(i+1).padStart(2,'0')}<small>${f.duration} ms</small></figcaption></figure>`).join('')}</div></details>`;

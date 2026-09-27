@@ -2,9 +2,12 @@ package ui
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -163,5 +166,36 @@ func TestFeishuFindsNpmNativeBinaryWithoutShell(t *testing.T) {
 	}
 	if got := findFeishuCLI(); got != native {
 		t.Fatalf("native CLI not found: %q", got)
+	}
+}
+
+// 帮手进程：SZU_FEISHU_HELPER=large 时模拟官方 CLI 输出一份转换后超过 2MB 的文档，
+// 同时在 stderr 留一段 configuration 错误并以非零码退出——确认「文档过大」优先于
+// stderr 的分类，不会被报成配置或权限问题。平时直接返回，不影响测试结果。
+func TestFeishuHelperProcess(t *testing.T) {
+	if os.Getenv("SZU_FEISHU_HELPER") != "large" {
+		return
+	}
+	os.Stderr.WriteString(`{"error":{"type":"configuration"}}`)
+	chunk := []byte(strings.Repeat("x", 64<<10))
+	for i := 0; i < 48; i++ {
+		if _, err := os.Stdout.Write(chunk); err != nil {
+			break
+		}
+	}
+	os.Exit(3)
+}
+
+func TestFeishuTooLargeDocumentIsReported(t *testing.T) {
+	if _, ok := any(&feishuOutput{}).(io.ReaderFrom); ok {
+		t.Fatal("feishuOutput 带 ReadFrom 会让 io.Copy 绕过 2MB 上限")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestFeishuHelperProcess$")
+	cmd.Env = append(os.Environ(), "SZU_FEISHU_HELPER=large")
+	out, err := feishuCommandOutput(ctx, cmd)
+	if !errors.Is(err, errFeishuTooLarge) || out != nil {
+		t.Fatalf("超过 2MB 的文档应明确报「文档过大」，实际：%v", err)
 	}
 }

@@ -108,6 +108,15 @@ VER = read_version()
 
 # 4. 编译
 step("编译 Windows 版")
+# 先删旧产物：go build 发现输出文件的 build ID 没变就不重写，上一次塞过资源的 exe
+# 会原样留着，下一步只能「跳过」并校验旧资源，改了版本号或资源写法也不会生效。
+if os.path.exists(OUT):
+    try:
+        os.remove(OUT)
+    except PermissionError:
+        # Windows 上正在运行的 exe 删不掉（WinError 32）；给一句能照做的话，而不是整段 traceback。
+        print("!! %s 正在运行或被占用，请先退出 szuDesktop（含托盘和便携版）再构建" % OUT)
+        sys.exit(1)
 env = dict(os.environ, CGO_ENABLED="0", GOOS="windows", GOARCH="amd64")
 r = subprocess.run(["go", "build", "-trimpath", "-ldflags", "-s -w -H=windowsgui",
                     "-o", OUT, "./desktop/cmd/szudesktop"],

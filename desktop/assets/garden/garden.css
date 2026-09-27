@@ -1,9 +1,7 @@
 /* A real garden sits over the original campus illustration; every plot is a control. */
-body[data-page=garden] .pagehead { margin-bottom:18px; padding-bottom:18px; }
 body[data-page=garden] .pagehead .eyebrow { margin-bottom:5px; }
-body[data-page=garden] .pagehead h1 { font-size:34px; }
 body[data-page=garden] .subnav { padding:5px; border:1px solid #b8a17b; background:#e1d3b3; box-shadow:inset 0 1px #fff9e6; gap:5px; }
-body[data-page=garden] .subnav button { padding:10px; background:transparent; color:#766344; box-shadow:none; border:1px solid transparent; }
+body[data-page=garden] .subnav button { background:transparent; color:#766344; box-shadow:none; border:1px solid transparent; }
 body[data-page=garden] .subnav button.active { color:#335c40; border-color:#c0ac80; background:#fffae9; box-shadow:0 2px #bcaa8160; }
 body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .garden-tools .wallet span { font-size:13px; padding:5px 8px; }
@@ -43,14 +41,14 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .growth-track small { font-size:11px; }
 .growth-card .meter { height:10px; background:#e5ddce; border:1px solid #b3a58a; box-shadow:none; }
 .growth-card .meter i { background:#9d8baa; box-shadow:inset 0 2px #cab8d2; }
-.growth-unlock { font-size:12px; color:#786850; margin:11px 0 18px; }
+.growth-unlock { color:#786850; margin:11px 0 18px; }
 .growth-card .inline-form input { font-size:13px; padding:9px; }
 .growth-card .inline-form button { font-size:14px; padding:7px 10px; }
 .daily-board { background:#fff9e8; }
 .daily-board .eyebrow { font:11px/1.6 var(--body); color:#8b7855; letter-spacing:0; margin-bottom:6px; }
 .daily-board h2,.milestone-board h2 { display:flex; align-items:center; gap:8px; font-size:23px; color:#52704e; margin-bottom:8px; }
 .daily-board .heading-icon { width:25px; height:25px; }
-.daily-intro { font-size:12px; color:#887759; margin-bottom:13px; }
+.daily-intro { color:#887759; margin-bottom:13px; }
 .daily-board ul { list-style:none; padding:0; margin:0; }
 .daily-board li { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px dashed #dacbae; }
 .daily-board li:last-child { border-bottom:0; }
@@ -59,9 +57,9 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .daily-board .is-claimed .daily-check { background:#dde8cb; border-color:#82926b; color:#4c6c44; }
 .daily-board li > div { flex:1; min-width:0; }
 .daily-board li strong { display:block; font-size:13px; font-weight:500; line-height:1.6; }
-.daily-board li small { display:block; font-size:11px; line-height:1.8; }
-.daily-board li button { font-size:12px; padding:5px 9px; min-height:30px; flex-shrink:0; }
-.daily-board .daily-kind { display:block; border-top:1px solid #e2d6be; margin-top:7px; padding-top:12px; font-size:11px; }
+.daily-board li small { display:block; line-height:1.8; }
+.daily-board li button { padding:5px 9px; min-height:30px; flex-shrink:0; }
+.daily-board .daily-kind { display:block; border-top:1px solid #e2d6be; margin-top:7px; padding-top:12px; }
 .pet-roster-card { grid-column:1/-1; }
 .pet-roster-card .card-head { padding:0; border:0; margin-bottom:16px; }
 .pet-roster-card h2 { font-size:22px; color:#6b5c46; }
@@ -70,8 +68,8 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .pet-roster-card .companion-choice { grid-template-columns:44px minmax(0,1fr); gap:4px 10px; padding:12px; border-width:1px; box-shadow:0 2px #bfa87d33; }
 .pet-roster-card .companion-portrait { width:44px; height:52px; border:0; background:transparent; }
 .pet-roster-card .companion-portrait .sprite { width:40px; height:46px; }
-.pet-roster-card .companion-caption small { font-size:11px; min-height:0; }
-.pet-roster-card .companion-selection { grid-column:2; font-size:10px; }
+.pet-roster-card .companion-caption small { min-height:0; }
+.pet-roster-card .companion-selection { grid-column:2; }
 .garden-diary { grid-column:1/-1; padding:17px 22px; }
 .garden-diary summary { display:flex; align-items:center; gap:10px; cursor:pointer; font:18px/1.5 var(--pixel); color:#63704b; }
 .garden-diary summary::after { content:'＋'; margin-left:auto; flex-shrink:0; }
@@ -81,7 +79,7 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .farm-main { min-width:0; grid-row:span 2; }
 .farm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fcf7e7; border:1px solid #b6a17b; padding:17px 20px; }
 .farm-toolbar h2 { font-size:25px; color:#486346; margin:0 0 6px; }
-.farm-toolbar p { margin:0; color:#837454; font-size:12px; }
+.farm-toolbar p { margin:0; color:#837454; }
 .farm-toolbar-icon .sprite { width:40px; height:40px; }
 .seed-picker { width:100%; min-width:0; margin:20px 0 0; padding-top:15px; border-top:1px solid #d8c59b; }
 .seed-picker label { font:13px/1.4 var(--body); margin:0 0 7px; color:#665638; }
@@ -97,21 +95,20 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .farm-landscape .plot:focus-visible { outline:3px solid #fff4ca; outline-offset:4px; }
 .farm-landscape .plot:active { transform:none; }
 .farm-landscape .plot:disabled { opacity:.75; }
-.farm-landscape .soil { height:96px; margin:0 0 8px; border-width:3px; border-color:#ac8850 #73552f #6b4c2d; background:repeating-linear-gradient(0deg,#856139 0 15px,#62472e 15px 19px,#947347 19px 22px); box-shadow:inset 0 0 0 2px #654c2d,0 5px #54713a80; position:relative; }
+.farm-landscape .soil { margin:0 0 8px; border-color:#ac8850 #73552f #6b4c2d; position:relative; }
 .farm-landscape .soil::before { content:''; position:absolute; inset:-7px -4px auto; height:6px; background:#90a859; border-top:2px solid #bed780; z-index:-1; }
 .farm-landscape .soil.ready { border-color:#f5d778; box-shadow:inset 0 0 0 2px #72502a,0 5px #54713a80; }
 .farm-landscape .soil.ready::after { content:'✦'; position:absolute; right:10px; top:9px; color:#ffe7a6; font-size:18px; animation:harvest-glint 2s steps(2,end) infinite; }
-.farm-landscape .soil .sprite { width:58px; height:58px; }
 .farm-landscape .soil.growing .sprite { transform:scale(.68); }
 .farm-landscape .soil.locked { background:#92a56aba; border-color:#829855; box-shadow:inset 0 0 0 1px #657b46,0 4px #54713a55; }
 .farm-landscape .soil.locked img { width:70px; height:66px; }
 .farm-landscape .soil.locked > span:not(.plot-number) { color:#d8e6bc; text-shadow:1px 2px #4e643d; font-size:30px; }
 .farm-landscape .soil .plot-number { position:absolute; top:4px; left:5px; bottom:auto; right:auto; font:11px/1.5 var(--body); padding:0 4px; color:#fff2d3; background:#5f4a33b8; text-shadow:none; }
 .farm-landscape .plot > strong { display:block; margin:0; padding:4px; color:#56452f; background:#fff5dbe8; font:17px/1.4 var(--pixel); }
-.farm-landscape .plot > small { display:block; padding:2px 2px 5px; margin:0; background:#fff5dbe8; color:#566244; font-size:10px; min-height:24px; line-height:1.7; }
-.watered-mark { position:absolute; bottom:3px; right:3px; padding:2px 4px; font-size:9px; color:#effbff; background:#3c7588; }
-.farm-kind { margin:22px 0 0; text-align:center; color:#344d33; font-size:12px; background:#f8f7d9e8; padding:7px 10px; }
-.farm-help { margin-top:12px; color:#766748; font-size:12px; line-height:1.8; }
+.farm-landscape .plot > small { display:block; padding:2px 2px 5px; margin:0; min-height:24px; line-height:1.7; }
+.watered-mark { position:absolute; bottom:3px; right:3px; padding:2px 4px; color:#effbff; background:#3c7588; }
+.farm-kind { margin:22px 0 0; text-align:center; color:#344d33; background:#f8f7d9e8; padding:7px 10px; }
+.farm-help { margin-top:12px; color:#766748; line-height:1.8; }
 .farm-help summary { cursor:pointer; }.farm-help p { margin:10px 0 0; }
 .farm-sidebar { display:grid; gap:18px; min-width:0; }
 .farm-controls { border-color:#9c7951; background:#fcf4dc; box-shadow:inset 0 0 0 3px #fff9e9,3px 4px #7d673b35; }
@@ -130,7 +127,7 @@ body[data-page=garden] .subnav button:hover { background:#f1e7cd; }
 .harvest-basket > div { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .harvest-basket > div > span { display:grid; grid-template-columns:30px 1fr; gap:0 7px; background:#f5ecd4; border:1px solid #ddcfb0; padding:9px; }
 .harvest-basket .sprite { width:28px; height:28px; grid-row:1/3; align-self:center; }
-.harvest-basket strong { font:13px/1.6 var(--pixel); }.harvest-basket small { font-size:11px; }
+.harvest-basket strong { font:13px/1.6 var(--pixel); }
 .harvest-basket > button { margin-top:16px; font-size:12px; }
 .journal-layout { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr); align-items:start; gap:20px; }
 .milestone-board h2 .sprite { width:26px; height:26px; }
@@ -216,10 +213,6 @@ body[data-page=garden] .subnav button { padding:7px; }
 .room-stickers { margin-top:18px; padding-top:15px; border-top:1px dashed var(--line); }
 .room-stickers h3 { font-size:17px; margin-bottom:12px; }
 .room-stickers .arcade-stickers { grid-template-columns:repeat(5,minmax(0,1fr)); }
-body[data-theme=night] .garden-next { background:#343f32; border-color:#6c7d55; }
-body[data-theme=night] .garden-next strong { color:#e6e7c6; }
-body[data-theme=night] .garden-next p { color:#c8d1b7; }
-body[data-theme=night] .focus-garden-note { color:#d8dfc7; background:#343f32; }
 @media(max-width:700px) {
  .garden-brief { grid-template-columns:1fr; gap:8px; }
  .garden-next { gap:10px; flex-wrap:wrap; padding:13px; }

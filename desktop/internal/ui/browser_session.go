@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"regexp"
 )
 
 // Only the isolated Electron school profile supplies these cookies. They never
@@ -68,7 +67,7 @@ func validateUndergradSession(ctx context.Context, client *http.Client) error {
 	if err != nil {
 		return err
 	}
-	if len(rows) != 1 || !regexp.MustCompile(`^\d{4}-\d{4}-[123]$`).MatchString(str(rows[0], "DM")) {
+	if len(rows) != 1 || !validTermPattern.MatchString(str(rows[0], "DM")) {
 		return errors.New("学校未返回有效学期，请在学校页面核对")
 	}
 	form := allRowsForm(500)
@@ -110,44 +109,66 @@ func (s *Server) handleBrowserSession(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, 400, errors.New("请选择课表或成绩业务"))
 		return
 	}
-	// Lock the selected account for the entire transition. Failed replacement must
+	// Clear the selected account before anything else. Failed replacement must
 	// not leave a previous person's authenticated state available to the UI,
 	// including when the browser has no cookies after logout or failed login.
-	if in.Business == "graduate" {
-		a := s.academic
+	//
+	// 两次学校请求（最长约 25 秒）不持锁：先在锁内复位并记下 gen，锁外校验，
+	// 回到锁内 gen 没变才落下新会话。这样同步期间 /api/cas/session、成绩、课表
+	// 和退出时的 DELETE 都不用排队；途中被清除或替换时，这次结果直接作废。
+	graduate := in.Business == "graduate"
+	a, c := s.academic, s.cas
+	var started uint64
+	if graduate {
 		a.mu.Lock()
-		defer a.mu.Unlock()
 		a.reset()
+		started = a.gen
+		a.mu.Unlock()
 	} else {
-		c := s.cas
 		c.mu.Lock()
-		defer c.mu.Unlock()
 		c.reset()
+		started = c.gen
+		c.mu.Unlock()
 	}
 	client := newCasClient()
-	if in.Business == "graduate" {
+	if graduate {
 		client = newAcademicClient()
 	}
 	if err := setBrowserCookies(client, in.Cookies); err != nil {
 		writeAPIError(w, 400, err)
 		return
 	}
-	if err := validateBrowserSession(r.Context(), client, in.Business); err != nil {
+	err := validateBrowserSession(r.Context(), client, in.Business)
+	var superseded bool
+	if graduate {
+		a.mu.Lock()
+		if superseded = a.gen != started; err == nil && !superseded {
+			a.client, a.authenticated = client, true
+		}
+		a.mu.Unlock()
+	} else {
+		c.mu.Lock()
+		if superseded = c.gen != started; err == nil && !superseded {
+			c.client, c.authenticated = client, true
+		}
+		c.mu.Unlock()
+	}
+	switch {
+	case superseded:
 		client.CloseIdleConnections()
-		if in.Business == "graduate" {
+		writeAPIError(w, 409, errBrowserSessionSuperseded)
+	case err != nil:
+		client.CloseIdleConnections()
+		if graduate {
 			writeAcademicError(w, err)
 		} else {
 			writeCasError(w, err)
 		}
-		return
+	default:
+		writeJSON(w, map[string]any{"ok": true, "authenticated": true, "business": in.Business,
+			"message": "所选业务已通过学校查询验证，可以返回课表或成绩卡片读取；登录仅保留到退出应用"})
 	}
-	if in.Business == "graduate" {
-		s.academic.client = client
-		s.academic.authenticated = true
-	} else {
-		s.cas.client = client
-		s.cas.authenticated = true
-	}
-	writeJSON(w, map[string]any{"ok": true, "authenticated": true, "business": in.Business,
-		"message": "所选业务已通过学校查询验证，可以返回课表或成绩卡片读取；登录仅保留到退出应用"})
 }
+
+// errBrowserSessionSuperseded：校验途中这条学校登录被清除或被别的登录替换。
+var errBrowserSessionSuperseded = errors.New("读取途中学校登录状态被清除或替换，请回到学校页面重新读取")

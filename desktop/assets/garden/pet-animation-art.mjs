@@ -314,23 +314,31 @@ function turtle(q,action){
 }
 
 const DRAW={libao,chestnut:cat,egret,pingu,skipper:penguin,turtle};
-export const ANIMATION_FRAMES=Object.freeze(Object.entries(PETS).flatMap(([species,pet])=>PET_ACTIONS.flatMap(action=>POSES[action].map((p,index)=>{
-  const draw=DRAW[species];
-  if(!draw)throw new Error(`Register animation drawing for ${species}`);
-  const art=draw(pose(p),action);
-  return Object.freeze({species,action,index,id:PET_CLIPS[species][action].frames[index].id,viewBox:pet.viewBox,art});
-}))));
+// Frames are drawn per companion on first use and then cached, so a window only
+// pays for the companions it shows; a retired one is drawn only if a save has it.
+const drawn=new Map();
+/** Every authored frame of one companion, in PET_ACTIONS order; [] for an unknown species. */
+export function animationFrames(species){
+  if(!Object.hasOwn(PETS,species))return [];
+  if(!drawn.has(species)){
+    const draw=DRAW[species],viewBox=PETS[species].viewBox;
+    if(!draw)throw new Error(`Register animation drawing for ${species}`);
+    drawn.set(species,Object.freeze(PET_ACTIONS.flatMap(action=>POSES[action].map((p,index)=>Object.freeze({species,action,index,id:PET_CLIPS[species][action].frames[index].id,viewBox,art:draw(pose(p),action)})))));
+  }
+  return drawn.get(species);
+}
+/** Read-only: the companions drawn so far in this window, in drawing order (checks use it). */
+export const drawnAnimationSpecies=()=>[...drawn.keys()];
 const frameSymbol=f=>`<symbol id="${f.id}" viewBox="${f.viewBox}" shape-rendering="crispEdges">${f.art}</symbol>`;
-export const ANIMATION_SYMBOLS=ANIMATION_FRAMES.map(frameSymbol).join('\n');
 /** Install one companion's frames at a time when only the active pet animates. */
-export function animationSymbols(species){return ANIMATION_FRAMES.filter(f=>f.species===species).map(frameSymbol).join('\n')}
+export function animationSymbols(species){return animationFrames(species).map(frameSymbol).join('\n')}
 
 /** Review/export every actual frame; preview sheets are never used as runtime sprites. */
 export function animationContactSheet(species){
   const pet=PETS[species];if(!pet)throw new Error('Unknown species');
   const cellW=104,cellH=100,left=94,top=65,width=left+cellW*6+16,height=top+PET_ACTIONS.length*cellH+20;
   const labels=PET_ACTIONS.map((action,row)=>`<text x="16" y="${top+row*cellH+44}" font-size="13" fill="#64462d">${ACTION_LABELS[action]}</text>`).join('');
-  const cells=ANIMATION_FRAMES.filter(f=>f.species===species).map(f=>{
+  const cells=animationFrames(species).map(f=>{
     const row=PET_ACTIONS.indexOf(f.action),x=left+f.index*cellW,y=top+row*cellH;
     const [,,w,h]=f.viewBox.split(' ').map(Number),scale=Math.floor(Math.min(78/w,72/h)),rw=w*scale,rh=h*scale;
     return `<rect x="${x}" y="${y}" width="96" height="92" rx="2" fill="${f.index%2?'#eadcc1':'#f3e7cd'}"/><svg x="${x+(96-rw)/2}" y="${y+7+(70-rh)}" width="${rw}" height="${rh}" viewBox="${f.viewBox}">${f.art}</svg><text x="${x+48}" y="${y+87}" text-anchor="middle" font-size="10" fill="#796449">${f.index+1} · ${PET_CLIPS[species][f.action].frames[f.index].duration} ms</text>`;

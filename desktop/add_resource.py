@@ -13,7 +13,7 @@
   2. 构造资源目录：图标组(14) + 图标(3) + 版本信息(16)
   3. 追加一个 .rsrc 段装这些数据，修正 section 数、SizeOfImage、
      NumberOfRvaAndSizes 和 data directory[2]
-  4. 校验：重新解析一遍，确认资源目录能读回来
+  4. 校验：重新解析一遍，确认资源目录和版本块都能按规范读回来
 
 用法:
     python add_resource.py <exe路径> [--ico 图标路径] [--version 0.2.0]
@@ -84,83 +84,87 @@ class PE:
 def make_res_dir(entries):
     """entries: [(type_id, name_id, data_bytes), ...]
 
-    返回 (资源目录字节, RVA修正函数)。
-    资源目录是三层树：类型 → 名字 → 语言，每层一个目录表。
-    结构简单（每类只有一项），所以直接拼出来，不做通用树。
+    返回 (资源段字节, 各数据块在段内的偏移, 数据项表偏移)。第 i 个数据项对应
+    entries[i]，数据项里的 RVA 由调用方按 offsets[i] 回填。
+
+    资源目录是三层树：类型 → 名字 → 语言。Windows 在每层目录里按 ID **二分查找**，
+    所以同一层的 ID 必须唯一并且升序。以前每条资源各占一个根项，根目录成了
+    [14, 3, 3, 3, …, 16]：类型重复、顺序也乱，系统一个都找不到
+    （GetFileVersionInfoSize 报 ERROR_RESOURCE_TYPE_NOT_FOUND，ExtractIconEx 返回 0）；
+    语言项又直接指向数据块本身而不是数据项，就算找到了也会把数据头当成 RVA。
+    所以 exe 属性里一片空白，资源管理器也一直显示默认图标。
+
+    布局（全部相对资源段起点）：
+      根目录       16 + 8 × 类型数
+      类型目录     每类 16 + 8 × 该类名字数
+      语言目录     每条资源 16 + 8（只有 0x409 一项）
+      数据项表     每条资源 16（RVA、Size、CodePage、Reserved）
+      数据块       各自补齐到 4 字节
     """
-    # 每类资源的叶子数据放在 0x1000 对齐的位置后面
-    # 先算目录部分大小：1 个根 + 3 个类型子目录，每个目录 16+8n 字节
-    # 目录部分的布局（全部相对资源段起点）：
-    #   根目录   16 + 8*N
-    #   类型目录 每类 16 + 8*1
-    #   名字目录 每类 16 + 8*1
-    #   数据项表 每类 16
-    #   数据块   ...
-    ROOT_OFF = 0
-    root_n = len(entries)
-    root_size = 16 + 8 * root_n
-    type_off = root_size
-    type_size = 16 + 8 * 1          # 每个类型子目录只有 1 项（名字层）
-    lang_size = 16 + 8 * 1          # 每个名字子目录只有 1 项（语言层）
-    names_off = type_off + type_size * root_n
-    data_tbl_off = names_off + lang_size * root_n
-    dir_total = data_tbl_off + 16 * root_n
+    by_type = {}
+    for i, (tid, nid, _) in enumerate(entries):
+        by_type.setdefault(tid, []).append((nid, i))
+    type_ids = sorted(by_type)
+    for tid in type_ids:
+        by_type[tid].sort()
+        names = [nid for nid, _ in by_type[tid]]
+        assert len(names) == len(set(names)), ("同一类型下名字 ID 重复", tid, names)
 
+    def dir_size(n):
+        return 16 + 8 * n
+
+    off = dir_size(len(type_ids))
+    type_dir_off = {}
+    for tid in type_ids:
+        type_dir_off[tid] = off
+        off += dir_size(len(by_type[tid]))
+    lang_dir_off = {}
+    for tid in type_ids:
+        for _, i in by_type[tid]:
+            lang_dir_off[i] = off
+            off += dir_size(1)
+    data_tbl_off = off
     # 数据区从 4 字节对齐处开始
-    DATA_OFF = (dir_total + 3) // 4 * 4
+    DATA_OFF = (data_tbl_off + 16 * len(entries) + 3) // 4 * 4
 
-    root = bytearray()
-    type_dirs = bytearray()
-    lang_dirs = bytearray()
-    data_entries = bytearray()
-    blobs = bytearray()
-
-    for i, (tid, nid, payload) in enumerate(entries):
-        t_off = type_off + type_size * i
-        l_off = names_off + lang_size * i
-        d_off = DATA_OFF + len(blobs)
-
-        # 根项：类型 ID → 指向该类型的子目录（高位 1 表示"是目录"）
-        root += struct.pack("<II", tid, 0x80000000 | t_off)
-        # 类型目录：1 个 ID 项，名字 ID → 指向名字子目录（同样 16 字节头）
-        type_dirs += struct.pack("<IIHHHH", 0, 0, 0, 0, 0, 1)
-        type_dirs += struct.pack("<II", nid, 0x80000000 | l_off)
-        # 名字目录：1 个 ID 项，语言 0x409 → 指向数据项
-        lang_dirs += struct.pack("<IIHHHH", 0, 0, 0, 0, 0, 1)
-        lang_dirs += struct.pack("<II", 0x409, d_off)          # 高位 0 表示"是叶子"
-
-        # 数据项：RVA(占位，外面回填) + Size + CodePage + Reserved
-        data_entries += struct.pack("<IIII", 0, len(payload), 0, 0)
-        blobs += payload
-        while len(blobs) % 4:
-            blobs += b"\x00"
-
-    # 拼起来（数据项里的 RVA 由调用方回填）
-    #
     # ⚠️ IMAGE_RESOURCE_DIRECTORY 是 **16** 字节：
     #     Characteristics(4) + TimeDateStamp(4) + MajorVersion(2) + MinorVersion(2)
     #     + NumberOfNamedEntries(2) + NumberOfIdEntries(2)
     # 少写 4 字节的话，整个树会错位 4 —— 外部看就是"资源目录里全是垃圾 ID"。
-    head = bytearray()
-    head += struct.pack("<IIHHHH", 0, 0, 0, 0, 0, root_n)   # 根目录 header
-    head += root
-    head += type_dirs
-    head += lang_dirs
-    # 数据项表紧跟在名字目录之后。**这里必须用组装后的实际长度算**，
-    # 不能拿预计的 names_off 去推 —— type_dirs / lang_dirs 是两个独立的
-    # 累加器，文件里的真实顺序是"根 → 所有类型目录 → 所有名字目录 → 数据项表"，
-    # 用公式推出来的偏移会跟实际差一截，回填 RVA 时就写错位置：
-    # 表现为资源里的图标 RVA 变成 ASCII "\x89PNG"（等于把 PNG 文件头当成了 RVA），
-    # 而结构检查还能过，只有真去看数据才发现。
-    data_tbl_actual = len(head)
-    assert data_tbl_actual == data_tbl_off, (data_tbl_actual, data_tbl_off)
-    head += data_entries
+    def directory(n):
+        return struct.pack("<IIHHHH", 0, 0, 0, 0, 0, n)
+
+    head = bytearray(directory(len(type_ids)))
+    # 根项：类型 ID → 该类型的子目录（高位 1 表示"是目录"）
+    for tid in type_ids:
+        head += struct.pack("<II", tid, 0x80000000 | type_dir_off[tid])
+    # 类型目录：名字 ID → 语言子目录
+    for tid in type_ids:
+        assert len(head) == type_dir_off[tid], ("类型目录错位", tid, len(head))
+        head += directory(len(by_type[tid]))
+        for nid, i in by_type[tid]:
+            head += struct.pack("<II", nid, 0x80000000 | lang_dir_off[i])
+    # 语言目录：0x409 → 数据项（高位 0 表示"是叶子"，指向的是数据项，不是数据块）
+    for tid in type_ids:
+        for _, i in by_type[tid]:
+            assert len(head) == lang_dir_off[i], ("语言目录错位", i, len(head))
+            head += directory(1)
+            head += struct.pack("<II", 0x409, data_tbl_off + 16 * i)
+    # 数据项表必须用组装后的实际长度核对：以前按公式推的偏移和真实位置差一截，
+    # 回填 RVA 时写错位置，表现为图标 RVA 变成 ASCII "\x89PNG"。
+    assert len(head) == data_tbl_off, (len(head), data_tbl_off)
+    offsets = []
+    blobs = bytearray()
+    for _, _, payload in entries:
+        # 数据项：RVA(占位，外面回填) + Size + CodePage + Reserved
+        head += struct.pack("<IIII", 0, len(payload), 0, 0)
+        offsets.append(DATA_OFF + len(blobs))
+        blobs += payload
+        while len(blobs) % 4:
+            blobs += b"\x00"
     assert DATA_OFF >= len(head), ("目录算小了", DATA_OFF, len(head))
     head += b"\x00" * (DATA_OFF - len(head))
     head += blobs
-    # 各资源数据块在段内的偏移（用来回填 RVA）
-    offsets = [DATA_OFF + sum(len(p) + (-len(p)) % 4 for _, _, p in entries[:i])
-               for i in range(len(entries))]
     return bytes(head), offsets, data_tbl_off
 
 
@@ -196,41 +200,49 @@ def pad4(b):
     return b
 
 
+def _ver_node(key, value=b"", value_len=0, text=False, children=()):
+    """版本资源里的一个节点。VS_VERSIONINFO、StringFileInfo、StringTable、String、
+    VarFileInfo、Var 都是同一种结构：
+
+        wLength, wValueLength, wType, szKey(UTF-16 带结尾 0), 补齐到 4 字节,
+        Value, 补齐到 4 字节, Children（每个子节点都从 4 字节边界开始）
+
+    wLength 是整个节点（含子节点）的字节数，不含最后一个子节点之后的补齐；
+    文本值（wType=1）的 wValueLength 按 WCHAR 计并含结尾 0，二进制值按字节计。
+    以前这里在 Value 前面多塞了 4 字节自造的长度字段，根节点的 wValueLength 写成 0、
+    VS_FIXEDFILEINFO 又缺签名，资源管理器和任务管理器因此读不出任何版本字段。
+    """
+    body = pad4(struct.pack("<HHH", 0, value_len, 1 if text else 0) + utf16z(key)) + value
+    for child in children:
+        body = pad4(body) + child
+    return struct.pack("<H", len(body)) + body[2:]
+
+
+def version_numbers(ver):
+    """Windows 固定版本字段只能放四段数字；展示文字仍保留 beta0.1 这类标签。
+    beta0.1 -> 0.1.0.0，0.1.0-beta.1 -> 0.1.0.1。"""
+    parts = [int(x) for x in re.findall(r"\d+", ver)][:4]
+    return tuple(parts + [0] * (4 - len(parts)))
+
+
 def version_info(ver, exe_name):
     """构造 VS_VERSION_INFO 资源（块结构，每个块自带长度）。"""
-    def block(key, value, is_text):
-        if is_text:
-            payload = utf16z(value)
-            val_len = len(payload) // 2
-            val_field = struct.pack("<HH", len(payload), val_len) + payload
-        else:
-            val_field = struct.pack("<HH", len(value), 0) + value
-            val_field = pad4(val_field)
-        body = struct.pack("<HH", 0, 0)          # wLength 占位, wValueLength
-        body = struct.pack("<HHH", 0, len(val_field), 1) + utf16z(key) + val_field
-        body = pad4(body)
-        return struct.pack("<H", len(body)) + body[2:]
-
-    # Windows 固定版本字段只能放四段数字；展示文字仍保留 beta0.1 这类标签。
-    # beta0.1 -> 0.1.0.0，0.1.0-beta.1 -> 0.1.0.1。
-    parts = [int(x) for x in re.findall(r"\d+", ver)]
-    if not parts:
-        parts = [0]
-    while len(parts) < 4:
-        parts.append(0)
-    ms, mn, bld, rev = parts[:4]
+    ms, mn, bld, rev = version_numbers(ver)
     # 版本号打包成两个 DWORD
     ms_hex = (ms << 16) | mn
     ls_hex = (bld << 16) | rev
 
-    fixed = struct.pack("<IIIIIIIIIIIIII",
-                        ms_hex, ls_hex, 0, 0,
-                        0x3F, 0, 0x40004, 1,
-                        ms_hex, ls_hex, 0x3F, 0, 0x40004, 1)
+    # VS_FIXEDFILEINFO 固定 13 个 DWORD（52 字节），必须以签名 0xFEEF04BD 开头：
+    #   dwSignature, dwStrucVersion, dwFileVersionMS/LS, dwProductVersionMS/LS,
+    #   dwFileFlagsMask, dwFileFlags, dwFileOS(VOS_NT_WINDOWS32),
+    #   dwFileType(VFT_APP), dwFileSubtype, dwFileDateMS/LS
+    fixed = struct.pack("<13I",
+                        0xFEEF04BD, 0x00010000,
+                        ms_hex, ls_hex, ms_hex, ls_hex,
+                        0x3F, 0, 0x40004, 1, 0, 0, 0)
+    assert len(fixed) == 52
 
-    sfi = block("StringFileInfo", b"", False)
-    # 单个 StringTable（040904B0 = 英文/Unicode）
-    st = struct.pack("<HHH", 0, 0, 1) + utf16z("040904B0")
+    strings = []
     for k, v in [("CompanyName", "SZUNet"),
                  ("FileDescription", "szuDesktop 深大校园服务台"),
                  ("FileVersion", ver),
@@ -239,19 +251,79 @@ def version_info(ver, exe_name):
                  ("ProductName", "szuDesktop"),
                  ("ProductVersion", ver),
                  ("LegalCopyright", "MIT License")]:
-        st += block(k, v, True)
-    st = pad4(st)
-    st = struct.pack("<H", len(st)) + st[2:]
-    sfi = block("StringFileInfo", st, False)
+        payload = utf16z(v)
+        strings.append(_ver_node(k, payload, len(payload) // 2, text=True))
+    # 单个 StringTable（040904B0 = 英文/Unicode），与下面 Translation 的 0x409/1200 对应
+    table = _ver_node("040904B0", text=True, children=strings)
+    sfi = _ver_node("StringFileInfo", text=True, children=[table])
+    translation = _ver_node("Translation", struct.pack("<HH", 0x409, 1200), 4)
+    vfi = _ver_node("VarFileInfo", text=True, children=[translation])
+    return _ver_node("VS_VERSION_INFO", fixed, len(fixed), children=[sfi, vfi])
 
-    vt = block("Translation", struct.pack("<HH", 0x409, 1200), False)
-    vs = block("VarFileInfo", vt, False)
 
-    root = struct.pack("<HHH", 0, 0, 0) + utf16z("VS_VERSION_INFO") \
-        + struct.pack("<H", 0) + pad4(fixed) + sfi + vs
-    root = pad4(root)
-    root = struct.pack("<H", len(root)) + root[2:]
-    return root
+def parse_version_info(blob):
+    """按 VS_VERSIONINFO 规范解析版本资源，返回 (固定版本 dict, 字符串表 dict)。
+
+    结构不合规（签名、长度、对齐任一不对）直接抛 ValueError。以前的 verify 只看
+    「有没有 RT_VERSION 这一类」，写错结构的版本块照样通过，exe 属性里却一片空白。
+    """
+    blob = bytes(blob)
+
+    def align(n):
+        return (n + 3) // 4 * 4
+
+    def node(off, end):
+        if off % 4:
+            raise ValueError("版本资源节点没有按 4 字节对齐（偏移 %#x）" % off)
+        if off + 6 > end:
+            raise ValueError("版本资源节点越界（偏移 %#x）" % off)
+        length, value_len, vtype = struct.unpack_from("<HHH", blob, off)
+        if length < 6 or off + length > end or vtype not in (0, 1):
+            raise ValueError("版本资源节点头不对：wLength=%d wType=%d（偏移 %#x）" % (length, vtype, off))
+        stop = off + length
+        k = off + 6
+        while k + 1 < stop and blob[k:k + 2] != b"\x00\x00":
+            k += 2
+        if k + 1 >= stop:
+            raise ValueError("版本资源节点的键没有结尾 0（偏移 %#x）" % off)
+        key = blob[off + 6:k].decode("utf-16-le")
+        v = align(k + 2)
+        size = value_len * 2 if vtype == 1 else value_len
+        if v + size > stop:
+            raise ValueError("%s 的值越过了节点末尾" % key)
+        value = blob[v:v + size]
+        children = []
+        c = align(v + size)
+        while c < stop:
+            child = node(c, stop)
+            children.append(child)
+            c = align(c + child["length"])
+        return dict(key=key, type=vtype, value=value, children=children, length=length)
+
+    root = node(0, len(blob))
+    if root["key"] != "VS_VERSION_INFO" or root["type"] != 0 or len(root["value"]) != 52:
+        raise ValueError("根节点不是 VS_VERSION_INFO，或 VS_FIXEDFILEINFO 长度不是 52（wValueLength=%d）"
+                         % len(root["value"]))
+    f = struct.unpack("<13I", root["value"])
+    if f[0] != 0xFEEF04BD:
+        raise ValueError("VS_FIXEDFILEINFO 签名不对：%#x" % f[0])
+
+    def split(ms_ls):
+        ms_, ls_ = ms_ls
+        return (ms_ >> 16, ms_ & 0xFFFF, ls_ >> 16, ls_ & 0xFFFF)
+
+    fixed = dict(struc_version=f[1], file_version=split(f[2:4]), product_version=split(f[4:6]),
+                 file_os=f[8], file_type=f[9])
+    strings = {}
+    for child in root["children"]:
+        if child["key"] != "StringFileInfo":
+            continue
+        for table in child["children"]:
+            for s in table["children"]:
+                if s["type"] != 1:
+                    raise ValueError("字符串 %s 不是文本类型" % s["key"])
+                strings[s["key"]] = s["value"].decode("utf-16-le").rstrip("\x00")
+    return fixed, strings
 
 
 # ---------------------------------------------------------------- 主流程
@@ -375,7 +447,7 @@ def add_resources(exe_path, ico_path, ver, exe_name):
     return True
 
 
-def verify(exe_path):
+def verify(exe_path, ver=None):
     pe = PE(open(exe_path, "rb").read())
     sects = pe.sections()
     rsrc = [s for s in sects if s["name"] == ".rsrc"]
@@ -400,9 +472,56 @@ def verify(exe_path):
         tid, _ = struct.unpack_from("<II", blob, 16 + i * 8)
         types.append(tid)
     print("   资源类型:", sorted(types), "(named=%d id=%d)" % (n_named, n_id))
-    # RT_ICON 会有多条（每个尺寸一条），所以只看"三类都在"
+    # 三类都要在；Windows 按 ID 二分查找，根目录里的类型还必须唯一且升序
+    # （以前每个图标尺寸各占一个根项，类型重复又乱序，系统一个资源都找不到）。
     uniq = set(types)
-    return {RT_GROUP_ICON, RT_VERSION} <= uniq and RT_ICON in uniq
+    if not ({RT_GROUP_ICON, RT_VERSION} <= uniq and RT_ICON in uniq):
+        return False
+    if types != sorted(uniq):
+        print("   !! 根目录里的资源类型重复或没有升序，Windows 会找不到资源")
+        return False
+    # 光有 RT_VERSION 这一类不够：版本块结构写错时类型照样在，exe 属性里却一片空白。
+    # 这里沿资源树找到版本块，按规范解析，并核对 exe 属性里要显示的字段。
+    try:
+        fixed, strings = parse_version_info(_version_resource(blob, rsrc[0]["vaddr"]))
+    except (ValueError, struct.error) as e:
+        print("   !! 版本资源解析失败：%s" % e)
+        return False
+    print("   文件版本 %s，%s %s（%s）" % (".".join(map(str, fixed["file_version"])),
+                                      strings.get("ProductName"), strings.get("ProductVersion"),
+                                      strings.get("FileDescription")))
+    if not all(strings.get(k) for k in ("FileDescription", "ProductName", "CompanyName")):
+        print("   !! 版本资源缺少描述、产品名或公司名")
+        return False
+    if ver is not None and (strings.get("FileVersion") != ver or strings.get("ProductVersion") != ver
+                            or fixed["file_version"] != version_numbers(ver)
+                            or fixed["product_version"] != version_numbers(ver)):
+        print("   !! 版本资源与要求的版本 %s 不一致" % ver)
+        return False
+    return True
+
+
+def _version_resource(blob, base_rva):
+    """沿资源目录「类型 16 → 名字 → 语言」找到版本块，返回它的字节。"""
+    def entries(off):
+        n_named, n_id = struct.unpack_from("<HH", blob, off + 12)
+        return [struct.unpack_from("<II", blob, off + 16 + i * 8) for i in range(n_named + n_id)]
+
+    for tid, target in entries(0):
+        if tid != RT_VERSION:
+            continue
+        for _ in range(2):  # 名字层、语言层都应该是子目录
+            if not target & 0x80000000:
+                raise ValueError("版本资源目录层级不对")
+            target = entries(target & 0x7FFFFFFF)[0][1]
+        if target & 0x80000000:
+            raise ValueError("版本资源的叶子不是数据项")
+        rva, size = struct.unpack_from("<II", blob, target)
+        start = rva - base_rva
+        if start < 0 or start + size > len(blob):
+            raise ValueError("版本资源数据越过了 .rsrc 段")
+        return blob[start:start + size]
+    raise ValueError("资源目录里没有 RT_VERSION")
 
 
 if __name__ == "__main__":
@@ -430,6 +549,6 @@ if __name__ == "__main__":
     if changed:
         print("   完成，%.1f MB" % (os.path.getsize(exe) / 1024 / 1024))
     print(">> 校验资源段")
-    ok = verify(exe)
+    ok = verify(exe, ver)
     print("   %s" % ("通过" if ok else "失败"))
     sys.exit(0 if ok else 1)

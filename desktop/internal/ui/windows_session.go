@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"sync"
@@ -90,7 +91,7 @@ func (s *Server) handleWindow(w http.ResponseWriter, r *http.Request) {
 		Closing bool   `json:"closing"`
 	}
 	if json.NewDecoder(r.Body).Decode(&in) != nil || len(in.ID) < 16 || len(in.ID) > 80 {
-		http.Error(w, "无效的窗口", 400)
+		writeAPIError(w, 400, errors.New("无效的窗口"))
 		return
 	}
 	s.windows.touch(in.ID, in.Closing, time.Now())
@@ -118,16 +119,16 @@ func (s *Server) watchWindows(done <-chan struct{}) {
 func (s *Server) handleWindowStream(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if len(id) < 16 || len(id) > 80 {
-		http.Error(w, "无效的窗口", 400)
+		writeAPIError(w, 400, errors.New("无效的窗口"))
 		return
 	}
 	if _, ok := w.(http.Flusher); !ok {
-		http.Error(w, "不支持窗口连接", 500)
+		writeAPIError(w, 500, errors.New("不支持窗口连接"))
 		return
 	}
 	nonce := make([]byte, 16)
 	if _, err := rand.Read(nonce); err != nil {
-		http.Error(w, "无法建立窗口连接", 500)
+		writeAPIError(w, 500, errors.New("无法建立窗口连接"))
 		return
 	}
 	key := id + "/" + hex.EncodeToString(nonce)

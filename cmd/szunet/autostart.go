@@ -41,7 +41,9 @@ func cmdAutostart(args []string) {
 
 	switch {
 	case *on:
-		if err := autostart.Enable(*targetCLI); err != nil {
+		// 说清楚自己是命令行版：程序被改名后从文件名认不出来，
+		// 按界面版登记的 --no-open 命令行版不认，开机时会直接退出。
+		if err := autostart.EnableAs(autostart.ProgramCLI, *targetCLI); err != nil {
 			fail(err)
 		}
 		fmt.Println("已打开开机自启。下次登录 Windows 会自动连接校园网。")

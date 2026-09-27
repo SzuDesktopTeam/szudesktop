@@ -41,6 +41,15 @@ var errUnsafeEhallURL = errors.New("学校系统连接地址不安全，已停�
 
 var errSessionInvalid = errors.New("学校系统登录状态已失效，请在学校页面重新登录并读取登录状态")
 
+// errSessionExpired 是确认过的会话失效：学校把请求送回了统一身份认证登录页（跳转
+// 过去，或正文就是登录页），或直接回 401。它仍然 errors.Is errSessionInvalid，用户
+// 看到的是同一句话；区别在于只有它会让统一身份认证会话复位。
+var errSessionExpired = fmt.Errorf("%w", errSessionInvalid)
+
+// errSchoolPage：学校回了一个不是登录页的网页（夜间维护、网关拦截一类）。
+// 说不准登录还在不在，所以既不当成过期去清掉登录，也不报成「暂无数据」。
+var errSchoolPage = errors.New("学校系统返回了网页而不是数据，可能正在维护；请稍后重试，多次出现请到学校页面核对登录状态")
+
 // ehallClient 用一份会话请求 ehall。
 type ehallClient struct {
 	cookie string
@@ -53,11 +62,18 @@ type ehallClient struct {
 	usesJar bool
 }
 
-// newEhallClient 造一个客户端。
+// ehallTransport 是粘贴 Cookie 这条路共用的连接池。
 //
 // ⚠️ Proxy 显式设为 nil，和 portal 那边同一个原因：
 // 系统上开着代理或加速器时，请求会被抓走，导致读不到校园系统。
 // 访问 ehall 必须直连。
+//
+// 每次点击都新建 Transport 会重新做 TCP/TLS 握手，用完的空闲连接又留在没人再用的
+// 池子里等学校断开。所以共用一个，并给空闲连接设上期限。Cookie 只在请求头里，
+// 连接本身不带身份；各 ehallClient 仍各自持有带自己 CheckRedirect 的 http.Client。
+var ehallTransport = &http.Transport{Proxy: nil, IdleConnTimeout: 90 * time.Second, TLSHandshakeTimeout: 10 * time.Second, MaxIdleConnsPerHost: 4}
+
+// newEhallClient 造一个客户端。
 func newEhallClient(cookie string, timeout time.Duration) *ehallClient {
 	if timeout <= 0 {
 		timeout = ehallTimeout
@@ -67,7 +83,7 @@ func newEhallClient(cookie string, timeout time.Duration) *ehallClient {
 		base:   ehallBaseURL,
 		http: &http.Client{
 			Timeout:   timeout,
-			Transport: &http.Transport{Proxy: nil},
+			Transport: ehallTransport,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				// 会话失效时 ehall 会 302 到统一身份认证登录页。
 				// 这里直接拦下来转成明确错误，比跟着跳到最后拿到一个登录页 HTML 更好判断。
@@ -79,10 +95,10 @@ func newEhallClient(cookie string, timeout time.Duration) *ehallClient {
 				}
 				// 被跳到别的域名（统一身份认证在另一个域）就是会话没了。
 				if !strings.EqualFold(req.URL.Host, via[0].URL.Host) {
-					return errSessionInvalid
+					return errSessionExpired
 				}
 				if req.URL.Query().Get("login") != "" || strings.Contains(req.URL.Path, "/login") {
-					return errSessionInvalid
+					return errSessionExpired
 				}
 				if !ehallPathAllowed(req.URL.Path) {
 					return errUnsafeEhallURL
@@ -93,11 +109,8 @@ func newEhallClient(cookie string, timeout time.Duration) *ehallClient {
 	}
 }
 
-// postForm 向 ehall 发一个表单 POST，返回响应体。
-func (c *ehallClient) postForm(path string, form url.Values) ([]byte, error) {
-	return c.postFormContext(context.Background(), path, form)
-}
-
+// postFormContext 向 ehall 发一个表单 POST，返回响应体。
+// 调用方必须传入本地请求的 context：渲染端断开时学校请求要一并取消。
 func (c *ehallClient) postFormContext(ctx context.Context, path string, form url.Values) ([]byte, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -132,8 +145,8 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		if errors.Is(err, errSessionInvalid) {
-			return nil, errSessionInvalid
+		if errors.Is(err, errSessionExpired) {
+			return nil, errSessionExpired
 		}
 		if errors.Is(err, errUnsafeEhallURL) {
 			return nil, errUnsafeEhallURL
@@ -141,6 +154,14 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 		return nil, errors.New("连不上学校系统，请检查网络后重试")
 	}
 	defer res.Body.Close()
+	// 统一身份认证会话由 jar 托管，会跟着跳转走：最后停在别的主机（authserver）或
+	// 登录路径上，就是被送回了登录页。显式写出的 :443 不算换了主机。
+	if final := res.Request; final != nil && final.URL != nil {
+		moved := !strings.EqualFold(strings.TrimSuffix(final.URL.Host, ":443"), strings.TrimSuffix(base.Host, ":443"))
+		if moved || strings.Contains(final.URL.Path, "/login") {
+			return nil, errSessionExpired
+		}
+	}
 
 	data, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))
 	if err != nil {
@@ -153,7 +174,7 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 		return nil, errors.New("学校系统返回的内容异常大，已中止")
 	}
 	if res.StatusCode == http.StatusUnauthorized {
-		return nil, errSessionInvalid
+		return nil, errSessionExpired
 	}
 	if res.StatusCode == http.StatusForbidden {
 		return nil, errSessionPermission
@@ -195,9 +216,13 @@ func parseEhallPage(data []byte, dataset string) (*ehallPage, error) {
 		return nil, errors.New("学校系统返回了空内容")
 	}
 	// 会话失效时可能直接返回登录页 HTML，此时 JSON 解析会失败。
+	// 只有确实是统一身份认证登录页才算过期；别的网页不能当成过期去清掉登录。
 	if trimmed[0] != '{' && trimmed[0] != '[' {
-		if bytes.Contains(trimmed, []byte("统一身份认证")) || bytes.Contains(trimmed, []byte("<html")) {
-			return nil, errSessionInvalid
+		if bytes.Contains(trimmed, []byte("统一身份认证")) || casLoginFormRe.Match(trimmed) {
+			return nil, errSessionExpired
+		}
+		if bytes.Contains(bytes.ToLower(trimmed), []byte("<html")) {
+			return nil, errSchoolPage
 		}
 		return nil, errors.New("学校系统返回的不是预期格式，可能是登录状态失效或页面已改版")
 	}

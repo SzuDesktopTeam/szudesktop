@@ -43,15 +43,84 @@ type vpnManager struct {
 	generation uint64
 	cancel     context.CancelFunc
 	logs       []vpnLog
+	proxy      proxyOps
 }
 
-func newVPNManager() *vpnManager {
-	m := &vpnManager{server: defaultVPNServer, socksAddr: fmt.Sprintf("127.0.0.1:%d", defaultSocksPort)}
-	vpn.SetLogger(m.appendLog)
-	if sysproxy.HasBackup() {
-		m.appendLog("warn", "检测到上次运行留下的系统代理备份；可点“关闭系统代理”恢复原设置")
+// proxyOps 是会读写真实系统代理（HKCU 注册表）的操作。
+// 测试换成替身，免得在开发机上把正在用的代理改掉。
+type proxyOps struct {
+	query        func() sysproxy.State
+	recoverStale func() (restored bool, err error)
+	disable      func() error
+	listening    func(addr string) bool // 本机这个端口上有没有程序在监听
+}
+
+func systemProxyOps() proxyOps {
+	return proxyOps{query: sysproxy.Query, recoverStale: sysproxy.RecoverStale, disable: sysproxy.Disable, listening: loopbackListening}
+}
+
+func loopbackListening(addr string) bool {
+	conn, err := net.DialTimeout("tcp", addr, 300*time.Millisecond)
+	if err != nil {
+		return false
 	}
+	conn.Close()
+	return true
+}
+
+// newVPNManager 只做初始化，不碰系统代理：ui.New() 在拿单实例锁之前就会调用它，
+// 第二次启动时在这里还原代理，会把正在运行的那个实例的代理关掉。
+func newVPNManager() *vpnManager {
+	m := &vpnManager{server: defaultVPNServer, socksAddr: fmt.Sprintf("127.0.0.1:%d", defaultSocksPort), proxy: systemProxyOps()}
+	vpn.SetLogger(m.appendLog)
 	return m
+}
+
+// recoverLeftover 善后上次运行没来得及还原的系统代理（被强杀、崩溃或关机）。
+//
+// 还不还原、还原成什么，全交给 sysproxy.RecoverStale：它和 Disable 用同一套
+// 所有权判断——当前设置还是我们写的那份才按备份还原；用户在这期间自己改过
+// 代理，就只丢掉过期的备份，不碰他的新设置。这里不再另写一份判断。
+//
+// 桌面端只多加一道检查：代理指着的本机端口若仍有程序在监听（换了配置目录
+// 运行的另一份程序、或用户自己的代理软件），就先不动，留给用户决定。
+// 只能在拿到单实例锁之后调用。
+func (m *vpnManager) recoverLeftover() {
+	if m == nil || m.proxy.query == nil || m.proxy.recoverStale == nil || m.proxy.listening == nil {
+		return
+	}
+	// Managed 就是 sysproxy 的所有权判断：有备份在案，且当前设置正是我们写的那份。
+	if st := m.proxy.query(); st.Managed && m.proxy.listening(strings.TrimPrefix(st.Server, "socks=")) {
+		m.appendLog("warn", "系统代理指向的本机端口仍有程序在监听，未自动恢复；确认不再需要后可点“关闭系统代理”")
+		return
+	}
+	// 这个进程还没开隧道，代理指着的端口又没人监听，留着只会让整台电脑断网。
+	restored, err := m.proxy.recoverStale()
+	switch {
+	case err != nil:
+		m.appendLog("error", "上次运行留下的系统代理没能自动恢复："+err.Error()+"；可点“关闭系统代理”重试")
+	case restored:
+		m.appendLog("info", "上次退出时没来得及还原系统代理，已自动恢复原设置")
+	}
+}
+
+// shutdown 在应用退出前断开隧道、还原系统代理。
+//
+// 只处理本进程建立过的连接：否则退出后 ProxyServer 仍指着一个没人监听的
+// 本机端口，浏览器和大多数软件都会断网，下次启动也不会自己好。
+func (m *vpnManager) shutdown() {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	client := m.client
+	m.mu.Unlock()
+	if client == nil {
+		return
+	}
+	if err := m.disconnect(); err != nil {
+		m.appendLog("error", "退出时恢复系统代理失败："+err.Error())
+	}
 }
 
 func (m *vpnManager) appendLog(level, message string) {
@@ -191,14 +260,12 @@ func (m *vpnManager) connect(req vpnConnectReq) (string, error) {
 	m.busy = true
 	m.logs = nil
 	m.mu.Unlock()
+	// 出错、要二步验证、甚至 panic（net/http 只兜住 handler，不管这里的状态），
+	// busy 都要放下；否则之后每次连接都报「VPN 已在连接或运行」，只能手动断开。
+	defer m.releaseBusy(gen)
 
 	m.appendLog("info", "开始建立校外 VPN 连接")
 	if err := client.Login(strings.TrimSpace(req.Username), req.Password); err != nil {
-		m.mu.Lock()
-		if m.generation == gen {
-			m.busy = false
-		}
-		m.mu.Unlock()
 		if errors.Is(err, vpn.ErrNextAuthSMS) {
 			return "服务器要求短信验证码", nil
 		}
@@ -233,7 +300,7 @@ func (m *vpnManager) startTunnel(gen uint64, client *vpn.Client, enableProxy boo
 			m.appendLog("error", "VPN 隧道已退出："+err.Error())
 		}
 		if current {
-			if err := sysproxy.Disable(); err != nil {
+			if err := m.disableProxy(); err != nil {
 				m.appendLog("error", "恢复系统代理失败："+err.Error())
 			}
 		}
@@ -281,16 +348,22 @@ func (m *vpnManager) continueAuth(code string, enableProxy bool) (string, error)
 	}
 	m.busy = true
 	m.mu.Unlock()
+	defer m.releaseBusy(gen)
 
 	if err := client.ContinueAuth(code); err != nil {
-		m.mu.Lock()
-		if m.generation == gen {
-			m.busy = false
-		}
-		m.mu.Unlock()
 		return "", err
 	}
 	return m.startTunnel(gen, client, enableProxy)
+}
+
+// releaseBusy 在 connect / continueAuth 结束时放下 busy。
+// 隧道已经跑起来（running）或这次操作已被新的连接、断开取代时不动。
+func (m *vpnManager) releaseBusy(gen uint64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.generation == gen && !m.running {
+		m.busy = false
+	}
 }
 
 func (m *vpnManager) disconnect() error {
@@ -302,11 +375,18 @@ func (m *vpnManager) disconnect() error {
 	if client != nil {
 		client.Stop()
 	}
-	if err := sysproxy.Disable(); err != nil {
+	if err := m.disableProxy(); err != nil {
 		return err
 	}
 	m.appendLog("info", "VPN 已断开，系统代理已恢复")
 	return nil
+}
+
+func (m *vpnManager) disableProxy() error {
+	if m.proxy.disable == nil {
+		return sysproxy.Disable()
+	}
+	return m.proxy.disable()
 }
 
 func decodeJSON(r *http.Request, dst any) error {
@@ -319,14 +399,6 @@ func decodeJSON(r *http.Request, dst any) error {
 		return errors.New("请求格式不对")
 	}
 	return nil
-}
-
-func writeAPIError(w http.ResponseWriter, status int, err error) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-	_ = enc.Encode(map[string]any{"ok": false, "message": err.Error()})
 }
 
 func requirePost(w http.ResponseWriter, r *http.Request) bool {

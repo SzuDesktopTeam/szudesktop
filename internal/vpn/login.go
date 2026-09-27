@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"net"
@@ -203,8 +204,21 @@ func ecAgentToken(server, twfId string) (string, error) {
 	if len(buf) == 0 {
 		return "", errors.New("ECAgent 探针没有任何响应")
 	}
-	logf("ok", "ECAgent token 获取成功（响应 %d 字节）", len(buf))
-	return hex.EncodeToString(conn.HandshakeState.ServerHello.SessionId)[:31] + "\x00", nil
+	return agentTokenFromSessionID(conn.HandshakeState.ServerHello.SessionId, len(buf))
+}
+
+// agentTokenFromSessionID 把 ServerHello 的 SessionId 换成 token 前半段：
+// 十六进制的前 31 个字符再补一个 \x00，正好 32 字节。
+//
+// SessionId 不足 16 字节时十六进制不够 31 个字符，直接切片会 panic。
+// 网关升级后返回长度一变，panic 发生在连接请求的处理协程里，界面那边的
+// 「连接中」标记就再也没人复位了。所以这里先查长度，给明确的错误。
+func agentTokenFromSessionID(sessionID []byte, respLen int) (string, error) {
+	if len(sessionID) < 16 {
+		return "", fmt.Errorf("ECAgent 握手的 SessionId 只有 %d 字节（应至少 16 字节），网关协议可能变了", len(sessionID))
+	}
+	logf("ok", "ECAgent token 获取成功（响应 %d 字节）", respLen)
+	return hex.EncodeToString(sessionID)[:31] + "\x00", nil
 }
 
 // httpClient 带自签证书放行。

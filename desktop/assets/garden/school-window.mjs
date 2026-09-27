@@ -1,5 +1,5 @@
 import {pixelIcon} from './pixel.mjs';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 export function createSchoolWindowUI({onSessionChanged}){
  let message='',error=false,busy=false,business='undergrad';
  const businesses={undergrad:'本科课表',graduate:'研究生课表','undergrad-scores':'本科成绩','graduate-scores':'研究生成绩'};

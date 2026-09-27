@@ -58,6 +58,15 @@ await check('academic identity defaults initialize after state arrives and follo
  assert.doesNotMatch(view.services('notices'),/图书馆与自习提醒|常用联系与入口/);assert.match(view.services('directory'),/常用联系与入口/);assert.doesNotMatch(view.services('directory'),/学校公告/);
 });
 
+await check('a failed workspace load hides reminders that only the unreadable save knows about',async()=>{
+ const state=createState();state.reminders=[{id:'r1',place:'占位里不该出现的房间',start:Date.now(),end:Date.now()+3600000}];let unavailable=false;
+ const view=createCampusUI({getState:()=>state,commit:async()=>{},toast:()=>{},confirm:async()=>true,render:()=>{},api:async()=>({}),workspaceUnavailable:()=>unavailable});
+ let html=view.services('spaces');assert.match(html,/id="campus-reminder-form"/);assert.match(html,/占位里不该出现的房间/);
+ unavailable=true;html=view.services('spaces');
+ assert.doesNotMatch(html,/id="campus-reminder-form"|campus-reminders|占位里不该出现的房间/,'读档失败时不显示也不新增本机提醒');
+ assert.match(html,/庭院存档暂时打不开，本机自习提醒先不显示/);assert.match(html,/图书馆与自习提醒/,'官方入口照常可用');
+});
+
 await check('both installed and portable score queries follow the global academic level without a second choice',async()=>{
  const previousDesktop=globalThis.szuDesktop;
  try{

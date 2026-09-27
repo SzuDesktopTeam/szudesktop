@@ -42,20 +42,24 @@ func notifyChanged() {
 	_, _, _ = procInternetSetOptio.Call(0, optRefresh, 0, 0)
 }
 
-// readInet 读当前的系统代理设置。
-func readInet() (enabled bool, server, override string) {
+// readInet 读当前的系统代理设置。键不存在（从没配过代理）按全空处理。
+func readInet() (setting, error) {
 	k, err := registry.OpenKey(registry.CURRENT_USER, inetPath, registry.QUERY_VALUE)
+	if errors.Is(err, registry.ErrNotExist) {
+		return setting{}, nil
+	}
 	if err != nil {
-		return false, "", ""
+		return setting{}, fmt.Errorf("读不到系统代理设置: %w", err)
 	}
 	defer k.Close()
 
+	var cur setting
 	if v, _, err := k.GetIntegerValue("ProxyEnable"); err == nil {
-		enabled = v != 0
+		cur.Enabled = v != 0
 	}
-	server, _, _ = k.GetStringValue("ProxyServer")
-	override, _, _ = k.GetStringValue("ProxyOverride")
-	return
+	cur.Server, _, _ = k.GetStringValue("ProxyServer")
+	cur.Override, _, _ = k.GetStringValue("ProxyOverride")
+	return cur, nil
 }
 
 // saveBackup 把原值抄进我们自己的键。
@@ -74,6 +78,9 @@ func saveBackup(s Snapshot) error {
 		return err
 	}
 	if err := k.SetStringValue("Server", s.Server); err != nil {
+		return err
+	}
+	if err := k.SetStringValue("Applied", s.Applied); err != nil {
 		return err
 	}
 	return k.SetStringValue("Override", s.Override)
@@ -95,12 +102,14 @@ func loadBackup() (Snapshot, bool) {
 	s.Enabled = v != 0
 	s.Server, _, _ = k.GetStringValue("Server")
 	s.Override, _, _ = k.GetStringValue("Override")
+	s.Applied, _, _ = k.GetStringValue("Applied") // 老版本的备份没有，读不到就是空
 	s.Valid = true
 	return s, true
 }
 
 func dropBackup() {
-	// 删不掉不算致命：下次 Enable 会覆盖，Disable 也只是多还原一次同样的值。
+	// 删不掉不算致命：下次 Enable 会按当前设置判断要不要沿用，
+	// Disable 也会先确认当前设置还是我们的才还原。
 	_ = registry.DeleteKey(registry.CURRENT_USER, backupPath)
 }
 
@@ -111,17 +120,35 @@ func HasBackup() bool {
 	return ok
 }
 
+// RecoverStale 在启动时善后上一次没来得及还原的系统代理。
+//
+// 有备份说明上次运行没能正常断开（被强杀、崩溃、关机）。这时系统代理多半还
+// 指着一个已经没人监听的本机端口，浏览器和大多数软件都会断网，而用户根本
+// 不知道是谁改的。
+//
+//   - 当前设置还是我们写的：按备份还原，返回 true；
+//   - 当前设置已经被用户改过：尊重用户的新设置，只丢掉过期的备份，返回 false；
+//   - 没有备份：什么都不做。
+//
+// 只能在 VPN 没连着的时候调（也就是进程刚启动时），否则会把正在用的代理关掉。
+func RecoverStale() (bool, error) {
+	return restore()
+}
+
 // Query 返回当前系统代理状况。
 func Query() State {
-	enabled, server, _ := readInet()
-	_, managed := loadBackup()
+	cur, _ := readInet()
+	// 有备份不等于还在接管：上次没善后、用户又自己改过代理时，备份已经过期，
+	// 断开时也不会拿它去还原（见 shouldRestore），不能说成是我们在接管。
+	backup, ok := loadBackup()
+	managed := ok && shouldRestore(cur, backup)
 
-	st := State{Supported: true, Enabled: enabled, Server: server, Managed: managed}
+	st := State{Supported: true, Enabled: cur.Enabled, Server: cur.Server, Managed: managed}
 	switch {
-	case managed && enabled:
+	case managed:
 		st.Note = "系统代理由 szuDesktop 接管中，断开 VPN 会自动还回原来的设置"
-	case enabled:
-		st.Note = "系统里本来就挂着代理：" + server
+	case cur.Enabled:
+		st.Note = "系统里本来就挂着代理：" + cur.Server
 	default:
 		st.Note = "系统代理没开，全部流量直连"
 	}
@@ -138,13 +165,16 @@ func Enable(socksAddr string) error {
 		return errors.New("没有给 SOCKS 地址")
 	}
 
-	// 先抄原值。已经有备份就别覆盖——那是我们自己设的代理，
-	// 覆盖等于把用户真正的原始设置弄丢了。
-	if _, ok := loadBackup(); !ok {
-		enabled, server, override := readInet()
-		if err := saveBackup(Snapshot{Enabled: enabled, Server: server, Override: override, Valid: true}); err != nil {
-			return err
-		}
+	// 先抄原值。沿用旧备份还是重新抓一份，见 nextBackup。
+	// 读不到当前设置就不改：没有可靠的原值，断开时就还不回去。
+	applied := "socks=" + socksAddr
+	cur, err := readInet()
+	if err != nil {
+		return err
+	}
+	old, ok := loadBackup()
+	if err := saveBackup(nextBackup(cur, old, ok, applied)); err != nil {
+		return err
 	}
 
 	k, err := registry.OpenKey(registry.CURRENT_USER, inetPath, registry.SET_VALUE)
@@ -153,7 +183,7 @@ func Enable(socksAddr string) error {
 	}
 	defer k.Close()
 
-	if err := k.SetStringValue("ProxyServer", "socks="+socksAddr); err != nil {
+	if err := k.SetStringValue("ProxyServer", applied); err != nil {
 		return fmt.Errorf("写代理地址失败: %w", err)
 	}
 	// 本机地址和校内直连域名不走代理，否则访问 127.0.0.1 上的界面自己
@@ -169,35 +199,52 @@ func Enable(socksAddr string) error {
 	return nil
 }
 
-// Disable 把系统代理还原成我们改之前的样子。没有备份就什么都不做。
+// Disable 把系统代理还原成我们改之前的样子。
+//
+// 没有备份就什么都不做；当前设置已经不是我们写的（用户在这期间自己改过），
+// 只丢掉过期的备份、不碰系统设置，见 shouldRestore。
 func Disable() error {
+	_, err := restore()
+	return err
+}
+
+// restore 是 Disable 和 RecoverStale 共用的还原逻辑，restored 表示真的改了系统设置。
+func restore() (restored bool, err error) {
 	s, ok := loadBackup()
 	if !ok {
-		return nil // 没动过，没什么可还的
+		return false, nil // 没动过，没什么可还的
+	}
+	cur, err := readInet()
+	if err != nil {
+		return false, err // 读不到就先别动，备份留着下次再判断
+	}
+	if !shouldRestore(cur, s) {
+		dropBackup()
+		return false, nil
 	}
 
 	k, err := registry.OpenKey(registry.CURRENT_USER, inetPath, registry.SET_VALUE)
 	if err != nil {
-		return fmt.Errorf("打不开系统代理设置: %w", err)
+		return false, fmt.Errorf("打不开系统代理设置: %w", err)
 	}
 	defer k.Close()
 
 	// 逐字还原：原来有代理就把地址填回去，原来没有就把开关关掉。
 	if err := k.SetStringValue("ProxyServer", s.Server); err != nil {
-		return err
+		return false, err
 	}
 	if err := k.SetStringValue("ProxyOverride", s.Override); err != nil {
-		return err
+		return false, err
 	}
 	var on uint32
 	if s.Enabled {
 		on = 1
 	}
 	if err := k.SetDWordValue("ProxyEnable", on); err != nil {
-		return err
+		return false, err
 	}
 
 	dropBackup()
 	notifyChanged()
-	return nil
+	return true, nil
 }

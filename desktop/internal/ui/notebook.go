@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -22,8 +23,9 @@ type notebookSnapshot struct {
 }
 
 type notebookStore struct {
-	mu   sync.Mutex
-	path string
+	mu     sync.Mutex
+	path   string
+	notice recoveryNotice // 从备份恢复过、还没告诉页面
 }
 
 func newNotebookStore(dir string) *notebookStore {
@@ -129,25 +131,41 @@ func decodeNotebookSnapshot(r io.Reader) (notebookSnapshot, error) {
 	return notebookSnapshot{Version: 1, Revision: *input.Revision, Data: input.Data}, nil
 }
 
-func (s *notebookStore) read() (notebookSnapshot, error) {
-	empty := notebookSnapshot{Version: 1, Data: json.RawMessage(`null`)}
-	f, err := os.Open(s.path)
-	if errors.Is(err, os.ErrNotExist) {
-		return empty, nil
+func (s *notebookStore) file() storeFile[notebookSnapshot] {
+	return storeFile[notebookSnapshot]{
+		path:       s.path,
+		tmpPattern: ".notebook-*.tmp",
+		limit:      notebookMaxBytes,
+		empty:      notebookSnapshot{Version: 1, Data: json.RawMessage(`null`)},
+		parse:      parseNotebookFile,
 	}
-	if err != nil {
-		return empty, err
+}
+
+func parseNotebookFile(b []byte) (notebookSnapshot, error) {
+	if len(b) > notebookMaxBytes {
+		return notebookSnapshot{}, errors.New("笔记存档超过大小上限")
 	}
-	defer f.Close()
-	b, err := io.ReadAll(io.LimitReader(f, notebookMaxBytes+1))
-	if err != nil {
-		return empty, err
+	var head struct {
+		Version int `json:"version"`
 	}
-	v, err := decodeNotebookSnapshot(bytes.NewReader(b))
-	if len(b) > notebookMaxBytes || err != nil {
-		return empty, errors.New("笔记存档无法读取或版本不兼容，原文件已保留，请先备份后再处理")
+	if json.Unmarshal(b, &head) == nil && head.Version > 1 {
+		return notebookSnapshot{}, errStoreIncompatible
 	}
-	return v, nil
+	return decodeNotebookSnapshot(bytes.NewReader(b))
+}
+
+// load 读笔记；主文件损坏而备份完好时自动恢复（recovered 为 true）。
+func (s *notebookStore) load() (current notebookSnapshot, raw []byte, recovered bool, err error) {
+	current, raw, recovered, err = s.file().load()
+	switch {
+	case errors.Is(err, errStoreIncompatible):
+		err = errors.New("笔记存档由更新的版本写入，当前版本无法读取，原文件已保留")
+	case errors.Is(err, errStoreCorrupt):
+		err = fmt.Errorf("笔记存档无法读取，也没有可用的备份；原文件已保留在 %s，请先备份该文件后再处理", s.path)
+	case errors.As(err, new(*restoreError)):
+		err = fmt.Errorf("笔记存档读取失败，%v。现有文件都没有改动，请关闭占用 %s 的同步盘或杀毒软件后重试", err, filepath.Dir(s.path))
+	}
+	return current, raw, recovered, err
 }
 
 func (s *Server) handleNotebook(w http.ResponseWriter, r *http.Request) {
@@ -163,11 +181,12 @@ func (s *Server) handleNotebook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer unlock()
-	current, err := s.notebook.read()
+	current, raw, recovered, err := s.notebook.load()
 	if err != nil {
 		writeAPIError(w, http.StatusInternalServerError, err)
 		return
 	}
+	restored := s.notebook.notice.apply(w, r, recovered)
 	if r.Method == http.MethodGet {
 		writeJSON(w, current)
 		return
@@ -183,9 +202,13 @@ func (s *Server) handleNotebook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if incoming.Revision != current.Revision {
+		message := "另一个窗口更新了笔记，请先导出当前内容，再重新载入"
+		if restored {
+			message = "笔记文件损坏，已恢复到上一次成功保存的版本；请先导出当前内容，再重新载入"
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusConflict)
-		writeJSON(w, map[string]any{"ok": false, "message": "另一个窗口更新了笔记，请先导出当前内容，再重新载入", "revision": current.Revision})
+		writeJSON(w, map[string]any{"ok": false, "message": message, "revision": current.Revision})
 		return
 	}
 	if incoming.Revision == ^uint64(0) {
@@ -198,27 +221,7 @@ func (s *Server) handleNotebook(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusRequestEntityTooLarge, errors.New("笔记不能超过 8 MiB，原笔记已保留"))
 		return
 	}
-	f, err := os.CreateTemp(filepath.Dir(s.notebook.path), ".notebook-*.tmp")
-	if err != nil {
-		writeAPIError(w, http.StatusInternalServerError, err)
-		return
-	}
-	tmp := f.Name()
-	defer os.Remove(tmp)
-	if err = f.Chmod(0600); err == nil {
-		_, err = f.Write(b)
-	}
-	if err == nil {
-		err = f.Sync()
-	}
-	closeErr := f.Close()
-	if err == nil {
-		err = closeErr
-	}
-	if err == nil {
-		err = os.Rename(tmp, s.notebook.path)
-	}
-	if err != nil {
+	if err = s.notebook.file().save(raw, b); err != nil {
 		writeAPIError(w, http.StatusInternalServerError, errors.New("笔记未写入，原文件已保留，请检查磁盘空间或权限"))
 		return
 	}

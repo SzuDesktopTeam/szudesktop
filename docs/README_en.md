@@ -27,7 +27,7 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ## Source preview: preparing for beta0.9.3
 
-**These changes are not publicly released; the download above remains beta0.9.2.** Course notes, Feishu document entry points, courtyard environments and the daily desk are already in the source. This iteration improves page layout, dusk readability and section navigation. Issues and verification stay in [STATUS section 65](STATUS.md#65-全应用界面与状态一致性2026-09-27源码未发布). Real school transactions and Feishu collaboration retain their existing acceptance limits.
+**These changes are not publicly released; the download above remains beta0.9.2.** Course notes, Feishu document entry points, courtyard environments and the daily desk are already in the source. This iteration improves page layout, dusk readability and section navigation. Issues and verification stay in [STATUS section 65](STATUS.md#s65). Real school transactions and Feishu collaboration retain their existing acceptance limits.
 
 ### One courtyard, across every page
 
@@ -152,7 +152,7 @@ The original daily supply remains 20 coins, one food item and two radish seeds, 
 
 The 2048 rules are adapted from Gabriele Cirulli's [MIT-licensed original at a pinned revision](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc), with its [complete license retained](../desktop/assets/garden/licenses/2048-MIT.txt). Garden design takes inspiration from [Stardew Valley's farming and character relationships](https://www.stardewvalley.net/about/) and [Animal Crossing's material gathering and everyday goals](https://animalcrossing.nintendo.com/new-horizons/create/), linking harvests, companion requests and keepsakes. The request rules and writing are our own; no commercial-game artwork or code was copied for those mechanics.
 
-To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 23 dialogue contexts with 12 lines each, and 18 animation actions with 6 frames each, plus the relevant checks. This iteration’s extension requirements are in [STATUS section 59.3](STATUS.md#593-扩展契约与兼容); [section 57.4](STATUS.md#574-继续添加伙伴的统一契约) retains the base field names, exported APIs and packaging dependencies.
+To add a companion, register its stable ID and availability in `pet-catalog.mjs`, personality and dialogue in `pet-dialogue.mjs`, frame artwork in `pet-animation-art.mjs`, and timing and routines in `pet-animation.mjs`. The main window and floating pet reuse `pet-player.mjs`. New species need static portraits, all 23 dialogue contexts with 12 lines each, and 18 animation actions with 6 frames each, plus the relevant checks. This iteration’s extension requirements are in [STATUS section 59.3](STATUS.md#s59-3); [section 57.4](STATUS.md#s57-4) retains the base field names, exported APIs and packaging dependencies.
 
 This garden iteration does not close unverified school-account workflows or deploy a backend, Docker, cloud sync or hot updates.
 
@@ -160,7 +160,7 @@ This garden iteration does not close unverified school-account workflows or depl
 
 The earlier baseline `09c2240` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980) while [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19) was a draft, including a beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those historical results do not cover the later penguins, catalog changes or this notebook. PR #19 subsequently completed its final checks and merged, as recorded in STATUS section 62; public downloads remain beta0.9.2.
 
-**These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+**These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#s56).
 
 ![Home page preview from the earlier unreleased candidate](screenshot-home-preview.png)
 
@@ -176,7 +176,7 @@ Meet **Pingu** and **Skipper**, the penguin captain from *Madagascar*: one waddl
 
 [Chestnut’s four expressions](cat-rough-preview.png): it takes being a cat seriously and never jokes about its own looks.
 
-Penguin integration baseline `1f5a23b` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079), including installation upgrades and native rendering and switching for both penguins. Chestnut’s subsequent return to abstract proportions and matter-of-fact dialogue has passed real-room, interaction-line and four-state artwork checks, and the local candidate packages have been rebuilt; the earlier CI remains the penguin integration baseline. Progress and artifact records are in [STATUS section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+Penguin integration baseline `1f5a23b` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079), including installation upgrades and native rendering and switching for both penguins. Chestnut’s subsequent return to abstract proportions and matter-of-fact dialogue has passed real-room, interaction-line and four-state artwork checks, and the local candidate packages have been rebuilt; the earlier CI remains the penguin integration baseline. Progress and artifact records are in [STATUS section 56](STATUS.md#s56).
 
 Implemented in the current source:
 
@@ -186,9 +186,9 @@ Implemented in the current source:
 - **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
 - **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
 
-For the earlier baseline, all 25 relevant check scripts and the Go checks passed. Real browser workflows covered focus, todo editing and archiving, planting, watering, harvesting, restored preferences, release lookup and PNG preview/save. The final farm scrolls fully without horizontal overflow at 420px; candidate files, build resources and license materials were checked. The CI build passed installation, upgrades, uninstall-with-data-retention and pet interaction checks using synthetic data on one display. Full art consistency, actual notification and startup triggers, school services, long-running resource use and longer-term balance still need their respective validation or trials. That candidate’s implementation, checksums and evidence stay in [STATUS section 55](STATUS.md#55-产品体验实施与候选版准备2026-09-27源码未发布); the new roster, shared catalog and artwork extension guide are in [section 56](STATUS.md#56-宠物阵容与扩展接口2026-09-27源码未发布).
+For the earlier baseline, all 25 relevant check scripts and the Go checks passed. Real browser workflows covered focus, todo editing and archiving, planting, watering, harvesting, restored preferences, release lookup and PNG preview/save. The final farm scrolls fully without horizontal overflow at 420px; candidate files, build resources and license materials were checked. The CI build passed installation, upgrades, uninstall-with-data-retention and pet interaction checks using synthetic data on one display. Full art consistency, actual notification and startup triggers, school services, long-running resource use and longer-term balance still need their respective validation or trials. That candidate’s implementation, checksums and evidence stay in [STATUS section 55](STATUS.md#s55); the new roster, shared catalog and artwork extension guide are in [section 56](STATUS.md#s56).
 
-The product review, current UX01–UX26 status and proposed seven-day trial are tracked in [STATUS section 54](STATUS.md#54-面向真实用户的完整产品审查2026-09-27分析与提案). Source improvements are not yet part of the downloadable installer. Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
+The product review, the UX01–UX26 tasks and acceptance criteria, and the proposed seven-day trial are recorded in [STATUS section 54](STATUS.md#s54); open items are summarised in [section 1.1](STATUS.md#s1-1). Source improvements are not yet part of the downloadable installer. Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
 
 ## What you can do today
 
@@ -241,7 +241,7 @@ The released installer includes **Libao, Chestnut, Xiaobai the egret and A-Qing 
 
 Export a backup from Settings before upgrading. A clean Windows environment passed the real beta0.9.1 → beta0.9.2 installation upgrade and data preservation checks, plus export, cancelled restoration and confirmed restoration. New installers are still downloaded manually; automatic updates are not implemented.
 
-The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Four companions are released and this cross-version upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Gaps stay in [STATUS section 50.2](STATUS.md#502-10-剩余任务暂不部署后端). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
+The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Four companions are released and this cross-version upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Open items are summarised in [STATUS section 1.1](STATUS.md#s1-1); school-service acceptance details stay in [section 50.2](STATUS.md#s50-2). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
 
 ### First run (released beta0.9.2)
 
@@ -260,7 +260,7 @@ The story progresses over seven different visiting days without resetting when y
 ### Opening and exiting
 
 - Starting the installer edition twice focuses the existing window; it can also reuse an already running portable engine of the same version. If an older engine is reported, exit the old edition before reopening
-- Closing the main window keeps the pet and tray running. Choose **Open main window** from the pet menu, or click the tray. Use **Pet menu → Quit app**, **Tray → Exit** or **Settings → Exit** to quit fully. Only the engine started by this instance is stopped; a reused service remains running. The portable edition exits about 10 seconds after all its windows close
+- Closing the main window keeps the pet and tray running. Choose **Open main window** from the pet menu, or click the tray. Use **Pet menu → Quit app**, **Tray → Exit** or **Settings → About and updates → Quit app** to quit fully. Only the engine started by this instance is stopped; a reused service remains running. The portable edition exits about 10 seconds after all its windows close
 - Reloading the page does not stop the service
 - To start the service without a window, launch `szudesktop.exe` with `--no-open`
   (meant for headless / sidecar use — the Electron shell starts the Go engine the same way)
@@ -366,22 +366,30 @@ build with `go build -o dist/szunet ./cmd/szunet`.
 
 | Command | What it does |
 | :------ | :----------- |
-| `login` | Sign in (pass `-u` card number and `-p` password for one-off use; not saved) |
+| `login` | Sign in (uses the account saved with `config set`; for a one-off account use the environment variables below) |
 | `logout` | Sign out |
 | `status` | Show current state |
 | `detect` | Detect the current zone and access point ID |
 | `diag` | Diagnostics: zone decision and protocol fingerprint |
-| `config` | View / change local configuration |
+| `config` | View / save the account (`config set` prompts for the password without echoing it) |
 | `autostart` | Configure launch at login (Windows only) |
 | `vpn` | Guidance for the three official ways to reach the campus network from outside (WebVPN / EasyConnect / zero trust). **Guidance only — it contains no experimental VPN protocol code** |
 | `version` | Show the version |
 
 ```text
+szunet config set                   # save the account first: interactive, the password is not echoed
+szunet login                        # then sign in without passing a password
 szunet detect                       # which zone and access point ID it detects
 szunet login --zone teaching        # force a protocol (auto / teaching / dorm)
 szunet login --ac-id 12             # set the access point ID by hand
 szunet diag                         # run this first when the network is down
 ```
+
+In scripts, save the account with `--password-stdin` so the password comes through a pipe instead
+of the command line: `<command that prints the password> | szunet config set -u <card number> --password-stdin`.
+For a one-off account you can also set `SZUNET_USERNAME` and `SZUNET_PASSWORD`.
+`-p` is kept only for old scripts: the password ends up in shell history and the process list, the
+CLI prints a warning when it is used, and it is **not recommended**.
 
 Run `--help` for all flags. **Never put real credentials in shared scripts or logs.**
 
@@ -438,14 +446,23 @@ is open source, so you can read it or build it yourself (`go build`) and compare
 <summary><b>Does it keep running after I close the window?</b></summary>
 
 Closing the main window keeps the pet and tray running. Reopen from **Pet menu → Open main window** or the tray. Quit from the pet menu, tray or Settings to stop its own engine; a reused service stays running.
-The portable edition exits about 10 seconds after all its windows close. **Settings → Exit** is also available.
+The portable edition exits about 10 seconds after all its windows close. **Settings → About and updates → Quit app** is also available.
 </details>
 
 <details>
 <summary><b>Does it reconnect on its own in the background?</b></summary>
 
-No. Whether to sign in is your call, made on the sign-in page. The app never fires
-authentication requests on a timer behind your back.
+Not on a timer. Apart from signing in yourself on the sign-in page, the only automatic attempt is
+a single sign-in at startup (see below); the app never fires authentication requests on a timer
+behind your back.
+
+Signing in once at startup has its own switch. In the installer edition, **Settings → Desktop
+companion → Connect to the campus network at startup** is on by default (you can turn it off; changes take effect on
+the next launch). When on, each launch signs in once with the remembered account, skips that if
+this computer is already online, and shows the result on the **Campus network** page. The portable
+edition has no such switch and signs in once at startup with the remembered account by default
+(skipped when this computer is already online or no campus sign-in portal is found); start
+`szudesktop.exe` with `--no-auto-login` to turn that off.
 </details>
 
 <details>
@@ -475,7 +492,11 @@ a wrong password won't overwrite the stored one. You can clear it at any time wi
   code path can submit a reservation
 - **Loopback only**: the desktop service listens on `127.0.0.1` and refuses to start on a
   non-loopback address; every `/api/*` route checks Host, `Sec-Fetch-Site` and a same-origin
-  `Origin`, returning 403 to any other page
+  `Origin`, returning 403 to any other page.
+  Apart from `/api/health` (version only) and `/api/instance` (which checks its own token), every
+  `/api/*` route also requires a per-run random token: the Electron main process sends an
+  `X-SZU-Token` header, and the page trades a one-time `?launch=` parameter for an HttpOnly,
+  SameSite=Strict session cookie and redirects straight away, so the token never stays in the address bar
 - **Dorm-area sign-in is plain text**: the school's Dr.COM gateway is HTTP by default
   (`http://172.30.255.42`). That is the university's protocol, not this app's choice; the
   teaching-area SRun portal is HTTPS and **does** verify certificates
@@ -491,55 +512,35 @@ a wrong password won't overwrite the stored one. You can clear it at any time wi
 You need Go (see `go.mod`), Python 3 and Node.js.
 
 ```text
-python desktop/sync-assets.py      # sync interface assets
-node   desktop/check-ui.mjs        # the regressions below all run in CI
-node   desktop/check-rewards.mjs
-node   desktop/check-garden-progress.mjs
-node   desktop/check-campus.mjs
-node   desktop/check-notices.mjs
-node   desktop/check-session-ui.mjs
-node   desktop/check-academic.mjs
-node   desktop/check-school.mjs
-node   desktop/check-booking.mjs
-node   desktop/check-network-ui.mjs
-node   desktop/check-workspace-ui.mjs
-node   desktop/check-productivity.mjs
-node   desktop/check-autostart-ui.mjs
-node   desktop/check-release-ui.mjs
-node   desktop/check-feedback.mjs
-python desktop/check_licenses.py
-node   desktop/electron/check-sidecar.mjs # Electron startup, shutdown and reuse regression
-node   desktop/electron/check-window-policy.mjs
-node   desktop/electron/check-pet-policy.mjs
-node   desktop/electron/check-pet-settings.mjs
-node   desktop/electron/check-desktop-settings.mjs
-node   desktop/electron/check-pet-view.mjs
-node   desktop/electron/check-school-policy.mjs
-node   desktop/check-interactions.mjs
-node   desktop/check-pet-commands.mjs
-node   desktop/check-piano.mjs
+python desktop/sync-assets.py      # sync interface assets (needed by go:embed)
+node   desktop/run-checks.mjs      # every regression, same entry point as CI (see below)
 go vet ./... && go test ./...      # static checks and unit tests
-python desktop/check_release_notes.py # release-notes extraction regression
 python desktop/build-windows.py    # build the Windows desktop exe (also the Electron Go sidecar)
 node   desktop/electron/build.mjs  # build the Windows Electron installer (run `npm ci` in desktop/electron first)
 python desktop/smoke_windows.py    # end-to-end smoke test
 python desktop/make_release.py     # produce the release package (only when actually releasing; it overwrites same-named local artifacts)
 ```
 
+`desktop/run-checks.mjs` discovers `desktop/check-*.mjs`, `desktop/electron/check-*.mjs` and `desktop/check_*.py` (release notes, licences, the Windows version resource and so on) and runs them one by one, after a module syntax and link check (`desktop/module-links.mjs`). It prints a summary of failures and exits non-zero if any failed; add `--only-node` to run just the Node checks. A new check is picked up as long as it is named `check-*.mjs` or `check_*.py` and placed in one of those directories, so there is no list to update.
+
 `python desktop/electron/smoke_installer.py` installs, reopens, reinstalls and uninstalls the final package only on a disposable GitHub Windows runner. It must not be run as an installation check on a development machine. PR and tag workflows retain all build and installer checks; release assets are published only after they succeed.
 
 Release notes live in the root [CHANGELOG.md](../CHANGELOG.md): when bumping the version,
 rename the `## 未发布` ("unreleased") section to the new version. CI extracts that section as
 the GitHub Release body and fails the release if it is missing or empty.
-`python desktop/release_notes.py <version>` previews it locally.
+A candidate that has not been tagged yet starts its section with a single `> 候选版：…`
+("candidate") line, which extraction drops. Don't write 尚未公开发布 ("not yet public") or
+本地候选版 ("local candidate") anywhere else in the section, or the tagged release will be rejected.
+`python desktop/release_notes.py <version>` previews it locally; add `--release` to check it the way a
+tagged release does (version match and candidate wording).
 
 The only interface sources are `desktop/index.html` and `desktop/assets/garden/`.
 Don't hand-edit build outputs. The default desktop build **excludes the experimental VPN
 protocol** and unverified third-party game artwork, and only links to the official WebVPN.
 Experimental sources are kept for provenance review and protocol study, and must not be
 presented as a finished, verified feature. The exclusion works through a build tag:
-`internal/vpn` is referenced only from files guarded by `//go:build campusvpn`, and neither
-CI nor the build scripts pass `-tags campusvpn`, so neither the desktop app nor the five CLI
+`internal/vpn` is referenced only from files guarded by `//go:build campusvpn`, and the build
+scripts never pass `-tags campusvpn` (CI compiles and tests that tag separately so it cannot rot), so neither the desktop app nor the five CLI
 release binaries contain that protocol code. The provenance and licensing of `internal/vpn`
 are still unverified (STATUS.md F11): its package comment now says so plainly and makes no
 claim of independent authorship, and F06 / F07 / F08 (false "connected" state, missing
@@ -570,7 +571,17 @@ verified, this module must not be presented as a working feature or as clean-sou
 
 MIT — see [LICENSE](../LICENSE).
 
-Third-party components keep their own licences: Fusion Pixel Font is under OFL 1.1, and the
-experimental VPN module's third-party provenance is still being verified and is not included
-in default desktop builds. Names such as EasyConnect remain the property of their
+Third-party components keep their own licences, which this project's MIT licence does not
+replace. Full notices are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) (Chinese):
+
+- Fusion Pixel Font: SIL Open Font License 1.1
+- [Three.js 0.180.0](https://www.npmjs.com/package/three/v/0.180.0): MIT, Copyright © 2010-2025 three.js authors
+- Toon-rendering modules adapted from [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81): MIT, Copyright (c) 2026 Kenton Wang
+- Move and merge rules adapted from [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc): MIT, Copyright (c) 2014 Gabriele Cirulli
+- Electron and Chromium (installer edition only): their licences stay in the install directory
+
+The installer puts the licence files for this project, the font, 2048, Three.js and Sakura
+Crossing in `resources/licenses/`; the portable ZIP keeps them in the extracted folder.
+The experimental VPN module's third-party provenance is still being verified and is not
+included in default desktop builds. Names such as EasyConnect remain the property of their
 respective owners.

@@ -34,7 +34,7 @@ body[data-page=home] main { padding:24px; }
 .home-harvest > .sprite { width:32px; height:32px; }
 .home-harvest strong { display:block; font:16px/1.5 var(--pixel); color:#3b6244; }
 .home-harvest small { display:block; font:11px/1.5 var(--body); }
-.home-companions { display:flex; align-items:center; gap:20px; padding:16px 0 20px; margin-bottom:4px; }
+.home-companions { display:flex; align-items:center; gap:20px; margin-bottom:4px; }
 .companions-heading { flex:0 0 145px; padding-left:2px; }
 .companions-heading > span { display:block; font:19px/1.4 var(--pixel); color:#5e503e; }
 .companions-heading small { display:block; margin-top:5px; font-size:11px; }

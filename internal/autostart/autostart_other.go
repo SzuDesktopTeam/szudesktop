@@ -11,6 +11,8 @@ func Status() State {
 
 func Enable(bool) error { return ErrUnsupported }
 
+func EnableAs(Program, bool) error { return ErrUnsupported }
+
 func Disable() error { return ErrUnsupported }
 
 func OpenSelfDir() error { return ErrUnsupported }

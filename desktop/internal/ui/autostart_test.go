@@ -36,8 +36,7 @@ func (r *autostartRecorder) backend() *autostartBackend {
 
 func autostartRequest(rec *autostartRecorder, method, origin, contentType, body string) *httptest.ResponseRecorder {
 	s := &Server{store: &guardTestStore{}, autostartTest: rec.backend()}
-	mux := http.NewServeMux()
-	s.routes(mux, fstest.MapFS{})
+	mux := authedRoutes(s, fstest.MapFS{})
 	req := httptest.NewRequest(method, "http://127.0.0.1:1234/api/autostart", strings.NewReader(body))
 	req.Header.Set("Origin", origin)
 	req.Header.Set("Content-Type", contentType)

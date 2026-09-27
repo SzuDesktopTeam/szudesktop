@@ -24,11 +24,11 @@ Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款
 
 ## Pingu 与 Skipper 像素形象
 
-候选 beta0.9.3 的 Pingu 与《马达加斯加》企鹅 Skipper 是项目自行绘制的粉丝像素形象，没有提取动画、电影或游戏的原始美术资源。角色及相关标识的权利属于各自原权利人；本项目的 MIT 许可不授予这些角色 IP 的使用权，也不表示获得官方授权或背书。
+自 beta0.9.3 起加入的 Pingu 与《马达加斯加》企鹅 Skipper 是项目自行绘制的粉丝像素形象，没有提取动画、电影或游戏的原始美术资源。角色及相关标识的权利属于各自原权利人；本项目的 MIT 许可不授予这些角色 IP 的使用权，也不表示获得官方授权或背书。
 
 ## Three.js 与 Sakura Crossing 渲染模块
 
-以下模块目前属于尚未公开发布的 beta0.9.3 源码候选；公开 beta0.9.2 安装包不含新增三渲二首页。下述随包路径是本源码的打包配置。
+以下模块自 beta0.9.3 起加入，beta0.9.2 及更早的安装包不含三渲二首页。下述随包路径是本源码的打包配置。
 
 主页三渲二场景使用 [Three.js 0.180.0](https://www.npmjs.com/package/three/v/0.180.0)，Copyright © 2010-2025 three.js authors，采用 MIT License。完整条款保留在源码 `desktop/assets/garden/vendor/three/LICENSE.txt`，随安装版和便携版分发为 `Three-MIT.txt`。
 
@@ -40,7 +40,7 @@ Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款
 
 - xEncode 实现改写自 MIT 项目 Sleepstars/SZU-login（https://github.com/Sleepstars/SZU-login），其上游为 vidar-team/srun-login；原始版权声明保留在 `LICENSE`。
 - 学校接口的事实性调研参考 MattDong123/tools4szu（https://github.com/MattDong123/tools4szu）。该参考仓库未声明开源许可；本项目按接口事实重新实现，不复制或再分发其代码。
-- 默认发行资源使用项目 SVG、像素角色、CSS 场景、开源字体和生成的校园背景；新增源码候选另含上述开源渲染模块和本项目校园三维场景。不捆绑 Stardew Valley、Terraria、Minecraft 的游戏美术或原版游戏字体。游戏名称属于各自权利人，风格参考不表示合作或授权。
+- 默认发行资源使用项目 SVG、像素角色、CSS 场景、开源字体和生成的校园背景；自 beta0.9.3 起另含上述开源渲染模块和本项目校园三维场景。不捆绑 Stardew Valley、Terraria、Minecraft 的游戏美术或原版游戏字体。游戏名称属于各自权利人，风格参考不表示合作或授权。
 - 实验 VPN 模块不进入默认发行构建；该模块的第三方来源与授权仍待核实，不能视为完成许可核验的发行功能。
 
 这是学生制作的非官方项目，与深圳大学及上述项目或游戏的权利人没有隶属或背书关系。

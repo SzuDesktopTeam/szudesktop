@@ -3,10 +3,8 @@ package vpn
 import (
 	"context"
 	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"net"
-	"os"
 	"sync"
 	"time"
 
@@ -207,11 +205,4 @@ func (k *connKeeper) closeAll() {
 	if k.tx != nil {
 		k.tx.Close()
 	}
-}
-
-// dumpHex 调试用（--debug 时才走）。
-func dumpHex(b []byte) {
-	w := hex.Dumper(os.Stdout)
-	w.Write(b)
-	w.Close()
 }

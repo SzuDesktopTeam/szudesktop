@@ -5,11 +5,13 @@ import (
 
 	"encoding/json"
 	"github.com/SzuDesktopTeam/szudesktop/internal/credential"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 // casLoginForm 的字段名与取值直接决定学校收不收，所以逐项钉死。
@@ -442,5 +444,308 @@ func TestCasChallengeWithoutSalt(t *testing.T) {
 	}
 	if s.cas.authenticated || s.cas.challenge != "" {
 		t.Fatal("失败后服务端状态应被清空")
+	}
+}
+
+// casChallengeFor 取一次登录页，返回挑战号。
+func casChallengeFor(t *testing.T, s *Server) string {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	s.handleCasChallenge(rec, httptest.NewRequest(http.MethodPost, "/api/cas/challenge", nil))
+	var ch map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &ch)
+	challenge, _ := ch["challenge"].(string)
+	if rec.Code != 200 || challenge == "" {
+		t.Fatalf("challenge: %d %s", rec.Code, rec.Body.String())
+	}
+	return challenge
+}
+
+// casSubmit 用一组测试账号提交登录，返回登录响应。
+func casSubmit(s *Server, challenge string) *httptest.ResponseRecorder {
+	raw, _ := json.Marshal(map[string]any{"challenge": challenge, "username": "2099000001", "password": "wrong-password"})
+	rec := httptest.NewRecorder()
+	s.handleCasLogin(rec, httptest.NewRequest(http.MethodPost, "/api/cas/login", strings.NewReader(string(raw))))
+	return rec
+}
+
+// 学校拒绝登录时要说出原因（账号密码、验证码、账号被限制），不能一律报「登录已失效」，
+// 否则用户只会拿同一组输入反复重试。这一步的 401 不是会话过期。
+func TestCasLoginReportsSchoolReason(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	failurePage := func(tip, needCaptcha string) string {
+		return `<html><body><form id="pwdFromId"><input type="hidden" id="pwdEncryptSalt" value="1RKM2IpP3pRszFGS" /><input type="hidden" id="execution" name="execution" value="e2s1" />` +
+			`<span id="showErrorTip" class="form-error"><span>` + tip + `</span></span></form><script>var needCaptcha = "` + needCaptcha + `"</script></body></html>`
+	}
+	for _, row := range []struct {
+		name, want string
+		status     int
+		page       string
+	}{
+		{"wrong password 401", "学号或密码不正确", 401, failurePage("您提供的用户名或者密码有误", "")},
+		{"wrong password 200", "学号或密码不正确", 200, failurePage("您提供的用户名或者密码有误", "")},
+		{"wrong captcha", "验证码不正确", 200, failurePage("图形动态码错误", "1")},
+		{"locked", "限制了这个账号登录", 401, failurePage("该账号已被冻结，请联系管理员", "")},
+		{"other reason", "学校未接受这次登录：请先完成安全验证", 200, failurePage("请先完成安全验证", "")},
+		{"captcha now required", "要求本次登录输入验证码", 200, failurePage("", "1")},
+		{"no reason", "学校未接受这次登录，请核对学号和密码", 401, failurePage("", "")},
+		{"forbidden", "学校拒绝了这次登录", 403, "<html>forbidden</html>"},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			f := newCasFixture(t, false)
+			f.enable()
+			page := f.srv.Config.Handler
+			f.srv.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == casLoginPath && r.Method == http.MethodPost {
+					w.WriteHeader(row.status)
+					w.Write([]byte(row.page))
+					return
+				}
+				page.ServeHTTP(w, r)
+			})
+			s := &Server{cas: newCasService()}
+			rec := casSubmit(s, casChallengeFor(t, s))
+			if rec.Code != 401 {
+				t.Fatalf("status %d %s", rec.Code, rec.Body.String())
+			}
+			if !strings.Contains(rec.Body.String(), row.want) || strings.Contains(rec.Body.String(), "登录已失效") {
+				t.Fatalf("没有说出学校给的原因：%s", rec.Body.String())
+			}
+			if strings.Contains(rec.Body.String(), "wrong-password") || strings.Contains(rec.Body.String(), "2099000001") {
+				t.Fatal("错误信息回显了账号或密码")
+			}
+			if f.probeHits != 0 || s.cas.authenticated || s.cas.client != nil {
+				t.Fatalf("登录被拒后不该继续探测或留下状态：probe=%d", f.probeHits)
+			}
+		})
+	}
+}
+
+// 学校没有退回登录表单、但后续业务读取拿到登录页时，要说清是教务没接受，而不是账号密码错或登录过期。
+func TestCasLoginAcceptedButBusinessRejected(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	f := newCasFixture(t, false)
+	f.enable()
+	f.ehall.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("<html>统一身份认证，请登录</html>"))
+	})
+	s := &Server{cas: newCasService()}
+	rec := casSubmit(s, casChallengeFor(t, s))
+	if rec.Code != 401 || !strings.Contains(rec.Body.String(), "本科教务没有接受这次登录") || s.cas.authenticated {
+		t.Fatalf("%d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// casSchoolExpired 造一条「已登录」的统一身份认证会话，学校对任何业务读取都回登录页。
+func casSchoolExpired(s *Server) *http.Client {
+	return casSchoolAnswers(s, ehallTestTransport(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader("<html>统一身份认证，请登录</html>")), Request: r}, nil
+	}))
+}
+
+// casSchoolAnswers 造一条「已登录」的统一身份认证会话，学校那边由 rt 应答。
+func casSchoolAnswers(s *Server, rt http.RoundTripper) *http.Client {
+	client := newCasClient()
+	client.Transport = rt
+	s.cas.mu.Lock()
+	s.cas.client, s.cas.authenticated = client, true
+	s.cas.mu.Unlock()
+	return client
+}
+
+// 统一身份认证会话过期后，成绩和本科课表读到登录页时要把这条会话复位：
+// /api/cas/session 不再报已登录，下一次读取回落到粘贴的 Cookie。
+func TestCasSessionExpiryResetsAndFallsBackToCookie(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	casTestBase, casTestEhall = "", ""
+	for name, read := range map[string]func(*Server) *httptest.ResponseRecorder{
+		"scores": func(s *Server) *httptest.ResponseRecorder {
+			w := httptest.NewRecorder()
+			s.handleScores(w, httptest.NewRequest(http.MethodGet, "/api/scores?level=undergrad", nil))
+			return w
+		},
+		"timetable": func(s *Server) *httptest.ResponseRecorder {
+			w := httptest.NewRecorder()
+			s.handleUndergradTimetable(w, httptest.NewRequest(http.MethodGet, "/api/academic/undergrad/timetable", nil))
+			return w
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := &Server{cas: newCasService(), session: &memSessionStore{value: credential.Session{Cookie: "kept-cookie"}}}
+			casSchoolExpired(s)
+			w := read(s)
+			if w.Code != 401 || !strings.Contains(w.Body.String(), "统一身份认证登录已失效") {
+				t.Fatalf("%d %s", w.Code, w.Body.String())
+			}
+			rec := httptest.NewRecorder()
+			s.handleCasSession(rec, httptest.NewRequest(http.MethodGet, "/api/cas/session", nil))
+			if !strings.Contains(rec.Body.String(), `"authenticated":false`) {
+				t.Fatalf("会话过期后仍报已登录：%s", rec.Body.String())
+			}
+			c, err := s.schoolClient()
+			if err != nil || c.usesJar || c.cookie != "kept-cookie" {
+				t.Fatalf("过期后应回落到粘贴的 Cookie：%+v %v", c, err)
+			}
+		})
+	}
+}
+
+// 只复位读取时用的那条会话：读取途中用户已经重新登录，新会话不能被旧请求的失败误伤；
+// 没有权限也不是会话过期，不能清掉登录。
+func TestCasExpiryOnlyResetsTheSessionThatFailed(t *testing.T) {
+	s := &Server{cas: newCasService()}
+	old := casSchoolExpired(s)
+	s.cas.mu.Lock()
+	stale := &ehallClient{base: ehallBaseURL, http: old, usesJar: true}
+	s.cas.mu.Unlock()
+	casSchoolExpired(s)
+	s.writeSchoolReadError(httptest.NewRecorder(), stale, errSessionExpired)
+	if !s.cas.authenticated || s.cas.client == nil {
+		t.Fatal("旧会话的失败清掉了新登录")
+	}
+	s.cas.mu.Lock()
+	current := s.cas.ehallClient()
+	s.cas.mu.Unlock()
+	w := httptest.NewRecorder()
+	s.writeSchoolReadError(w, current, errSessionPermission)
+	if w.Code != 403 || !s.cas.authenticated {
+		t.Fatal("没有权限不该清掉登录", w.Code)
+	}
+}
+
+// 登录请求在学校那边卡住时，/api/cas/session 与清除登录都不能排在锁后面；
+// 途中清除后，这次登录的结果不能复活。
+func TestCasLoginDoesNotHoldLockDuringSchoolRequests(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	f := newCasFixture(t, false)
+	f.enable()
+	entered, release := make(chan struct{}), make(chan struct{})
+	page := f.srv.Config.Handler
+	f.srv.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == casLoginPath && r.Method == http.MethodPost {
+			close(entered)
+			<-release
+		}
+		page.ServeHTTP(w, r)
+	})
+	s := &Server{cas: newCasService()}
+	challenge := casChallengeFor(t, s)
+	done := make(chan *httptest.ResponseRecorder)
+	go func() { done <- casSubmit(s, challenge) }()
+	<-entered
+	quick := make(chan string, 2)
+	go func() {
+		rec := httptest.NewRecorder()
+		s.handleCasSession(rec, httptest.NewRequest(http.MethodGet, "/api/cas/session", nil))
+		quick <- rec.Body.String()
+		rec = httptest.NewRecorder()
+		s.handleCasSession(rec, httptest.NewRequest(http.MethodDelete, "/api/cas/session", nil))
+		quick <- rec.Body.String()
+	}()
+	for i := 0; i < 2; i++ {
+		select {
+		case <-quick:
+		case <-time.After(5 * time.Second):
+			close(release)
+			t.Fatal("登录进行中，会话查询或清除被锁住了")
+		}
+	}
+	close(release)
+	rec := <-done
+	s.cas.mu.Lock()
+	defer s.cas.mu.Unlock()
+	if rec.Code != 409 || s.cas.authenticated || s.cas.client != nil {
+		t.Fatalf("途中清除后登录结果复活了：%d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// 学校回的是维护页、网关拦截页这类 200 网页时，说不准登录是否还在：不能清掉统一身份
+// 认证会话（清掉就得重新输密码和验证码），也不能报成登录已失效。
+func TestCasSessionSurvivesMaintenancePage(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	casTestBase, casTestEhall = "", ""
+	for _, page := range []string{
+		"<html><head><title>系统维护中</title></head><body>服务暂时不可用，请稍后访问</body></html>",
+		"<!DOCTYPE html>\n<HTML><body>Request blocked by WAF</body></HTML>",
+	} {
+		s := &Server{cas: newCasService(), session: &memSessionStore{value: credential.Session{Cookie: "kept-cookie"}}}
+		casSchoolAnswers(s, ehallTestTransport(func(r *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(page)), Request: r}, nil
+		}))
+		w := httptest.NewRecorder()
+		s.handleScores(w, httptest.NewRequest(http.MethodGet, "/api/scores?level=undergrad", nil))
+		if w.Code != 502 || !strings.Contains(w.Body.String(), "可能正在维护") || strings.Contains(w.Body.String(), "已失效") {
+			t.Fatalf("%d %s", w.Code, w.Body.String())
+		}
+		if !s.cas.authenticated || s.cas.client == nil {
+			t.Fatal("维护页清掉了仍然有效的统一身份认证登录")
+		}
+	}
+}
+
+// 会话跟着跳转回到 authserver 时，不管那一页长什么样，都是被送回了登录页：要复位。
+func TestCasSessionResetWhenRedirectedToAuthserver(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	casTestBase, casTestEhall = "", ""
+	s := &Server{cas: newCasService(), session: &memSessionStore{value: credential.Session{Cookie: "kept-cookie"}}}
+	casSchoolAnswers(s, ehallTestTransport(func(r *http.Request) (*http.Response, error) {
+		if r.URL.Host == ehallHost {
+			h := make(http.Header)
+			h.Set("Location", casBaseURL+casLoginPath+"?service="+url.QueryEscape(r.URL.String()))
+			return &http.Response{StatusCode: 302, Header: h, Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
+		}
+		return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader("<html><body>请稍候…</body></html>")), Request: r}, nil
+	}))
+	w := httptest.NewRecorder()
+	s.handleUndergradTimetable(w, httptest.NewRequest(http.MethodGet, "/api/academic/undergrad/timetable?term=2026-2027-1", nil))
+	if w.Code != 401 || !strings.Contains(w.Body.String(), "统一身份认证登录已失效") {
+		t.Fatalf("%d %s", w.Code, w.Body.String())
+	}
+	if s.cas.authenticated || s.cas.client != nil {
+		t.Fatal("被送回 authserver 后统一身份认证会话没有复位")
+	}
+}
+
+// 提交后停在 authserver 上、又不是登录表单（二次认证、完善信息一类）时，要说清是学校
+// 要求额外验证；不能当成已提交，再拿业务探针的失败报成「本科教务没有接受」。
+func TestCasLoginReportsExtraVerification(t *testing.T) {
+	base, ehall := casTestBase, casTestEhall
+	defer func() { casTestBase, casTestEhall = base, ehall }()
+	extra := `<html><body><div class="reAuth">为了您的账号安全，请完成二次认证</div></body></html>`
+	for name, answer := range map[string]func(http.ResponseWriter, *http.Request){
+		"same page": func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte(extra)) },
+		"redirected": func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/authserver/reAuthCheck/reAuthLoginView.do", http.StatusFound)
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			f := newCasFixture(t, false)
+			f.enable()
+			page := f.srv.Config.Handler
+			f.srv.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case r.URL.Path == casLoginPath && r.Method == http.MethodPost:
+					answer(w, r)
+				case strings.HasPrefix(r.URL.Path, "/authserver/reAuthCheck/"):
+					w.Write([]byte(extra))
+				default:
+					page.ServeHTTP(w, r)
+				}
+			})
+			s := &Server{cas: newCasService()}
+			rec := casSubmit(s, casChallengeFor(t, s))
+			if rec.Code != 401 || !strings.Contains(rec.Body.String(), "额外验证") || strings.Contains(rec.Body.String(), "本科教务") {
+				t.Fatalf("%d %s", rec.Code, rec.Body.String())
+			}
+			if f.probeHits != 0 || s.cas.authenticated || s.cas.client != nil {
+				t.Fatalf("需要额外验证时不该继续探测或留下状态：probe=%d", f.probeHits)
+			}
+		})
 	}
 }

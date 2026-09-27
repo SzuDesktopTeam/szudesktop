@@ -24,7 +24,7 @@ func TestEhallNeverSendsCookieToUnsafeTarget(t *testing.T) {
 				calls++
 				return &http.Response{StatusCode: 307, Header: http.Header{"Location": {target}}, Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
 			})
-			if _, err := c.postForm(undergradScorePath, allRowsForm(1)); err == nil {
+			if _, err := c.postFormContext(t.Context(), undergradScorePath, allRowsForm(1)); err == nil {
 				t.Fatal("unsafe redirect accepted")
 			}
 			if calls != 1 {
@@ -35,7 +35,7 @@ func TestEhallNeverSendsCookieToUnsafeTarget(t *testing.T) {
 	c := newEhallClient("test-only", 0)
 	c.base = "http://ehall.szu.edu.cn"
 	c.http.Transport = ehallTestTransport(func(*http.Request) (*http.Response, error) { t.Fatal("insecure request sent"); return nil, nil })
-	if _, err := c.postForm(undergradScorePath, allRowsForm(1)); !errors.Is(err, errUnsafeEhallURL) {
+	if _, err := c.postFormContext(t.Context(), undergradScorePath, allRowsForm(1)); !errors.Is(err, errUnsafeEhallURL) {
 		t.Fatal(err)
 	}
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {autostartView} from './assets/garden/app-logic.mjs';
 
 const app=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const tests=[];
@@ -14,17 +15,13 @@ test('settings page exposes the autostart card',()=>{
   assert.match(settings,/btn\('读取中…','autostart'\)/);
   assert.match(settings,/登录 Windows 时/);
   assert.match(app,/autostart:'i-signal'/,'开机自启按钮没有图标');
+  assert.match(app,/function paintAutostart\(\)\{[^\n]*autostartView\(autostartState,globalThis\.szuDesktop\?\.shell==='electron'\)/,'设置页必须用 autostartView 画开机自启状态');
 });
 
-const paint=app.slice(app.indexOf('function paintAutostart(){'),app.indexOf('\n',app.indexOf('function paintAutostart(){')));
-
+// 状态文字与按钮由 app-logic.mjs 的 autostartView 算出，paintAutostart 只负责写进节点。
 function paintWith(state,shell){
-  const nodes={'#autostart-state':{textContent:''}};
-  const button={disabled:false,innerHTML:''};
-  const ctx=vm.createContext({$:s=>nodes[s],document:{querySelector:()=>button},sprite:()=>'',autostartState:state,szuDesktop:shell});
-  vm.runInContext(paint,ctx);
-  vm.runInContext('paintAutostart()',ctx);
-  return {text:nodes['#autostart-state'].textContent,button};
+  const view=autostartView(state,shell?.shell==='electron');
+  return {text:view.text,button:{disabled:view.disabled,innerHTML:view.label}};
 }
 
 // 读不到状态时不能画成「未开启」，否则用户以为开关没生效，会反复点。

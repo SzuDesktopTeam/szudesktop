@@ -1,5 +1,5 @@
 import {pixelIcon} from './pixel.mjs';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 const official='https://swzx.webvpn.szu.edu.cn/#/pages/booth/szu-booth-list';
 const labels={available:'空闲',occupied:'已预约',closed:'不可选',past:'已开始',unknown:'未确认'};
 const tones={available:'success',occupied:'muted',closed:'muted',past:'muted',unknown:'warning'};

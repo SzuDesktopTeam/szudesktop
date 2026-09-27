@@ -202,6 +202,7 @@ func TestAcIDSourceGuessIsNotCached(t *testing.T) {
 	defer srv.Close()
 
 	c := NewSrunClient(srv.URL, "123456", "pw")
+	c.redirectProbes = nil // 没有网关拦截：跳转发现拿不到值，只能走猜测
 	c.OnAcIDResolved = func(id string) { cached = append(cached, id) }
 
 	res, err := c.Login()
@@ -270,6 +271,8 @@ func TestAcIDSourceManualIsTrusted(t *testing.T) {
 // 就会拿着这个假可信的 1 去认证，报 Unknow ac-type。
 //
 // 所以判据必须收紧：只有真的发生 3xx 跳转，才算网关拦了我们。
+// 这里让探针真的打到假服务上（以前这条用例请求的是写死的外网探针，
+// 根本没用到自己起的 srv）。
 func TestRedirectProbeIgnoresNonRedirectResponses(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 200 + 一个把自己伪装成跳转页的 body。
@@ -285,30 +288,100 @@ func TestRedirectProbeIgnoresNonRedirectResponses(t *testing.T) {
 	}
 
 	// 直接验"非 3xx 一律跳过"这条规则。
+	c.redirectProbes = []string{srv.URL + "/generate_204"}
 	if got := c.discoverAcIDFromRedirect(); got != "" {
 		t.Fatalf("探针返回 200 时不该认为被网关拦了，却读出 %q", got)
 	}
 }
 
 // TestRedirectProbeReadsRealGatewayRedirect 确认真被拦时能读出 ac_id。
+//
+// 这条要走完整的 HTTP 路径：以前探测用的客户端会自动跟随 302，
+// 拿回来的是认证页的 200、Location 为空，3xx 分支永远走不到——
+// 只测 acIDFromLocation 的话，这个问题完全看不出来。
 func TestRedirectProbeReadsRealGatewayRedirect(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var portalHits int
+	portal := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 如果客户端跟着跳到了认证页，这里会被打到——不该发生。
+		portalHits++
+		_, _ = w.Write([]byte(`<html>login</html>`))
+	}))
+	defer portal.Close()
+
+	gateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 模拟校园网网关：任意外网请求都被 302 到认证页，带 ac_id=12。
-		w.Header().Set("Location", "https://net.szu.edu.cn/srun_portal_pc?ac_id=12&theme=proyx")
+		w.Header().Set("Location", portal.URL+"/srun_portal_pc?ac_id=12&theme=proyx")
 		w.WriteHeader(http.StatusFound)
 	}))
-	defer srv.Close()
+	defer gateway.Close()
 
-	c := NewSrunClient(srv.URL, "123456", "pw")
-	got := c.acIDFromLocation(srv.URL+"/probe",
-		"https://net.szu.edu.cn/srun_portal_pc?ac_id=12&theme=proyx")
-	if got != "12" {
-		t.Fatalf("应该从跳转里读出 12，实际 %q", got)
+	c := NewSrunClient(portal.URL, "123456", "pw")
+	c.redirectProbes = []string{gateway.URL + "/generate_204"}
+	if got := c.discoverAcIDFromRedirect(); got != "12" {
+		t.Fatalf("应该从网关跳转里读出 12，实际 %q", got)
+	}
+	if portalHits != 0 {
+		t.Fatalf("探测不该跟随跳转去请求认证页，实际请求了 %d 次", portalHits)
 	}
 
 	// 相对跳转也要能补全后读出来。
-	got = c.acIDFromLocation("https://probe.example.com/x", "/login?ac_id=7")
-	if got != "7" {
+	if got := c.acIDFromLocation("https://probe.example.com/x", "/login?ac_id=7"); got != "7" {
 		t.Fatalf("相对跳转应该也能读出 7，实际 %q", got)
+	}
+}
+
+// TestRedirectProbeIgnoresServerIPOverride 守住「指定了服务器 IP」时的坑：
+// 认证客户端会把所有连接都拨到那个 IP 上。探针要是也走它，外网探针就被
+// 拨到了认证服务器，读出来的是门户默认的 ac_id=1，而且被当成可信值。
+func TestRedirectProbeIgnoresServerIPOverride(t *testing.T) {
+	gateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "https://net.szu.edu.cn/srun_portal_pc?ac_id=12")
+		w.WriteHeader(http.StatusFound)
+	}))
+	defer gateway.Close()
+
+	c := NewSrunClient("http://portal.invalid", "123456", "pw")
+	c.SetServerIP("192.0.2.1") // 文档保留地址，真拨过去只会超时
+	c.redirectProbes = []string{gateway.URL + "/generate_204"}
+	if got := c.discoverAcIDFromRedirect(); got != "12" {
+		t.Fatalf("探针应该直连外网地址，不受服务器 IP 影响，实际读出 %q", got)
+	}
+}
+
+// TestLoginUsesGatewayRedirectAndCachesIt 端到端：未认证时网关 302 带出 ac_id，
+// 登录就用它，并且作为可信来源写进缓存。
+func TestLoginUsesGatewayRedirectAndCachesIt(t *testing.T) {
+	var sawAcID string
+	portal := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/cgi-bin/get_challenge":
+			_, _ = w.Write([]byte(`_({"challenge":"0123456789abcdef","client_ip":"10.20.30.40","error":"ok"})`))
+		case "/cgi-bin/srun_portal":
+			sawAcID = r.URL.Query().Get("ac_id")
+			_, _ = w.Write([]byte(`_({"error":"ok","res":"ok","suc_msg":"login_ok"})`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer portal.Close()
+	gateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, portal.URL+"/srun_portal_pc?ac_id=12&theme=proyx", http.StatusFound)
+	}))
+	defer gateway.Close()
+
+	var cached []string
+	c := NewSrunClient(portal.URL, "123456", "pw")
+	c.redirectProbes = []string{gateway.URL + "/generate_204"}
+	c.OnAcIDResolved = func(id string) { cached = append(cached, id) }
+
+	res, err := c.Login()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.OK || sawAcID != "12" || res.AcIDSource != string(AcIDSourceRedirect) {
+		t.Fatalf("应该用网关跳转里的 12 登录成功，实际 ac_id=%q result=%+v", sawAcID, res)
+	}
+	if len(cached) != 1 || cached[0] != "12" {
+		t.Fatalf("网关跳转来的值是可信的，应该缓存，实际 %v", cached)
 	}
 }

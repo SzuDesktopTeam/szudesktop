@@ -52,7 +52,7 @@ export function petWindowBounds(workArea, scale, position) {
   };
 }
 
-// BrowserWindow 选项（不含 webPreferences，由 main.mjs 注入 preload 等安全配置）。
+// BrowserWindow 选项（不含 webPreferences，由 pet-controller.mjs 注入 preload 等安全配置）。
 // scale 缺省为 1，输出与本函数加缩放参数之前完全一致。
 export function petWindowOptions(workArea, scale = 1, position) {
   const bounds = petWindowBounds(workArea, scale, position);
@@ -71,6 +71,21 @@ export function petWindowOptions(workArea, scale = 1, position) {
     show: false,
     title: 'szuDesktop 宠物',
   };
+}
+
+// 透明窗的透明区域不能点穿，所以窗口默认忽略鼠标（forward 让立绘仍能收到移动事件）。
+// 只有指针停在立绘上、正在拖动或宠物菜单打开时才接收点击。
+// Electron 只在 Windows / macOS 上支持转发鼠标移动；其他平台保持整窗可点，避免立绘永远点不到。
+export const petClickThroughSupported = platform => platform === 'win32' || platform === 'darwin';
+export function petIgnoresMouse({hit = false, dragging = false, menu = false} = {}) {
+  return !(hit === true || dragging === true || menu === true);
+}
+// 系统光标是否还在宠物窗里（屏幕坐标，右、下边界不算在内）。拖出屏幕边缘或菜单关闭时，
+// 指针可能已经离开窗口而立绘收不到 pointerleave，主进程据此复位。
+export function pointInBounds(point, bounds) {
+  return Boolean(point && bounds && Number.isFinite(point.x) && Number.isFinite(point.y)
+    && point.x >= bounds.x && point.x < bounds.x + bounds.width
+    && point.y >= bounds.y && point.y < bounds.y + bounds.height);
 }
 
 // 镜像 engine.mjs 的 say()：String(text).slice(0,60)。

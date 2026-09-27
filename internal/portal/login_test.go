@@ -40,7 +40,9 @@ func TestSrunLoginEndToEndAgainstPortal(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res, err := NewSrunClient(srv.URL, "123456", `p&<>"ass`).Login()
+	c := NewSrunClient(srv.URL, "123456", `p&<>"ass`)
+	c.redirectProbes = nil // 不碰真实外网
+	res, err := c.Login()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -131,5 +132,111 @@ func TestCollegeNoticeCachesAreSeparate(t *testing.T) {
 	server.handleCampusNotices(w, httptest.NewRequest("GET", "/api/campus/notices?source=college-csse", nil))
 	if w.Code != 503 || calls != 2 {
 		t.Fatal("unavailable source must not pretend to have an empty feed")
+	}
+}
+
+// 一个慢学院站点不能让别的来源排队；同一来源的并发请求合并成一次读取。
+func TestSlowNoticeSourceDoesNotBlockOthers(t *testing.T) {
+	old := noticeClient
+	publicNotices.results = map[string]noticeResult{}
+	publicNotices.retry = map[string]time.Time{}
+	t.Cleanup(func() {
+		noticeClient = old
+		publicNotices.results = map[string]noticeResult{}
+		publicNotices.retry = map[string]time.Time{}
+	})
+	entered, release := make(chan struct{}), make(chan struct{})
+	var mu sync.Mutex
+	calls := map[string]int{}
+	noticeClient = &http.Client{Transport: noticeTransport(func(r *http.Request) (*http.Response, error) {
+		mu.Lock()
+		calls[r.URL.Host]++
+		first := r.URL.Host == "law.szu.edu.cn" && calls[r.URL.Host] == 1
+		mu.Unlock()
+		if first {
+			close(entered)
+			<-release
+		}
+		body := `<li><a href="/info/100/1.htm" title="` + r.URL.Host + `学院公告">学院公告</a><span>2026-09-18</span></li>`
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+	})}
+	server := &Server{}
+	get := func(id string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		server.handleCampusNotices(w, httptest.NewRequest("GET", "/api/campus/notices?source="+id, nil))
+		return w
+	}
+	slow, again := make(chan *httptest.ResponseRecorder), make(chan *httptest.ResponseRecorder)
+	go func() { slow <- get("college-law") }()
+	<-entered
+	go func() { again <- get("college-law") }()
+	other := make(chan *httptest.ResponseRecorder)
+	go func() { other <- get("undergrad") }()
+	select {
+	case w := <-other:
+		if w.Code != 200 || !strings.Contains(w.Body.String(), "jwb.szu.edu.cn") {
+			t.Fatal(w.Code, w.Body.String())
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("慢来源让其他来源排队了")
+	}
+	close(release)
+	a, b := <-slow, <-again
+	if a.Code != 200 || b.Code != 200 || !strings.Contains(b.Body.String(), "law.szu.edu.cn") {
+		t.Fatal(a.Code, b.Code, b.Body.String())
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if calls["law.szu.edu.cn"] != 1 {
+		t.Fatal("同一来源的并发请求应合并成一次读取", calls)
+	}
+}
+
+// 读取途中 panic（net/http 会兜住这一个请求）后，这个来源不能永远停在「读取中」：
+// 下一次请求要照常去读，而不是一直等下去。
+func TestNoticeSourceReleasedAfterPanic(t *testing.T) {
+	old := noticeClient
+	publicNotices.results = map[string]noticeResult{}
+	publicNotices.retry = map[string]time.Time{}
+	t.Cleanup(func() {
+		noticeClient = old
+		publicNotices.results = map[string]noticeResult{}
+		publicNotices.retry = map[string]time.Time{}
+	})
+	calls := 0
+	noticeClient = &http.Client{Transport: noticeTransport(func(r *http.Request) (*http.Response, error) {
+		calls++
+		if calls == 1 {
+			panic("unexpected response")
+		}
+		body := `<li><a href="/info/100/1.htm" title="学院公告">学院公告</a><span>2026-09-18</span></li>`
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+	})}
+	server := &Server{}
+	get := func() (w *httptest.ResponseRecorder, panicked bool) {
+		defer func() { panicked = recover() != nil }()
+		w = httptest.NewRecorder()
+		server.handleCampusNotices(w, httptest.NewRequest("GET", "/api/campus/notices?source=college-law", nil))
+		return w, false
+	}
+	if _, panicked := get(); !panicked {
+		t.Fatal("测试替身应当在第一次读取时 panic")
+	}
+	publicNotices.Lock()
+	_, busy := publicNotices.pending["college-law"]
+	publicNotices.retry = map[string]time.Time{}
+	publicNotices.Unlock()
+	if busy {
+		t.Fatal("panic 之后这个来源仍停在读取中")
+	}
+	done := make(chan *httptest.ResponseRecorder)
+	go func() { w, _ := get(); done <- w }()
+	select {
+	case w := <-done:
+		if w.Code != 200 || calls != 2 {
+			t.Fatal(w.Code, calls, w.Body.String())
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("panic 之后同一来源的请求被卡住了")
 	}
 }

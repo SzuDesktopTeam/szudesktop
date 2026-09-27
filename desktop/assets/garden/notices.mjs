@@ -1,5 +1,5 @@
 import {pixelIcon} from './pixel.mjs';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {esc} from './html.mjs';
 const directory='https://www.szu.edu.cn/yxjg/xbxy.htm';
 const link=(url,text)=>`<a class="button quiet" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${text} ↗</a>`;
 export function createNoticesUI({api,getSource=()=> 'undergrad',setSource}){

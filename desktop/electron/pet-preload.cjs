@@ -1,4 +1,4 @@
-// 宠物窗专用 preload：仅暴露状态订阅和受限的菜单、缩放步进、拖动通知。
+// 宠物窗专用 preload：仅暴露状态订阅和受限的菜单、缩放步进、拖动与指针进出通知。
 // 宠物渲染进程没有任何 fetch/Node 能力，数据全部由主进程推过来。
 // 不接收路径或任意频道；拖动只传事件坐标，主进程将窗口限制在显示器工作区。
 const {contextBridge, ipcRenderer} = require('electron');
@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('szuPet', Object.freeze({
     });
   },
   openMenu: () => ipcRenderer.send('pet:menu'),
+  // 只告诉主进程指针是否停在立绘上（布尔值），用来切换透明窗的点击穿透。
+  hit: (inside) => {
+    if (typeof inside === 'boolean') ipcRenderer.send('pet:hit', inside);
+  },
   scaleStep: (direction) => {
     if (direction === 1 || direction === -1) ipcRenderer.send('pet:scale-step', direction);
   },

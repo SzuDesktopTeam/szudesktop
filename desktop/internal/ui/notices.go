@@ -2,6 +2,7 @@ package ui
 
 // Public school notices only. Personal services must use a separate authenticated adapter.
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,13 +30,17 @@ type noticeResult struct {
 	Stale     bool           `json:"stale"`
 	Message   string         `json:"message,omitempty"`
 }
+
+// noticeCache 的锁只保护这几张表，不跨网络请求持有：一个慢学院站点不能让
+// 别的来源排队。同一来源的并发请求合并成一次读取（pending），读完再各自按缓存作答。
 type noticeCache struct {
 	sync.Mutex
 	results map[string]noticeResult
 	retry   map[string]time.Time
+	pending map[string]chan struct{}
 }
 
-var publicNotices = noticeCache{results: map[string]noticeResult{}, retry: map[string]time.Time{}}
+var publicNotices = noticeCache{results: map[string]noticeResult{}, retry: map[string]time.Time{}, pending: map[string]chan struct{}{}}
 var noticePath = regexp.MustCompile(`/info/\d+/\d+\.htm$`)
 var noticeDates = []struct {
 	pattern *regexp.Regexp
@@ -212,15 +217,31 @@ func (s *Server) handleCampusNotices(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, 503, errors.New(source.Note))
 		return
 	}
-	// Serialize refreshes and bound source polling even after a failure.
+	// Bound source polling even after a failure. Only one read per source runs at
+	// a time; the network request itself happens outside the lock.
 	publicNotices.Lock()
-	defer publicNotices.Unlock()
+	for {
+		wait, busy := publicNotices.pending[id]
+		if !busy {
+			break
+		}
+		// 同一来源已有读取在跑：等它结束，再按它留下的缓存或失败节流作答。
+		publicNotices.Unlock()
+		select {
+		case <-wait:
+		case <-r.Context().Done():
+			return
+		}
+		publicNotices.Lock()
+	}
 	cached, exists := publicNotices.results[id]
 	if exists && time.Since(cached.FetchedAt) < 10*time.Minute {
+		publicNotices.Unlock()
 		writeJSON(w, cached)
 		return
 	}
 	if time.Now().Before(publicNotices.retry[id]) {
+		publicNotices.Unlock()
 		if exists {
 			cached.Stale = true
 			cached.Message = "学校网站暂时无法读取，显示上次读取的内容"
@@ -231,24 +252,28 @@ func (s *Server) handleCampusNotices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	publicNotices.retry[id] = time.Now().Add(time.Minute)
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, source.URL, nil)
-	if err != nil {
-		writeAPIError(w, 500, err)
-		return
-	}
-	req.Header.Set("User-Agent", "szuDesktop/0.5 (+https://github.com/SzuDesktopTeam/szudesktop)")
-	res, err := noticeClient.Do(req)
-	var items []campusNotice
-	if err == nil {
-		defer res.Body.Close()
-		if res.StatusCode == 200 {
-			data, readErr := io.ReadAll(io.LimitReader(res.Body, (2<<20)+1))
-			if readErr == nil && len(data) <= 2<<20 {
-				items = parseNotices(string(data), source.URL)
+	done := make(chan struct{})
+	publicNotices.pending[id] = done
+	publicNotices.Unlock()
+
+	var result noticeResult
+	func() {
+		// 放开 pending 放在 defer 里：读取或解析途中 panic（net/http 只兜住本次请求）
+		// 时也要放开，否则之后对这个来源的请求都会一直等下去，直到重启应用。
+		defer func() {
+			publicNotices.Lock()
+			if len(result.Items) > 0 {
+				publicNotices.results[id] = result
 			}
+			delete(publicNotices.pending, id)
+			publicNotices.Unlock()
+			close(done)
+		}()
+		if items := fetchNotices(r.Context(), source.URL); len(items) > 0 {
+			result = noticeResult{Source: source.Name, URL: source.URL, Items: items, FetchedAt: time.Now()}
 		}
-	}
-	if len(items) == 0 {
+	}()
+	if len(result.Items) == 0 {
 		if exists {
 			cached.Stale = true
 			cached.Message = "学校网站暂时无法读取或页面结构变化，显示上次读取的内容"
@@ -258,7 +283,27 @@ func (s *Server) handleCampusNotices(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	result := noticeResult{Source: source.Name, URL: source.URL, Items: items, FetchedAt: time.Now()}
-	publicNotices.results[id] = result
 	writeJSON(w, result)
+}
+
+// fetchNotices 读一个公开来源的列表页。任何失败都返回空列表，由调用方决定怎么报。
+func fetchNotices(ctx context.Context, address string) []campusNotice {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("User-Agent", "szuDesktop/0.5 (+https://github.com/SzuDesktopTeam/szudesktop)")
+	res, err := noticeClient.Do(req)
+	if err != nil {
+		return nil
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil
+	}
+	data, err := io.ReadAll(io.LimitReader(res.Body, (2<<20)+1))
+	if err != nil || len(data) > 2<<20 {
+		return nil
+	}
+	return parseNotices(string(data), address)
 }

@@ -23,25 +23,7 @@ const (
 	runValue   = "szuDesktop"
 )
 
-// 开机自启时的参数：不弹浏览器（开机就弹窗很烦），但自动登录。
-// 用户可以随时双击程序手动开界面。
-const autostartArgs = " --no-open"
-
-// 命令行版开机自启的参数。
-//
-// 只放 szunet 真正认识的子命令：`szunet login` 本身就是非交互的——它按
-// 「命令行参数 > 环境变量 > 已保存凭据」取账号，失败只反映在退出码上，
-// 没有任何需要用户确认的提示，所以不需要额外的开关。
-//
-// 这里原来写的是 `login --auto`，而 login 从来没有 --auto 这个参数。szunet 的
-// flag 集用的是 ExitOnError，遇到未知参数会直接 os.Exit(2)：于是「用命令行版
-// 开机自启」这条路上程序什么都没做就退出了，用户看到的是一个静默失效的开关。
-// 注册的命令行必须能被 szunet 真的接受，改这里时请对着 cmd/szunet 的 flag 核对。
-const cliLoginArgs = " login"
-
-// CLILoginArgs 返回命令行版开机自启登记的参数。
-// 导出只为一件事：让 cmd/szunet 的测试能断言「登记的参数 login 一定认得」。
-func CLILoginArgs() string { return cliLoginArgs }
+// 开机自启的参数和「登记哪个程序」的选择逻辑在 target.go。
 
 // Status 读注册表里的登记情况。
 //
@@ -85,8 +67,17 @@ func describe(cmd string) string {
 }
 
 // Enable 打开开机自启。preferCLI 为真时改登记命令行版。
+//
+// 当前程序的身份按文件名认；认不出来（被改名了）时按界面版处理。
+// 命令行版请用 EnableAs 说清楚自己是谁。
 func Enable(preferCLI bool) error {
-	target, args, err := resolveTarget(preferCLI)
+	return EnableAs(ProgramGUI, preferCLI)
+}
+
+// EnableAs 同 Enable，但由调用方声明自己是界面版还是命令行版。
+// 文件名认得出身份时以文件名为准，认不出来时才用 self。
+func EnableAs(self Program, preferCLI bool) error {
+	target, args, err := resolveTarget(self, preferCLI)
 	if err != nil {
 		return err
 	}
@@ -130,60 +121,11 @@ func OpenSelfDir() error {
 	return exec.Command("explorer", "/select,", self).Start()
 }
 
-// resolveTarget 决定开机启动哪个程序。
-//
-// 优先找同目录下的界面程序 szudesktop——它起的是常驻服务，
-// 能一直盯着网络、掉线自动补登；命令行版只连一次。
-//
-// 文件名可能是 szudesktop.exe，也可能是 szudesktop-windows-amd64.exe
-// （交叉编译的产物通常带平台后缀），所以按前缀找。
-func resolveTarget(preferCLI bool) (string, string, error) {
+// resolveTarget 决定开机启动哪个程序，规则见 pickTarget。
+func resolveTarget(declared Program, preferCLI bool) (string, string, error) {
 	self, err := selfPath()
 	if err != nil {
 		return "", "", fmt.Errorf("找不到自己在哪里: %w", err)
 	}
-	dir := filepath.Dir(self)
-
-	find := func(prefix string) string {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return ""
-		}
-		// 先精确匹配，再找前缀匹配里名字最短的（避免匹配到 .old 之类）
-		var best string
-		for _, e := range entries {
-			if e.IsDir() {
-				continue
-			}
-			n := strings.ToLower(e.Name())
-			if !strings.HasPrefix(n, prefix) || !strings.HasSuffix(n, ".exe") {
-				continue
-			}
-			if best == "" || len(n) < len(best) {
-				best = e.Name()
-			}
-		}
-		if best == "" {
-			return ""
-		}
-		return filepath.Join(dir, best)
-	}
-
-	guiPath := find("szudesktop")
-	cliPath := find("szunet")
-
-	if preferCLI {
-		if cliPath != "" {
-			return cliPath, cliLoginArgs, nil
-		}
-		return self, cliLoginArgs, nil
-	}
-	if guiPath != "" {
-		return guiPath, autostartArgs, nil
-	}
-	if cliPath != "" {
-		return cliPath, cliLoginArgs, nil
-	}
-	// 两个都没找到（可能被改名了），就用自己
-	return self, autostartArgs, nil
+	return resolveTargetIn(self, declared, preferCLI)
 }

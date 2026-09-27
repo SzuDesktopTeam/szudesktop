@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import {petSprite} from '../assets/garden/engine.mjs';
-import {petWindowOptions,petWindowBounds,petScaleClamp,petSay,petSpriteFor,activePetOf,isPetSender,PET_WIDTH,PET_HEIGHT,PET_MARGIN,PET_SAY_MAX,PET_SCALE_MIN,PET_SCALE_MAX,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,petPresetFor} from './pet-policy.mjs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {createPetController} from './pet-controller.mjs';
+import {registerIpcRoutes} from './ipc-routes.mjs';
+import {FakeIpcMain,fakeDialog,fakeMenu,fakeScreen,fakeWindowClass} from './testdata/fake-electron.mjs';
+import {petWindowOptions,petWindowBounds,petScaleClamp,petSay,petSpriteFor,activePetOf,isPetSender,petIgnoresMouse,petClickThroughSupported,pointInBounds,PET_WIDTH,PET_HEIGHT,PET_MARGIN,PET_SAY_MAX,PET_SCALE_MIN,PET_SCALE_MAX,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,petPresetFor} from './pet-policy.mjs';
 
 // 窗口选项：spec §7 的每一项都要钉死。
 const wa={x:0,y:0,width:1920,height:1080};
@@ -170,4 +175,98 @@ assert.equal(petPresetFor(1.23),null);
 assert.equal(petPresetFor(0.4),null);
 assert.equal(petPresetFor(NaN),null);
 
-console.log('Pet policy: window options, say cap, sprite mapping and sender checks passed');
+// 点击穿透：透明窗默认不拦截下层点击；指针在立绘上、拖动中或菜单打开时才接收。
+assert.equal(petIgnoresMouse(),true);
+assert.equal(petIgnoresMouse({}),true);
+assert.equal(petIgnoresMouse({hit:true}),false);
+assert.equal(petIgnoresMouse({dragging:true}),false,'drag keeps the window clickable even if the pointer outruns it');
+assert.equal(petIgnoresMouse({menu:true}),false,'menu keeps the window clickable');
+assert.equal(petIgnoresMouse({hit:'yes',dragging:1,menu:{}}),true,'only real booleans enable clicks');
+assert.equal(petClickThroughSupported('win32'),true);
+assert.equal(petClickThroughSupported('darwin'),true);
+assert.equal(petClickThroughSupported('linux'),false,'Linux cannot forward mouse moves, keep the old clickable window');
+const petBox={x:10,y:20,width:260,height:320};
+for(const point of [{x:10,y:20},{x:269,y:339},{x:140,y:180}])assert.equal(pointInBounds(point,petBox),true,JSON.stringify(point));
+for(const point of [{x:9,y:20},{x:270,y:100},{x:100,y:340},{x:NaN,y:30},null,{}])assert.equal(pointInBounds(point,petBox),false,JSON.stringify(point));
+assert.equal(pointInBounds({x:1,y:1},null),false);
+/// 宠物窗接线（pet-controller + ipc-routes，用假窗口运行，不启动 Electron）：创建即穿透、只收布尔、只认宠物窗，
+// 拖动开始/结束与菜单开关都会重新计算。
+const petHtml=path.resolve('pet-check','pet.html'),petHtmlUrl=pathToFileURL(petHtml).href;
+function petWiring(platform,overrides={}){
+  const {FakeWindow,windows}=fakeWindowClass(),{Menu,built}=fakeMenu(),screen=fakeScreen(wa),ipc=new FakeIpcMain(),saved=[];
+  const pet=createPetController({BrowserWindow:FakeWindow,Menu,screen,dialog:fakeDialog(),platform,html:petHtml,preload:'/pet-preload.cjs',
+    gardenEngine:Promise.resolve({}),loadWorkspace:async()=>({data:null}),readPreferences:()=>({petVisible:true,petAlwaysOnTop:true}),
+    changeSettings(){},saveSettings:(scale,position)=>saved.push({scale,position}),isQuitting:()=>false,observeWorkspace(){},
+    dispatch(){},refreshTray(){},publishScale(){},quit(){},setInterval:()=>({unref(){}}),clearInterval(){},...overrides});
+  registerIpcRoutes({ipcMain:ipc,app:{},isTrusted:()=>false,quit:{},pet,preferences:{},getOfficial:()=>null});
+  return {pet,windows,built,screen,ipc,saved};
+}
+{
+  const linux=petWiring('linux');await linux.pet.create();
+  assert.deepEqual(linux.windows[0].mouse,[],'Linux keeps the whole window clickable');
+  const {pet,windows,built,screen,ipc,saved}=petWiring('win32');
+  assert.equal(pet.isSender({sender:{},senderFrame:{url:petHtmlUrl}}),false,'no pet window yet');
+  await pet.create();
+  const petWin=windows[0],pwc=petWin.webContents;
+  assert.deepEqual(petWin.options.webPreferences,{preload:'/pet-preload.cjs',contextIsolation:true,nodeIntegration:false,sandbox:true});
+  assert.deepEqual(petWin.loaded,[petHtml]);assert.equal(petWin.visible,true);assert.equal(petWin.level,'screen-saver');
+  // 宠物窗不加载任何远程内容：拦截一切导航与新窗请求。
+  assert.deepEqual(pwc.openHandler({url:'https://evil.test/'}),{action:'deny'});
+  for(const name of ['will-navigate','will-redirect']){let prevented=false;pwc.emit(name,{preventDefault(){prevented=true;}},'https://evil.test/');assert.ok(prevented,name);}
+  pwc.mainFrame.url=petHtmlUrl;
+  const petEvent={sender:pwc,senderFrame:pwc.mainFrame},last=()=>petWin.mouse.at(-1);
+  assert.deepEqual(petWin.mouse[0],{ignore:true,forward:true},'new pet windows start click-through with forwarded moves');
+  ipc.emit('pet:hit',petEvent,true);assert.equal(last().ignore,false,'pointer over the pet accepts clicks');
+  ipc.emit('pet:hit',petEvent,false);assert.equal(last().ignore,true,'leaving the pet restores click-through');
+  const before=petWin.mouse.length;
+  for(const value of ['true',1,null,{}])ipc.emit('pet:hit',petEvent,value);
+  ipc.emit('pet:hit',{sender:{},senderFrame:pwc.mainFrame},true);
+  ipc.emit('pet:hit',{sender:pwc,senderFrame:{url:petHtmlUrl}},true);
+  pwc.mainFrame.url='file:///D:/evil/pet.html';ipc.emit('pet:hit',petEvent,true);pwc.mainFrame.url=petHtmlUrl;
+  assert.equal(petWin.mouse.length,before,'only booleans from the pet main frame are accepted');
+  const box=petWin.getBounds(),inside={x:box.x+100,y:box.y+100},outside={x:box.x-500,y:box.y-500};
+  screen.cursor=inside;
+  ipc.emit('pet:drag',petEvent,'start',inside);assert.equal(last().ignore,false,'dragging keeps clicks');
+  ipc.emit('pet:hit',petEvent,false);assert.equal(last().ignore,false,'pointer leaving mid-drag does not drop the drag');
+  ipc.emit('pet:drag',petEvent,'move',{x:inside.x-40,y:inside.y-20});
+  const dragged=petWindowBounds(wa,1,{x:box.x-40,y:box.y-20});
+  assert.deepEqual(petWin.getBounds(),dragged,'drag follows both pointer axes');
+  ipc.emit('pet:drag',petEvent,'end',{x:inside.x-40,y:inside.y-20});assert.equal(last().ignore,true,'drag end returns to click-through');
+  assert.deepEqual(saved,[{scale:1,position:{x:dragged.x,y:dragged.y}}],'a moved pet saves its new position');
+  ipc.emit('pet:drag',petEvent,'start',inside);ipc.emit('pet:drag',petEvent,'end',inside);
+  assert.equal(saved.length,1,'a click without moving saves nothing');
+  const openMenu=async()=>{await pet.openMenu();return built.at(-1).popups.at(-1);};
+  let popup=await openMenu();
+  assert.equal(popup.window,petWin);assert.equal(last().ignore,false,'open menu keeps clicks');assert.equal(petWin.focusable,true);
+  popup.callback();assert.equal(last().ignore,true);assert.equal(petWin.focusable,false,'menu close gives focus back');
+  // 拖到屏幕边缘或点了远处的菜单项后指针已在窗外，立绘收不到 pointerleave：以系统光标为准恢复穿透。
+  ipc.emit('pet:hit',petEvent,true);
+  ipc.emit('pet:drag',petEvent,'start',inside);screen.cursor=outside;
+  ipc.emit('pet:drag',petEvent,'end',outside);
+  assert.equal(pet.mouse().hit,false);assert.equal(last().ignore,true,'pointer left during the drag: click-through again');
+  ipc.emit('pet:hit',petEvent,true);popup=await openMenu();popup.callback();
+  assert.equal(last().ignore,true,'menu closed with the pointer elsewhere: click-through again');
+  screen.cursor=inside;ipc.emit('pet:hit',petEvent,true);popup=await openMenu();popup.callback();
+  assert.equal(last().ignore,false,'pointer still over the pet stays clickable');
+  ipc.emit('pet:drag',petEvent,'start',inside);ipc.emit('pet:drag',petEvent,'end',inside);
+  assert.equal(last().ignore,false);assert.deepEqual(pet.mouse(),{hit:true,ignoring:false});
+  // 隐藏宠物后立绘收不到 pointerleave：直接恢复穿透。
+  pet.applyPreferences({petVisible:false,petAlwaysOnTop:true});
+  assert.equal(petWin.visible,false);assert.deepEqual(pet.mouse(),{hit:false,ignoring:true});
+  // 退出时停掉刷新并关窗；之后宠物窗消息一律忽略。
+  pet.destroy();assert.equal(petWin.destroyed,true);assert.equal(pet.window(),null);
+  const afterDestroy=petWin.mouse.length;ipc.emit('pet:hit',petEvent,true);assert.equal(petWin.mouse.length,afterDestroy);
+}
+// 位置写不进配置目录时如实告诉用户，拖动状态照常收尾。
+{
+  const {pet,windows,ipc}=petWiring('win32',{saveSettings:()=>{throw Error('只读目录');}});
+  await pet.create();
+  const petWin=windows[0],pwc=petWin.webContents;pwc.mainFrame.url=petHtmlUrl;
+  const petEvent={sender:pwc,senderFrame:pwc.mainFrame},box=petWin.getBounds();
+  ipc.emit('pet:drag',petEvent,'start',{x:box.x+5,y:box.y+5});
+  ipc.emit('pet:drag',petEvent,'move',{x:box.x-5,y:box.y-5});
+  ipc.emit('pet:drag',petEvent,'end',{x:box.x-5,y:box.y-5});
+  assert.equal(pwc.last('pet:say'),'位置没有保存成功，下次打开可能回到原处。');
+  assert.equal(petWin.mouse.at(-1).ignore,true);
+}
+console.log('Pet policy: window options, say cap, sprite mapping, sender checks and pet window wiring (click-through, drag, menu) passed');
