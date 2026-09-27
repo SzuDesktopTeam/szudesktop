@@ -233,15 +233,15 @@ export function buildCampusScene(THREE, scene, skin = 'lake') {
     box(0xc5a279,x,y+h,z,w+.15,.12,.67);
   };
   const bookshop=()=>{
-    box(0xadbab4,0,-.23,0,400,.4,400);
-    box(0x99aeb0,0,-.008,13,80,.02,15);
-    box(0xc2c7bd,0,.1,1,30,.22,9);
+    box(0xbdceb5,0,-.23,0,400,.4,400);
+    box(0xa9c3bc,0,-.008,13,80,.02,15);
+    box(0xd4d3bf,0,.1,1,30,.22,9);
     // Broad, flush paving stones: colour variation carries the joints instead
     // of dozens of raised tile edges competing with the shopfront's ink lines.
     const paving=geometry('paving-plane',()=>new THREE.PlaneGeometry(1,1));
     for(let i=0;i<8;i++)for(let j=0;j<4;j++){
       const x=-13.125+i*3.75,z=-2.375+j*2.25;
-      put(paving,(i+j)%4?0xc2c8bf:0xbdc6bd,[x,.212,z],[3.735,2.235,1],[-Math.PI/2,0,0],{cast:false});
+      put(paving,(i+j)%4?0xd4d5c5:0xcad0bc,[x,.212,z],[3.735,2.235,1],[-Math.PI/2,0,0],{cast:false});
     }
     // The open frontage is a 1.4 m deep recess, with real shelves behind it.
     box(0xc6cabb,0,1.68,-4.2,9.4,3.2,4.7);
@@ -307,7 +307,7 @@ export function buildCampusScene(THREE, scene, skin = 'lake') {
     box(0xc6d8d3,-5.4,.24,3.52,.83,.01,.02,0,{cast:false,receive:false,material:{unlit:true}});
     lamp(9,2.6,.2);
     hanging(4.37,2.86,1.62);
-    return {camera:{position:[11.47,8.12,16.95],target:[-.5,2,-1.5],fov:40},lighting:{fog:0xbdcfd0,fogNear:40,fogFar:105,skyTop:0x88aebf,skyMid:0xb6d3d8,skyHaze:0xd0dfd8,sun:0xffe6c5,fill:0xafd0e4,hemiSky:0xe4e9e3,hemiGround:0x8eaaa2,sunIntensity:1.7,fillIntensity:1.04,hemiIntensity:1.08}};
+    return {camera:{position:[11.47,8.12,16.95],target:[-.5,2,-1.5],fov:40},lighting:{fog:0xbdcfd0,fogNear:40,fogFar:105,skyTop:0x88aebf,skyMid:0xb6d3d8,skyHaze:0xd0dfd8,sun:0xffe6c5,fill:0xafd0e4,hemiSky:0xe4e9e3,hemiGround:0x8eaaa2,sunIntensity:2.05,fillIntensity:1.04,hemiIntensity:1.18}};
   };
   const terrace=()=>{
     box(0x738a89,0,-.26,0,400,.4,400);

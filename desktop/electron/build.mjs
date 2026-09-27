@@ -24,7 +24,7 @@ if(!process.argv.includes('--skip-sidecar')){
 //    用当前 node 跑本地装好的 electron-builder CLI，等价于 npx electron-builder。
 const ebCli=path.join(here,'node_modules','electron-builder','cli.js');
 execFileSync(process.execPath,[ebCli,'--win','--x64','--publish','never','--config','electron-builder.yml',
-  `--config.extraMetadata.version=${semver}`],{cwd:here,stdio:'inherit'});
+  `--config.extraMetadata.version=${semver}`,`--config.extraMetadata.szuVersion=${ver}`],{cwd:here,stdio:'inherit'});
 const installer=path.join(here,'release',`szuDesktop-Setup-${semver}.exe`);
 const digest=createHash('sha256').update(readFileSync(installer)).digest('hex');
 writeFileSync(installer+'.sha256',`${digest}  ${path.basename(installer)}\n`,'ascii');

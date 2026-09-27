@@ -4,7 +4,8 @@ const official='https://swzx.webvpn.szu.edu.cn/#/pages/booth/szu-booth-list';
 const labels={available:'空闲',occupied:'已预约',closed:'不可选',past:'已开始',unknown:'未确认'};
 const tones={available:'success',occupied:'muted',closed:'muted',past:'muted',unknown:'warning'};
 const button=(text,key,disabled=false)=>`<button type="button" data-action="booking-${key}"${disabled?' disabled':''}>${text}</button>`;
-const officialLink=(text,cls='button primary')=>`<a class="${cls}" href="${official}" target="_blank" rel="noopener noreferrer">${pixelIcon('i-key')}${text} ↗</a>`;
+const schoolWindowAvailable=()=>typeof globalThis.szuDesktop?.openSchool==='function';
+const officialLink=(text,cls='button quiet',disabled=false)=>schoolWindowAvailable()?`<button type="button" class="${cls}" data-action="booking-open-school"${disabled?' disabled':''}>${pixelIcon('i-key')}${text} ↗</button>`:`<a class="${cls}" href="${official}" target="_blank" rel="noopener noreferrer">${pixelIcon('i-key')}${text} ↗</a>`;
 export function bookingSlotsHTML(day){
  if(!day)return '<p class="empty">选择场地和日期，点击「查询空位」。</p>';
  try{return bookingSlotsBody(day)}
@@ -51,9 +52,9 @@ function venueRulesBody(rooms){
  // 按场地重复会造成「每个场地规则不同」的错觉。
  const notice=(rooms.find(r=>r.type&&r.type.announcement)||{}).type?.announcement||'';
  return `<p class="muted">学校返回 ${esc(rooms.length)} 个场地、${esc(list.length)} 类。规则与设备说明取自学校场地接口的原文，办理预约仍在学校页面完成。</p>
- ${notice?`<details open><summary>学校统一使用须知</summary><pre class="notice">${esc(notice)}</pre></details>`:'<p class="muted">学校这次没有返回使用须知。</p>'}
- ${list.map(g=>`<section class="venue-group"><h3>${esc(g.name)} · ${esc(g.rooms.length)} 处</h3><p class="muted">单日 ${esc(ruleNum(g.type.samePersonMaxReservationPerDay))} 格 · 可提前 ${esc(ruleNum(g.type.lastReservationDayBeforeAppointment))} 天 · 每日开放 ${esc(openHours(g.type.availableTimePeriod))} 小时 · 爽约 ${esc(ruleNum(g.type.blacklistValidDuration))} 天内不可再约</p><ul class="venue-rules">${g.rooms.map(r=>`<li><strong>${esc(r.name)}</strong><small>${esc(r.campus||'')}${r.community?' · '+esc(r.community):''}${r.status?'':' · 已停用'}</small><p class="muted">${esc(r.description||'学校未提供设备说明')}</p></li>`).join('')}</ul></section>`).join('')}
- <p class="muted">图片与现场实况以学校页面为准，本页不内嵌学校图片。</p><div class="actions">${officialLink('登录并预约')}</div>`;
+ ${notice?`<details><summary>学校统一使用须知</summary><pre class="notice">${esc(notice)}</pre></details>`:'<p class="muted">学校这次没有返回使用须知。</p>'}
+ ${list.map(g=>`<details class="venue-group"><summary>${esc(g.name)} · ${esc(g.rooms.length)} 处</summary><p class="muted">单日 ${esc(ruleNum(g.type.samePersonMaxReservationPerDay))} 格 · 可提前 ${esc(ruleNum(g.type.lastReservationDayBeforeAppointment))} 天 · 每日开放 ${esc(openHours(g.type.availableTimePeriod))} 小时 · 爽约 ${esc(ruleNum(g.type.blacklistValidDuration))} 天内不可再约</p><ul class="venue-rules">${g.rooms.map(r=>`<li><strong>${esc(r.name)}</strong><small>${esc(r.campus||'')}${r.community?' · '+esc(r.community):''}${r.status?'':' · 已停用'}</small><p class="muted">${esc(r.description||'学校未提供设备说明')}</p></li>`).join('')}</ul></details>`).join('')}
+ <p class="muted">图片与现场实况以学校页面为准，本页不内嵌学校图片。</p>`;
 }
 // 「学校场地列表」是两张卡片共用的同一次只读请求。这个加载器带短 TTL 并合并并发调用：
 // 先后点两张卡的按钮只会打一次接口；失败不写入缓存，下次点击照旧重试。
@@ -73,7 +74,7 @@ export function createVenueRulesUI({api,loadRooms}){
  function content(){
   return `<div class="card-head"><h2 class="icon-heading tone-info">${pixelIcon('i-book','heading-icon')}场地与琴房规则速查</h2><span class="badge" data-tone="info">只读 · 学校返回原文</span></div><div class="actions">${button(pixelIcon('i-compass')+'读取学校场地规则','rules',busy)}</div>
  ${busy?'<p role="status">正在读取学校场地规则…</p>':''}
- ${error?`<p role="status" class="notice error">${esc(error)}</p><div class="actions">${officialLink('登录并预约')}</div>`:''}
+ ${error?`<p role="status" class="notice error">${esc(error)}</p><div class="actions">${officialLink('打开学校预约')}</div>`:''}
  ${rooms.length?venueRulesHTML(rooms):'<p class="muted">规则来自学校场地接口，不需要登录。读取后可看每类场地的时段上限、可提前天数与爽约限制。</p>'}`;
  }
  function card(){return `<section class="card campus-booking" id="venue-rules-panel">${content()}</section>`}
@@ -92,17 +93,26 @@ export function createVenueRulesUI({api,loadRooms}){
 export function createBookingUI({api,loadRooms}){
  // 同上：优先用上层共享的请求，单独使用时直连。
  const fetchRooms=loadRooms||(()=>api('/api/booking/rooms'));
- let rooms=[],today='',room='',date='',day=null,error='',message='',busy=false,requestVersion=0;
- function content(){return `<div class="card-head"><h2 class="icon-heading tone-info">${pixelIcon('i-calendar','heading-icon')}学习空间 · 预约与空位</h2><span class="badge" data-tone="info">学校页面办理</span></div>
- <p>社区会议室、面试间与琴房。登录、选择时段、提交和查看预约结果，都在学校官方页面完成。</p>
- <div class="actions">${officialLink('登录并预约')}${button(pixelIcon('i-compass')+'查看场地空位','rooms',busy)}</div>
- <p class="muted">点击「登录并预约」会在浏览器打开学校页面，按学校提示完成登录即可。图书馆使用独立预约系统。</p>
+ let rooms=[],today='',room='',date='',day=null,error='',message='',busy=false,requestVersion=0,opening=false,openMessage='',openError='';
+ function content(){return `<div class="card-head"><h2 class="icon-heading tone-info">${pixelIcon('i-calendar','heading-icon')}社区空间</h2><span class="badge" data-tone="info">会议室 · 面试间 · 琴房</span></div>
+ <p>找一处安静的空间。可以先查空位，再到学校页面登录、选时段并确认预约。</p>
+ <div class="actions">${officialLink(opening?'正在打开…':'打开学校预约','button primary',opening)}${button(pixelIcon('i-compass')+(rooms.length?'刷新场地':'先看空位'),'rooms',busy)}</div>
+ <p class="muted">${schoolWindowAvailable()?'在应用的独立学校窗口办理。':'在浏览器打开学校页面办理。'}登录、提交、查看结果和取消都在原页面完成；如需二次验证，请按学校提示操作。</p>
+ ${openMessage||openError?`<p role="status" class="notice${openError?' error':''}">${esc(openError||openMessage)}</p>`:''}
  ${rooms.length?`<h3>空位速览</h3><p>这里可以先查空位；具体预约资格与最终结果以学校系统为准。</p><div class="grid"><div><label for="booking-room">场地 · ${rooms.length} 处</label><select id="booking-room">${rooms.map(x=>`<option value="${esc(x.id)}" ${String(x.id)===room?'selected':''}>${esc(x.campus)} · ${esc(x.name)}${x.status?'':'（停用）'}</option>`).join('')}</select></div><div><label for="booking-date">使用日期</label><input id="booking-date" type="date" value="${esc(date)}" min="${esc(today)}"></div></div><div class="actions">${button('查询空位','query',busy)}</div>`:''}
  <div role="status" aria-live="polite" class="notice" data-tone="${error?'error':'info'}">${esc(error||message||'校园网内可在这里直接查看场地空位，无需先登录。')}</div>${error?`<div class="actions">${officialLink('打开官方 WebVPN 预约页','button quiet')}</div>`:''}
  ${rooms.length?bookingSlotsHTML(day):''}`}
  function card(){return `<section class="card campus-booking" id="booking-panel">${content()}</section>`}
  function paint(){const el=document.getElementById('booking-panel');if(el)el.innerHTML=content()}
  async function click(a){
+  if(a==='booking-open-school'){
+   if(opening)return true;
+   opening=true;openMessage='';openError='';paint();
+   try{await globalThis.szuDesktop.openSchool('booking');openMessage='学校预约窗口已打开，请在窗口内完成预约并查看结果。'}
+   catch(e){openError=e.message.replace(/^Error invoking remote method '[^']+': Error: /,'')}
+   finally{opening=false;paint()}
+   return true;
+  }
   if(!['booking-rooms','booking-query'].includes(a))return false;
   if(busy)return true;
   const version=++requestVersion;busy=true;error='';message='正在读取学校场地信息…';day=null;paint();

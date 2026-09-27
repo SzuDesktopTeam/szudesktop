@@ -44,7 +44,7 @@ function waitForExit(child,timeoutMs){
   });
 }
 
-async function waitHealthy(baseUrl, readyPath, timeoutMs, child){
+async function waitHealthy(baseUrl, readyPath, timeoutMs, child, expectedVersion){
   const controller=new AbortController();
   const timeoutError=new Error('sidecar 健康探测超时: '+baseUrl+readyPath);
   const timer=setTimeout(()=>controller.abort(timeoutError),timeoutMs);
@@ -61,7 +61,14 @@ async function waitHealthy(baseUrl, readyPath, timeoutMs, child){
         }
         if(response.ok){
           const identity=await response.json();
-          if(identity.ok===true&&identity.app==='szuDesktop')return;
+          if(identity.ok===true&&identity.app==='szuDesktop'){
+            if(expectedVersion&&identity.app_version!==expectedVersion){
+              controller.abort(new Error(child?'后台引擎与应用版本不一致，请重新安装当前版本'
+                :'正在运行的后台程序与当前版本不一致，请先退出旧版 szuDesktop（包括便携版）后再打开'));
+              throw controller.signal.reason;
+            }
+            return;
+          }
         }else response.body?.cancel().catch(()=>{});
       }catch(err){if(controller.signal.aborted)throw controller.signal.reason;}
       try{await delay(150,undefined,{signal:controller.signal});}catch{throw controller.signal.reason;}
@@ -73,7 +80,7 @@ async function waitHealthy(baseUrl, readyPath, timeoutMs, child){
   }
 }
 
-export async function startSidecar({command,args=[],env,cwd,readyPath='/api/health',readyTimeoutMs=15000,healthTimeoutMs=8000}){
+export async function startSidecar({command,args=[],env,cwd,expectedVersion,readyPath='/api/health',readyTimeoutMs=15000,healthTimeoutMs=8000}){
   const child=spawn(command,args,{env:env||process.env,cwd,stdio:['ignore','pipe','inherit'],windowsHide:true});
   let endpoint;
   try{
@@ -82,7 +89,7 @@ export async function startSidecar({command,args=[],env,cwd,readyPath='/api/heal
       if(!await waitForExit(child,readyTimeoutMs))throw new Error('sidecar 复用启动器退出超时');
       if(child.exitCode!==0)throw new Error('sidecar 提前退出，码 '+child.exitCode);
     }
-    await waitHealthy(endpoint.baseUrl,readyPath,healthTimeoutMs,endpoint.owned?child:null);
+    await waitHealthy(endpoint.baseUrl,readyPath,healthTimeoutMs,endpoint.owned?child:null,expectedVersion);
   }catch(err){
     await stopSidecar(child);
     throw err;

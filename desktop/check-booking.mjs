@@ -20,7 +20,8 @@ const rules=createVenueRulesUI({api});
 async function check(name,f){await f();count++;console.log('PASS',name)}
 await check('booking goes directly to school, without a manual session or unfinished local form',()=>{
  assert.match(ui.card(),/href="https:\/\/swzx\.webvpn\.szu\.edu\.cn\/#\/pages\/booth\/szu-booth-list"/);
- assert.match(ui.card(),/登录并预约/);assert.match(ui.card(),/在浏览器打开学校页面/);
+ assert.match(ui.card(),/打开学校预约/);assert.match(ui.card(),/在浏览器打开学校页面/);
+ assert.equal((ui.card().match(/class="button primary"/g)||[]).length,1);
  assert.doesNotMatch(ui.card(),/Cookie|F12|booking-cookie|booking-form|booking-connect/);
  assert.equal(calls.length,0);
 });
@@ -35,10 +36,10 @@ await check('query uses public endpoints and changing conditions discards previo
  assert.ok(calls.every(x=>x==='/api/booking/rooms'||x.startsWith('/api/booking/availability?')));
 });
 await check('query failure clears stale availability and keeps official booking reachable',async()=>{
- failure=true;await ui.click('booking-query');assert.doesNotMatch(ui.card(),/14:00/);assert.match(ui.card(),/无法读取学校场地信息/);assert.match(ui.card(),/登录并预约/);failure=false;
+ failure=true;await ui.click('booking-query');assert.doesNotMatch(ui.card(),/14:00/);assert.match(ui.card(),/无法读取学校场地信息/);assert.match(ui.card(),/打开学校预约/);failure=false;
 });
 await check('empty room list is explicit and still offers the school page',async()=>{
- empty=true;await ui.click('booking-rooms');assert.match(ui.card(),/没有返回可查询的场地/);assert.doesNotMatch(ui.card(),/id="booking-room"/);assert.match(ui.card(),/登录并预约/);empty=false;
+ empty=true;await ui.click('booking-rooms');assert.match(ui.card(),/没有返回可查询的场地/);assert.doesNotMatch(ui.card(),/id="booking-room"/);assert.match(ui.card(),/打开学校预约/);empty=false;
 });
 await check('retired private actions cannot send a session or reservation request',async()=>{
  const before=calls.length;
@@ -78,7 +79,7 @@ await check('rules card carries no photos and still routes booking to the school
 });
 await check('rules failure is explicit and keeps the official page reachable',async()=>{
  failure=true;await rules.click('booking-rules');
- assert.match(rules.card(),/无法读取学校场地信息/);assert.match(rules.card(),/登录并预约/);failure=false;
+ assert.match(rules.card(),/无法读取学校场地信息/);assert.match(rules.card(),/打开学校预约/);failure=false;
 });
 // —— 回归防线：这几条对应「本轮新提交引入、但只会被真实校园网数据触发」的缺陷 ——
 await check('implausible school numbers degrade to — instead of throwing on the render path',()=>{
@@ -137,5 +138,21 @@ await check('changing venue conditions ignores a late old response or failure',a
   await query;assert.match(card.card(),/value="2026-09-24"/);
   assert.match(card.card(),/条件已更改/);assert.doesNotMatch(card.card(),/14:00|旧日期失败/);
  }
+});
+await check('installed booking opens one official window and reports failures in the visible booking card',async()=>{
+ let finish,opens=0,fail=false;
+ globalThis.szuDesktop={openSchool:async target=>{assert.equal(target,'booking');opens++;if(fail)throw Error('学校窗口暂时无法打开');await new Promise(resolve=>{finish=resolve})}};
+ try{
+  const native=createBookingUI({api});
+  assert.match(native.card(),/data-action="booking-open-school"/);
+  assert.match(native.card(),/独立学校窗口/);
+  assert.doesNotMatch(native.card(),/在浏览器打开学校页面/);
+  const opening=native.click('booking-open-school');
+  await native.click('booking-open-school');assert.equal(opens,1,'repeated clicks must reuse the opening window');
+  assert.match(native.card(),/data-action="booking-open-school" disabled/);
+  finish();await opening;assert.match(panel.innerHTML,/学校预约窗口已打开/);
+  fail=true;await native.click('booking-open-school');assert.match(panel.innerHTML,/学校窗口暂时无法打开/);
+  assert.doesNotMatch(native.card(),/data-action="booking-open-school" disabled/);
+ }finally{delete globalThis.szuDesktop}
 });
 console.log(`${count} booking checks passed`);
