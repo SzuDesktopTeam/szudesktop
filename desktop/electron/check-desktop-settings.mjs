@@ -25,7 +25,7 @@ assert.equal(readDesktopSettings(profile).lastNotifiedFocus,null);
 for(const patch of [null,[],{petVisible:'false'},{lastNotifiedFocus:'fake'},{notificationsSupported:true},{other:true}])assert.throws(()=>validateDesktopPatch(patch));
 assert.deepEqual(validateDesktopPatch({focusNotifications:false,doNotDisturb:true,launchAtLogin:true}),{focusNotifications:false,doNotDisturb:true,launchAtLogin:true});
 
-// 启动时自动连接校园网：默认关闭，只接受布尔值，重启后保留；关闭时 sidecar 一律带 --no-auto-login。
+// 启动时自动连接校园网：默认开启，只接受布尔值，重启后保留；关闭时 sidecar 一律带 --no-auto-login。
 assert.equal(DESKTOP_DEFAULTS.autoConnectCampus,true,'auto campus login is on by default and can be turned off');
 assert.deepEqual(validateDesktopPatch({autoConnectCampus:true}),{autoConnectCampus:true});
 assert.throws(()=>validateDesktopPatch({autoConnectCampus:'true'}));
