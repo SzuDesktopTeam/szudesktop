@@ -1,4 +1,4 @@
-"""生成 Windows 应用图标 szudesktop.ico。
+"""生成 Windows 应用图标 szudesktop.ico；加 --mac 时改为生成 macOS 的应用图标和菜单栏图标。
 
 画什么：一颗像素荔枝（深大的"荔"），跟页面里的荔宝同一套视觉语言。
 为什么要自己画而不是拿现成的：
@@ -11,11 +11,23 @@ Windows 会按显示场景自己挑（任务栏用 32，桌面大图标用 256�
 所以这两个尺寸用简化版点阵（去掉小噪点，加粗轮廓）。
 
 用法: python gen_icon.py            # 生成 desktop/assets/szudesktop.ico
+      python gen_icon.py --mac      # 只在 macOS 上运行：生成 szudesktop.icns 和两张菜单栏模板图，不碰 .ico
+
+macOS 素材为什么另画：
+  - 应用图标自带圆角方形底板，按 Apple 的 1024 网格（底板 824、四周各留 100）。
+    图标不是这个形状时，macOS 26 会把它装进一块灰色底板里，跟别的应用放在一起很突兀。
+  - 菜单栏图标用黑色加透明度的模板图（文件名以 Template 结尾），系统按深浅色菜单栏自动着色；
+    nativeImage 在 macOS 上也解不了 .ico。
+  - 荔枝点阵一律按整数倍放大（NEAREST），像素边缘才是齐的；只有底板的圆角做抗锯齿。
 """
 import io
 import os
+import shutil
+import subprocess
+import sys
+import tempfile
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 # ---------------------------------------------------------------- 调色板
 PAL = {
@@ -161,6 +173,109 @@ def write_ico(path, imgs):
         f.write(header + entries + blobs)
 
 
+# ---------------------------------------------------------------- macOS 素材
+# 底板：上浅下深的暖米色，和页面的奶油底色一个调子；描一圈浅棕边，放在白色 Finder 背景上也分得清边界。
+PLATE_TOP = (255, 250, 240)
+PLATE_BOTTOM = (243, 222, 196)
+PLATE_EDGE = (222, 196, 160)
+# icns 里的 10 张图：(文件名, 像素边长)。同一边长的图内容相同。
+ICONSET = [
+    ("icon_16x16.png", 16), ("icon_16x16@2x.png", 32),
+    ("icon_32x32.png", 32), ("icon_32x32@2x.png", 64),
+    ("icon_128x128.png", 128), ("icon_128x128@2x.png", 256),
+    ("icon_256x256.png", 256), ("icon_256x256@2x.png", 512),
+    ("icon_512x512.png", 512), ("icon_512x512@2x.png", 1024),
+]
+
+
+def art_side(rows):
+    """点阵裁掉留白、补成正方形后的边长；render 的输出按它的整数倍放大，像素才不会糊。"""
+    points = [(x, y) for y, r in enumerate(rows) for x, ch in enumerate(r) if PAL.get(ch)]
+    xs, ys = [x for x, _ in points], [y for _, y in points]
+    return max(max(xs) - min(xs), max(ys) - min(ys)) + 1
+
+
+def mac_art(plate):
+    """选点阵和整数倍数：荔枝约占底板的 72%，放不下时用小图。
+    大图（MID）只要整数倍放大后和目标差不到 15% 就用它，细节多；否则用小图（SMALL），16/32/64 都走这条。"""
+    target = plate * 0.72
+    choices = []
+    for rows in (MID, SMALL):
+        side = art_side(rows)
+        k = max(1, round(target / side))
+        if side * k <= plate - 2:  # 四周至少留 1 像素底板
+            choices.append((rows, side * k))
+    rows, size = choices[0]
+    if rows is MID and abs(size - target) > target * 0.15 and len(choices) > 1:
+        rows, size = choices[1]
+    return render(rows, size)
+
+
+def mac_icon(size):
+    """一张带底板的应用图标。底板在 4 倍画布上画再缩小，圆角才平滑。"""
+    inset = size * 100 // 1024
+    plate = size - 2 * inset
+    s = 4
+    big, box = size * s, [inset * s, inset * s, (size - inset) * s - 1, (size - inset) * s - 1]
+    radius = round(plate * s * 0.2237)  # Apple 网格：824 的底板配 185 左右的圆角
+    grad = Image.linear_gradient("L").resize((big, big))
+    fill = Image.composite(Image.new("RGBA", (big, big), PLATE_BOTTOM + (255,)),
+                           Image.new("RGBA", (big, big), PLATE_TOP + (255,)), grad)
+    mask = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(box, radius=radius, fill=255)
+    canvas = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    canvas.paste(fill, (0, 0), mask)
+    ImageDraw.Draw(canvas).rounded_rectangle(box, radius=radius, outline=PLATE_EDGE + (255,),
+                                             width=max(s, round(plate * s * 0.008)))
+    icon = canvas.resize((size, size), Image.LANCZOS)
+    art = mac_art(plate)
+    at = inset + (plate - art.width) // 2
+    icon.alpha_composite(art, (at, at))
+    return icon
+
+
+# 菜单栏模板图只涂描边、叶子和龟裂纹，果肉留空：线稿和系统菜单栏图标是一个风格，
+# 整颗涂黑则只剩一团看不出是什么的剪影。
+TRAY_INK = "ogGq"
+
+
+def tray_template(rows, size):
+    """菜单栏模板图：TRAY_INK 里的像素纯黑不透明，其余全透明，点阵原大居中。"""
+    rows = ["".join(ch if ch in TRAY_INK else "." for ch in r) for r in rows]
+    art = render(rows, art_side(rows))
+    px = art.load()
+    for y in range(art.height):
+        for x in range(art.width):
+            px[x, y] = (0, 0, 0, 255) if px[x, y][3] else (0, 0, 0, 0)
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    im.paste(art, ((size - art.width) // 2, (size - art.height) // 2))
+    return im
+
+
+def main_mac(assets):
+    if sys.platform != "darwin" or not shutil.which("iconutil"):
+        raise SystemExit("--mac 要在装有 Xcode Command Line Tools 的 macOS 上运行（用系统的 iconutil 打包 icns）")
+    # 16px 用小点阵原大；@2x（32px）用中号点阵原大，Retina 菜单栏上能看出荔枝壳的龟裂纹。
+    trays = [("szudesktop-trayTemplate.png", tray_template(SMALL, 16)),
+             ("szudesktop-trayTemplate@2x.png", tray_template(MID, 32))]
+    for name, im in trays:
+        out = os.path.join(assets, name)
+        im.save(out, format="PNG")
+        print("->", out, os.path.getsize(out), "字节", "尺寸:", im.size)
+    icons = {size: mac_icon(size) for size in sorted({size for _, size in ICONSET})}
+    out = os.path.join(assets, "szudesktop.icns")
+    with tempfile.TemporaryDirectory() as tmp:
+        iconset = os.path.join(tmp, "szudesktop.iconset")
+        os.mkdir(iconset)
+        for name, size in ICONSET:
+            icons[size].save(os.path.join(iconset, name), format="PNG")
+        subprocess.run(["iconutil", "-c", "icns", iconset, "-o", out], check=True)
+    print("->", out, os.path.getsize(out), "字节", "尺寸:", sorted(icons))
+
+
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
-    main(os.path.join(here, "..", "assets", "szudesktop.ico"))
+    if "--mac" in sys.argv[1:]:
+        main_mac(os.path.join(here, "..", "assets"))
+    else:
+        main(os.path.join(here, "..", "assets", "szudesktop.ico"))

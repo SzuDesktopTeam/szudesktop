@@ -5,7 +5,11 @@ import {isWorkspaceSave} from './focus-notifications.mjs';
 
 // 这些宠物菜单指令要看页面，先把主窗口带到前台；其余（摸摸头、喂食等）在后台执行。
 export const FOREGROUND_COMMANDS=['home','garden','farm','study'];
-export function createMainWindow({BrowserWindow,preload,smoke,openExternal,onWorkspaceSaved,onRendererGone,canHideToTray,isQuitting,quit,onSessionEnd}){
+// activateApp：用户主动要看主窗口时先把整个应用带到前台（macOS 上菜单栏图标、程序坞菜单不会激活应用，只 show 窗口可能被别的应用挡住）；
+// platform：macOS 全屏时关窗要先退出全屏。两者缺省时与 Windows 行为一致。
+export function createMainWindow({BrowserWindow,preload,smoke,openExternal,onWorkspaceSaved,onRendererGone,canHideToTray,isQuitting,quit,onSessionEnd,
+  activateApp=()=>{},platform}){
+  const mac=platform==='darwin';
   let mainWin=null;
   function create(baseUrl){
     // paintWhenInitiallyHidden:false：静默自启时窗口从未显示，页面里的 document.hidden 才是 true，
@@ -30,7 +34,12 @@ export function createMainWindow({BrowserWindow,preload,smoke,openExternal,onWor
     wc.on('will-redirect',(event,url)=>{if(!isAppUrl(url,baseUrl))event.preventDefault();});
     wc.on('render-process-gone',()=>onRendererGone());
     win.on('close',event=>{
-      if(!isQuitting()&&canHideToTray()){event.preventDefault();win.hide();}
+      if(!isQuitting()&&canHideToTray()){
+        event.preventDefault();
+        // macOS 全屏窗口直接 hide 会留下一块空的全屏桌面：先退出全屏，动画结束后再藏起来。
+        if(mac&&win.isFullScreen()){win.once('leave-full-screen',()=>{if(!win.isDestroyed())win.hide();});win.setFullScreen(false);}
+        else win.hide();
+      }
       else if(!isQuitting())quit();
     });
     win.on('closed',()=>{mainWin=null;});
@@ -40,6 +49,7 @@ export function createMainWindow({BrowserWindow,preload,smoke,openExternal,onWor
   function show(){
     if(mainWin&&!mainWin.isDestroyed()){
       if(mainWin.isMinimized())mainWin.restore();
+      activateApp();
       mainWin.show();mainWin.focus();
     }
   }

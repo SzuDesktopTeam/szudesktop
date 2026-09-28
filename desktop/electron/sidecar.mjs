@@ -54,9 +54,14 @@ function timeoutError(stderr){
   return Object.assign(new Error('后台引擎启动超时（可能有旧的 szuDesktop 后台进程正在退出）'+(detail?'，最后输出：'+detail:'')),{retryLater:true});
 }
 // 启动失败错误框的正文：有原因按原因处理；超时请稍后再开；其余情况才建议重装。
-export function startupErrorText(error){
+// platform 缺省时是 Windows 的原文；macOS 上改说活动监视器，重装就是重新把应用拖进「应用程序」。
+export function startupErrorText(error,{platform}={}){
   const message=String(error?.message||'后台引擎没有启动').replace(/[。.\s]+$/,'');
   if(error?.reason)return message+'。\n\n请按上面的原因处理后重新打开应用；若仍失败，反馈时请附上这段原因。';
+  if(platform==='darwin'){
+    if(error?.retryLater)return message+'。\n\n请稍等几秒再重新打开应用；若仍失败，请在「活动监视器」里结束名称含 szudesktop 的残留进程，或重启 Mac 后再试。';
+    return message+'。请重新打开应用；若仍失败，请重新下载 szuDesktop，把它重新拖入「应用程序」文件夹。';
+  }
   if(error?.retryLater)return message+'。\n\n请稍等几秒再重新打开应用；若仍失败，请在任务管理器结束残留的 szudesktop 后台进程，或重启电脑后再试。';
   return message+'。请重新打开应用；若仍失败，请重新安装。';
 }
@@ -138,7 +143,8 @@ async function waitHealthy(baseUrl, readyPath, timeoutMs, child, expectedVersion
 
 // stderrTo：可选的可写流，启动前后的 stderr 都原样转发过去（开发模式传 process.stderr）。
 export async function startSidecar({command,args=[],env,cwd,expectedVersion,readyPath='/api/health',readyTimeoutMs=15000,healthTimeoutMs=8000,stderrTo}){
-  const child=spawn(command,args,{env:env||process.env,cwd,stdio:['ignore','pipe','pipe'],windowsHide:true});
+  // Windows 以外让引擎自成一个进程组：强制清理时连同它拉起的 osascript、lark-cli 等子进程一起结束（见 stopSidecar）。
+  const child=spawn(command,args,{env:env||process.env,cwd,stdio:['ignore','pipe','pipe'],windowsHide:true,...(process.platform==='win32'?{}:{detached:true})});
   const stderr=captureStderr(child,stderrTo);
   let endpoint;
   try{
@@ -188,7 +194,8 @@ export function stopSidecar(child){
         if(err&&!hasExited(child))reject(new Error('sidecar 进程树清理失败',{cause:err}));else resolve();
       }));
     }else{
-      child.kill('SIGKILL');
+      // 引擎以 detached 启动，进程号就是进程组号：整组结束，孙进程不会被遗留；组已不在（或不是组长）时退回只结束引擎本身。
+      try{process.kill(-child.pid,'SIGKILL');}catch{child.kill('SIGKILL');}
     }
     if(!await waitForExit(child,1000))throw new Error('sidecar 退出超时');
   })();

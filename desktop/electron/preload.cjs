@@ -7,6 +7,8 @@ ipcRenderer.on('szu:prepare-quit',async(_event,id)=>{
 const petCommands = new Set(['pat', 'feed', 'play', 'chat', 'sleep', 'garden', 'farm', 'study', 'home']);
 contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   shell: 'electron',
+  // 页面只在 'darwin' 时换成 macOS 文案；拿不到 process（检查脚本的 vm）就给空串，页面照旧显示 Windows 原文。
+  platform: typeof process!=='undefined'&&typeof process.platform==='string'?process.platform:'',
   quit: () => ipcRenderer.invoke('szu:quit'),
   onBeforeQuit: (callback) => {
     if(typeof callback!=='function')return ()=>{};

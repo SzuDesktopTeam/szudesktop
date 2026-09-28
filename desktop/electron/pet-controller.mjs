@@ -3,15 +3,21 @@
 import {mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {petWindowOptions,petWindowBounds,petScaleClamp,petPresetFor,petSay,petSpriteFor,activePetOf,isPetSender,petIgnoresMouse,petClickThroughSupported,pointInBounds,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_WIDTH,PET_HEIGHT} from './pet-policy.mjs';
+import {petWindowOptions,petPlatformOptions,petTopLevel,petWindowBounds,petScaleClamp,petPresetFor,petSay,petSpriteFor,activePetOf,isPetSender,petIgnoresMouse,petClickThroughSupported,pointInBounds,PET_SCALE_DEFAULT,PET_SCALE_PRESETS,PET_WIDTH,PET_HEIGHT} from './pet-policy.mjs';
 import {PETS} from './pet-catalog.mjs';
 
 export const PET_REFRESH_MS=30000;
+// macOS 上同一次按压结束后这么久之内再次请求菜单，视为同一个手势的重复请求。
+export const PET_MENU_REPEAT_MS=1000;
+// activateApp 缺省什么也不做：宠物是不激活应用的面板，点它不该抢走前台应用的焦点；只有真机证实菜单弹不出来时才由 main 接上。
 export function createPetController({BrowserWindow,Menu,screen,dialog,platform,html,preload,smoke,petShot,gardenEngine,loadWorkspace,
-  readPreferences,changeSettings,saveSettings,isQuitting,observeWorkspace,dispatch,refreshTray,publishScale,quit,
-  setInterval:repeat=setInterval,clearInterval:cancel=clearInterval}){
+  readPreferences,changeSettings,saveSettings,isQuitting,observeWorkspace,dispatch,refreshTray,publishScale,quit,activateApp=()=>{},
+  setInterval:repeat=setInterval,clearInterval:cancel=clearInterval,now=Date.now}){
+  const mac=platform==='darwin';
   let petWin=null,petTimer=null,petGreeted=false,petHtmlUrl=null,petScale=PET_SCALE_DEFAULT;
   let petMenu=null,petGame=null,petPosition=null,petDrag=null,petHit=false,petMenuOpen=false,petIgnoring=null;
+  // 只在 macOS 上使用的菜单手势记录：菜单是否正在打开、第几次按压、这次按压何时结束（null 表示还按着）、上次菜单属于哪次按压。
+  let petMenuPending=false,petPress=0,petPressEnded=-Infinity,petMenuPress=null;
 
   function sendPet(channel,payload){
     if(petWin&&!petWin.isDestroyed())petWin.webContents.send(channel,payload);
@@ -53,9 +59,11 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     if(isQuitting())return;
     const {workArea}=petPosition?screen.getDisplayNearestPoint(petPosition):screen.getPrimaryDisplay();
     petHtmlUrl=pathToFileURL(html).href;
-    petWin=new BrowserWindow({...petWindowOptions(workArea,petScale,petPosition),alwaysOnTop:readPreferences().petAlwaysOnTop,
+    petWin=new BrowserWindow({...petWindowOptions(workArea,petScale,petPosition),alwaysOnTop:readPreferences().petAlwaysOnTop,...petPlatformOptions(platform),
       webPreferences:{preload,contextIsolation:true,nodeIntegration:false,sandbox:true}});
     petWin.setMenuBarVisibility(false);
+    // 应用菜单「窗口」一栏只列用户能切换的窗口，宠物不在其中。
+    if(mac)petWin.excludedFromShownWindowsMenu=true;
     petHit=false;petMenuOpen=false;
     syncPetMouse();
     const pwc=petWin.webContents;
@@ -65,9 +73,15 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     pwc.on('will-navigate',event=>event.preventDefault());
     pwc.on('will-redirect',event=>event.preventDefault());
     petWin.on('closed',()=>{petWin=null;});
+    // macOS 上 ⌘H、别的应用里的「隐藏其他」会把宠物随整个应用藏起来，设置却没变；菜单栏图标和程序坞菜单的
+    // 「隐藏宠物/显示宠物」按窗口真实显隐重建，点一次「显示宠物」就经 applyPreferences 的 showInactive 只把宠物带回来。
+    if(mac){petWin.on('hide',()=>refreshTray());petWin.on('show',()=>refreshTray());}
     await petWin.loadFile(html);
     if(isQuitting()||!petWin||petWin.isDestroyed())return;
-    petWin.setAlwaysOnTop(readPreferences().petAlwaysOnTop,'screen-saver');
+    petWin.setAlwaysOnTop(readPreferences().petAlwaysOnTop,petTopLevel(platform));
+    // macOS：切换桌面或进入全屏应用时宠物跟着走。skipTransformProcessType 必须带上，
+    // 否则 Electron 会把整个应用改成没有程序坞图标和应用菜单的后台进程。
+    if(mac)petWin.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true,skipTransformProcessType:true});
     if(readPreferences().petVisible)petWin.showInactive();
     syncPetGeometry();
     // 首帧推送：立绘 + 招呼台词，随后每 ~30s 刷新一次。
@@ -109,9 +123,22 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
   function changePetSize(scale){
     try{applyPetScale(scale);}catch{sendPet('pet:say','大小没有保存成功，请检查本机配置目录后再试。');}
   }
+  // macOS 的 Control 点按会先后送来 pointerdown（左键）和 contextmenu，按压结束时又可能再请求一次菜单；
+  // NSMenu 跟踪菜单期间还可能吞掉 pointerup，拖动状态就一直不结束、点击穿透也恢复不了。
+  // 所以在 macOS 上：菜单打开中或正在打开时不再打开；同一次按压已经请求过菜单时，按压结束后 1 秒内的再次请求忽略。
+  // 其他平台这些条件恒为假，行为与原来一致。
+  function repeatedMenuGesture(){
+    return petMenuOpen||petMenuPending||(petMenuPress===petPress&&(petPressEnded===null||now()-petPressEnded<PET_MENU_REPEAT_MS));
+  }
   async function openPetMenu(){
     if(!petWin||petWin.isDestroyed()||isQuitting())return;
+    if(mac){
+      if(repeatedMenuGesture())return;
+      // 在等待存档之前就记下，等待期间到达的第二次请求直接被挡住；此后到弹出菜单之间没有 await，不会再插进别的请求。
+      petMenuPending=true;petMenuPress=petPress;
+    }
     await pushPetState();
+    petMenuPending=false;
     if(!petWin||petWin.isDestroyed()||isQuitting())return;
     const pet=activePetOf(petGame);
     const care=(label,command)=>({id:command,label,enabled:Boolean(pet),click:()=>dispatch(command)});
@@ -140,8 +167,11 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
       {label:'隐藏宠物',click:()=>changeSettings({petVisible:false})},
       {label:'退出应用',click:()=>quit()},
     ]);
+    // 按压还没结束就要弹菜单（Control 点按、按住时按回车）：先把拖动收尾，菜单跟踪期间可能再也收不到 pointerup。
+    if(mac&&petDrag){endPetDrag();petPressEnded=now();}
     petWin.setFocusable(true);
     petMenuOpen=true;syncPetMouse();
+    if(mac)activateApp();
     petMenu.popup({window:petWin,callback:()=>{
       petMenuOpen=false;
       if(petWin&&!petWin.isDestroyed()){petWin.setFocusable(false);settlePetHit();syncPetMouse();}
@@ -160,7 +190,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
   // 桌面设置里宠物的部分：置顶、显示/隐藏。
   function applyPreferences(preferences){
     if(petWin&&!petWin.isDestroyed()){
-      petWin.setAlwaysOnTop(preferences.petAlwaysOnTop,'screen-saver');
+      petWin.setAlwaysOnTop(preferences.petAlwaysOnTop,petTopLevel(platform));
       // 隐藏期间不刷新伙伴状态；重新显示时立刻补一次。
       if(preferences.petVisible){const hidden=!petWin.isVisible();petWin.showInactive();if(hidden)void pushPetState();}
       // 隐藏后立绘收不到 pointerleave：直接恢复点击穿透，再显示时不会整窗挡住下层。
@@ -184,17 +214,21 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
   // 记下最近的进出及当时是否仍忽略鼠标：真实光标的转发事件会紧跟着改写瞬时状态，检查只看发生过什么。
   let petHitLog=[];
   function setHit(inside){petHit=inside;syncPetMouse();petHitLog=[...petHitLog.slice(-19),{inside,ignoring:petIgnoring}];}
+  // 拖动收尾：移动过才保存位置，然后按系统光标位置恢复点击穿透。
+  function endPetDrag(){
+    if(petDrag.moved){try{saveSettings(petScale,petPosition);}catch{sendPet('pet:say','位置没有保存成功，下次打开可能回到原处。');}}
+    petDrag=null;settlePetHit();syncPetMouse();
+  }
   function drag(phase,point){
+    if(mac&&phase==='start'){petPress++;petPressEnded=null;}
+    if(mac&&phase==='end')petPressEnded=now();
     if(phase==='start'){petDrag={cursor:point,bounds:petWin.getBounds(),moved:false};syncPetMouse();}
     else if(phase==='move'&&petDrag){
       const {workArea}=screen.getDisplayNearestPoint(point);
       const position={x:petDrag.bounds.x+point.x-petDrag.cursor.x,y:petDrag.bounds.y+point.y-petDrag.cursor.y};
       petWin.setBounds(petWindowBounds(workArea,petScale,position));
       petDrag.moved=true;syncPetGeometry();
-    }else if(phase==='end'&&petDrag){
-      if(petDrag.moved){try{saveSettings(petScale,petPosition);}catch{sendPet('pet:say','位置没有保存成功，下次打开可能回到原处。');}}
-      petDrag=null;settlePetHit();syncPetMouse();
-    }
+    }else if(phase==='end'&&petDrag)endPetDrag();
   }
   // 主窗执行完宠物指令后的回执：先按存档刷新，再说结果、播放对应动作。
   async function showResult(result){
@@ -210,6 +244,8 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     create:createPetWindow,pushState:pushPetState,applyScale:applyPetScale,changeSize:changePetSize,
     stepScale:direction=>changePetSize(petScale+direction*0.1),openMenu:openPetMenu,sizeMenu:petSizeMenu,
     applyPreferences,watchDisplays,setHit,drag,showResult,destroy,
+    // 主进程主动让宠物说一句（例如 macOS 上系统通知发不出去时）。
+    say:text=>sendPet('pet:say',petSay(text)),
     // 启动时恢复上次保存的大小与位置。
     restore:({scale,position})=>{petScale=scale;petPosition=position||null;},
     isSender:event=>Boolean(petHtmlUrl)&&isPetSender(event,petWin,petHtmlUrl),

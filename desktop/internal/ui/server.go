@@ -204,6 +204,11 @@ func (s *Server) Run() error {
 	if err := instance.publish(url); err != nil {
 		return err
 	}
+	// 协议行一发出，外壳就可能用 SIGTERM 结束引擎：在那之前先接住 SIGTERM 等信号，
+	// 等下面的排空路径建好再走它（Windows 为空实现），见 server_signal_unix.go。
+	shutdownReady := make(chan struct{})
+	stopSignals := notifyShutdownSignals(func() { <-shutdownReady; s.shutdown() })
+	defer stopSignals()
 	announce(startupOutput, "已启动", url, s.apiToken)
 
 	if s.opts.AutoLogin {
@@ -242,6 +247,7 @@ func (s *Server) Run() error {
 			_ = srv.Shutdown(ctx)
 		})
 	}
+	close(shutdownReady)
 	done := make(chan struct{})
 	defer close(done)
 	go s.watchWindows(done)

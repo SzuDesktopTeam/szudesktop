@@ -17,7 +17,7 @@
   --error: #a03f3b;
   --magic: #71508c;
   --rose: #a3485d;
-  --pixel: "Fusion Pixel 12px Proportional Simplified Chinese", "Microsoft YaHei UI", monospace;
+  --pixel: "Fusion Pixel 12px Proportional Simplified Chinese", "Microsoft YaHei UI", "PingFang SC", monospace;
   --body: "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
   font-family: var(--body);
   font-size: 15px;

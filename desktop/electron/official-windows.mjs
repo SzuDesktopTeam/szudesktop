@@ -7,8 +7,9 @@ import {isFeishuDocumentURL} from './feishu-policy.mjs';
 import {isSafeExternalUrl} from './external-url.mjs';
 
 // reportSchoolCleanup：学校会话清不掉时是否提示用户（复用便携版的引擎时会话留在对方进程里；冒烟测试不弹框）。
-export function createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,getBaseURL,getToken,isQuitting,reportSchoolCleanup}){
-  const electron={BrowserWindow,Menu,dialog,session,shell};
+// onWindowMenu、platform 原样交给两个窗口模块（macOS 上菜单项进应用菜单的「页面」一栏）；缺省时与 Windows 行为一致。
+export function createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,getBaseURL,getToken,isQuitting,reportSchoolCleanup,onWindowMenu,platform}){
+  const electron={BrowserWindow,Menu,dialog,session,shell,onWindowMenu,platform};
   const schoolWindows=createSchoolWindows(getBaseURL,getToken,electron);
   const feishuWindow=createFeishuWindow(electron);
   function openExternal(url){
@@ -17,7 +18,8 @@ export function createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,g
       return;
     }
     if(isSchoolURL(url)){
-      void schoolWindows.open(url).catch(()=>dialog.showErrorBox('学校页面暂时无法打开','请检查校园网或 WebVPN；可通过学校窗口菜单在系统浏览器中打开。'));
+      void schoolWindows.open(url).catch(()=>dialog.showErrorBox('学校页面暂时无法打开',platform==='darwin'?'请检查校园网或 WebVPN；可通过菜单栏的「页面」菜单在系统浏览器中打开。'
+        :'请检查校园网或 WebVPN；可通过学校窗口菜单在系统浏览器中打开。'));
       return;
     }
     if(isSafeExternalUrl(url)) void shell.openExternal(url).catch(()=>{

@@ -4,7 +4,7 @@ import {readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {readPetSettings} from './pet-settings.mjs';
 import {readDesktopSettings} from './desktop-settings.mjs';
-import {petWindowBounds} from './pet-policy.mjs';
+import {petWindowBounds,petClickThroughSupported} from './pet-policy.mjs';
 import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
 import {PET_CLIPS} from './pet-animation.mjs';
 import {TOKEN_HEADER} from './listen-url.mjs';
@@ -27,8 +27,10 @@ function evalWithin(win,label,source,ms=15000){
   return Promise.race([win.webContents.executeJavaScript(source),timeout]).finally(()=>clearTimeout(timer));
 }
 
+// 慢环境（Apple 芯片上经 Rosetta 跑 x64 包）由冒烟脚本放宽等待；没设置时仍是 6 秒，Windows 冒烟不受影响。
+const WAIT_SCALE=Math.max(1,Number(process.env.SZU_SMOKE_WAIT_SCALE)||1);
 async function until(read, message) {
-  const end=Date.now()+6000;
+  const end=Date.now()+6000*WAIT_SCALE;
   while(Date.now()<end){if(await read())return;await new Promise(r=>setTimeout(r,50));}
   throw Error(message);
 }
@@ -146,9 +148,9 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   trace('main-hidden');
   assert.ok(!mainWin.isDestroyed()&&!mainWin.isVisible(),'close hides main without destroying it');
   const target=await pet("(()=>{const r=document.querySelector('#pet').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
-  // 透明区域默认点穿；指针进入立绘后才接收点击，离开后恢复穿透。
+  // 透明区域默认点穿；指针进入立绘后才接收点击，离开后恢复穿透。支持转发鼠标移动的平台（Windows、macOS）都要验。
   let clickThrough=null;
-  if(process.platform==='win32'){
+  if(petClickThroughSupported(process.platform)){
     assert.equal(getPetMouse().ignoring,true,'transparent pet area lets clicks through by default');
     // CI 桌面上真实光标的位置也会经 forward 转发进来，可能紧跟着触发 pointerleave；所以检查进出记录，而不是轮询瞬时状态。
     const seen=getPetHitLog().length;

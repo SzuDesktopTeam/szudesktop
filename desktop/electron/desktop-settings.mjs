@@ -34,7 +34,8 @@ export function validateDesktopPatch(patch) {
   }
   return {...patch};
 }
-export const loginItemSupported = (platform,packaged) => platform==='win32'&&packaged;
+// macOS 还要求应用已在「应用程序」文件夹里：从 DMG 或下载目录直接运行时登记的是临时位置，拖走之后登录项就失效了。
+export const loginItemSupported = (platform,packaged,inApplications=true) => (platform==='win32'||platform==='darwin'&&inApplications)&&packaged;
 export const loginItemOptions = executable => ({path:executable,args:['--autostart']});
 export const isQuietStartup = argv => argv.includes('--autostart');
 // 启动 sidecar 的参数：除非用户开启了“启动时自动连接校园网”，一律不自动登录；冒烟测试永远不登录。
@@ -59,6 +60,7 @@ export function startupApprovedEnabled(output) {
 
 // The OS is the source of truth. Reading never creates or rewrites a login item.
 export function createLoginItemControl(app,{platform=process.platform,executable=process.execPath,name=APP_USER_MODEL_ID,query=queryRegistryValue}={}) {
+  if(platform==='darwin')return macLoginItemControl(app);
   const supported=loginItemSupported(platform,app.isPackaged);
   const options=loginItemOptions(executable);
   const get=()=>{
@@ -87,5 +89,55 @@ export function createLoginItemControl(app,{platform=process.platform,executable
       if(actual!==enabled)throw Error('系统没有应用这次自启设置，请检查 Windows 启动应用设置');
       return actual;
     },
+  };
+}
+
+// macOS 的登录项由 Electron 经 SMAppService 登记（需要 macOS 13），用户在「系统设置 → 通用 → 登录项与扩展」里的开关才是准的
+// （macOS 15 起叫这个名字，13、14 上叫「登录项」，按新名字找也能对上）：
+// 登记了但还没被允许时 status 为 requires-approval，登记的程序已不在原处时为 not-found，这两种都不算开启。
+// 只写 openAtLogin：不传 path 和参数，静默启动改由 wasOpenedAtLogin 判断（见 openedAtLogin）。
+// 没有需要修复的旧登记，repair 恒为 false。hint 给设置页显示原因：不在「应用程序」里、等待用户在系统设置里允许。
+function macLoginItemControl(app) {
+  const inApplications=Boolean(app.isInApplicationsFolder?.());
+  const supported=loginItemSupported('darwin',app.isPackaged,inApplications);
+  const status=()=>app.getLoginItemSettings().status;
+  const get=()=>{
+    if(!supported)return false;
+    const state=app.getLoginItemSettings();
+    return Boolean(state.openAtLogin&&state.status!=='requires-approval'&&state.status!=='not-found');
+  };
+  return {
+    supported,
+    get,
+    get hint(){
+      if(!inApplications)return 'not-in-applications';
+      return supported&&status()==='requires-approval'?'requires-approval':undefined;
+    },
+    repair:async()=>false,
+    set:enabled=>{
+      if(!supported)throw Error(app.isPackaged?'请先把 szuDesktop 拖到「应用程序」文件夹，再从那里打开后开启':'开发模式不支持登录时启动');
+      if(typeof enabled!=='boolean')throw Error('自启开关格式不正确');
+      app.setLoginItemSettings({openAtLogin:enabled});
+      if(enabled&&status()==='requires-approval')throw Error('macOS 需要你在「系统设置 → 通用 → 登录项与扩展」里允许 szuDesktop，允许后才会在登录时启动');
+      const actual=get();
+      if(actual!==enabled)throw Error('系统没有应用这次登录时启动设置，请检查「系统设置 → 通用 → 登录项与扩展」');
+      return actual;
+    },
+  };
+}
+// 本次启动是不是登录时由系统拉起的（只在 macOS 上判断；Windows 的静默自启仍看 --autostart 参数）。
+// platform 不给时按今天的行为返回 false，由 main.mjs 显式传 process.platform。
+export function openedAtLogin(app,platform) {
+  return platform==='darwin'&&Boolean(app.getLoginItemSettings().wasOpenedAtLogin);
+}
+// 注销时勾选了「重新登录时重新打开窗口」：登录后系统恢复会再启动一次应用，与登录项同时到达，
+// 表现为紧跟着的 second-instance 或 activate。登录拉起后 windowMs 内的第一次这样的请求不弹主窗，之后照常。
+// 返回的判定函数为 true 表示这次请求应当忽略；Windows 上恒为 false。
+export function createLoginReopenGuard({platform,openedAtLogin,now=Date.now,windowMs=15000}={}) {
+  const started=now();let used=false;
+  return ()=>{
+    if(platform!=='darwin'||!openedAtLogin||used||now()-started>=windowMs)return false;
+    used=true;
+    return true;
   };
 }

@@ -105,7 +105,7 @@
 .note-markdown :is(h2,h3,h4,h5,h6) { font-family:var(--body,"Microsoft YaHei",sans-serif); color:var(--note-ink); line-height:1.55; margin:25px 0 12px; font-weight:600; }
 .note-markdown h2 { font-size:22px; }.note-markdown h3 { font-size:18px; }.note-markdown h4 { font-size:16px; }
 .note-markdown :is(ul,ol) { padding-left:23px; margin:13px 0 20px; }.note-markdown li { margin:5px 0; }
-.note-markdown code { font:12px/1.75 Consolas,"Courier New",monospace; background:#eff1e7; padding:2px 4px; border-radius:2px; }
+.note-markdown code { font:12px/1.75 Consolas,Menlo,"SF Mono","Courier New",monospace; background:#eff1e7; padding:2px 4px; border-radius:2px; }
 .note-markdown pre { overflow:auto; max-width:100%; padding:14px; background:#eff1e7; border:1px solid #dde4d4; }.note-markdown pre code { padding:0; white-space:pre; }
 .note-markdown blockquote { border-left:3px solid #aec39c; color:#76816e; padding:4px 14px; margin:16px 0; background:#f5f7ef; }
 .note-markdown a { color:var(--note-green); text-decoration:underline; text-underline-offset:3px; }

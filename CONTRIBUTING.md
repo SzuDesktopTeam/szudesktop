@@ -14,6 +14,7 @@
 | Go | 版本见 `go.mod`，编译 CLI 与桌面服务 |
 | Python 3 | 构建、冒烟、打包脚本 |
 | Node.js | 前端与 Electron 回归检查脚本（`desktop/check-*.mjs`、`desktop/electron/check-*.mjs`） |
+| Xcode Command Line Tools | 只在构建 macOS 桌面版时需要：`codesign`、`lipo`、`vtool`、`hdiutil`、`iconutil`，见[macOS 桌面版](#macos-桌面版) |
 
 `build-windows.py` 用 `GOOS=windows` 交叉编译，图标和版本信息由纯 Python 的 `add_resource.py` 写入，
 不依赖 Windows 专属工具（CI 只在 Windows runner 上跑它）；需要 Edge 或 Chrome 的是整机冒烟
@@ -21,8 +22,8 @@
 
 **本地试用界面**：在 Windows 上跑完 `python desktop/build-windows.py` 后，直接运行
 `dist/szudesktop-windows-amd64.exe`（就是便携版里的 `szudesktop.exe`，用本机 Edge / Chrome 开窗）。
-桌面服务入口是 `desktop/cmd/szudesktop`；在 macOS / Linux 上 `go run ./desktop/cmd/szudesktop`
-没有验证过，这两个平台的桌面端也不在发布范围内（见[范围与非目标](#范围与非目标)）。
+桌面服务入口是 `desktop/cmd/szudesktop`；在 Linux 上 `go run ./desktop/cmd/szudesktop`
+没有验证过，Linux 桌面端也不在发布范围内（见[范围与非目标](#范围与非目标)）。macOS 的开发模式与打包见[macOS 桌面版](#macos-桌面版)。
 
 ## 界面资源的规矩
 
@@ -104,6 +105,67 @@ python desktop/make_release.py       # 生成便携 ZIP（只在真的要发布�
 `check_licenses.py` 也会提示 vendor 文件是 CRLF。删掉对应文件后 `git checkout -- <路径>`，
 或整库重新检出一次即可。
 
+## macOS 桌面版
+
+macOS 版与 Windows 安装版是同一套 Electron 外壳加 Go 引擎，按芯片出两个 ad-hoc 签名的 DMG
+（`szuDesktop-<版本>-mac-arm64.dmg`、`-mac-x64.dmg`），不公证、不做自动更新。实现取舍与验收边界见
+[STATUS 第 68 节](docs/STATUS.md#s68)。只能在 macOS 上构建，需要 Xcode Command Line Tools；首次先在
+`desktop/electron` 里 `npm ci`。
+
+```text
+python3 desktop/build-macos.py            # 编 arm64 与 amd64 两个引擎并 ad-hoc 签名：dist/szudesktop-darwin-<arch> 及 .sha256
+python3 desktop/build-macos.py --dev      # 只编本机架构，再复制成 dist/szudesktop 给开发模式用
+cd desktop/electron && npm start          # 开发模式（先跑上一行）
+node desktop/electron/build-mac.mjs       # 打两个 DMG，输出到 desktop/electron/release/（默认先调 build-macos.py）
+make desktop-mac                          # 等于 build-macos.py 再 build-mac.mjs --skip-sidecar
+make desktop-mac-dev                      # 等于 build-macos.py --dev
+```
+
+- `build-macos.py` 的 `--arch arm64|amd64` 可以重复；amd64 的 `--version` 自检在 Apple 芯片上要有 Rosetta。
+  引擎的 `.sha256` 写的是相对仓库根的路径，所以在仓库根核对：`shasum -a 256 -c dist/szudesktop-darwin-*.sha256`。
+- `build-mac.mjs` 的 `--arm64` / `--x64` 只打一个架构，`--skip-sidecar` 复用已编好的引擎（CI 就这样复用冒烟通过的那份）。
+  引擎放在 .app 的 `Contents/MacOS/szudesktop-engine`：那是嵌套代码的位置，随整个应用一起签名、一起过 Gatekeeper。
+  它由 `build-macos.py` 预签名（`com.szudesktop.engine`），`electron-builder.yml` 的 `signIgnore` 不再重签，所以包里的引擎
+  与冒烟通过的那份逐字节一致。打完脚本断言 ad-hoc 签名、引擎字节、版本号与最低系统版本，再写 DMG 的 `.sha256`；
+  hdiutil 偶发「Resource busy」时整轮重打，最多再试 2 次。`release/builder-debug.yml` 不要上传。
+- 图标：`python3 desktop/design/gen_icon.py --mac` 生成 `szudesktop.icns` 和菜单栏模板图，需要 Pillow 和 `iconutil`。
+  产物已提交；不加 `--mac` 时仍只生成 `.ico`，字节不变。
+- `npm ci` 可能因 npm 的 allow-scripts 策略跳过 Electron 的 postinstall：开发模式缺 `node_modules/electron/dist` 时执行
+  `node node_modules/electron/install.js`（需要时设 `ELECTRON_MIRROR`）。打包用 electron-builder 缓存的 Electron 压缩包，不受影响。
+- 本机会留下的痕迹：开发模式的 Electron 会建 `com.github.Electron` 偏好域，并把 `node_modules/electron/dist/Electron.app`
+  登记进 LaunchServices；electron-builder 会把 `release/mac*/szuDesktop.app` 登记进 LaunchServices。要清理时用
+  `/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u <路径>`。
+
+### macOS 冒烟
+
+- `python3 desktop/smoke_macos.py --arch arm64|amd64`：引擎冒烟。签名与架构、与 `smoke_windows.py` 相同的接口检查、
+  2KB 学校会话只在钥匙串留密钥（密文在 `session.enc`，0600）、SIGTERM 优雅退出、launchd 默认 PATH 下的开机自启状态。
+- `python3 desktop/electron/smoke_dmg.py --arch arm64|x64 [--dmg <路径>]`：DMG 安装版冒烟。挂载、复制、静态核对，
+  真启动四次（首次打开、重开、真实的 quit Apple Event、复用便携引擎），最后删掉复制出来的 .app 并核对数据不动。
+- 两个脚本默认只在一次性的 GitHub macOS runner 上运行；开发机上必须显式加 `--local`，否则什么都不做就退出。
+  它们只用临时目录里的配置，钥匙串只会建带 `-test-<配置目录哈希>` 的条目、结束时删掉，并核对真实
+  `szunet` / `szunet-session` 条目的修改时间不变。`smoke_dmg.py --local` 另外会：先 `defaults export` 备份
+  `com.szudesktop.app` 偏好，结束后还原（本来没有就 `defaults delete`，并删掉它留下的空 plist；不直接拷 plist 文件，
+  免得被 cfprefsd 的缓存覆盖）；删掉本次新建的 `~/Library` 缓存目录；从 LaunchServices 注销复制出来的 .app；
+  只结束自己启动的进程。它会在屏幕上真的打开窗口，运行时不要去点。
+- 证据写在 `desktop/electron/release/smoke-evidence-mac-<arch>/`，写完把令牌打码。
+
+### 验证分层
+
+- **A 类**（本机自动执行）：Go 测试（含 `GOARCH=amd64` 在 Rosetta 下）、`run-checks.mjs`、引擎与 DMG 冒烟、Windows 打包比对。
+  全程设置 `SZUNET_CONFIG_DIR`，只碰带 `-test-` 的钥匙串条目，不登记登录项、不注销、不打开系统设置、不改通知权限。
+- **B 类**（B1–B9，清单见 [STATUS 68.2](docs/STATUS.md#s68-2)）：必须由人在**独立的 macOS 用户账户或虚拟机**里做，
+  不在日常使用的账户上做——注销会结束当前会话，从「应用程序」直接运行会读写与命令行版共用的真实钥匙串条目，
+  登记登录项和改通知权限会改动真实系统。B 类全部通过前不发布带 DMG 的版本，由 `desktop/release_notes.py` 的 `MAC_SINCE`
+  开关把关（见[发布](#发布)）。
+- CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
+- 第一个 macOS 版本发布前没有可作升级基线的旧版，`smoke_dmg.py` 不做跨版本升级；首个版本发布后再按
+  `smoke_installer.py` 的做法固定基线。
+- 多人或多个 agent 在同一个工作树里并行改动时，凡是运行 `sync-assets.py`、`go build` / `vet` / `test`、`run-checks.mjs`、
+  `npm`、`electron`、`electron-builder`、`hdiutil` 的验证，都经同一把锁串行执行，例如
+  `/usr/bin/lockf -k /tmp/szudesktop-verify.lock sh -c '…'`：`sync-assets.py` 会先删掉整个 `desktop/internal/ui/assets` 再复制，
+  和并行的 go:embed 编译、检查互相踩。
+
 ## 硬规矩（红线）
 
 1. **不许谎报成功。** 读不到状态就报「状态未知」，请求失败就报错，
@@ -184,9 +246,11 @@ node desktop/electron/check-pet-view.mjs
   根目录的 `THIRD_PARTY_NOTICES.md` 写来源和改动。
 - 安装版把项目 `LICENSE`、`THIRD_PARTY_NOTICES.md` 和上面各许可文件放进 `resources/licenses/`
   （`electron-builder.yml` 的 `extraResources`），便携 ZIP 放在解压目录（`make_release.py`）；
-  Electron 与 Chromium 自带的许可留在安装目录。
+  Electron 与 Chromium 自带的许可留在安装目录。macOS 的 .app 放在 `Contents/Resources/licenses/`：DMG 里只有 .app，
+  所以 `mac-electron-licenses.cjs` 在打包时把 Electron 与 Chromium 的许可也复制进同一目录。
 - `check_licenses.py` 核对许可源文件存在、两种包的配置都带上了它们、vendor 文件与 `SOURCE.json` 的哈希一致；
-  加 `--portable <zip>` 或 `--electron <win-unpacked 目录>` 还会核对成品里的内容。
+  加 `--portable <zip>` 或 `--electron <win-unpacked 目录或 szuDesktop.app>` 还会核对成品里的内容（`.app` 的分支
+  每次运行都先用临时假包自测一遍）。
 - 新增或改动第三方素材时，同步 `SOURCE.json`、`THIRD_PARTY_NOTICES.md` 和许可文件；新的许可文件还要加进
   `check_licenses.py` 的 `EXPECTED`、`electron-builder.yml` 和 `make_release.py`。
 - 庭院玩法参考 Stardew Valley 和动物森友会，但不复制它们的素材或代码；委托规则和文字由本项目编写。
@@ -236,11 +300,11 @@ node desktop/electron/check-pet-view.mjs
 
 提 PR 前先确认改动在当前范围内（依据 [STATUS 1.1 节](docs/STATUS.md#s1-1)和 [第 50.2 节](docs/STATUS.md#s50-2)）：
 
-- 1.0 先完成 Windows 桌面版（安装版与便携版）。macOS / Linux 只发命令行 `szunet`，
-  桌面端在路线图里是 X06「待做」、P3。
+- 1.0 先完成 Windows 桌面版（安装版与便携版）。macOS 桌面版（按芯片两个 DMG）已实现，B1–B9 真机验收通过后
+  才随版本发布（[STATUS 第 68 节](docs/STATUS.md#s68)）；Linux 仍只发命令行 `szunet`，桌面端是 X06 的剩余部分。
 - 暂不部署校内后端、Docker 或服务器发布流程；云同步与好友庭院、内容和素材热更新、自动下载安装更新、
   整机 VPN、图书馆选座、余额与流量都已延期，方案保留在 STATUS 原章节。
-- 安装包未签名；目前只有手动版本查询（UX21），没有自动更新。
+- Windows 安装包未签名，macOS 包只有 ad-hoc 签名、未经公证；目前只有手动版本查询（UX21），没有自动更新。
 - 学校业务（R01–R07）以真实账号验收为准，本机和 CI 检查不能代替；没验收的不要在文档或界面里写成可用。
 
 ## 发布
@@ -263,8 +327,8 @@ node desktop/electron/check-pet-view.mjs
     拿不到任何可分类的内容，所以说明必须自己写。
 - `.github/workflows/release.yml` 在 PR、推到 main、打 `beta*` / `v*` 标签时都会运行，
   同一分支连推时自动取消旧的运行（标签发布不取消）。它不是一条直链：
-  - `test`（ubuntu）与 `test-macos`（macOS 真机：同步资源 + `go vet` + `internal/credential` 测试 +
-    对真实 `security` 命令的 stdin 探针）**并行**跑。`test` 同步资源后跑 `run-checks.mjs`、
+  - `test`（ubuntu）与 `test-macos`（macOS 真机：同步资源 + `run-checks.mjs` + `go vet` + `go test ./...` 与 campusvpn
+    界面包测试 + 对真实 `security` 命令的 stdin 探针，另有一条只记录、不断言的钥匙串长输入探针）**并行**跑。`test` 同步资源后跑 `run-checks.mjs`、
     `go vet`、`go vet -tags campusvpn` 和 `go test -race`；打标签时它的第一步先核对
     标签等于 `internal/version/VERSION`、CHANGELOG 能按发布模式抽取，对不上几秒内就失败。
   - `test` 通过后，`build-cli`（一台 runner 上 `make cross` 交叉编译 5 个平台，逐个生成 `.sha256`）
@@ -273,9 +337,26 @@ node desktop/electron/check-pet-view.mjs
   - `build-desktop-electron-windows` 等 `build-desktop-windows` 通过后，**直接用它上传的那份引擎**
     打 NSIS 安装包（不重新编译），并核对安装包里的引擎与冒烟通过的字节一致，
     再从最新公开版安装、升级、重开、卸载一遍。
+  - macOS 这条线与 Windows 并行：`test` 通过后，`build-desktop-macos`（arm64 runner）编两个架构的引擎并 ad-hoc 签名，
+    arm64 原生、amd64 经 Rosetta 各跑一遍 `smoke_macos.py`；`build-desktop-electron-macos` **直接用这两份引擎**打两个 DMG，
+    核对包里的引擎与冒烟通过的字节一致，再对 arm64 与 x64（Rosetta）各跑一遍 `smoke_dmg.py`。真实 quit Apple Event 那一步
+    如被 runner 的系统拒绝（-1743），脚本记为跳过并打印警告。
+  - `smoke-desktop-electron-macos-intel`（`macos-15-intel`）在真 Intel 机器上再跑一遍 x64 的两种冒烟：Rosetta 会掩盖只在
+    Intel 上出现的问题。这种 runner 排队慢，所以只在推到 main、打标签和手动触发时运行，不卡 PR。镜像预计 2027 年 8 月前后下线：
+    届时删掉这个 job（DMG 发布已开启的话，同时从 `release` 的 `needs` 里去掉），x64 包只在 Rosetta 下验证，
+    发布前另在 Intel Mac 上人工抽测一遍。
   - 最后 `release` 等 `[build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos]`
     全绿，核对全部 `.sha256` 后才发。整个 workflow 默认只读，只有 `release` 有写权限；
     action 都固定在提交 SHA 上，由 Dependabot 提 PR 升级。
+- **DMG 暂不随版本发布。** B1–B9 真机验收（[STATUS 68.2](docs/STATUS.md#s68-2)）全部通过之前，`desktop/release_notes.py`
+  的 `MAC_SINCE` 保持 `None`：`release` 不等上面三个 macOS 打包与冒烟 job、不上传 DMG，发布说明也不列 DMG，
+  Windows 版照常发布，不会被 macOS 的 job 或 Intel runner 卡住。CHANGELOG 里介绍 DMG 的条目先留在「未发布」一节：
+  打标签时（`--release`）正文提到 `.dmg` 而这一版不发 DMG，`release_notes.py` 直接失败。
+  - 验收通过后在同一个 PR 里开启：`MAC_SINCE` 设成那一版的版本号；`release` 的 `needs` 加上
+    `build-desktop-electron-macos` 和 `smoke-desktop-electron-macos-intel`；下载 `szudesktop-electron-macos` 到 `dist`；
+    `files` 加两个 DMG 及其 `.sha256`（这几步也写在 release.yml Intel 冒烟 job 上方的注释里）。
+  - `check_release_notes.py` 核对开关、`release.yml` 与 STATUS 68.2 一致：只改了其中一处，或 B1–B9 还有没标「通过」的，检查就失败。
+  - 开启后 macOS 只发两个 DMG 及其 `.sha256`，裸的 `szudesktop-darwin-*` 引擎只在 job 之间传递。
 - **`test-macos` 会阻断发布**——它在 `release.needs` 里。它曾经带 `continue-on-error`，
   把真实的失败显示成 success，于是 beta0.7.1 / beta0.7.2 带着「macOS 上存不了凭据」
   发了出去（F26）；修好之后那个开关就被摘掉了，原委见 `docs/STATUS.md` 第 39.4 节。
@@ -284,6 +365,11 @@ node desktop/electron/check-pet-view.mjs
   beta0.7.1 / beta0.7.2 只喂一行，在那种机器上得到 `passwords don't match`（退出码 44）、存不了凭据；
   从 beta0.7.3 起喂「密码 + 确认」两行，只问一遍的机器上多出的那行没人读。写入前先用一次性条目自检、写后读回校验，
   失败时明确报错，不退回把密码放进命令行参数的写法。两个测试替身都如实模拟两次提问。
+  这条路一次最多完整写入 128 字节，超出的部分被 `security` 静默截断、退出码仍是 0（macOS 26 实测），所以写入前先检查长度，
+  超长或含换行就拒绝，绝不先覆盖旧条目。学校会话因此改为加密写进配置目录的 `session.enc`（0600），钥匙串的
+  `szunet-session` 条目只放 64 位十六进制密钥。桌面引擎在设置了 `SZUNET_CONFIG_DIR` 时服务名带
+  `-test-<配置目录哈希>`（`internal/credential/keychain_namespace.go`），测试与冒烟不碰真实条目；命令行版 `szunet`
+  不开这个开关，已发布用户的服务名不变。
   **仍未完成**：真机上先 `szunet config set`、再 `szunet config show` 或 `szunet login` 的完整保存再读取没有验证
   （[STATUS 1.1 节](docs/STATUS.md#s1-1)的 F21；那里写的 `config get` 实际对应 `config show`，szunet 没有 `get` 子命令），
   CI 探针只覆盖 `security` 本身的行为，文档里不要写成「已在真机验证」。
@@ -311,9 +397,10 @@ node desktop/electron/check-pet-view.mjs
 | [65](docs/STATUS.md#s65)、[65.2](docs/STATUS.md#s65-2) | 全应用界面与状态一致性，及其验收与交付 |
 | [66](docs/STATUS.md#s66)、[66.1](docs/STATUS.md#s66-1)、[66.2](docs/STATUS.md#s66-2)、[66.3](docs/STATUS.md#s66-3) | 代码审查与全面修复：主要修复、验收、未在本机验证的部分 |
 | [67](docs/STATUS.md#s67) | 第二轮发布审查：性质测试、修复与发布附件 |
+| [68](docs/STATUS.md#s68)、[68.2](docs/STATUS.md#s68-2) | macOS 桌面版：实现取舍、自动验收覆盖与 B1–B9 真机验收清单 |
 
 Electron 外壳加 Go sidecar 的由来见[迁移设计](docs/superpowers/specs/2026-09-24-electron-migration-design.md)和
 [阶段 0–1 实施计划](docs/superpowers/plans/2026-09-24-electron-phase-0-1-shell.md)。它们是历史设计记录：
-其中的 agent 事件（`POST /api/pet/event`、SSE 推送）和 macOS / Linux 安装包都没有实现，以代码和 STATUS 为准。
+其中的 agent 事件（`POST /api/pet/event`、SSE 推送）和 Linux 安装包都没有实现，macOS 安装包的实际做法见 STATUS 第 68 节，以代码和 STATUS 为准。
 
 安全问题的报告方式见 [SECURITY.md](SECURITY.md)，**不要**开公开 issue 写可利用细节。

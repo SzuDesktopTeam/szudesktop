@@ -5,7 +5,9 @@ import {createFocusNotifier,createFocusScheduler,FOCUS_RECHECK_MAX_MS} from './f
 
 // 专注也可能在主窗以外开始（复用的便携版引擎、便携版为本机引擎打开的浏览器页），主窗看不到那次保存：
 // 没有进行中的专注时也按 idleRecheckMs 复查一次。宠物可见时它的 30 秒刷新会顺延这次复查，不额外读取。
-export function createFocusReminders({Notification,loadWorkspace,readSettings,saveSettings,isSupported,icon,onClick,
+// icon 为 undefined 时不带 icon 键（macOS 用 .app 自己的图标）。onFailed 只有 macOS 接：通知没授权或发不出去时换个方式提醒；
+// 没传时 failed 的处理与原来一字不差，Windows 的 toast 失败不会多出任何动作。
+export function createFocusReminders({Notification,loadWorkspace,readSettings,saveSettings,isSupported,icon,onClick,onFailed,
   idleRecheckMs=FOCUS_RECHECK_MAX_MS,now,setTimer,clearTimer}){
   let focusNotifier=null,focusScheduler=null,focusNotification=null;
   function start(){
@@ -13,11 +15,12 @@ export function createFocusReminders({Notification,loadWorkspace,readSettings,sa
       loadWorkspace,readSettings,saveSettings,isSupported,now,
       notify:({duration})=>{
         focusNotification?.close();
-        const notification=new Notification({title:'这一段专注完成了',body:`你设定的 ${duration} 分钟已经结束。点这里回到学习工具领取奖励。`,icon});
+        const notification=new Notification({title:'这一段专注完成了',body:`你设定的 ${duration} 分钟已经结束。点这里回到学习工具领取奖励。`,...(icon===undefined?{}:{icon})});
         focusNotification=notification;
         notification.on('click',()=>onClick());
         notification.on('close',()=>{if(focusNotification===notification)focusNotification=null;});
         notification.on('failed',()=>{if(focusNotification===notification)focusNotification=null;});
+        if(typeof onFailed==='function')notification.on('failed',(_event,error)=>onFailed(error));
         notification.show();
       },
     });

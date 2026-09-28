@@ -34,7 +34,7 @@ func Gateway() string {
 	case "linux":
 		return firstField(runOutput("ip", "route", "show", "default"))
 	case "darwin":
-		return firstField(runOutput("route", "-n", "get", "default"))
+		return firstField(runOutput("/sbin/route", "-n", "get", "default"))
 	}
 	return ""
 }

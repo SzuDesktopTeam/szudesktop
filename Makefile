@@ -5,7 +5,7 @@ LDFLAGS := -s -w
 # 这句探测和下面的 PYTHON=… 前缀都要求 make 用 sh 执行命令；Windows 上请在 Git Bash 里跑 make。
 PYTHON  ?= $(shell python -c "" >/dev/null 2>&1 && echo python || echo python3)
 
-.PHONY: all build test vet cross clean check check-all
+.PHONY: all build test vet cross clean check check-all desktop-mac desktop-mac-dev
 
 all: check build
 
@@ -42,6 +42,17 @@ cross: clean
 	GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/$(BINARY)-darwin-amd64       ./cmd/szunet
 	GOOS=darwin  GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/$(BINARY)-darwin-arm64       ./cmd/szunet
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/$(BINARY)-windows-amd64.exe  ./cmd/szunet
+
+## macOS 桌面版 DMG：编两个架构的引擎并 ad-hoc 签名，再按芯片各打一个 DMG，产物在 desktop/electron/release/。
+## 需要 macOS 和 Xcode Command Line Tools（codesign、lipo、vtool、hdiutil），首次先在 desktop/electron 里执行 npm ci。
+## 第一步已经编好引擎，打包时加 --skip-sidecar，不再重编一遍。
+desktop-mac:
+	$(PYTHON) desktop/build-macos.py && cd desktop/electron && node build-mac.mjs --skip-sidecar
+
+## macOS 开发模式引擎：只编本机架构，复制成 dist/szudesktop；之后在 desktop/electron 里 npm start。
+## 同样需要 macOS 和 Xcode Command Line Tools，首次先在 desktop/electron 里执行 npm ci。
+desktop-mac-dev:
+	$(PYTHON) desktop/build-macos.py --dev
 
 clean:
 	rm -rf $(DIST)

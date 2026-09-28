@@ -24,7 +24,33 @@ import (
 )
 
 // securityBin 是 security 命令的位置，测试可以替换成假命令。
-var securityBin = "security"
+// 默认值按平台放在 security_bin_*.go：darwin 用绝对路径，其他平台沿用命令名。
+var securityBin = defaultSecurityBin
+
+// maxKeychainSecret 是经标准输入交给 security 时能完整存下的最大字节数。
+//
+// security 的 -w 提示走 getpass，一行最多收 128 字节，多出来的静默丢掉；
+// 两行都截成一样的前缀，确认照样通过，-U 随即把截断值写进条目——等读回校验
+// 发现不一致时，原来存着的密码或会话已经被覆盖了。所以必须在写之前拦下。
+// macOS 26 真机实测：128 字节原样存下，129 字节起截成 128 字节，退出码仍是 0。
+const maxKeychainSecret = 128
+
+// errKeychainSecretRejected 表示这段内容写进钥匙串会被截断或拆行，所以根本没去写。
+var errKeychainSecretRejected = errors.New("这段内容无法完整写入 macOS 钥匙串，已取消保存，钥匙串里原有的条目没有改动")
+
+// checkKeychainSecret 拦下 security 的提示输入存不完整的内容。
+//
+// 换行同样要拦：secretInput 用换行分隔「密码」与「确认」，内容里带换行会被拆成
+// 几行，碰巧两行相同时 security 会把残缺的一截当成完整密码存下来。
+func checkKeychainSecret(secret []byte) error {
+	if len(secret) > maxKeychainSecret {
+		return fmt.Errorf("%w（内容有 %d 字节，security 最多只能完整写入 %d 字节）", errKeychainSecretRejected, len(secret), maxKeychainSecret)
+	}
+	if bytes.ContainsAny(secret, "\r\n") {
+		return fmt.Errorf("%w（内容里含有换行）", errKeychainSecretRejected)
+	}
+	return nil
+}
 
 // runSecurity 执行 security 子命令。
 //
@@ -133,9 +159,13 @@ func ensurePromptWriteWorks() error {
 
 // keychainSave 是 macOS 上凭据与会话共用的写入路径。
 //
-// 顺序是有意的：先自检机制、再写、最后读回校验。任何一步失败都如实报错，
-// 不会退回「把密码放到命令行参数」那种会被 ps 看到的老做法。
+// 顺序是有意的：先检查内容存不存得完整、再自检机制、再写、最后读回校验。
+// 任何一步失败都如实报错，不会退回「把密码放到命令行参数」那种会被 ps 看到的老做法。
+// 长度检查排在最前：读回校验只能事后发现截断，那时旧条目已经被 -U 覆盖了。
 func keychainSave(service, account string, secret []byte) error {
+	if err := checkKeychainSecret(secret); err != nil {
+		return err
+	}
 	if err := ensurePromptWriteWorks(); err != nil {
 		return err
 	}
