@@ -49,6 +49,11 @@ func RunWithOptions(username, password, srunHost, drcomHost string, opts Options
 
 	if r.Detect.Zone == portal.ZoneOnline {
 		r.Advices = append(r.Advices, "当前能正常上外网。如果只是想上网，不用做任何事")
+		// 外网正常时学校域名被代理接管最常见（开着 Clash 之类照常上网），
+		// 学校系统打不开、掉线后认证失败都出在这里，排在指纹预判前面。
+		if a := fakeIPAdvice(r.Detect); a != "" {
+			r.Advices = append(r.Advices, a)
+		}
 		// 已经在线时不会去认证，但掉线重登走的正是这套判区，
 		// 所以把预判结论单独报出来，让人现在就能确认。
 		r.Advices = append(r.Advices, fingerprintAdvice(r.Detect, opts))
@@ -112,6 +117,15 @@ func manualTeachingHint(opts Options) string {
 	return "在登录页的「所在区域」里改选教学区"
 }
 
+// fakeIPAdvice 在 net.szu.edu.cn 解析进 198.18.0.0/15（代理的 Fake-IP 段）时给出能照做的说法，否则返回空串。
+func fakeIPAdvice(d *portal.DetectResult) string {
+	if d == nil || !d.SrunDNSFakeIP {
+		return ""
+	}
+	return "学校域名 net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址：" + portal.ProxyTakeoverHint +
+		"。改好后重新运行诊断，这条提示消失才算生效"
+}
+
 func boolCN(v bool) string {
 	if v {
 		return "是"
@@ -124,6 +138,10 @@ func boolCN(v bool) string {
 func advices(r *Report, opts Options) []string {
 	var out []string
 
+	// 学校域名被代理接管时，下面按门户连通性给的结论也可能是代理造成的，先说这一条。
+	if a := fakeIPAdvice(r.Detect); a != "" {
+		out = append(out, a)
+	}
 	if r.Online != nil && r.Online.Online {
 		out = append(out, "账号在这个区域已经在线了。如果还是上不了网，"+
 			"大概率是代理、域名解析或者系统网络设置的问题，和认证本身无关")

@@ -3,7 +3,8 @@
 Never installs on a developer's desktop. Uses an isolated Chinese/space path and
 profile, refuses existing installations, and only stops processes it started.
 The published baseline is installed, given synthetic data, upgraded to the
-candidate, opened twice, and removed. No real account or school login is used.
+candidate, opened twice, started once from its launch-at-login command, and
+removed. No real account or school login is used.
 """
 import ctypes
 from contextlib import contextmanager
@@ -112,6 +113,26 @@ def seed_autostart(exe):
           and APP_ID in reg_values(winreg.HKEY_CURRENT_USER, STARTUP_APPROVED_KEY, winreg.KEY_WOW64_64KEY))
 
 
+def launch_as_registered(exe, cfg, version):
+    """UX06: start the app from the Run value, the way Windows does at logon.
+
+    The value comes from seed_autostart(), written in the format Electron's
+    setLoginItemSettings uses; the app itself never registers it here, since
+    smoke launches never touch the real login items. The arguments the app
+    registers on its own are covered only by check-desktop-settings.mjs.
+    The command line is read back from the registry and handed to
+    CreateProcess verbatim (quoted Chinese/space path plus --autostart), not
+    rebuilt from argv. The main window must stay hidden while pet, tray and
+    engine come up; the app then quits through the usual smoke report path.
+    The auto-connect setting cannot be observed here: smoke launches always
+    pass --no-auto-login to the engine.
+    """
+    import winreg
+    command = reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY).get(APP_ID)
+    check("launch at login command is registered", bool(command))
+    return launch(exe, cfg, version, "autostart", command=command, hidden_start=True)
+
+
 def remove_autostart_leftovers():
     """Return the keys that still hold our autostart value, then delete them.
 
@@ -183,7 +204,52 @@ def wait_process_gone(pid, timeout=15):
         kernel.CloseHandle(handle)
 
 
-def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None):
+def visible_window_titles(pid):
+    """Titles of pid's visible top-level windows (a read-only Win32 query).
+
+    GetWindowText reads another process's caption without sending it a
+    message, so a busy Electron main thread cannot stall this probe.
+    """
+    from ctypes import wintypes
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    enum_proc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    user32.EnumWindows.argtypes = [enum_proc, wintypes.LPARAM]
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    titles = []
+
+    def collect(hwnd, _):
+        owner = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(owner))
+        if owner.value == pid and user32.IsWindowVisible(hwnd):
+            text = ctypes.create_unicode_buffer(512)
+            user32.GetWindowTextW(hwnd, text, len(text))
+            titles.append(text.value)
+        return True
+
+    user32.EnumWindows(enum_proc(collect), 0)
+    return titles
+
+
+# smoke-pet.mjs 里 trace() 记下的阶段：到这些阶段为止冒烟还没有自己打开主窗口
+# （它在 companion-menu-selection 之后才从宠物菜单点「伙伴小屋」）。静默启动时这段时间主窗口必须一直藏着。
+MAIN_NOT_YET_OPENED = {"start", "main-hidden", "click-through", "dragged", "clicked", "menu-closed",
+                       "sleep-0", "sleep-1", "feed"}
+PET_PROGRESS = EVIDENCE / "pet-progress.json"
+
+
+def smoke_stage():
+    """Empty before the UI smoke starts, then the stage name; None while the file is mid-write."""
+    try:
+        return json.loads(PET_PROGRESS.read_text(encoding="utf-8"))["stage"]
+    except FileNotFoundError:
+        return ""
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None, command=None, hidden_start=False):
     report = EVIDENCE / (label + ".json")
     shot = EVIDENCE / (label + ".png")
     report.unlink(missing_ok=True)
@@ -192,8 +258,13 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
                SZU_SMOKE_SCREENSHOT=str(shot), SZU_SMOKE_QUIT_AFTER_REPORT="1")
     # An inherited developer diagnostic variable must not compete with smoke.
     env.pop("SZU_SHOT", None)
+    # 上一次启动留下的进度停在最后一个阶段；静默启动要从「界面冒烟还没开始」看起。
+    if hidden_start:
+        PET_PROGRESS.unlink(missing_ok=True)
+    seen_titles, hidden_samples = set(), 0
     with (EVIDENCE / (label + ".log")).open("wb") as log:
-        proc = subprocess.Popen([str(exe)], env=env, stdout=log, stderr=log,
+        # command 是一整条命令行（开机自启登记的原文），原样交给 CreateProcess，和登录时系统启动它一样。
+        proc = subprocess.Popen(command or [str(exe)], env=env, stdout=log, stderr=log,
                                 creationflags=subprocess.CREATE_NO_WINDOW)
         try:
             # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；共享 runner 上偶尔要 40 秒以上，
@@ -202,7 +273,16 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             while not report.exists() and time.monotonic() < deadline:
                 if proc.poll() is not None:
                     raise RuntimeError("installed application exited before its rendered-page report")
-                time.sleep(.1)
+                if hidden_start:
+                    # 枚举前后读到同一个阶段才算数：主窗口只会在这些阶段之后被冒烟打开，不会误把那一下算进来。
+                    # 界面冒烟开始前、桌宠已经出现的样本也算：main.mjs 先决定显不显示主窗口，再创建桌宠。
+                    stage = smoke_stage()
+                    if stage == "" or stage in MAIN_NOT_YET_OPENED:
+                        titles = visible_window_titles(proc.pid)
+                        if smoke_stage() == stage:
+                            seen_titles.update(titles)
+                            hidden_samples += bool(stage or titles)
+                time.sleep(.05 if hidden_start else .1)
             check(label + ": real UI report created", report.exists())
             # main writes the report atomically before its normal quit path.
             result = json.loads(report.read_text(encoding="utf-8"))
@@ -219,6 +299,12 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             check(label + ": engine ownership", result["owned"] is owned)
             pet = result["pet"]
             check(label + ": real pet and tray", pet["rendered"] and pet["tray"])
+            if hidden_start:
+                (EVIDENCE / (label + "-windows.json")).write_text(json.dumps({
+                    "samples_before_main_opened": hidden_samples, "visible_window_titles": sorted(seen_titles),
+                    "main_window_title": result["title"]}, ensure_ascii=False, indent=2), encoding="utf-8")
+                check(label + ": windows watched after startup, before the smoke opened main", hidden_samples > 0)
+                check(label + ": main window stays hidden at login start", result["title"] not in seen_titles)
             check(label + ": main closes and reopens", pet["closeAndReopen"])
             check(label + ": pet visibility and actions", pet["hideAndShow"] and pet["actionsReturnToBase"])
             check(label + ": scale through settings and tray", pet["settingsAndPresets"] and pet["finalScale"] == 1.7)
@@ -492,6 +578,8 @@ def main():
             check("no startup entries changed", startup_before == reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY))
             # Last step before uninstall: the user turned on launch at login.
             seed_autostart(exe)
+            launch_as_registered(exe, cfg, version)
+            assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
             (EVIDENCE / "summary.json").write_text(json.dumps({
                 "version": version, "electron": first["electron"], "installer_sha256": digest,
                 "upgrade_from": BASELINE_VERSION, "baseline_sha256": BASELINE_SHA256,
@@ -505,6 +593,7 @@ def main():
                 "penguins_render_and_switch": first["pet"]["penguinSelection"],
                 "pet_click_through": first["pet"]["clickThrough"],
                 "locales": EXPECTED_LOCALES,
+                "launch_at_login_command_starts_hidden": True,
             }, ensure_ascii=False, indent=2), encoding="utf-8")
         finally:
             if installed:
@@ -540,7 +629,8 @@ if __name__ == "__main__":
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
     if sys.argv[1:] == ["--baseline"]:
-        # The workflow downloads exactly this release asset; keep one source of truth.
-        print(BASELINE_VERSION, BASELINE_INSTALLER)
+        # The workflow downloads exactly this release asset and caches it under
+        # this digest (moving the baseline changes the key); one source of truth.
+        print(BASELINE_VERSION, BASELINE_INSTALLER, BASELINE_SHA256)
     else:
         main()

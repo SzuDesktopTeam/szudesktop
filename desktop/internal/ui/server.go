@@ -324,6 +324,14 @@ var staticTypes = map[string]string{
 	".txt":   "text/plain; charset=utf-8",
 }
 
+// staticCacheControl 用在首页和内嵌的静态资源上：不让浏览器把它们写进磁盘缓存。
+//
+// 本地服务默认每次启动换一个随机端口，缓存按「协议+主机+端口」分，上次写下的
+// 两兆多资源这次一条也命中不了，只是每次启动白写一遍磁盘（O14）。资源本来就在
+// 本进程内存里（go:embed），走回环地址重新取几乎没有代价。/api 的响应由 guardAPI
+// 另设 no-store。
+const staticCacheControl = "no-store"
+
 // routes 注册路由。
 //
 // ⚠️ 静态资源这条规则别动，改了会踩一个很隐蔽的坑。
@@ -348,6 +356,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 			w.Header().Set("Content-Type", kind)
 		}
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Cache-Control", staticCacheControl)
 		staticFiles.ServeHTTP(w, r)
 	})
 
@@ -369,6 +378,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 				return
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Cache-Control", staticCacheControl)
 			w.Header().Set("Content-Security-Policy", indexCSP)
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -462,6 +472,8 @@ type statusResp struct {
 	Online      bool     `json:"online"`
 	OnlineKnown bool     `json:"online_known"`
 	OnlineError string   `json:"online_error"`
+	OnlineState string   `json:"online_state"` // 校园认证这一栏属于哪种情况，取值见 onlineState* 常量
+	OnlineNote  string   `json:"online_note"`  // 中性状态下给人看的说明，其余状态为空
 	OnlineIP    string   `json:"online_ip"`
 	Username    string   `json:"username"`
 	Saved       bool     `json:"saved"`      // 有没有存过凭据
@@ -490,11 +502,32 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	// 门户按请求出口查询认证状态，与本机有没有保存账号无关。
 	// 账号和设备 IP 默认不向页面回传；查询失败也不等于明确离线。
-	if netState.onlineErr != nil {
+	switch {
+	case netState.onlineErr != nil && zone == portal.ZoneOnline && det.InternetOK:
+		// 外网正常、没判到教学区或宿舍区，门户又查不到：人在校外（或家里、手机热点）时
+		// 本来就是这样。以前这里也写成「暂时无法确认」，页面常驻一条琥珀色的「请运行诊断」，
+		// 在家安装的新生会去排查一个根本不存在的问题（O7）。
+		out.OnlineState = onlineStateNoPortal
+		out.OnlineNote = noCampusPortalNote
+		// 同一次探测已经看到学校域名解析进了 198.18.0.0/15：人在校内开着 Clash 这类代理时，
+		// 门户正是因此查不到。仍用灰色（在家开着代理的同学更多，不能又把他们引去排查），
+		// 但要带上代理提示，不能只说一句「属正常」。
+		if det.SrunDNSFakeIP {
+			out.OnlineNote += noCampusPortalFakeIPLead + portal.ProxyTakeoverHint
+		}
+	case netState.onlineErr != nil:
+		// 判定在教学区或宿舍区时查不到才是真问题，保留警告和诊断引导。
+		out.OnlineState = onlineStateUnconfirmed
 		out.OnlineError = "暂时无法确认校园网认证状态，请稍后刷新或运行网络诊断"
-	} else if netState.online != nil {
+	case netState.online != nil:
 		out.OnlineKnown = true
 		out.Online = netState.online.Online
+		out.OnlineState = onlineStateOffline
+		if out.Online {
+			out.OnlineState = onlineStateOnline
+		}
+	default:
+		out.OnlineState = onlineStateNotQueried
 	}
 
 	s.mu.Lock()
@@ -510,6 +543,22 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, out)
 }
+
+// /api/status 的 online_state 取值。页面按它决定校园认证那一栏的样式，不再从
+// online_known / online_error 的组合去猜。
+const (
+	onlineStateOnline      = "online"           // 门户确认这个出口在线
+	onlineStateOffline     = "offline"          // 门户确认这个出口没有在线会话
+	onlineStateNoPortal    = "no_campus_portal" // 中性：外网正常，没判到校园网区域，门户也查不到
+	onlineStateUnconfirmed = "unconfirmed"      // 警告：判定在教学区或宿舍区，门户却查不到，online_error 有说明
+	onlineStateNotQueried  = "not_queried"      // 校外不通或判不出区，没有查询门户
+)
+
+// noCampusPortalNote 是中性状态下的说明，页面原样显示。
+const noCampusPortalNote = "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）"
+
+// noCampusPortalFakeIPLead 接在中性说明后面，引出学校域名被代理接管时的提示。
+const noCampusPortalFakeIPLead = "。人在校内的话："
 
 type loginResp struct {
 	OK      bool   `json:"ok"`
@@ -721,6 +770,7 @@ type diagResp struct {
 	DormPortal  bool     `json:"dorm_portal_ok"`
 	TeachPortal bool     `json:"teaching_portal_ok"`
 	DNSOK       bool     `json:"dns_ok"`
+	DNSFakeIP   bool     `json:"dns_fake_ip"` // net.szu.edu.cn 解析进了代理的 Fake-IP 段，提示已写进 Advices
 	Online      *bool    `json:"online,omitempty"`
 	Advices     []string `json:"advices"`
 	Notes       []string `json:"notes"`
@@ -751,6 +801,7 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 		DormPortal:  rep.Detect.DormPortalOK,
 		TeachPortal: rep.Detect.TeachPortalOK,
 		DNSOK:       rep.Detect.SrunDNSOK,
+		DNSFakeIP:   rep.Detect.SrunDNSFakeIP,
 		Advices:     rep.Advices,
 		Notes:       rep.Detect.Notes,
 	}

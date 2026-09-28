@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {networkSummaryHTML,networkTone,networkLoginHint,autoLoginHTML} from './assets/garden/network-status.mjs';
+import {networkSummaryHTML,networkTone,networkLoginHint,autoLoginHTML,authState,OFF_CAMPUS_NOTE,diagResultHTML,diagErrorHTML,NETWORK_GUIDE_URL} from './assets/garden/network-status.mjs';
 import {createApi} from './assets/garden/api-client.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 import {shouldPollNetwork,stampVersion} from './assets/garden/app-logic.mjs';
@@ -79,13 +79,47 @@ vm.runInContext(authenticate,authCtx);
 await vm.runInContext('authenticate()',authCtx);
 assert.equal(refreshed,1);
 console.log('PASS a login that did not verify credentials still refreshes outlet status');
-const mixed=networkSummaryHTML({...connected,online_known:false,online_error:'<img src=x>'});
-assert.match(mixed,/data-tone="success"/);assert.match(mixed,/data-tone="warning"/);
-assert.match(mixed,/&lt;img src=x&gt;/);assert.doesNotMatch(mixed,/<img src=x>/);
+// O7：外网正常、判区为「已联网」（接口真实返回 zone:'online'）、又没查明认证状态时，多半只是人在校外（宿舍区门户必然连不上），
+// 不再常驻琥珀色的「请运行诊断」，改成灰色中性说明。原断言要求这里是 warning，正是本条要改掉的行为。
+const mixed=networkSummaryHTML({...connected,zone:'online',zone_label:'已联网',online_known:false,online_error:'<img src=x>'});
+assert.match(mixed,/data-tone="success"/);assert.match(mixed,/data-tone="muted"/);assert.doesNotMatch(mixed,/data-tone="warning"/);
+assert.ok(mixed.includes(OFF_CAMPUS_NOTE));assert.doesNotMatch(mixed,/img src=x|运行网络诊断|待确认/);
+// 判定在教学区或宿舍区时保留琥珀色与诊断引导；学校返回的报错照旧按纯文本转义。
+for(const zone of ['teaching','dorm']){const campus=networkSummaryHTML({internet_ok:false,zone,zone_label:zone,online_known:false,online_error:'<img src=x>'});assert.match(campus,/data-tone="warning"/);assert.match(campus,/待确认/);assert.match(campus,/&lt;img src=x&gt;/);assert.doesNotMatch(campus,/<img src=x>/);assert.ok(!campus.includes(OFF_CAMPUS_NOTE))}
+// 与状态接口的 online_state 对齐（desktop/internal/ui/server.go）：no_campus_portal 与 not_queried 都是灰色说明，只有 unconfirmed 是琥珀色；
+// 中性说明优先用接口给的 online_note，照样按纯文本转义。
+const noPortal=networkSummaryHTML({internet_ok:true,zone:'online',zone_label:'已联网',online_known:false,online_state:'no_campus_portal',online_note:'<b>外网正常</b>'});
+assert.match(noPortal,/data-tone="muted"/);assert.doesNotMatch(noPortal,/data-tone="warning"/);assert.match(noPortal,/&lt;b&gt;外网正常&lt;\/b&gt;/);
+assert.ok(networkSummaryHTML({internet_ok:true,zone:'online',online_known:false,online_state:'no_campus_portal'}).includes(OFF_CAMPUS_NOTE));
+const notQueried=networkSummaryHTML({internet_ok:false,zone:'outside',zone_label:'校外，或校园网不通',online_known:false,online_state:'not_queried'});
+assert.match(notQueried,/data-tone="error"/);assert.match(notQueried,/data-tone="muted"/);assert.doesNotMatch(notQueried,/data-tone="warning"/);
+const unconfirmed=networkSummaryHTML({internet_ok:false,zone:'teaching',zone_label:'教学区',online_known:false,online_state:'unconfirmed',online_error:'暂时无法确认校园网认证状态，请稍后刷新或运行网络诊断'});
+assert.match(unconfirmed,/data-tone="warning"/);assert.match(unconfirmed,/运行网络诊断/);
+assert.equal(authState({online_known:true,online:false,online_state:'offline'}),'offline');
+// 已查明认证状态时照旧；拿不到判区（没有 zone 字段）时不猜，仍按待确认处理。
+assert.doesNotMatch(networkSummaryHTML({...connected,zone:'online'}),/data-tone="muted"/);
+assert.match(networkSummaryHTML({...connected,online_known:false}),/data-tone="warning"/);
 assert.equal(networkTone({...connected,internet_ok:false}),'error');
 const split=networkSummaryHTML({...connected,internet_ok:false});
 assert.match(split,/data-tone="error"/);assert.match(split,/data-tone="success"/);
 console.log('PASS independent colored states and escaped school error text');
+console.log('PASS off-campus with working internet is neutral; teaching and dormitory zones keep the amber diagnosis hint');
+// 前后端的字段约定各写一份：Go 那边新增或改名一个 online_state 取值、改了中性说明，页面会悄悄落进「待确认」的琥珀色，
+// 或者旧版兜底文字和接口给的不一样。这里直接读 server.go 核对，两边只能一起改。
+const server=readFileSync(new URL('./internal/ui/server.go',import.meta.url),'utf8');
+const goStates=[...server.matchAll(/^\s*onlineState\w+\s*=\s*"([a-z_]+)"/gm)].map(m=>m[1]).sort();
+assert.deepEqual(goStates,['no_campus_portal','not_queried','offline','online','unconfirmed'],'server.go 的 online_state 取值变了，network-status.mjs 与诊断报告要一起改');
+for(const online_state of goStates){const auth=authState({online_known:['online','offline'].includes(online_state),online:online_state==='online',online_state});assert.equal(auth,online_state,`页面没有按接口的 online_state=${online_state} 显示`)}
+assert.equal(/noCampusPortalNote\s*=\s*"([^"]+)"/.exec(server)?.[1],OFF_CAMPUS_NOTE,'旧版接口兜底用的中性说明要与 server.go 的 noCampusPortalNote 一字不差');
+assert.match(server,/json:"online_state"/);assert.match(server,/json:"online_note"/);assert.match(server,/json:"dns_fake_ip"/);
+console.log('PASS network status fields and wording match the engine (online_state values, online_note, dns_fake_ip)');
+// O8：诊断结果旁边就是校园网指南；诊断结论和报错都是纯文本。
+const diagnosed=diagResultHTML({zone_label:'<b>已联网</b>',internet_ok:true,teaching_portal_ok:false,dorm_portal_ok:true,advices:['当前能正常上外网']});
+assert.match(diagnosed,/&lt;b&gt;已联网&lt;\/b&gt; · 互联网：可用 · 教学区门户：未确认 · 宿舍区门户：可达 · 当前能正常上外网/);assert.doesNotMatch(diagnosed,/<b>/);
+assert.equal(NETWORK_GUIDE_URL,'https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/network.md');
+for(const view of [diagnosed,diagErrorHTML('<i>诊断失败</i>')]){assert.ok(view.includes(`href="${NETWORK_GUIDE_URL}" target="_blank" rel="noopener noreferrer">校园网指南 ↗</a>`));assert.doesNotMatch(view,/<i>/)}
+assert.match(app,/el\.innerHTML=diagErrorHTML\(e\.message\);throw e\}lastDiag=d;el\.dataset\.tone=d\.internet_ok\?'info':'warning';el\.innerHTML=diagResultHTML\(d\);/,'网络诊断结果要带校园网指南链接，并记下最近一次结论给诊断报告');
+console.log('PASS diagnosis results link to the campus network guide and escape their text');
 const attemptAt=1790000000,attemptTime=new Date(attemptAt*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 assert.equal(autoLoginHTML(null),'');assert.equal(autoLoginHTML(connected),'');assert.equal(autoLoginHTML({auto_login:{result:'unknown'}}),'');
 const autoOk=autoLoginHTML({auto_login:{result:'ok',message:'认证成功',at:attemptAt}});

@@ -5,7 +5,7 @@ import {isSafeExternalUrl} from './external-url.mjs';
 import {createEngineMonitor,ENGINE_HEALTH_INTERVAL_MS} from './engine-monitor.mjs';
 import {fakeDialog,settle} from './testdata/fake-electron.mjs';
 import {EventEmitter} from 'node:events';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawn} from 'node:child_process';
 import {Writable} from 'node:stream';
 import http from 'node:http';
 import path from 'node:path';
@@ -23,13 +23,37 @@ function killOwnFixture(pid){
   if(!pid||!alive(pid))return;
   try{if(process.platform==='win32')execFileSync('taskkill',['/pid',String(pid),'/T','/F'],{stdio:'ignore',windowsHide:true});else process.kill(pid,'SIGKILL');}catch{}
 }
+// 已被结束、只是还没被回收的僵尸进程也算结束：孤儿由 launchd / init 回收，时机不由我们决定。
+const gone=pid=>{
+  if(!alive(pid))return true;
+  if(process.platform==='win32')return false;
+  try{return /^Z/.test(execFileSync('ps',['-o','stat=','-p',String(pid)],{encoding:'utf8'}).trim());}catch{return true;}
+};
+async function waitGone(pid,ms=2000){
+  for(const end=Date.now()+ms;!gone(pid)&&Date.now()<end;)await new Promise(resolve=>setTimeout(resolve,50));
+  return gone(pid);
+}
+const fixturePids=dir=>['parent.pid','descendant.pid'].map(name=>path.join(dir,name)).filter(file=>fs.existsSync(file))
+  .map(file=>Number(fs.readFileSync(file,'utf8'))).filter(pid=>pid>0);
+// 正在跑的测试登记假引擎进程号的目录。测试抛错退出、被 Ctrl+C 或 run-checks 超时（SIGTERM）打断时 finally 来不及执行，
+// 退出前按这里收尾；连这里都来不及的 kill -9，由假引擎自己发现测试进程不在了而退出（testdata/fake-lifecycle.mjs）。
+const fixtureDirs=new Set();
+function cleanupFixtures(dir){
+  // Only terminate PIDs recorded by this test's child fixtures.
+  for(const pid of fixturePids(dir))killOwnFixture(pid);
+  fs.rmSync(dir,{recursive:true,force:true});
+  fixtureDirs.delete(dir);
+}
+process.on('exit',()=>{for(const dir of fixtureDirs)cleanupFixtures(dir);});
+for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.once(signal,()=>process.exit(128+os.constants.signals[signal]));
 async function withFixtureFiles(fn){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'szu-sidecar-test-'));
-  try{await fn(dir);}finally{
-    // Only terminate PIDs recorded by this test's child fixtures.
-    for(const name of ['parent.pid','descendant.pid']){const p=path.join(dir,name);if(fs.existsSync(p))killOwnFixture(Number(fs.readFileSync(p,'utf8')));}
-    fs.rmSync(dir,{recursive:true,force:true});
-  }
+  fixtureDirs.add(dir);
+  try{
+    await fn(dir);
+    // 测试正常结束时，它拉起的假引擎和孙进程都应已结束；还活着就是泄漏（slow-start 的假引擎以前就这样残留过）。
+    for(const pid of fixturePids(dir))assert.equal(await waitGone(pid),true,`测试结束时假引擎进程 ${pid} 仍在运行`);
+  }finally{cleanupFixtures(dir);}
 }
 
 // testdata 里各个假引擎打印的同一份凭据。
@@ -150,6 +174,40 @@ test('startSidecar: 一直不打印地址时超时，不建议重装，并回收
     });
     assert.equal(alive(Number(fs.readFileSync(path.join(dir,'parent.pid'),'utf8'))),false,'超时后回收卡住的引擎');
   });
+});
+
+// 测试进程被强制结束（kill -9、任务管理器）时 finally 和退出收尾都不会执行，只能靠假引擎自己退出。
+// 中间进程照 startSidecar 的方式拉起 slow-start 假引擎（非 Windows 上 detached、自成进程组），然后被强制结束。
+test('假引擎：启动它的进程被强制结束后自己退出，不留孤儿进程',async()=>{
+  await withFixtureFiles(async dir=>{
+    const launch=`require('node:child_process').spawn(process.execPath,${JSON.stringify([fixture,'slow-start',dir])},{stdio:'ignore',windowsHide:true,detached:process.platform!=='win32'});setInterval(()=>{},1000);`;
+    const launcher=spawn(process.execPath,['-e',launch],{stdio:'ignore',windowsHide:true});
+    let pid=0;
+    try{
+      for(const end=Date.now()+10000;!pid&&Date.now()<end;){
+        await new Promise(resolve=>setTimeout(resolve,50));
+        try{pid=Number(fs.readFileSync(path.join(dir,'parent.pid'),'utf8'));}catch{}
+      }
+      assert.ok(pid>0&&alive(pid),'slow-start 假引擎没有启动');
+    }finally{launcher.kill('SIGKILL');}
+    assert.equal(await waitGone(pid,5000),true,'启动它的进程已被强制结束，slow-start 假引擎仍在运行');
+  });
+});
+
+// 「拉起健康引擎」用的 fake-sidecar 一直监听、不写进程号文件，同样要能自己退出。中间进程等它打印出地址
+// （说明它已记下谁启动了它）再报出进程号；报早了、中间进程先被结束，它记下的就是 launchd / init 了。
+test('假引擎：一直监听的 fake-sidecar 在启动它的进程被强制结束后也自己退出',async()=>{
+  const launch=`const c=require('node:child_process').spawn(process.execPath,${JSON.stringify([fake])},{stdio:['ignore','pipe','ignore'],windowsHide:true,detached:process.platform!=='win32'});c.stdout.once('data',()=>process.stdout.write(c.pid+'\\n'));setInterval(()=>{},1000);`;
+  const launcher=spawn(process.execPath,['-e',launch],{stdio:['ignore','pipe','ignore'],windowsHide:true});
+  let pid=0;
+  try{
+    pid=await new Promise((resolve,reject)=>{
+      let out='';const timer=setTimeout(()=>reject(Error('中间进程没有报出 fake-sidecar 的进程号')),10000);
+      launcher.stdout.on('data',chunk=>{out+=chunk;const found=/^(\d+)\n/.exec(out);if(found){clearTimeout(timer);resolve(Number(found[1]));}});
+    });
+    assert.ok(alive(pid),'fake-sidecar 没有启动');
+  }finally{launcher.kill('SIGKILL');}
+  try{assert.equal(await waitGone(pid,5000),true,'启动它的进程已被强制结束，fake-sidecar 仍在运行');}finally{killOwnFixture(pid);}
 });
 
 test('startSidecar: 开发模式把启动前后的 stderr 转发到终端',async()=>{

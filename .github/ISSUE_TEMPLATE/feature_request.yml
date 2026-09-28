@@ -1,0 +1,25 @@
+name: 功能建议
+description: 希望增加的功能，或希望现有功能怎么改
+body:
+  - type: markdown
+    attributes:
+      value: 请不要附上账号、密码、Cookie、令牌或未遮挡的个人成绩。截图前请遮挡个人信息。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决什么问题
+      description: 在什么情况下觉得不方便，或者缺了什么。涉及学校业务时说明是哪个系统，不要提供账号。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 希望它怎么做
+      description: 写出期望的效果；有参考的应用或页面也可以写上。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本和系统版本
+      placeholder: 例如 beta0.9.4 安装版，Windows 11

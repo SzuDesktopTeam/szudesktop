@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/SzuDesktopTeam/szudesktop/internal/portal"
 )
 
 const bookingPublic = "http://swzx.szu.edu.cn/venue-api"
@@ -33,6 +35,10 @@ func bookingConnectionError(err error) error {
 		message = "学校预约服务连接或读取超时"
 	case errors.Is(err, io.EOF), errors.Is(err, io.ErrUnexpectedEOF):
 		message = "学校预约服务返回空响应，连接在收到完整数据前结束"
+	}
+	// 查得到学校域名确实被代理的 Fake-IP 接管时，直接说原因和做法，不再让人自己去猜（O7）。
+	if u, perr := url.Parse(bookingPublic); perr == nil && schoolFakeIP(u.Hostname()) {
+		return errors.New(message + "。" + portal.ProxyTakeoverHint + "；无法据此判断是否在校园网，也可打开官方 WebVPN 预约页核对")
 	}
 	return errors.New(message + "。无法据此判断是否在校园网；若已在校内，请检查代理、TUN 或 DNS 是否接管学校域名，也可打开官方 WebVPN 预约页核对")
 }

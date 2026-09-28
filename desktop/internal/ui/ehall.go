@@ -151,7 +151,7 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 		if errors.Is(err, errUnsafeEhallURL) {
 			return nil, errUnsafeEhallURL
 		}
-		return nil, errors.New("连不上学校系统，请检查网络后重试")
+		return nil, schoolConnectionError("连不上学校系统", "连不上学校系统，请检查网络后重试", req.URL, err)
 	}
 	defer res.Body.Close()
 	// 统一身份认证会话由 jar 托管，会跟着跳转走：最后停在别的主机（authserver）或

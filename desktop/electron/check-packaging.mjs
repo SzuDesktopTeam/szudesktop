@@ -23,6 +23,9 @@ assert.match(main,/loginItems=createLoginItemControl\(app,\{name:APP_USER_MODEL_
 assert.ok(main.indexOf('app.setAppUserModelId(')<main.indexOf('loginItems=createLoginItemControl(app'),'AppUserModelId is set before any login item is written');
 assert.equal(Object.hasOwn(loginItemOptions('C:/szuDesktop/szuDesktop.exe'),'name'),false,'login item keeps the default AppUserModelId value name');
 assert.match(entries,/^nsis:\n(?: {2}.+\n)* {2}include: installer\.nsh\n/m,'NSIS include is wired into the nsis section');
+// 没有接自动更新（electron-updater），用不上差分下载：关掉后程序包整体压缩，安装包约小 10MB，也不再生成没人用的 .blockmap（O14）。
+// 以后真接自动更新时要改回，这条断言会提醒那时一起评估。
+assert.match(entries,/^nsis:\n(?: {2}.+\n)* {2}differentialPackage: false\n/m,'NSIS 程序包不做差分压缩（没有接自动更新；安装包约小 10MB）');
 assert.ok(existsSync(new URL('./installer.nsh',import.meta.url)));
 const nsh=read('./installer.nsh');
 const uninstall=/!macro customUnInstall\n([\s\S]*?)!macroend/.exec(nsh)?.[1];

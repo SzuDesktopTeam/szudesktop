@@ -1,6 +1,7 @@
 import {focusKey,restoreFocus} from './shell-repaint.mjs';
 import {isMac} from './platform.mjs';
-const rows=[['focusNotifications','专注完成时提醒我','主窗口隐藏时也可提醒；完全退出后不提醒。'],['doNotDisturb','安静陪伴','暂停专注通知，不改变计时、互动或奖励。'],['petVisible','显示桌面伙伴','关闭后可从托盘恢复，重启保留选择。'],['petAlwaysOnTop','伙伴保持置顶','关闭后，其他窗口可以盖住伙伴。'],['autoConnectCampus','启动时自动连接校园网','使用已记住的账号；本机已在线时跳过，下次启动生效。'],['launchAtLogin','登录 Windows 时启动','只在主动开启后登记，开机不弹出主窗口。']];
+// 「勿扰」与托盘菜单的「勿扰（暂停专注提醒）」同名：同一个开关只用一个名字。
+const rows=[['focusNotifications','专注完成时提醒我','主窗口隐藏时也可提醒；完全退出后不提醒。'],['doNotDisturb','勿扰','暂停专注通知，不改变计时、互动或奖励。'],['petVisible','显示桌面伙伴','关闭后可从托盘恢复，重启保留选择。'],['petAlwaysOnTop','伙伴保持置顶','关闭后，其他窗口可以盖住伙伴。'],['autoConnectCampus','启动时自动连接校园网','使用已记住的账号；本机已在线时跳过，下次启动生效。'],['launchAtLogin','登录 Windows 时启动','只在主动开启后登记，开机不弹出主窗口。']];
 // macOS 用菜单栏图标代替托盘；通知授权要等第一次提醒时才由系统询问，先说一声免得用户以为没反应。其余几行与 Windows 同文。
 const macRows=rows.map(([key,label,hint])=>({focusNotifications:[key,label,hint+'首次提醒时 macOS 会询问是否允许通知。'],petVisible:[key,label,'关闭后可从菜单栏图标恢复，重启保留选择。'],launchAtLogin:[key,'登录 Mac 时启动','只在主动开启后登记，登录时不弹出主窗口。']})[key]||[key,label,hint]);
 const rowsFor=mac=>mac?macRows:rows;

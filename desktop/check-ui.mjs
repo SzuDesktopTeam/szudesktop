@@ -81,4 +81,21 @@ test('version comes from the API, never hardcoded in page sources',()=>{assert.o
 test('unverified features share one label',()=>{const label=readFileSync(new URL('./assets/garden/labels.mjs',import.meta.url),'utf8');assert.match(label,/接入测试 · 未经真实验收/,'统一措辞被改了，全项目的验收状态提示会跟着漂');for(const name of ['app.mjs','engine.mjs','campus-ui.mjs','campus.mjs','school.mjs','booking.mjs','academic.mjs','notices.mjs','network-status.mjs']){const src=readFileSync(new URL('./assets/garden/'+name,import.meta.url),'utf8');assert.ok(!/接入测试|实验功能/.test(src),name+' 自己写了一份验收状态措辞，应该用 labels.mjs 的 unverifiedBadge()')}for(const name of ['school.mjs','campus-ui.mjs']){const src=readFileSync(new URL('./assets/garden/'+name,import.meta.url),'utf8');assert.match(src,/unverifiedBadge\(\)/,name+' 该标未验收的功能没有用统一标记')}});
 test('HTML escaping lives in html.mjs only',()=>{assert.equal(esc(`<a href="x" title='y'>&</a>`),'&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;&amp;&lt;/a&gt;');assert.equal(esc(null),'');assert.equal(esc(undefined),'');assert.equal(esc(0),'0');assert.equal(esc(false),'false');assert.deepEqual(['<b>','"'].map(esc),['&lt;b&gt;','&quot;'],'map(esc) 传入的下标参数不能影响结果');assert.equal(esc('&amp;'),'&amp;amp;','esc 只接收原始文本；已转义的片段不要再交给它');const dir=new URL('./assets/garden/',import.meta.url);for(const name of readdirSync(dir).filter(n=>n.endsWith('.mjs')&&n!=='html.mjs')){const src=readFileSync(new URL(name,dir),'utf8');assert.ok(!/(?:const|let|var|function)\s+esc\b|[,{]\s*esc\s*=|'&amp;'/.test(src),name+' 自己定义了一份 HTML 转义，应改为从 html.mjs 导入 esc');if(/\besc\(|\.map\(esc\)/.test(src))assert.match(src,/^import \{ ?esc ?\} from '\.\/html\.mjs';$/m,name+' 用到 esc 却没有从 html.mjs 导入')}});
 test('every class a stylesheet targets still appears in the page sources',()=>{const dir=new URL('./assets/garden/',import.meta.url),names=readdirSync(dir);const pages=[html,...names.filter(n=>n.endsWith('.mjs')).map(n=>readFileSync(new URL(n,dir),'utf8'))].join('\n');const dynamic=[...pages.matchAll(/([A-Za-z][\w-]*-)\$\{/g)].map(m=>m[1]);const dead=new Set();for(const name of names.filter(n=>n.endsWith('.css'))){const css=readFileSync(new URL(name,dir),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/@[^{};]*\{/g,'').replace(/\{[^{}]*\}/g,',');for(const selector of css.split(/[,}]/).map(s=>s.replace(/:not\([^()]*\)/g,'')))for(const [,cls] of selector.matchAll(/\.([A-Za-z_][\w-]*)/g))if(!new RegExp('(?<![\\w-])'+cls+'(?![\\w-])').test(pages)&&!dynamic.some(prefix=>cls.startsWith(prefix)))dead.add(name+' .'+cls)}assert.deepEqual([...dead],[],'样式表里还留着页面已不再使用的类名，删掉对应规则，别让死样式越积越多')});
+// O12：界面正文与说明文字不小于 12px。检查脚本没有 DOM，这里静态扫描每条样式规则里的 font-size / font 字号（含 @media 里的）；
+// 像素字体 Fusion Pixel 的网格就是 12px，小于它既看不清也会糊。唯一的例外是 2048 棋盘上五位数以上的数字：
+// 它们按格子宽度用 clamp 缩放，才能塞进同一个格子，不是正文。
+test('visible text is at least 12px in every stylesheet',()=>{
+ const dir=new URL('./assets/garden/',import.meta.url),small=[];
+ const allowed=new Set(['.arcade-tile[data-digits="5"] strong,.arcade-tile[data-digits="6"] strong','.arcade-tile:not([data-digits="1"]):not([data-digits="2"]):not([data-digits="3"]):not([data-digits="4"]):not([data-digits="5"]):not([data-digits="6"]) strong']);
+ for(const name of readdirSync(dir).filter(n=>n.endsWith('.css'))){
+  const css=readFileSync(new URL(name,dir),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
+  for(const [,selector,body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g))for(const declaration of body.split(';')){
+   const [,prop,value]=/^\s*(font-size|font)\s*:\s*(.*)$/s.exec(declaration)||[];if(!prop)continue;
+   const size=prop==='font-size'?/(?:clamp\(\s*)?([\d.]+)px/.exec(value):/(?:^|\s)([\d.]+)px(?=\s*\/|\s)/.exec(value);
+   const key=selector.trim().replace(/\s+/g,' ');
+   if(size&&Number(size[1])<12&&!allowed.has(key))small.push(`${name} ${key} { ${prop}:${value.trim()} }`);
+  }
+ }
+ assert.deepEqual(small,[],'这些文字小于 12px，改成 12px（像素字体按 12px 网格取整）');
+});
 console.log(`${checks} checks passed`);

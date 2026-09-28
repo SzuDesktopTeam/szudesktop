@@ -83,6 +83,10 @@ nsis:
   # 真正卸载时删除本应用登记的开机自启项；升级时保留用户的选择。
   include: installer.nsh
   artifactName: szuDesktop-Setup-${version}.exe
+  # 没有接自动更新（electron-updater），用不上差分下载：electron-builder 默认为它按 1MB 字典、非固实压缩程序包
+  # 并生成 .blockmap。关掉后按 7z 默认字典固实压缩（本机实测 108.5MB → 97.8MB，打包多花约一分半），
+  # 安装、升级、卸载的脚本不变。以后真做自动更新时再评估要不要改回。
+  differentialPackage: false
 # macOS：按芯片各出一个 ad-hoc 签名的 DMG（build-mac.mjs 传 --arm64 / --x64），不公证、不做自动更新。
 # 引擎由 build-mac.mjs 按架构写进 extraFiles（Contents/MacOS/szudesktop-engine），已用 com.szudesktop.engine 预签名：
 # signIgnore 让 osx-sign 不重签它，外层签名把它当作已签名的嵌套代码封进去，包里的引擎与冒烟通过的那份逐字节一致。

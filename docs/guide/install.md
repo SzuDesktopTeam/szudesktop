@@ -30,14 +30,16 @@ Windows 上三种形态的区别：
 
 所有文件都在 [GitHub 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)。目前的版本都是测试版，发布页上标为预发布（Pre-release）。
 
-| 文件 | 是什么 |
-| :-- | :-- |
-| `szuDesktop-Setup-<版本号>.exe` | Windows 安装版 |
-| `szudesktop-<发布标签>-windows-amd64.zip` | Windows 便携版，解压后双击里面的 `szudesktop.exe` |
-| `szudesktop-windows-amd64.exe` | 便携版里的同一个程序，单文件下载 |
-| `szunet-windows-amd64.exe` | 命令行，Windows x64 |
-| `szunet-darwin-amd64` / `szunet-darwin-arm64` | 命令行，macOS Intel / Apple 芯片 |
-| `szunet-linux-amd64` / `szunet-linux-arm64` | 命令行，Linux amd64 / arm64 |
+| 文件 | 是什么 | 下载大小（约） |
+| :-- | :-- | :-- |
+| `szuDesktop-Setup-<版本号>.exe` | Windows 安装版 | 约 108 MB，自带窗口运行时 |
+| `szudesktop-<发布标签>-windows-amd64.zip` | Windows 便携版，解压后双击里面的 `szudesktop.exe` | 6.5 MB |
+| `szudesktop-windows-amd64.exe` | 便携版里的同一个程序，单文件下载 | 13 MB |
+| `szunet-windows-amd64.exe` | 命令行，Windows x64 | 7.1 MB |
+| `szunet-darwin-amd64` / `szunet-darwin-arm64` | 命令行，macOS Intel / Apple 芯片 | 7.0 MB / 6.5 MB |
+| `szunet-linux-amd64` / `szunet-linux-arm64` | 命令行，Linux amd64 / arm64 | 6.8 MB / 6.3 MB |
+
+大小是近几个版本的大致数字，每一版略有不同，以发布页上显示的为准；装好后占用多少磁盘还没有实测。
 
 文件名里的 `<版本号>` 只有数字（形如 `x.y.z`，不带 beta），`<发布标签>` 是发布页上这一版的标签名（目前的测试版是 `beta` 加版本号）。拿不准时，对照发布页上的实际文件名。
 
@@ -136,7 +138,7 @@ Windows 上三种形态的区别：
 
 ## 反馈问题
 
-「设置 → 关于与更新 → 反馈与建议」里有「复制环境信息」，只复制版本、系统类型和界面模式三行，不包含学号、成绩、密码、Cookie 或存档。点「提交反馈 ↗」会打开 GitHub，需要 GitHub 账号。
+「设置 → 关于与更新 → 反馈与建议」里有「复制环境信息」，只复制版本、系统类型和界面模式三行，不包含学号、成绩、密码、Cookie 或存档。网络或学校服务出问题时，同一张卡片里还有默认折叠的「诊断报告 · 先预览，再复制」，只含结构、不含具体值，包含哪些内容见[数据、隐私与安全](data-and-privacy.md)。点「提交反馈 ↗」会打开 GitHub，需要 GitHub 账号。
 
 ## 限制
 
