@@ -73,6 +73,16 @@ export function petWindowOptions(workArea, scale = 1, position) {
   };
 }
 
+// 只在 macOS 上追加的窗口选项，petWindowOptions 的输出各平台都不变（其他平台返回空对象）。
+// panel：不激活应用的浮动面板，点宠物不会把前台的浏览器等应用切走；hiddenInMissionControl：不出现在调度中心；
+// acceptFirstMouse：第一次点击直接交给立绘，不用先点一下激活窗口；透明窗不要系统加的圆角。
+export function petPlatformOptions(platform) {
+  return platform === 'darwin' ? {type: 'panel', hiddenInMissionControl: true, acceptFirstMouse: true, roundedCorners: false} : {};
+}
+// 置顶层级：Windows 用 screen-saver 压住任务栏和全屏应用；macOS 的 screen-saver 层比菜单还高，
+// 宠物自己的菜单和菜单栏弹出的菜单都会被它盖住，所以用 floating，全屏空间里的显示交给 setVisibleOnAllWorkspaces。
+export const petTopLevel = platform => platform === 'darwin' ? 'floating' : 'screen-saver';
+
 // 透明窗的透明区域不能点穿，所以窗口默认忽略鼠标（forward 让立绘仍能收到移动事件）。
 // 只有指针停在立绘上、正在拖动或宠物菜单打开时才接收点击。
 // Electron 只在 Windows / macOS 上支持转发鼠标移动；其他平台保持整窗可点，避免立绘永远点不到。

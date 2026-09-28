@@ -12,6 +12,7 @@
 ## 1. 当前状态
 
 - **本轮进展（2026-09-28）**：beta0.9.4 已从 `main@00f1c00` 发布；PR #24、#25 依赖更新与 PR #26 第二轮审查修复均已合并。`go test ./...`、`go vet ./...`、`go mod tidy -diff`、`desktop/run-checks.mjs` 与标签 CI 全部通过。中英文 README 和本状态页已更新至 beta0.9.4。
+- **macOS 桌面版（2026-09-28，未发布）**：分支 `feat/macos-desktop` 实现了按芯片区分的两个 ad-hoc 签名 DMG（Apple 芯片 arm64、Intel x64），功能与 Windows 安装版对齐。本机自动验收（A 类：Go 测试、全部回归、引擎与 DMG 冒烟、Windows 打包比对）已通过；浏览器下载放行、注销与登录启动、通知授权、真实钥匙串、macOS 13/14 等真机验收（B1–B9）全部通过之前，不发布带 DMG 的版本，见[第 68 节](#s68)。
 - **公开版本**：[beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)（2026-09-28，预发布）。[标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36403210612)通过，含 beta0.9.3 → beta0.9.4 安装升级、数据保留与卸载验收；发布页 16 个附件（Windows 安装版、便携版、单文件 EXE 与五个平台的 `szunet`，各带同名 `.sha256`）。安装版 SHA-256：`c21e771aa8ac5097852fc8e1e18a9df1bb4a8b5a5f97e193201066ff7a2366da`。
 - **源码已包含**：PR #19 合并的 Pingu／Skipper 阵容、六物种 648 帧与 1,656 句、庭院委托和建设闭环、2048 庭院素材，以及三套三渲二风景；PR #20 合并课程书架、可靠保存、选句转待办和从笔记开始专注。PR #21 补大纲跳转、归入课程、最近一页继续、设置备份与学院公告自动读取；本轮新增设置分区、完整子路由、草稿保留和全局材质修正。新档默认五位伙伴，阿青在旧档「老朋友」中保留，已有成长不变。
 - **飞书边界**：本机笔记独立保存；可绑定共享文档，原页共编，CLI 只读导入本机副本。不做双向同步，项目组织加入入口未配置；真实授权、文档权限和多人协作待验收，见 NOTE03–NOTE05。
@@ -47,9 +48,10 @@
 | 网络与数据 | 时长、流量、套餐、余额与学校业务缓存（F15、D3） | P1 / M | 数据层未接入；本地测量与官方账单要分开，拿不到的数据继续显示待接入 | [3.1](#31-功能安全与工程)、[4](#4-原功能任务完整保留-ae-编号) |
 | 校园内容 | 中文校历 OCR 在英文系统语言下的复核 | P1 / M | 需在对应语言环境的设备上复核 | [32](#32-当前总清单2026-09-26-更新) |
 | 校园内容 | 其余 11 个学院公告栏目 | P2 / M | 仍只给官方入口，需逐个核实公开 HTML 后适配 | [32](#32-当前总清单2026-09-26-更新) |
-| 平台 | macOS 凭据真机往返（F21） | P1 / M | CI 探针已覆盖 `security` 行为，真机上的 `szunet config set` → `config get` 整条保存链路仍未验证 | [39.6](#396-仍未完成)、[3.1](#31-功能安全与工程) |
+| 平台 | macOS 桌面版真机验收（B1–B9） | P1 / M | 源码与本机自动验收已完成，CI 的三个 macOS job 待 PR 首跑；真实浏览器下载与「仍要打开」、菜单栏与程序坞、宠物的 Control 点按与全屏、学校和飞书的「页面」菜单、通知与 App Nap、登录项与注销、真实钥匙串、macOS 13/14 抽测、校内本地网络授权都要人在独立的 macOS 账户或虚拟机里验；全部通过前不发布带 DMG 的版本 | [68.2](#s68-2) |
+| 平台 | macOS 凭据真机往返（F21） | P1 / M | CI 探针已覆盖 `security` 行为，真机上的 `szunet config set` → `config get` 整条保存链路仍未验证；可与 68.2 的 B7 一起做 | [39.6](#396-仍未完成)、[3.1](#31-功能安全与工程) |
 | 实验模块 | 实验 VPN 的状态、超时、证书与来源（F06、F07、F08、F11、F16） | P0 / L | 不在任何发布件里；来源核实和故障闭环完成前不得进入发布构建或对外宣传 | [3.1](#31-功能安全与工程)、[32.2](#322-保留的工程与来源事项) |
-| 延期 | 校内后端与 Docker、云同步、图书馆选座、余额／流量、整机 VPN、多平台 GUI | P2–P3 / L | 按用户决定延期，不作为 1.0 前置；方案保留 | [50.2](#502-10-剩余任务暂不部署后端)、[50.3](#503-校内后端与校外访问边界) |
+| 延期 | 校内后端与 Docker、云同步、图书馆选座、余额／流量、整机 VPN、Linux 桌面端 | P2–P3 / L | 按用户决定延期，不作为 1.0 前置；方案保留 | [50.2](#502-10-剩余任务暂不部署后端)、[50.3](#503-校内后端与校外访问边界) |
 | 长期功能池 | 原功能清单中标「待做」「部分完成」的 A–E、X 条目 | P1–P3 / S–L | 其中课表、成绩、预约相关已由 R01–R07 接管，以 R 编号为准；其余未排期，按第 2 节优先级择机推进 | [4](#4-原功能任务完整保留-ae-编号)、[4.1](#41-原设计和发布收尾补充项) |
 
 ## 2. 分类方法
@@ -213,7 +215,7 @@ C 类须验证各系统会话；D1/D2 不是“一次完成全部解锁”。预
 | X03 | 深色模式 | P3 | M | 部分完成 | 暖阳/暮色背景模式可选；暮色不是全套深色阅读主题 |
 | X04 | 窗口真实控制 | P2 | M | 已完成（移除伪能力） | 沿用系统标题栏控制窗口；提供本地服务退出按钮，不自制虚假窗口按钮 |
 | X05 | 构建自动注入版本号 | P2 | S | 已完成（见第 29 节） | 唯一来源 `internal/version/VERSION`；两个 main.go 经 go:embed 读取，页面从 `/api/status` 取，构建与打包脚本读同一文件。README / 发布说明的版本文字仍在发版时手工更新 |
-| X06 | macOS / Linux 桌面端 | P3 | L | 待做 | Windows 优先，区分现有 CLI 支持 |
+| X06 | macOS / Linux 桌面端 | P3 | L | macOS 已实现、待 B 类真机验收（未发布）；Linux 待做 | macOS：按芯片两个 ad-hoc 签名 DMG，功能与 Windows 安装版对齐，验收边界见[第 68 节](#s68)；Linux 桌面端仍待做，命令行版照旧 |
 | X07 | 天气/穿衣建议 | P3 | S | 待做 | 现有为演示；真实数据来源和更新时间 |
 | X08 | LMS 作业/实验报告截止 | P3 | L | 待做 | 独立会话及数据源；汇入 E4 |
 | X09 | 选课冲突/名额提醒/绩点预估 | P3 | L | 待做 | C7 扩展，不自动抢课或代提交 |
@@ -3015,3 +3017,71 @@ NSIS 安装包构建与跨版本升级/卸载验收（含桌宠点穿、语言�
 - **版本来源**：版本资源、关于页、反馈、sidecar 与更新检查均读取 `internal/version/VERSION`；历史升级基线和旧存档夹具保留其原版本，供迁移和升级测试使用。
 
 本机完整验证通过：`go test ./...`、`go vet ./...`、`go mod tidy -diff`，以及 `node desktop/run-checks.mjs`（44 项 JavaScript 检查、4 项 Python 检查）；新增庭院、笔记、Electron 性质检查均通过。[PR #26 检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36402192088)与[正式标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36403210612)全部通过，含 Windows 安装包构建、beta0.9.3 → beta0.9.4 安装升级、资料保留与卸载冒烟。发布安装包 SHA-256 为 `c21e771aa8ac5097852fc8e1e18a9df1bb4a8b5a5f97e193201066ff7a2366da`，与发布附件 `.sha256` 一致。真实学校账号、课表、预约提交与琴房权限仍按第 50.2 节单独验收；上述本机与 CI 检查不构成学校业务验收。
+
+<a id="s68"></a>
+
+## 68. macOS 桌面版（2026-09-28）
+
+**写入时状态**：已实现，未发布；本机自动验收（A 类）已通过，CI 的 macOS job 待 PR 首跑，真机验收（B1–B9）全部待做。
+
+基于 `main@fb60aab`，在分支 `feat/macos-desktop` 上把桌面版移植到 macOS（X06 的 macOS 部分）。产物是按芯片区分的两个 DMG：`szuDesktop-<版本>-mac-arm64.dmg` 与 `szuDesktop-<版本>-mac-x64.dmg`，各带同名 `.sha256`。整个 .app 用 ad-hoc 签名，不公证、没有硬化运行时，也不做自动更新；最低支持 macOS 13。DMG 发布由 `desktop/release_notes.py` 的 `MAC_SINCE` 开关把关：B1–B9 全部通过之前保持关闭，`release` 不等 macOS 的打包与冒烟 job、不上传 DMG，发布说明也不列 DMG，Windows 版照常发布；开启时要在同一个 PR 里接好 `release.yml`，`check_release_notes.py` 核对开关、`release.yml` 与 68.2 一致。本轮不升版本、不打标签。
+
+主要取舍（细节见各文件注释）：
+
+- **引擎位置**：Go 引擎按架构编译、预签名（`com.szudesktop.engine`）后放在 `Contents/MacOS/szudesktop-engine`，属于嵌套代码，随整个 .app 一起签名、一起过 Gatekeeper；包里的引擎与冒烟通过的那份逐字节一致。
+- **退出与注销**：darwin 上不监听 `powerMonitor` 的 shutdown。⌘Q、程序坞退出、托盘和宠物菜单的退出、注销与关机时系统发来的 quit Apple Event 都走同一条「先请页面保存、保存不住就弹框」的路径；注销时如果弹框，系统会提示应用中断了注销，这比静默丢掉笔记可以接受。
+- **钥匙串**：`security` 的提示输入一次最多完整写入 128 字节，超出的部分静默截断。写入前先检查长度，绝不先覆盖旧条目；学校会话改为 AES-GCM 加密写到 `session.enc`（0600），钥匙串的 `szunet-session` 条目只放 64 位十六进制密钥。桌面引擎在设置了 `SZUNET_CONFIG_DIR` 时服务名带 `-test-<配置目录哈希>`，测试与冒烟不碰真实条目；命令行版 `szunet` 的服务名不变。
+- **平台差异只在 darwin 分支里**：菜单栏模板图与程序坞菜单、应用菜单与「页面」菜单、宠物窗的面板类型与跨桌面显示、登录项（要求放在「应用程序」里）、通知失败时的宠物气泡、页面文案（只在 `szuDesktop.platform==='darwin'` 时换）。新增参数的缺省值都等于 Windows 的现状，只有 `main.mjs` 显式传入 `process.platform`。
+- **其余**：校历 OCR 改用系统 Vision（`osascript -l JavaScript`）；从程序坞或登录项启动时，按 Homebrew、npm 等固定目录找 `lark-cli`；引擎收到 SIGTERM、SIGINT、SIGHUP 时优雅退出。
+
+<a id="s68-1"></a>
+### 68.1 已由自动验证覆盖
+
+A 类由 agent 在本机（macOS 26.6.2，Apple 芯片，Rosetta）执行，全程设置 `SZUNET_CONFIG_DIR`，只碰带 `-test-` 的钥匙串条目，不登记登录项、不注销、不改系统设置。各部分完成后，又在同一工作树上按 A0–A11 从头集成验收了一遍（2026-09-29），下表是这一遍的结果。
+
+| 范围 | 怎么验证 | 本机结果 |
+|---|---|---|
+| Go 凭据 | `go test ./internal/credential/...`（arm64 原生、amd64 经 Rosetta）：128 字节上限与截断模拟、会话信封（篡改、换密钥、截断、0600）、`-test-` 命名规则与 Python 侧的已知答案 | 通过；`go list -deps ./cmd/szunet` 不含桌面界面包，命令行版不会打开命名空间 |
+| Go 桌面引擎 | `go test ./desktop/... ./internal/netpref/...`（两个架构）、Windows / Linux 交叉 `go vet`（含 `-tags campusvpn`）；`SZU_ONLINE_TESTS=1` 的校历 Vision 测试 | 通过；四张官方校历图的识别结果在 arm64 与 amd64 上都等于内置校历 |
+| 全部回归 | `node desktop/run-checks.mjs`：check-main-wiring 在 darwin 宿主上实跑，另用子进程模拟 darwin、登录时启动与 win32；新增 check-macos-*、check-packaging-macos、check-windows-copy 等 | 模块链接检查、50 个 JS 检查与 5 个 Python 检查全部通过（新增的 check_macos_scripts.py 核对构建与冒烟脚本的纯逻辑：钥匙串后缀与 Go 侧一致、退出轨迹按子序列核对、DMG 卷白名单、没有 `--local` 时直接拒绝）；Windows 文案的渲染哈希与 `origin/main` 一致 |
+| 引擎冒烟 | `python3 desktop/smoke_macos.py --arch arm64 --local`，再跑 `--arch amd64 --local`：签名与架构、协议两行、凭据 401/403、工作区持久化、2KB 会话只在钥匙串留密钥、SIGTERM 优雅退出、launchd 默认 PATH | 两个架构各 94 项通过；SIGTERM 约 0.2 秒以 0 退出；amd64 确认经 Rosetta 执行 |
+| 开发模式冒烟 | `npx electron .` 的冒烟报告：应用菜单角色、activate 恢复主窗、模板托盘图、宠物跨桌面、程序坞菜单、渲染进程平台与设置页文案 | 除按设计保留开发者工具的一项外全部为真 |
+| 打包 | `node build-mac.mjs --arm64 --x64 --skip-sidecar`：hdiutil verify、codesign（.app 与引擎的标识）、Info.plist 版本与最低系统版本、语言包只剩 en 与 zh_CN、引擎与 dist 一致、许可文件 | 两个 DMG 生成并通过全部断言 |
+| DMG 冒烟 | `python3 desktop/electron/smoke_dmg.py --arch arm64 --local`，再跑 `--arch x64 --local`（Rosetta）：挂载复制、静态核对、真实启动的界面与宠物冒烟、mac 专项核对、重开保持缩放、真实 quit Apple Event 的退出轨迹、与便携引擎共存、删除 .app 不动数据 | 两个架构各 141 项通过；quit Apple Event 的轨迹依次经过保存握手、关窗与停引擎，没有 session-end。集成验收中 x64 曾有一次在备份恢复一步超时，查明是主窗口被别的窗口整个挡住时 Chromium 把页面当作隐藏，`<dialog>` 的 close 事件和 requestAnimationFrame 都停下（实测复现）；此前一次等动画帧超时也是同一原因。修复后冒烟模式在 macOS 上关掉按遮挡隐藏（`disable-backgrounding-occluded-windows`，只在冒烟里加），盖住主窗口也能跑完 |
+| Windows 不回归 | 受保护文件（`*_windows.go`、Windows 构建与冒烟脚本、安装脚本、`build.mjs`、图标等）`git diff` 为空；在 `origin/main` 副本与本分支上各打一次 `--win --x64 --dir` 比对 | 文件清单一致；app.asar 之外只有 `szuDesktop.exe` 不同，而且只差内嵌的 app.asar 完整性哈希（app.asar 变了它必然变）；asar 内的差异只在带平台条件的代码和新增模块里 |
+| 冒烟的隔离与收尾 | 跑前跑后核对真实 `szunet` / `szunet-session` 条目、`-test-` 条目、`com.szudesktop.app` 偏好、LaunchServices 与残留进程 | 真实条目前后一致（本机本来就没有）；`-test-` 条目 0 个；偏好域仍不存在；临时 .app 已从 LaunchServices 注销；无残留进程 |
+
+CI 的改动已写进 `.github/workflows/release.yml`，推分支后在 PR 上首次运行，结果待补记：
+
+- `test-macos` 扩成 macOS 上的全套检查（`run-checks.mjs`、`go test ./...`、campusvpn 界面包测试），另加一条只记录不断言的钥匙串长输入探针。
+- `build-desktop-macos` 编两个架构的引擎，arm64 原生、amd64 经 Rosetta 各跑一遍引擎冒烟。
+- `build-desktop-electron-macos` 用同一份引擎打两个 DMG，arm64 与 x64（Rosetta）各跑一遍 DMG 冒烟；quit Apple Event 如被系统拒绝（-1743）记为跳过并警告。
+- `smoke-desktop-electron-macos-intel` 在 `macos-15-intel` 上跑 x64 的引擎冒烟与 DMG 冒烟，只在推到 main、打标签和手动触发时运行。
+- `release` 的 `needs` 和附件与 `main` 相同，不等这些 job、不上传 DMG（见上文的 `MAC_SINCE` 开关）。Windows 各 job 与 `release` 一字未改。
+
+<a id="s68-2"></a>
+### 68.2 待真机验收（B1–B9）
+
+以下各项 CI 和本机自动化都替代不了，要由人在独立的 macOS 用户账户或虚拟机里做，不在日常使用的账户上做。全部通过之前不发布带 DMG 的版本；结果写进本节的「后续更正」。
+
+| 编号 | 验收内容 | 为什么自动化替代不了 | 状态 |
+|---|---|---|---|
+| B1 | 用 Safari 真实下载 DMG，拖进「应用程序」后双击：应提示「无法验证开发者」而不是「已损坏」；「仍要打开」后正常启动，引擎不再被单独拦下；留 syspolicy 日志 | CI 从不经过 Gatekeeper，隔离属性不能用 `xattr` 伪造 | 待验收 |
+| B2 | 菜单栏图标在浅色与深色下清晰；⌘W 后从菜单栏和程序坞都能找回主窗；全屏时 ⌘W 先退出全屏；三种退出方式都先保存；逐页核对 mac 文案 | 需要人眼和真实的全屏、菜单栏交互 | 待验收 |
+| B3 | 宠物：Safari 在前台时单击一次就弹菜单且不抢输入焦点；Control 点按只弹一个菜单、之后点穿和拖动正常；触控板与滚轮缩放；全屏应用与切换桌面；外接屏；在 Safari 里按 ⌥⌘H 后，菜单栏图标显示「显示宠物」，点一次宠物就回来、主窗口不弹出 | 真实光标、NSMenu 的菜单跟踪与多显示器 | 待验收 |
+| B4 | 学校和飞书窗口：「页面」菜单各项可用；登录框 ⌘V、飞书文档 ⌘Z / ⇧⌘Z；主窗隐藏时关掉学校窗口，「页面」各项立即置灰且点击不报错 | 需要真实学校与飞书页面 | 待验收 |
+| B5 | 允许与拒绝通知两种情况下各开一次 1 分钟专注；隐藏主窗和宠物后开 10 分钟专注，记录提醒延迟（超过 60 秒再加 darwin 专用的 App Nap 缓解） | 通知授权与 App Nap 只在真实会话里出现 | 待验收 |
+| B6 | 从「应用程序」开启「登录 Mac 时启动」；注销再登录后宠物和菜单栏图标出现、主窗不弹（含勾选「重新打开窗口」）；从 DMG 里运行时开关置灰；有未保存内容时注销被弹框中断；更新后登录项状态一致 | 注销会结束 agent 的会话；登录项是真实系统设置 | 待验收 |
+| B7 | 真实钥匙串：粘贴 1–2KB 的 Cookie 保存成功，`szunet-session` 条目只有密钥、`session.enc` 为 0600、清除后两处都消失；覆盖安装后读取账号不弹授权框，命令行版读到同一账号；设置了 `SZUNET_CONFIG_DIR` 的命令行版仍用原服务名；没有「szuDesktop Safe Storage」条目 | 会覆盖真实的 `szunet` 条目，只能在独立账户里做 | 待验收 |
+| B8 | macOS 13 与 14 虚拟机里分别启动 x64 或 arm64 包，菜单栏图标、宠物、登录项开关可用 | GitHub 已不提供 13、14 的镜像 | 待验收 |
+| B9 | 校内实测是否弹出「本地网络」授权，允许与拒绝两种情况下门户可达的判定 | 只有校园网里才有认证门户 | 待验收 |
+
+<a id="s68-3"></a>
+### 68.3 已知限制与后续
+
+- 应用未经 Apple 公证，每次更新都要重新放行一次；不支持 macOS 12 及更早版本；第一个 macOS 版本发布前没有可作升级基线的旧版，跨版本升级冒烟等首个版本发布后再补。
+- 按 ⌘H（或在别的应用里「隐藏其他」）时宠物随应用一起隐藏；菜单栏图标和程序坞菜单随即显示「显示宠物」，点一次只把宠物带回来。主窗和宠物都隐藏时专注提醒可能被 App Nap 推迟，等 B5 实测后再定是否处理。
+- 宠物菜单默认不激活整个应用，避免抢走前台应用的焦点；如果 B3 证实非激活面板弹不出菜单，再在 darwin 上接入激活。
+- 本机 DMG 冒烟曾偶发等主窗口动画帧或对话框关闭超时，原因是主窗口被别的窗口挡住时页面被当作隐藏；冒烟模式已在 macOS 上关掉按遮挡隐藏，正常使用不受影响。
+- 本机已装的新版 `lark-cli` 不认 `auth status --json`，飞书状态显示可用但未连接；这是各平台共有的版本契约问题，不在本轮处理。
+- `macos-15-intel` 镜像预计 2027 年 8 月前后下线；届时 x64 包改为只在 Rosetta 下验证，发布前另在 Intel Mac 上人工抽测。

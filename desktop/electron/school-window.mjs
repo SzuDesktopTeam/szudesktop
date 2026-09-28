@@ -4,7 +4,10 @@ import {isNavigationAbort} from './window-policy.mjs';
 // No persist: prefix: school cookies/cache disappear when the app exits.
 // getToken 返回 sidecar 交来的本次运行凭据：主进程调本机服务不经过页面 Cookie，要自己带请求头。
 // electron 的 BrowserWindow/Menu/dialog/session/shell 由 main.mjs 注入（经 official-windows.mjs），检查脚本用假对象代替。
-export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dialog,session,shell,fetch:request=globalThis.fetch}){
+// onWindowMenu(win,submenu)：macOS 没有窗口菜单栏，把同一份菜单项交给应用菜单的「页面」一栏（app-menu.mjs）；其他平台缺省什么也不做。
+// platform 只用来选报错文案：macOS 上指向菜单栏的「页面」菜单，其他平台保留原文。
+export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dialog,session,shell,fetch:request=globalThis.fetch,onWindowMenu=()=>{},platform}){
+  const menuHint=platform==='darwin'?'菜单栏的「页面」菜单':'学校窗口菜单';
   let window=null,imported=false,loading=null,lastTarget=null;
   const profile=session.fromPartition('szu-official',{cache:false});
   profile.setPermissionRequestHandler((_wc,_permission,done)=>done(false));
@@ -44,7 +47,7 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
       wc.on('page-title-updated',event=>event.preventDefault());
       wc.on('did-navigate',(_event,url)=>win.setTitle(new URL(url).hostname+' · 学校官方页面'));
       win.on('closed',()=>{if(window===win)window=null;});
-      win.setMenu(Menu.buildFromTemplate([{label:'学校页面',submenu:[
+      const submenu=[
         {label:'返回',click:()=>{if(wc.navigationHistory.canGoBack())wc.navigationHistory.goBack();}},
         {label:'前进',click:()=>{if(wc.navigationHistory.canGoForward())wc.navigationHistory.goForward();}},
         {label:'刷新',accelerator:'CmdOrCtrl+R',click:()=>wc.reload()},
@@ -53,7 +56,9 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
         {type:'separator'},
         {label:'清除本次学校登录',click:()=>void clear().catch(showError)},
         {label:'关闭学校窗口',click:()=>win.close()},
-      ]}]));
+      ];
+      win.setMenu(Menu.buildFromTemplate([{label:'学校页面',submenu}]));
+      onWindowMenu(win,submenu);
     }
     window.show();window.focus();
     if(window.webContents.getURL()!==url)load(window,url);
@@ -73,11 +78,11 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
   function showError(error,blocked){
     if(blocked){
       let origin='';try{origin=new URL(blocked).origin;}catch{}
-      dialog.showErrorBox('学校页面暂时无法打开',`页面跳转到了应用内不允许打开的地址${origin&&origin!=='null'?`（${origin}）`:''}，已停止加载。请检查校园网或 WebVPN；也可通过学校窗口菜单在系统浏览器中打开。`);
+      dialog.showErrorBox('学校页面暂时无法打开',`页面跳转到了应用内不允许打开的地址${origin&&origin!=='null'?`（${origin}）`:''}，已停止加载。请检查校园网或 WebVPN；也可通过${menuHint}在系统浏览器中打开。`);
       return;
     }
     const code=/^ERR_[A-Z_]+$/.test(error?.code||'')?`\n错误代码：${error.code}`:'';
-    dialog.showErrorBox('学校页面暂时无法打开','请检查校园网或 WebVPN；也可通过学校窗口菜单在系统浏览器中打开。'+code);
+    dialog.showErrorBox('学校页面暂时无法打开',`请检查校园网或 WebVPN；也可通过${menuHint}在系统浏览器中打开。`+code);
   }
   async function sync(business){
     if(!Object.hasOwn(schoolTargets,business)||business==='booking')throw Error('请选择课表或成绩业务');

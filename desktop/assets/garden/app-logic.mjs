@@ -1,8 +1,10 @@
 // 从 app.mjs 抽出的小块页面逻辑：不在模块顶层碰 DOM，要用的节点、桥接和回调都由调用方传入。
 // app.mjs 照常导入使用；检查脚本直接 import 这些函数做行为测试，不再按字符串标记切 app.mjs 的源码。
+import {isMac} from './platform.mjs';
 
 // 退出方式随外壳不同：安装版关闭主窗口后桌面宠物仍常驻，浏览器模式在所有窗口关闭后自动退出。
-export function exitHint(shell=globalThis.szuDesktop?.shell){return shell==='electron'?'关闭主窗口后桌面宠物仍会常驻；要完全退出请用托盘菜单「退出」或「设置 → 关于与更新 → 退出应用」，下次打开可继续使用。':'关闭所有应用窗口约 10 秒后自动退出；想立即退出走「设置 → 关于与更新 → 退出应用」。刷新页面不会结束服务。'}
+// macOS 没有托盘：关窗后从程序坞找回主窗口，退出用 ⌘Q 或菜单栏图标。拿不到平台时一律是 Windows 原文。
+export function exitHint(shell=globalThis.szuDesktop?.shell,mac=isMac()){return shell==='electron'?(mac?'关闭主窗口后桌面宠物仍会常驻，点程序坞图标就能找回主窗口；要完全退出请按 ⌘Q，或用菜单栏图标里的「退出」、「设置 → 关于与更新 → 退出应用」，下次打开可继续使用。':'关闭主窗口后桌面宠物仍会常驻；要完全退出请用托盘菜单「退出」或「设置 → 关于与更新 → 退出应用」，下次打开可继续使用。'):'关闭所有应用窗口约 10 秒后自动退出；想立即退出走「设置 → 关于与更新 → 退出应用」。刷新页面不会结束服务。'}
 
 export function countdown(end,now=Date.now()){let n=Math.max(0,Math.ceil((end-now)/1000));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
 export function remaining(end,now=Date.now()){return end<=now?'成熟啦，随时可以收获':'还需 '+countdown(end,now)}

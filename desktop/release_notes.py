@@ -40,6 +40,19 @@ DOWNLOADS = """### 下载
 
 ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版（Electron 窗口），旁边是同名 `.sha256` 校验文件\n"
 
+# macOS 版按芯片各一个 DMG（electron-builder.yml 的 dmg.artifactName），各带同名 .sha256。
+# MAC_SINCE 既是 DMG 发布的开关，也是第一个带 DMG 的版本号。B1–B9 真机验收（docs/STATUS.md 68.2）全部通过之前
+# 保持 None：下载清单不列 DMG，release.yml 也不上传、不等 macOS 的 job，Windows 版照常发布。验收通过后，
+# 在同一个 PR 里把它设成那一版的版本号，并按 release.yml 里 Intel 冒烟 job 上方的注释接上 needs、下载和附件；
+# 回看更早的版本不会虚构附件。check_release_notes.py 核对这几处与 STATUS 68.2 一致。
+MAC_SINCE = None
+MAC_DOWNLOADS = (
+    "- `szuDesktop-__SEMVER__-mac-arm64.dmg` — macOS 版，Apple 芯片（M1 及更新）选这个，旁边是同名 `.sha256` 校验文件\n"
+    "- `szuDesktop-__SEMVER__-mac-x64.dmg` — macOS 版，Intel 处理器选这个，旁边是同名 `.sha256` 校验文件\n"
+)
+# 没有公证，第一次打开会被系统拦下；不写清怎么放行，用户只会以为包坏了。
+MAC_NOTE = "\nmacOS 版未经 Apple 公证，需要 macOS 13 或更高版本；首次打开时到「系统设置 → 隐私与安全性」点「仍要打开」。\n"
+
 # beta0.9.3 起，单文件 EXE 与每个命令行版也各带同名 .sha256；更早的版本没有，不能虚构。
 ALL_CHECKSUMS_SINCE = (0, 9, 3)
 
@@ -117,10 +130,24 @@ def render(text, version, release=False):
     all_sums = numbers >= ALL_CHECKSUMS_SINCE
     downloads = downloads.replace("__EXE_SUM__", "，旁边是同名 `.sha256` 校验文件" if all_sums else "")
     downloads = downloads.replace("__CLI_SUM__", "，各带同名 `.sha256` 校验文件" if all_sums else "")
+    mac = MAC_SINCE is not None and numbers >= MAC_SINCE
     if numbers >= (0, 8, 0):
         installer = ELECTRON_DOWNLOAD.replace("__SEMVER__", ".".join(match.groups()))
+        # 两个 DMG 紧跟在 Windows 安装包之后：都是带窗口的安装版，按系统挑一个。
+        if mac:
+            installer += MAC_DOWNLOADS.replace("__SEMVER__", ".".join(match.groups()))
         downloads = downloads.replace("### 下载\n\n", "### 下载\n\n" + installer)
-    return extract(text, version, release) + "\n\n---\n\n" + downloads
+    if mac:
+        downloads += MAC_NOTE
+    body = extract(text, version, release)
+    # 这一版不发 DMG，正文却在介绍 DMG：发布页上会写着不存在的附件，等于把没验收过的包说成能下载。
+    # 只在打 tag 时拦（test job 第一步就会失败），「未发布」一节平时照常可以先写好 macOS 的条目。
+    if release and not mac and ".dmg" in body:
+        raise NotesError(
+            "CHANGELOG.md 的 `## %s` 一节提到了 .dmg，但这一版不发布 DMG（desktop/release_notes.py 的 MAC_SINCE 没有开启）："
+            "B1–B9 真机验收通过之前，把 macOS 桌面版的条目留在「未发布」一节；验收通过后按 CONTRIBUTING.md「发布」一节开启 DMG 发布"
+            % version)
+    return body + "\n\n---\n\n" + downloads
 
 
 def load(path=CHANGELOG):

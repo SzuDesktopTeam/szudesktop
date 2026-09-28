@@ -192,4 +192,216 @@ check("发布模式下提示行之外还有「本地候选版」时报错",
 check("发布模式下标签与 VERSION 不一致时报错",
       lambda: expect_error(lambda: release_notes.check_release_tag("beta0.9.4", "beta0.9.3"), "标签不一致"))
 
+
+# ───── macOS DMG（MAC_SINCE 开关）─────
+# DMG 的名字写在三处：electron-builder.yml 的 dmg.artifactName（打包）、release.yml 的附件清单（上传）、
+# 这里的下载说明（给用户看）。B1–B9 真机验收（STATUS 68.2）通过之前 MAC_SINCE 为 None：release 不等 macOS 的 job、
+# 不上传 DMG，说明里也不列，Windows 版照常发布。开启时这几处要在同一个 PR 里一起改，STATUS 68.2 也必须全部通过；
+# 任何一处没跟上，发布页上就会写着不存在的文件，或者发出没验收过的包。
+import contextlib  # noqa: E402
+import fnmatch  # noqa: E402
+import os  # noqa: E402
+import re  # noqa: E402
+
+MAC_BODY = "## beta0.9.5\n\n- macOS 版\n"
+# 开启 DMG 发布时 release 必须等的两个 job：打包加 Apple 芯片冒烟、真 Intel 机器冒烟。
+MAC_JOBS = ("build-desktop-electron-macos", "smoke-desktop-electron-macos-intel")
+
+
+@contextlib.contextmanager
+def mac_since(value):
+    """临时改掉 DMG 发布开关，核对开启（或关闭）时的渲染结果；结束时还原。"""
+    saved = release_notes.MAC_SINCE
+    release_notes.MAC_SINCE = value
+    try:
+        yield
+    finally:
+        release_notes.MAC_SINCE = saved
+
+
+def read_repo(*parts):
+    with open(os.path.join(release_notes.ROOT, *parts), encoding="utf-8") as f:
+        return f.read()
+
+
+def dmg_names(semver):
+    """按 electron-builder.yml 的 dmg.artifactName 展开两个架构的 DMG 名（不依赖 PyYAML）。"""
+    block = re.search(r"^dmg:[ \t]*\n((?:[ \t]+.*\n|[ \t]*\n)*)", read_repo("desktop", "electron", "electron-builder.yml"), re.M)
+    assert block, "electron-builder.yml 里没有 dmg 段"
+    pattern = re.search(r"^[ \t]+artifactName:[ \t]*(\S+)[ \t]*$", block.group(1), re.M)
+    assert pattern, "electron-builder.yml 的 dmg 段没有 artifactName"
+    names = [pattern.group(1).replace("${version}", semver).replace("${arch}", arch).replace("${ext}", "dmg")
+             for arch in ("arm64", "x64")]
+    assert all("$" not in name for name in names), "dmg.artifactName 里有这里不认识的宏：" + pattern.group(1)
+    return names
+
+
+def release_job(workflow):
+    """release.yml 里 release job 的原文，到下一个 job 或文件末尾为止。"""
+    lines = workflow.splitlines()
+    start = lines.index("  release:")
+    end = next((i for i in range(start + 1, len(lines)) if re.fullmatch(r"  [a-z][a-z0-9-]*:", lines[i])), len(lines))
+    return "\n".join(lines[start:end])
+
+
+def release_files(job):
+    """release job 里 action-gh-release 的 files 清单（每行一个 glob）。"""
+    lines = job.splitlines()
+    start = next(i for i, line in enumerate(lines) if re.fullmatch(r"\s+files: \|", line))
+    indent = len(lines[start]) - len(lines[start].lstrip())
+    files = []
+    for line in lines[start + 1:]:
+        if line.strip() and len(line) - len(line.lstrip()) <= indent:
+            break
+        if line.strip():
+            files.append(line.strip())
+    return files
+
+
+def release_needs(job):
+    found = re.search(r"^    needs: \[(.*)\]$", job, re.M)
+    assert found, "release job 的 needs 不是单行列表，这里读不出来"
+    return [name.strip() for name in found.group(1).split(",")]
+
+
+def b_status(status):
+    """STATUS 68.2 表格里 B1–B9 各行的「状态」列。"""
+    start = status.index('<a id="s68-2"></a>')
+    end = status.index('<a id="s68-3"></a>', start)
+    rows = {}
+    for line in status[start:end].splitlines():
+        row = re.match(r"\|\s*(B\d+)\s*\|.*\|\s*([^|]*?)\s*\|\s*$", line)
+        if row:
+            rows[row.group(1)] = row.group(2)
+    return rows
+
+
+def mac_release_problems(since, workflow, status):
+    """DMG 发布开关与 release.yml、STATUS 68.2 是否一致；返回问题清单，空表示一致。"""
+    job = release_job(workflow)
+    files, needs = release_files(job), release_needs(job)
+    problems = []
+    if since is None:
+        problems += ["MAC_SINCE 没有开启，release.yml 却会上传 " + f for f in files if ".dmg" in f]
+        if "szudesktop-electron-macos" in job:
+            problems.append("MAC_SINCE 没有开启，release job 却下载了 DMG 产物")
+        problems += ["MAC_SINCE 没有开启，release 却在等 %s：Windows 版会被 macOS 的 job 卡住" % j for j in MAC_JOBS if j in needs]
+        return problems
+    for name in dmg_names(".".join(map(str, since))):
+        for asset in (name, name + ".sha256"):
+            if not any(fnmatch.fnmatchcase("dist/" + asset, pattern) for pattern in files):
+                problems.append("release.yml 不会上传 " + asset)
+    if not re.search(r"^\s+name: szudesktop-electron-macos$", job, re.M):
+        problems.append("release job 没有下载 szudesktop-electron-macos")
+    problems += ["release 的 needs 里没有 " + j for j in MAC_JOBS if j not in needs]
+    rows = b_status(status)
+    if sorted(rows) != sorted("B%d" % i for i in range(1, 10)):
+        problems.append("STATUS 68.2 应当正好是 B1–B9 九行，读到 " + "、".join(sorted(rows)))
+    pending = sorted(k for k, v in rows.items() if not v.startswith("通过"))
+    if pending:
+        problems.append("STATUS 68.2 还有没通过的真机验收：" + "、".join(pending))
+    return problems
+
+
+def wire_mac_release(workflow):
+    """按 release.yml 注释里的步骤接上 DMG 发布，只用来核对上面的检查认得出接好的样子。"""
+    wired = workflow.replace(
+        "needs: [build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos]",
+        "needs: [build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos, " + ", ".join(MAC_JOBS) + "]")
+    wired = wired.replace(
+        "      - name: 上传前核对全部校验文件\n",
+        "      - uses: actions/download-artifact@0 # 占位\n        with:\n          name: szudesktop-electron-macos\n"
+        "          path: dist\n      - name: 上传前核对全部校验文件\n")
+    wired = wired.replace(
+        "          fail_on_unmatched_files: true\n",
+        "".join("            dist/szuDesktop-*-mac-%s.dmg%s\n" % (arch, ext) for arch in ("arm64", "x64") for ext in ("", ".sha256"))
+        + "          fail_on_unmatched_files: true\n")
+    assert wired.count("szudesktop-electron-macos") == workflow.count("szudesktop-electron-macos") + 1 and ".dmg\n" in wired \
+        and wired.count(", ".join(MAC_JOBS) + "]") == 1, "release.yml 的 release job 变了，wire_mac_release 需要跟着改"
+    return wired
+
+
+def test_mac_switch_matches_workflow_and_status():
+    workflow, status = read_repo(".github", "workflows", "release.yml"), read_repo("docs", "STATUS.md")
+    problems = mac_release_problems(release_notes.MAC_SINCE, workflow, status)
+    assert not problems, "DMG 发布开关与 release.yml / STATUS 68.2 对不上：" + "；".join(problems)
+
+
+def test_mac_gate_blocks_until_wired_and_accepted():
+    workflow, status = read_repo(".github", "workflows", "release.yml"), read_repo("docs", "STATUS.md")
+    wired = wire_mac_release(workflow)
+    accepted = re.sub(r"(\|\s*B\d+\s*\|.*\|\s*)待验收(\s*\|\s*)$", r"\1通过\2", status, flags=re.M)
+    # 只改开关、不接 release.yml：缺附件、缺下载、缺 needs 都要报出来。
+    alone = "；".join(mac_release_problems((0, 9, 5), workflow, accepted))
+    for part in ("不会上传 szuDesktop-0.9.5-mac-arm64.dmg", "不会上传 szuDesktop-0.9.5-mac-x64.dmg.sha256",
+                 "没有下载 szudesktop-electron-macos", "needs 里没有 smoke-desktop-electron-macos-intel"):
+        assert part in alone, "只开开关时没有报出：" + part
+    # 接好了但真机验收还没做完：必须拦下。
+    if "待验收" in status:
+        assert any("没通过的真机验收" in p for p in mac_release_problems((0, 9, 5), wired, status)), "B 类没通过也放行了 DMG"
+    # 接好、验收全部通过：放行。
+    assert mac_release_problems((0, 9, 5), wired, accepted) == [], "接好且验收通过时不应再报问题"
+    # 反过来，没开开关却接上了：同样要报，免得悄悄上传没在说明里写的 DMG。
+    assert len(mac_release_problems(None, wired, status)) >= 3, "没开开关却上传 DMG、等 macOS 的 job 时没有报出"
+
+
+def test_mac_off_keeps_windows_notes():
+    with mac_since(None):
+        for version in ("beta0.9.5", "v1.0.0", "beta0.9.4"):
+            out = release_notes.render("## %s\n\n- 正文\n" % version, version, release=True)
+            assert ".dmg" not in out and "Apple 公证" not in out, version + "：DMG 发布没开启时不能列出 DMG"
+        # 这一版不发 DMG 而 CHANGELOG 正文在介绍 DMG：打 tag 时拦下；平时预览照常。
+        mac_entry = "## beta0.9.5\n\n- macOS 桌面版：Apple 芯片选 `mac-arm64.dmg`\n"
+        expect_error(lambda: release_notes.render(mac_entry, "beta0.9.5", release=True), "不发 DMG 的版本正文里写了 DMG")
+        assert "mac-arm64.dmg" in release_notes.render(mac_entry, "beta0.9.5"), "非发布模式只是预览，不该拦"
+    with mac_since((0, 9, 5)):
+        assert "`szuDesktop-0.9.5-mac-arm64.dmg`" in release_notes.render(mac_entry, "beta0.9.5", release=True), "开启后正文可以介绍 DMG"
+
+
+def test_mac_downloads_follow_installer():
+    with mac_since((0, 9, 5)):
+        lines = release_notes.render(MAC_BODY, "beta0.9.5").splitlines()
+        future = release_notes.render("## v1.0.0\n\n- 正式版\n", "v1.0.0")
+    installer = next(i for i, line in enumerate(lines) if "`szuDesktop-Setup-0.9.5.exe`" in line)
+    arm = next(i for i, line in enumerate(lines) if "`szuDesktop-0.9.5-mac-arm64.dmg`" in line)
+    x64 = next(i for i, line in enumerate(lines) if "`szuDesktop-0.9.5-mac-x64.dmg`" in line)
+    assert (arm, x64) == (installer + 1, installer + 2), "两个 DMG 应紧跟在 Windows 安装包那一行之后"
+    assert "Apple 芯片" in lines[arm] and "Intel" in lines[x64], "DMG 说明没写清按芯片怎么选"
+    assert all(".sha256" in lines[i] for i in (arm, x64)), "DMG 旁边的同名 .sha256 没写"
+    assert "`szuDesktop-1.0.0-mac-arm64.dmg`" in future and "`szuDesktop-1.0.0-mac-x64.dmg`" in future, "之后的版本也要带 DMG"
+
+
+def test_mac_note_and_placeholders():
+    with mac_since((0, 9, 5)):
+        out = release_notes.render(MAC_BODY, "beta0.9.5")
+    note = next(line for line in out.splitlines() if line.startswith("macOS 版未经 Apple 公证"))
+    assert "macOS 13" in note and "隐私与安全性" in note and "仍要打开" in note, "首次打开的放行步骤没写全：" + note
+    assert out.index("`szuDesktop-0.9.5-mac-x64.dmg`") < out.index(note), "放行说明应在下载清单之后"
+    assert "__" not in out, "DMG 下载清单还留着占位符"
+
+
+def test_no_dmg_before_mac_since():
+    with mac_since((0, 9, 5)):
+        for version in ("beta0.9.4", "beta0.9.3", "beta0.8.0", "beta0.7.1"):
+            out = release_notes.render("## %s\n\n- 正文\n" % version, version)
+            assert ".dmg" not in out and "Apple 公证" not in out, version + " 没有 macOS 桌面版，不能虚构 DMG 附件"
+        current = release_notes.render(SAMPLE, "beta0.7.1")
+    assert ".dmg" not in current, "旧版本不应凭空多出 DMG"
+
+
+def test_dmg_names_match_packaging():
+    with mac_since((0, 9, 5)):
+        out = release_notes.render(MAC_BODY, "beta0.9.5")
+    for name in dmg_names("0.9.5"):
+        assert "`%s`" % name in out, "下载说明里的 DMG 名与 dmg.artifactName 的展开结果不一致：" + name
+
+
+check("DMG 发布开关与 release.yml、STATUS 68.2 一致（没开启时 release 不等 macOS 的 job、不上传 DMG）", test_mac_switch_matches_workflow_and_status)
+check("开启 DMG 发布要同时接好 needs、下载与附件，且 B1–B9 全部通过", test_mac_gate_blocks_until_wired_and_accepted)
+check("DMG 发布没开启时说明不列 DMG，正文介绍 DMG 的版本打 tag 时被拦下", test_mac_off_keeps_windows_notes)
+check("开启后两个 DMG 紧跟在 Windows 安装包之后，各带 .sha256", test_mac_downloads_follow_installer)
+check("DMG 版本写明未公证、最低 macOS 13 与首次打开的放行步骤，不留占位符", test_mac_note_and_placeholders)
+check("开启后 MAC_SINCE 之前的版本仍不出现 DMG", test_no_dmg_before_mac_since)
+check("DMG 名与 dmg.artifactName 的展开结果一致", test_dmg_names_match_packaging)
+
 print("%d release-notes checks passed" % count)

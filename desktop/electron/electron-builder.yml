@@ -43,12 +43,13 @@ files:
   - pet.html
   - pet-render.mjs
   - pet-preload.cjs
+  - app-menu.mjs
+  - smoke-macos.mjs
   - package.json
 # 庭院引擎（resources/garden-engine.mjs）及其相对依赖不在这里手写：
 # build.mjs 用 garden-engine-deps.mjs 按静态 import 图算出后追加进 extraResources。
+# 各平台的引擎不在这里：Windows 的在 win.extraResources，macOS 的由 build-mac.mjs 按架构写进 mac.extraFiles（Contents/MacOS）。
 extraResources:
-  - from: ../../dist/szudesktop-windows-amd64.exe
-    to: szudesktop-windows-amd64.exe
   # 托盘图标：打包后 app-paths.mjs 从 process.resourcesPath 解析。
   - from: ../assets/szudesktop.ico
     to: szudesktop.ico
@@ -71,6 +72,10 @@ electronLanguages:
 win:
   target: nsis
   icon: ../assets/szudesktop.ico
+  # electron-builder 把这里与顶层 extraResources 合并，Windows 安装包里的文件与原来相同。
+  extraResources:
+    - from: ../../dist/szudesktop-windows-amd64.exe
+      to: szudesktop-windows-amd64.exe
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -78,3 +83,31 @@ nsis:
   # 真正卸载时删除本应用登记的开机自启项；升级时保留用户的选择。
   include: installer.nsh
   artifactName: szuDesktop-Setup-${version}.exe
+# macOS：按芯片各出一个 ad-hoc 签名的 DMG（build-mac.mjs 传 --arm64 / --x64），不公证、不做自动更新。
+# 引擎由 build-mac.mjs 按架构写进 extraFiles（Contents/MacOS/szudesktop-engine），已用 com.szudesktop.engine 预签名：
+# signIgnore 让 osx-sign 不重签它，外层签名把它当作已签名的嵌套代码封进去，包里的引擎与冒烟通过的那份逐字节一致。
+mac:
+  target: dmg
+  icon: ../assets/szudesktop.icns
+  category: public.app-category.education
+  identity: '-'
+  # ad-hoc 签名加硬化运行时会拒绝加载带别的 Team ID 的 Electron 框架；不公证时硬化运行时也没有收益。
+  hardenedRuntime: false
+  signIgnore:
+    - /Contents/MacOS/szudesktop-engine$
+  # macOS 的语言资源是 .lproj 目录，名字与 Windows 的 .pak 不同；只留简体中文和兜底的英文。
+  electronLanguages:
+    - zh_CN
+    - en
+  # 菜单栏模板图（@2x 由 nativeImage 自动取用），app-paths.mjs 从 process.resourcesPath 解析。
+  extraResources:
+    - from: ../assets/szudesktop-trayTemplate.png
+      to: szudesktop-trayTemplate.png
+    - from: ../assets/szudesktop-trayTemplate@2x.png
+      to: szudesktop-trayTemplate@2x.png
+  extendInfo:
+    NSLocalNetworkUsageDescription: szuDesktop 需要访问本地网络，用来连接校园网认证门户、检测校园网登录状态。
+dmg:
+  artifactName: szuDesktop-${version}-mac-${arch}.${ext}
+  # 本轮不做自动更新：不生成 latest-mac.yml 和 blockmap。
+  writeUpdateInfo: false

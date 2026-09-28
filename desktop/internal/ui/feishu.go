@@ -57,6 +57,10 @@ func findFeishuCLI() string {
 			return p
 		}
 	}
+	// 从 Finder、Dock 或登录项启动时 PATH 只有系统默认几项，再查各平台的常见安装目录。
+	if p := platformFeishuCLI(name); p != "" {
+		return p
+	}
 	return ""
 }
 
@@ -92,6 +96,7 @@ func runFeishuCLI(ctx context.Context, args ...string) ([]byte, error) {
 	cmd.Dir, _ = os.UserHomeDir()
 	cmd.Env = append(os.Environ(), "LARKSUITE_CLI_NO_UPDATE_NOTIFIER=1", "LARKSUITE_CLI_NO_SKILLS_NOTIFIER=1")
 	hideFeishuCommand(cmd)
+	prepareFeishuEnv(cmd)
 	return feishuCommandOutput(ctx, cmd)
 }
 

@@ -28,3 +28,5 @@
 *.otf binary
 *.zip binary
 *.exe binary
+*.icns binary
+*.dmg binary

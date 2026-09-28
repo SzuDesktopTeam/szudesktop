@@ -36,6 +36,8 @@ export function fakeWindowClass(){
       this.bounds={x:options.x??0,y:options.y??0,width:options.width??0,height:options.height??0};
       this.visible=Boolean(options.show??true);this.destroyed=false;this.minimized=false;this.focused=false;
       this.alwaysOnTop=Boolean(options.alwaysOnTop);this.focusable=options.focusable!==false;this.mouse=[];this.loaded=[];
+      // macOS 才用到的状态：全屏、是否列在「窗口」菜单里。跨桌面显示（allWorkspaces）只在调用 setVisibleOnAllWorkspaces 后才有。
+      this.fullScreen=false;this.excludedFromShownWindowsMenu=false;
       windows.push(this);
     }
     setMenuBarVisibility(value){this.menuBar=value;}
@@ -56,13 +58,19 @@ export function fakeWindowClass(){
     isDestroyed(){return this.destroyed;}
     destroy(){if(this.destroyed)return;this.destroyed=true;this.webContents.destroyed=true;this.emit('closed');}
     close(){this.destroy();}
+    setVisibleOnAllWorkspaces(value,options){this.allWorkspaces={value,options};}
+    isVisibleOnAllWorkspaces(){return Boolean(this.allWorkspaces?.value);}
+    isFullScreen(){return this.fullScreen;}
+    // 真实窗口退出全屏要等动画结束才发 leave-full-screen；这里同步发出，检查脚本按顺序断言即可。
+    setFullScreen(value){const leaving=this.fullScreen&&!value;this.fullScreen=Boolean(value);if(leaving)this.emit('leave-full-screen');}
   }
   return {FakeWindow,windows};
 }
 
 // Menu.buildFromTemplate 的替身：保留模板，按 id 查找菜单项，popup 只记下参数（callback 由检查脚本手动调用）。
+// setApplicationMenu 记下每次设置的应用菜单（applied），getApplicationMenu 返回最近一次。
 export function fakeMenu(){
-  const built=[];
+  const built=[],applied=[];
   const find=(items,id)=>{
     for(const item of items||[]){
       if(item.id===id)return item;
@@ -71,12 +79,14 @@ export function fakeMenu(){
     }
     return null;
   };
-  return {built,Menu:{buildFromTemplate(template){
+  return {built,applied,Menu:{buildFromTemplate(template){
     const menu={items:template,popups:[],popup(options){this.popups.push(options);},getMenuItemById:id=>find(template,id),
       find:label=>template.find(item=>item.label===label)};
     built.push(menu);
     return menu;
-  }}};
+  },
+  setApplicationMenu(menu){applied.push(menu);},
+  getApplicationMenu:()=>applied.at(-1)??null}};
 }
 
 // screen 的替身：单一显示器，光标位置可以改；on() 记下显示器变化的监听器。
@@ -101,9 +111,20 @@ export class FakeIpcMain {
 export class FakeTray extends EventEmitter {
   constructor(icon){super();this.icon=icon;this.menu=null;this.destroyed=false;}
   setToolTip(text){this.tooltip=text;}
+  setIgnoreDoubleClickEvents(value){this.ignoreDoubleClick=value;}
   setContextMenu(menu){this.menu=menu;}
   destroy(){this.destroyed=true;}
   isDestroyed(){return this.destroyed;}
+}
+
+// nativeImage 的替身：createFromPath 按文件名判断，以 Template 结尾（不含扩展名）的算模板图，空路径算读不出来。
+export function fakeNativeImage(){
+  const loaded=[];
+  return {loaded,nativeImage:{createFromPath(file){
+    loaded.push(file);
+    const name=String(file||'').split(/[\\/]/).pop().replace(/(@\dx)?\.\w+$/,'');
+    return {isEmpty:()=>!file,isTemplateImage:()=>/Template$/.test(name)};
+  }}};
 }
 
 // 记录错误框和询问框；showMessageBox 依次取 responses 里的按钮编号。

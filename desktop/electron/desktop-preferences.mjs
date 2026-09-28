@@ -7,9 +7,12 @@ export function createDesktopPreferences({Notification,dialog,getUserData,applyE
   let desktopPreferences={...DESKTOP_DEFAULTS},loginItems=null;
   // 启动时载入已保存的偏好和开机自启控制；在此之前一律按默认值。
   function load(preferences,control){desktopPreferences=preferences;loginItems=control;}
+  // macOS 的登录项控制会给出开不了的原因（不在「应用程序」里、等待系统设置里允许），设置页据此提示；没有原因时不带这个键。
   function desktopSettingsSnapshot(){
     const {lastNotifiedFocus,...preferences}=desktopPreferences;
-    return {...preferences,launchAtLogin:loginItems?.get()||false,launchAtLoginSupported:Boolean(loginItems?.supported),notificationsSupported:Notification.isSupported()};
+    const hint=loginItems?.hint;
+    return {...preferences,launchAtLogin:loginItems?.get()||false,launchAtLoginSupported:Boolean(loginItems?.supported),notificationsSupported:Notification.isSupported(),
+      ...(hint?{launchAtLoginHint:hint}:{})};
   }
   function saveDesktopPreferences(value){
     desktopPreferences=write(getUserData(),value);

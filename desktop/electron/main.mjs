@@ -1,13 +1,13 @@
-import {app, BrowserWindow, dialog, ipcMain, Menu, Notification, screen, session, shell, Tray} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, screen, session, shell, Tray} from 'electron';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {startSidecar,startupErrorText} from './sidecar.mjs';
 import {launchUrl,redactToken,workspaceLoader} from './listen-url.mjs';
 import {isTrustedSender} from './window-policy.mjs';
 import {readPetSettings,writePetSettings} from './pet-settings.mjs';
-import {APP_USER_MODEL_ID,readDesktopSettings,createLoginItemControl,isQuietStartup} from './desktop-settings.mjs';
+import {APP_USER_MODEL_ID,readDesktopSettings,createLoginItemControl,isQuietStartup,openedAtLogin as openedAtLoginFn,createLoginReopenGuard} from './desktop-settings.mjs';
 import {appPaths,sidecarCommand} from './app-paths.mjs';
-import {smokeMode,createSmokeRecorder} from './smoke-report.mjs';
+import {smokeMode,createSmokeRecorder,createQuitTrace} from './smoke-report.mjs';
 import {createQuitCoordinator} from './quit-coordinator.mjs';
 import {createMainWindow} from './main-window.mjs';
 import {createEngineMonitor} from './engine-monitor.mjs';
@@ -17,6 +17,7 @@ import {createPetController} from './pet-controller.mjs';
 import {createTrayMenu} from './tray-menu.mjs';
 import {createOfficialWindows} from './official-windows.mjs';
 import {registerIpcRoutes} from './ipc-routes.mjs';
+import {buildAppMenuTemplate,createPageMenuRegistry} from './app-menu.mjs';
 
 // 这里只负责组装：各模块的状态都在自己的工厂里，electron 的对象从这里注入，检查脚本用假对象测试各模块。
 const here=path.dirname(fileURLToPath(import.meta.url));
@@ -27,28 +28,53 @@ const gardenEngine=import(pathToFileURL(paths.gardenEngine).href);
 const smoke=createSmokeRecorder(smokeMode(process.env));
 if(smoke.enabled) app.setPath('userData',smoke.profile);
 const userData=()=>app.getPath('userData');
+// 平台相关的行为一律由这里显式传 process.platform，各模块缺省时与 Windows 的行为一致。
+const mac=process.platform==='darwin';
+// 只在 macOS 冒烟里：主窗口被别的窗口整个挡住时，Chromium 会把页面当作隐藏，<dialog> 的 close 事件和 requestAnimationFrame
+// 都停下（已实测），界面冒烟的备份恢复、截图等步骤就会超时。冒烟核对的是功能不是遮挡节流，所以关掉按遮挡隐藏；正常使用与 Windows 不受影响。
+if(smoke.enabled&&mac)app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+// 用户主动要看主窗口或引擎报错时把整个应用带到前台：macOS 上菜单栏图标和程序坞菜单不会激活应用。宠物菜单不接它，点宠物不抢前台焦点。
+const activateApp=mac?()=>app.focus({steal:true}):()=>{};
 
-let handle=null,startup=null,official=null;
+let handle=null,startup=null,official=null,openedAtLogin=false;
+// 登录项拉起后系统恢复重开造成的第一次二次启动或 activate 不弹主窗；whenReady 之后才读得到是不是登录时启动的。
+let loginReopen=()=>false;
 const quit=createQuitCoordinator({app,dialog,getMainWindow:()=>mainWindow.get(),showMainWindow:()=>mainWindow.show(),
-  waitForStartup:()=>startup,closeWindows,stopEngine});
+  waitForStartup:()=>startup,closeWindows,stopEngine,trace:createQuitTrace(process.env)});
 const mainWindow=createMainWindow({BrowserWindow,preload:paths.mainPreload,smoke,isQuitting:quit.isQuitting,quit:()=>app.quit(),
   openExternal:url=>official.openExternal(url),onWorkspaceSaved:()=>focus.workspaceSaved(),
   onRendererGone:()=>void engine.failed('窗口进程意外结束，请重新打开应用'),
-  canHideToTray:()=>tray.exists(),onSessionEnd:()=>quit.sessionEnd()});
-const engine=createEngineMonitor({app,dialog,getMainWindow:()=>mainWindow.get(),isQuitting:quit.isQuitting});
+  canHideToTray:()=>tray.exists(),onSessionEnd:()=>quit.sessionEnd(),platform:process.platform,activateApp});
+const engine=createEngineMonitor({app,dialog,getMainWindow:()=>mainWindow.get(),isQuitting:quit.isQuitting,activateApp});
 const preferences=createDesktopPreferences({Notification,dialog,getUserData:userData,
   applyEffects:current=>{pet.applyPreferences(current);focus.settingsChanged();},
   refreshTray:()=>tray.refresh(),publish:result=>mainWindow.send('szu:desktop-settings',result)});
 const loadWorkspace=workspaceLoader(()=>handle);
+// macOS 上通知没授权或发不出去时，换成宠物气泡加程序坞弹跳；Windows 不接，toast 失败时与原来一样什么也不多做。
 const focus=createFocusReminders({Notification,loadWorkspace,readSettings:preferences.current,saveSettings:preferences.save,
-  isSupported:()=>!smoke.enabled&&Notification.isSupported(),icon:paths.icon,onClick:()=>mainWindow.command('study')});
+  isSupported:()=>!smoke.enabled&&Notification.isSupported(),icon:paths.notificationIcon,onClick:()=>mainWindow.command('study'),
+  onFailed:process.platform==='darwin'?()=>{pet.say('这一段专注完成了，回到学习工具领取奖励吧');app.dock?.bounce('informational');}:undefined});
 const pet=createPetController({BrowserWindow,Menu,screen,dialog,platform:process.platform,html:paths.petHtml,preload:paths.petPreload,
   smoke,petShot:process.env.SZU_PET_SHOT,gardenEngine,loadWorkspace,readPreferences:preferences.current,changeSettings:preferences.change,
   saveSettings:(scale,position)=>writePetSettings(userData(),scale,position),isQuitting:quit.isQuitting,
   observeWorkspace:snapshot=>focus.observe(snapshot),dispatch:command=>mainWindow.command(command),
   refreshTray:()=>tray.refresh(),publishScale:scale=>mainWindow.send('szu:pet-scale',scale),quit:()=>app.quit()});
-const tray=createTrayMenu({Tray,Menu,icon:paths.icon,readPreferences:preferences.current,petVisible:pet.isVisible,petSizeMenu:pet.sizeMenu,
-  changeSettings:preferences.change,showMainWindow:()=>mainWindow.show(),quit:()=>app.quit(),recordError:smoke.record,debug:Boolean(process.env.SZU_PET_SHOT)});
+const tray=createTrayMenu({Tray,Menu,icon:paths.trayIcon,readPreferences:preferences.current,petVisible:pet.isVisible,petSizeMenu:pet.sizeMenu,
+  changeSettings:preferences.change,showMainWindow:()=>mainWindow.show(),quit:()=>app.quit(),recordError:smoke.record,debug:Boolean(process.env.SZU_PET_SHOT),
+  platform:process.platform,setDockMenu:m=>app.dock?.setMenu(m)});
+// macOS 的应用菜单：「页面」一栏跟着当前聚焦的学校或飞书窗口走，聚焦变化或窗口关掉时重建。Windows 不建应用菜单。
+let focusedWindow=null;
+const pages=mac?createPageMenuRegistry({onChange:()=>refreshAppMenu()}):null;
+function refreshAppMenu(){
+  Menu.setApplicationMenu(Menu.buildFromTemplate(buildAppMenuTemplate({version:appVersion(),isPackaged:app.isPackaged,
+    pageMenu:pages.current(focusedWindow),onOpenMain:()=>mainWindow.show()})));
+}
+// 关于面板和菜单里显示的版本，与启动时核对引擎用的是同一份（安装版 package.json 的 szuVersion，开发时仓库的 VERSION）；读一次就记住。
+let shownVersion=null;
+function appVersion(){
+  if(shownVersion===null){try{shownVersion=sidecarCommand(paths).expectedVersion;}catch{shownVersion=app.getVersion();}}
+  return shownVersion;
+}
 
 async function startPet(){
   try{
@@ -84,20 +110,23 @@ async function boot(){
   await loginRepair;
   if(quit.isQuitting())return;
   official=createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,getBaseURL:()=>handle.baseUrl,getToken:()=>handle.token,
-    isQuitting:quit.isQuitting,reportSchoolCleanup:()=>!handle.owned&&!smoke.enabled});
+    isQuitting:quit.isQuitting,reportSchoolCleanup:()=>!handle.owned&&!smoke.enabled,platform:process.platform,onWindowMenu:pages?.set});
   const mainWin=mainWindow.create(handle.baseUrl);
   engine.watch(handle);
   // 首次加载带一次性的 launch 凭据：Go 换成 HttpOnly Cookie 后 303 回到 /，页面此后的请求都自动带 Cookie。
   // loadURL 失败时的报错含完整地址，统一在启动失败的出口抹掉凭据。
   await mainWin.loadURL(launchUrl(handle));
-  if(!isQuietStartup(process.argv))mainWin.show();
+  // macOS 的登录项不带 --autostart 参数，由系统在登录时拉起就同样不弹主窗（openedAtLogin 只在 darwin 上可能为 true）。
+  if(!openedAtLogin){if(!isQuietStartup(process.argv))mainWin.show();}
   pet.restore(readPetSettings(userData()));
   if(!quit.isQuitting())await startPet();
   // Quiet login still needs an accessible way back if the system tray failed.
   if(!quit.isQuitting()&&!tray.get())mainWin.show();
   if(!quit.isQuitting())focus.start();
   await smoke.writeReport({app,mainWin:mainWindow.get(),handle,petRuntime:()=>({petWin:pet.window(),tray:tray.get(),getMenu:tray.menu,screen,
-    getPetMenu:pet.menu,getPetMouse:pet.mouse,getPetHitLog:pet.hitLog,initialScale:pet.scale(),userData:userData()})});
+    getPetMenu:pet.menu,getPetMouse:pet.mouse,getPetHitLog:pet.hitLog,initialScale:pet.scale(),userData:userData()}),
+    macRuntime:()=>({app,Menu,nativeImage,mainWin:mainWindow.get(),showMain:()=>mainWindow.show(),petWin:pet.window(),trayIcon:paths.trayIcon,
+      loginItems,baseUrl:handle.baseUrl})});
 }
 
 const gotLock=app.requestSingleInstanceLock();
@@ -105,8 +134,19 @@ if(!gotLock)app.quit();
 else{
   registerIpcRoutes({ipcMain,app,quit,pet,preferences,getOfficial:()=>official,
     isTrusted:event=>isTrustedSender(event,mainWindow.get(),handle?.baseUrl)});
-  app.on('second-instance',(_event,argv)=>{if(!isQuietStartup(argv))mainWindow.show();});
+  app.on('second-instance',(_event,argv)=>{if(!isQuietStartup(argv)&&!loginReopen())mainWindow.show();});
+  // macOS 上点程序坞图标（或再次打开应用）走 activate：主窗口只是藏起来了，重新显示它。退出流程中不再弹出。
+  if(mac)app.on('activate',()=>{if(!quit.isQuitting()&&!loginReopen())mainWindow.show();});
   app.whenReady().then(()=>{
+    // 系统在应用启动完成时才告诉我们是不是登录项拉起的，所以放在 whenReady 里读；Windows 上恒为 false。
+    openedAtLogin=openedAtLoginFn(app,process.platform);
+    loginReopen=createLoginReopenGuard({platform:process.platform,openedAtLogin});
+    if(mac){
+      app.setAboutPanelOptions({applicationName:'szuDesktop',applicationVersion:appVersion(),copyright:'学生自制的校园生活工具，与深圳大学官方无关'});
+      refreshAppMenu();
+      app.on('browser-window-focus',(_event,win)=>{focusedWindow=win;refreshAppMenu();});
+      app.on('browser-window-blur',()=>{focusedWindow=null;refreshAppMenu();});
+    }
     pet.watchDisplays();
     startup=boot();
     return startup;
@@ -116,7 +156,7 @@ else{
     if(e instanceof Error)e.message=redactToken(e.message,token);
     if(smoke.enabled)await smoke.writeFailure(e,mainWindow.get(),token);
     // 后台引擎报告了具体原因（目录不可写等）或启动超时（旧进程仍在退出）时，重装解决不了，不再建议重装。
-    else if(!quit.isQuitting())dialog.showErrorBox('szuDesktop 启动失败',startupErrorText(e));
+    else if(!quit.isQuitting())dialog.showErrorBox('szuDesktop 启动失败',startupErrorText(e,{platform:process.platform}));
     app.quit();
   });
   app.on('window-all-closed',()=>app.quit());

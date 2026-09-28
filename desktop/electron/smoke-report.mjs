@@ -1,7 +1,7 @@
 // 安装包冒烟模式：只在 SZU_SMOKE_REPORT 与 SZUNET_CONFIG_DIR 都是绝对路径时开启，使用独立的配置目录，
 // 从不碰用户的账号。这里收集页面和宠物窗的报错，界面就绪后跑 smoke-pet.mjs 的真实交互，
 // 把结果或失败现场写进报告；失败报告写盘前抹掉会话凭据。
-import {mkdirSync,renameSync,writeFileSync} from 'node:fs';
+import {appendFileSync,mkdirSync,renameSync,writeFileSync} from 'node:fs';
 import {Worker} from 'node:worker_threads';
 import path from 'node:path';
 import {redactToken} from './listen-url.mjs';
@@ -12,6 +12,15 @@ export function smokeMode(env){
   const enabled=Boolean(report&&path.isAbsolute(report)&&env.SZUNET_CONFIG_DIR&&path.isAbsolute(env.SZUNET_CONFIG_DIR));
   return {enabled,report,profile:enabled?path.join(env.SZUNET_CONFIG_DIR,'electron-profile'):null,
     screenshot:env.SZU_SMOKE_SCREENSHOT,quitAfterReport:env.SZU_SMOKE_QUIT_AFTER_REPORT==='1'};
+}
+// 退出轨迹：只有冒烟模式开启、且 SZU_SMOKE_QUIT_TRACE 是绝对路径时，才把退出协调走过的每一步按行追加成 JSONL，
+// 供 macOS 冒烟核对真实的 quit Apple Event 也走了保存握手；其余情况（包括 Windows 冒烟，它不设这个变量）什么也不做。
+export function createQuitTrace(env){
+  const file=env.SZU_SMOKE_QUIT_TRACE;
+  if(!smokeMode(env).enabled||!file||!path.isAbsolute(file))return ()=>{};
+  return (event,detail)=>{
+    try{mkdirSync(path.dirname(file),{recursive:true});appendFileSync(file,JSON.stringify({event,...detail,at:Date.now()})+'\n');}catch{}
+  };
 }
 export function createSmokeRecorder({enabled=false,report=null,profile=null,screenshot=null,quitAfterReport=false}={}){
   const errors=[];
@@ -42,7 +51,8 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
     webContents.on('console-message',details=>{if(details.level==='error')record(consoleLabel+details.message);});
   }
   // petRuntime 在界面就绪之后才取值：宠物窗、托盘和当前缩放以那一刻为准。
-  async function writeReport({app,mainWin,handle,petRuntime}){
+  // macRuntime 只在 macOS 上取值：应用菜单、程序坞、菜单栏图标等真实 Electron 上的核对见 smoke-macos.mjs，结果写进报告的 mac 字段。
+  async function writeReport({app,mainWin,handle,petRuntime,macRuntime}){
     if(!enabled)return;
     const deadline=Date.now()+15000;
     let rendered=false;
@@ -57,6 +67,13 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
     const status=await response.json();
     const {checkPetRuntime}=await import('./smoke-pet.mjs');
     const pet=await checkPetRuntime({mainWin,...petRuntime(),evidenceDir:path.dirname(report),baseUrl:handle.baseUrl,token:handle.token});
+    // 每项核对都是 true/false，没通过的原因另放在 macFailures；核对本身抛错时按启动失败写失败报告。
+    let mac={};
+    if(process.platform==='darwin'){
+      const {checkMacRuntime}=await import('./smoke-macos.mjs');
+      const {checks,failures}=await checkMacRuntime(macRuntime());
+      mac={mac:checks,macFailures:failures};
+    }
     if(errors.length)throw Error(errors.join('; '));
     if(wantsShot()){
       await mainWin.webContents.executeJavaScript('document.fonts.ready.then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))');
@@ -66,7 +83,7 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
     mkdirSync(path.dirname(report),{recursive:true});
     writeFileSync(report+'.tmp',JSON.stringify({version:status.app_version,packageVersion:app.getVersion(),electron:process.versions.electron,
       appPid:process.pid,sidecarPid:handle.owned?handle.child.pid:null,owned:handle.owned,
-      baseUrl:handle.baseUrl,title:mainWin.getTitle(),rendered,pet},null,2));
+      baseUrl:handle.baseUrl,title:mainWin.getTitle(),rendered,pet,platform:process.platform,arch:process.arch,...mac},null,2));
     renameSync(report+'.tmp',report);
     if(quitAfterReport)app.quit();
   }

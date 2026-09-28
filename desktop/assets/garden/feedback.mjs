@@ -1,8 +1,10 @@
+import {isMac} from './platform.mjs';
 const safeVersion=value=>/^(?:beta|v)?\d+\.\d+\.\d+$/.test(String(value))?String(value):'未知构建';
-export function environmentSummary({version,mode,navigatorInfo=globalThis.navigator}={}){
- const platform=String(navigatorInfo?.userAgentData?.platform||navigatorInfo?.platform||navigatorInfo?.userAgent||'');
- const os=/android/i.test(platform)?'Android':/iphone|ipad|ipod/i.test(platform)?'iOS':/win/i.test(platform)?'Windows':/mac/i.test(platform)?'macOS':/linux/i.test(platform)?'Linux':'未知系统';
- return `szuDesktop ${safeVersion(version)}\n系统：${os}\n界面：${mode==='electron'?'安装版桌面窗口':'便携版 / 浏览器窗口'}`;
+// macOS 桌面版以 preload 给出的 platform 为准，并且要在 /win/ 之前判断（"darwin" 里也含 win）；没有桥时仍按浏览器报告的系统猜。
+export function environmentSummary({version,mode,navigatorInfo=globalThis.navigator,bridge=globalThis.szuDesktop}={}){
+ const mac=isMac(bridge),platform=String(navigatorInfo?.userAgentData?.platform||navigatorInfo?.platform||navigatorInfo?.userAgent||'');
+ const os=mac?'macOS':/android/i.test(platform)?'Android':/iphone|ipad|ipod/i.test(platform)?'iOS':/win/i.test(platform)?'Windows':/mac/i.test(platform)?'macOS':/linux/i.test(platform)?'Linux':'未知系统';
+ return `szuDesktop ${safeVersion(version)}\n系统：${os}\n界面：${mode==='electron'?(mac?'macOS 桌面版窗口':'安装版桌面窗口'):'便携版 / 浏览器窗口'}`;
 }
 export function createFeedbackUI({getVersion,getMode,toast,clipboard=globalThis.navigator?.clipboard}){
  const summary=()=>environmentSummary({version:getVersion(),mode:getMode()});
