@@ -21,7 +21,7 @@ func cmdAutostart(args []string) {
 	off := fs.Bool("off", false, "关掉开机自启")
 	show := fs.Bool("status", false, "看当前状态")
 	openDir := fs.Bool("open-dir", false, "在资源管理器里定位程序位置")
-	targetCLI := fs.Bool("target-cli", false, "开机跑命令行版而不是界面版（默认界面版，能持续保持在线）")
+	targetCLI := fs.Bool("target-cli", false, "开机跑命令行版而不是界面版（默认界面版，在后台常驻）")
 
 	if len(args) == 0 {
 		fmt.Println("用法:")
@@ -30,9 +30,9 @@ func cmdAutostart(args []string) {
 		fmt.Println("  szunet autostart -off      关掉")
 		fmt.Println("  szunet autostart -open-dir 在文件夹里定位程序")
 		fmt.Println()
-		fmt.Println("说明: 默认开机自启同目录下的 szudesktop（界面程序），它会在后台静默连一次网，")
-		fmt.Println("      并持续盯着网络状态、掉线自动补登，但不弹窗口。想手动用界面就双击它。")
-		fmt.Println("      加 -target-cli 改成只跑命令行版（只登录一次，不保持）。")
+		fmt.Println("说明: 默认开机自启同目录下的 szudesktop（界面程序），它在后台常驻、不弹窗口，")
+		fmt.Println("      启动时用已保存的账号静默连一次网（已在线时跳过），之后不会自动重连。")
+		fmt.Println("      想手动用界面就双击它。加 -target-cli 改成只跑命令行版（登录一次就退出）。")
 		fmt.Println()
 		fmt.Printf("当前状态: %s\n", autostart.Status().Detail)
 		return
