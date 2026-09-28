@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {CROPS,DECOR,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet} from './assets/garden/engine.mjs';
+import {CROPS,DECOR,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet,plotUnlockCost} from './assets/garden/engine.mjs';
 import {todoView,focusView,weeklyView} from './assets/garden/productivity.mjs';
 import {ordersView} from './assets/garden/arcade-ui.mjs';
 import {movePuzzle} from './assets/garden/puzzle2048.mjs';
@@ -13,6 +13,7 @@ import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
 import {readRoute,routeHash} from './assets/garden/routes.mjs';
 import {countdown,remaining,recordOnboarded} from './assets/garden/app-logic.mjs';
+const currentVersion=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 import {focusKey,restoreFocus,formEdited,refreshDraft} from './assets/garden/shell-repaint.mjs';
 import {esc} from './assets/garden/html.mjs';
@@ -207,7 +208,7 @@ function farmFixture(){
  const plots=state.game.plots.map((p,i)=>{const classes=new Set(),el={dataset:{farmPlot:String(i),growth:''},attrs:{},disabled:false,isConnected:true,html:'',ready:{dataset:{},textContent:''},soil:{classList:{add:value=>classes.add(value),remove:value=>classes.delete(value),contains:value=>classes.has(value)}},setAttribute(name,value){this.attrs[name]=value},querySelector(){return this.soil},set innerHTML(value){this.html=value;classes.clear();for(const c of /class="soil ([^"]+)"/.exec(value)?.[1].split(' ')||[])classes.add(c);const due=/data-ready="(\d+)"/.exec(value);this.ready.dataset.ready=due?due[1]:''},get innerHTML(){return this.html}};readyLabels.push(el.ready);return el});
  for(const [id,node] of Object.entries({'farm-selected-title':title,'farm-plot-details':details,'farm-plot-actions':actions,'seed-choice':seeds}))nodes.set(id,node);
  const money={outerHTML:''},basket={outerHTML:''},daily={outerHTML:''},activity={hidden:true};
- const context=vm.createContext({state,CROPS,Date:Clock,esc,gardenLevel,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,petPlayer:null,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
+ const context=vm.createContext({state,CROPS,Date:Clock,esc,gardenLevel,plotUnlockCost,reservedStock,cropPurpose,readyOrders,projectScene,selectedCrop:'radish',selectedPlot:0,petPlayer:null,page:'garden',gardenTab:'farm',busy:false,revision:1,settle:s=>settle(s,now),act:(s,a)=>act(s,a,now),activePet,normalize,structuredClone,
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cat:()=>'<svg data-animated-pet></svg>',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
   render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},paintGardenPath(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
@@ -460,11 +461,11 @@ await check('campus service sections do not mount unrelated forms or booking too
 });
 
 await check('settings sections retain appearance, desktop controls, both backups and update tools in their own rooms',()=>{
- const context=vm.createContext({state:createState(),saved:true,appVersion:'beta0.9.3',settingsTab:'appearance',head:()=>'',sprite:()=>'',esc:String,homeSkinPicker,
+ const context=vm.createContext({state:createState(),saved:true,appVersion:currentVersion,settingsTab:'appearance',head:()=>'',sprite:()=>'',esc:String,homeSkinPicker,plotUnlockCost,
   btn:(text,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${text}</button>`,
   desktopUI:{card:()=>'<section id="desktop-options"></section>'},
-  releaseUI:createReleaseUI({getVersion:()=> 'beta0.9.3',api:()=>assert.fail('rendering settings must not check updates automatically')}),
-  feedbackUI:createFeedbackUI({getVersion:()=> 'beta0.9.3',getMode:()=> 'browser',toast(){}}),exitHint:()=> '退出方式',
+  releaseUI:createReleaseUI({getVersion:()=> currentVersion,api:()=>assert.fail('rendering settings must not check updates automatically')}),
+  feedbackUI:createFeedbackUI({getVersion:()=> currentVersion,getMode:()=> 'browser',toast(){}}),exitHint:()=> '退出方式',
   workspaceFailure:null,workspaceFailureHTML:()=>'<section id="recovery-only"></section>',
  });
  vm.runInContext(section('function sectionNav(','function servicesPage(')+section('function settings(){','function loadPetScale(){'),context);
@@ -472,7 +473,7 @@ await check('settings sections retain appearance, desktop controls, both backups
   appearance:[/class="home-skin-picker" open/,/id="profile-form"/,/id="theme"/],
   desktop:[/id="autostart-state"/,/data-action="autostart"/],
   data:[/data-action="export"/,/data-action="notebookBackup"/,/id="import-file"/,/data-action="forget"/],
-  about:[/id="release-panel"/,/data-action="release-check"/,/id="feedback-panel"/,/data-action="feedback-copy"/,/data-action="shutdown"/,/beta0.9.3/],
+  about:[/id="release-panel"/,/data-action="release-check"/,/id="feedback-panel"/,/data-action="feedback-copy"/,/data-action="shutdown"/,new RegExp(currentVersion.replaceAll('.','\\.'))],
  })){
   context.settingsTab=tab;const html=context.settings();
   assert.match(html,new RegExp(`data-tab="${tab}" aria-pressed="true"`));

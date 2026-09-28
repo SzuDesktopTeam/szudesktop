@@ -13,6 +13,7 @@ import {createFocusReminders} from './focus-reminders.mjs';
 import {createPetController} from './pet-controller.mjs';
 import {smokeMode,createSmokeRecorder,SMOKE_ERROR_LIMIT} from './smoke-report.mjs';
 import {createTrayMenu} from './tray-menu.mjs';
+const currentVersion=readFileSync(new URL('../../internal/version/VERSION',import.meta.url),'utf8').trim();
 import {FakeTray,fakeDialog,fakeMenu,fakeScreen,fakeWindowClass,settle} from './testdata/fake-electron.mjs';
 
 const profile=mkdtempSync(join(tmpdir(),'szu-desktop-settings-'));
@@ -210,13 +211,13 @@ assert.equal(readFileSync(desktopSettingsPath(profile),'utf8'),'{broken','read m
 {
   const resources=path.resolve('res'),asar=path.join(resources,'app.asar'),reads=[];
   const packaged=appPaths({isPackaged:true,resourcesPath:resources,here:asar,platform:'win32'});
-  assert.deepEqual(sidecarCommand(packaged,{smoke:false,autoConnectCampus:true,stderr:process.stderr,read:file=>{reads.push(file);return JSON.stringify({szuVersion:'beta0.9.3'});}}),
-    {command:path.join(resources,'szudesktop-windows-amd64.exe'),args:['--no-open'],expectedVersion:'beta0.9.3',stderrTo:undefined},'installed builds keep stderr for the failure reason only');
+  assert.deepEqual(sidecarCommand(packaged,{smoke:false,autoConnectCampus:true,stderr:process.stderr,read:file=>{reads.push(file);return JSON.stringify({szuVersion:currentVersion});}}),
+    {command:path.join(resources,'szudesktop-windows-amd64.exe'),args:['--no-open'],expectedVersion:currentVersion,stderrTo:undefined},'installed builds keep stderr for the failure reason only');
   assert.deepEqual(reads,[path.join(asar,'package.json')]);
   assert.equal(packaged.icon,path.join(resources,'szudesktop.ico'));
   const dev=appPaths({isPackaged:false,resourcesPath:'',here:path.resolve('desktop','electron'),platform:'linux'});
-  const devCommand=sidecarCommand(dev,{smoke:false,autoConnectCampus:false,stderr:process.stderr,read:file=>{assert.equal(file,path.resolve('internal','version','VERSION'));return 'beta0.9.3\n';}});
-  assert.deepEqual(devCommand,{command:path.resolve('dist','szudesktop'),args:['--no-open','--no-auto-login'],expectedVersion:'beta0.9.3',stderrTo:process.stderr});
+  const devCommand=sidecarCommand(dev,{smoke:false,autoConnectCampus:false,stderr:process.stderr,read:file=>{assert.equal(file,path.resolve('internal','version','VERSION'));return currentVersion+'\n';}});
+  assert.deepEqual(devCommand,{command:path.resolve('dist','szudesktop'),args:['--no-open','--no-auto-login'],expectedVersion:currentVersion,stderrTo:process.stderr});
   assert.deepEqual(sidecarCommand(dev,{smoke:true,autoConnectCampus:true,read:()=>'v1.2.3'}).args,['--no-open','--no-auto-login'],'smoke never logs in');
   for(const version of ['','dev','1.2',null])assert.throws(()=>sidecarCommand(packaged,{read:()=>JSON.stringify({szuVersion:version})}),/应用版本信息缺失，请重新安装当前版本/);
 }

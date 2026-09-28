@@ -111,7 +111,15 @@ func redactRequestError(err error) error {
 	if !errors.As(err, &ue) {
 		return err
 	}
-	return &url.Error{Op: ue.Op, URL: redactURL(ue.URL), Err: ue.Err}
+	detail := ue.Err
+	// net/http includes an invalid Location header verbatim in its parse error.
+	// A captive portal may echo the original login URL there, including the
+	// account and password query parameters. Keep the error chain for errors.As,
+	// but replace that untrusted detail before it reaches the UI or logs.
+	if detail != nil && strings.Contains(detail.Error(), "failed to parse Location header") {
+		detail = &scrubbedError{msg: "redirect response contained an invalid address", err: detail}
+	}
+	return &url.Error{Op: ue.Op, URL: redactURL(ue.URL), Err: detail}
 }
 
 // redactURL 只留下 scheme://host/path，查询串、片段和 userinfo 一律去掉。
@@ -198,7 +206,22 @@ func secretForms(secrets []string) []string {
 		if secret == "" {
 			continue
 		}
-		out = append(out, secret, url.QueryEscape(secret), url.PathEscape(secret), html.EscapeString(secret))
+		frontier := []string{secret}
+		seen := map[string]bool{}
+		for depth := 0; depth < 3 && len(frontier) > 0; depth++ {
+			next := make([]string, 0, len(frontier)*2)
+			for _, form := range frontier {
+				if form == "" || seen[form] {
+					continue
+				}
+				seen[form] = true
+				out = append(out, form, html.EscapeString(form))
+				query, path := url.QueryEscape(form), url.PathEscape(form)
+				out = append(out, query, path)
+				next = append(next, query, path)
+			}
+			frontier = next
+		}
 	}
 	return out
 }

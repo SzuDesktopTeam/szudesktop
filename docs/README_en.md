@@ -25,9 +25,9 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ---
 
-## What beta0.9.3 brings
+## beta0.9.4 release candidate and complete feature set
 
-**beta0.9.3 was released on 2026-09-27; the download above is that release.** Course notes, Feishu document entry points, courtyard environments and the daily desk ship with it, together with unified page layout, dusk readability and section navigation. Interface verification is recorded in [STATUS section 65](STATUS.md#s65); the repository-wide code review fixes made before the release are in [section 66](STATUS.md#s66). Real school transactions and Feishu collaboration retain their existing acceptance limits.
+**beta0.9.4 is waiting for PR checks and release packaging; beta0.9.3 remains the latest public release, and the download above points to it.** The candidate fixes issues found in the second release audit: save recovery, campus credential redaction, app shutdown, CJK word counting and conflict synchronisation. Every build check now reads the single version source. See [CHANGELOG](../CHANGELOG.md) and [STATUS section 67](STATUS.md#s67) for the full record. beta0.9.4 retains the complete feature set introduced in beta0.9.3; real school transactions and Feishu collaboration keep their existing acceptance limits.
 
 ### One courtyard, across every page
 
@@ -49,7 +49,7 @@ The preceding PR #21 was viewed at regular desktop width and 420px, in daylight 
 
 The network page starts with connection status, refresh and diagnosis. When internet access is available, expand the login form only when connecting or changing accounts. Learning spaces now have one primary **Open school booking** action and a secondary availability lookup. Library links appear before the detailed, expandable rules. Entering the notices section automatically reads the remembered department once; failures remain visible and can be retried manually, without background polling.
 
-The installer also checks that its complete version matches the background engine. A mismatch asks the user to exit the older version and reopen the app; it does not terminate an existing portable engine. These changes are part of beta0.9.3; the limits on verified school bookings and account permissions remain unchanged.
+The installer also checks that its complete version matches the background engine. A mismatch asks the user to exit the older version and reopen the app; it does not terminate an existing portable engine. This behavior has been retained since beta0.9.3; the limits on verified school bookings and account permissions remain unchanged.
 
 ### From the courtyard to your study desk
 
@@ -208,19 +208,21 @@ The garden, todos and focus timer work offline without a school account. The flo
 
 ## Download
 
-The current installer is **[szuDesktop-Setup-0.9.3.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**. Run it, then open szuDesktop. The Windows installer includes its window runtime and Go engine. Portable downloads, CLI binaries and checksums are on the [beta0.9.3 release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3).
+The current public installer is **[szuDesktop-Setup-0.9.3.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**. Run it, then open szuDesktop. The Windows installer includes its window runtime and Go engine. Portable downloads, CLI binaries and checksums are on the [beta0.9.3 release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3).
 
 | Item | Detail |
 | :--- | :----- |
 | Windows installer | An independent Electron window; a matching `.sha256` file verifies the download |
 | Windows portable | `szudesktop-beta0.9.3-windows-amd64.zip`; unzip and run `szudesktop.exe`, using the local Edge / Chrome browser |
 | Command line | Windows / macOS / Linux `szunet` binaries remain available; since beta0.9.3 the single-file EXE and every CLI binary also ship with a matching `.sha256` |
-| Current version | `beta0.9.3` · Released 2026-09-27; five default companions, the beta0.9.2 → beta0.9.3 installer upgrade and backup restoration checked |
+| Current version | `beta0.9.3` · Released 2026-09-27; beta0.9.2 → beta0.9.3 installer upgrade checked |
 | Saved data | Both Windows editions use the same local garden and study records; export a backup from Settings before updating |
 
 The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. The installer can enable launch at login from **Settings → Desktop companion → Launch when signing in to Windows**; it is off by default, and the actual launch after signing in still awaits validation.
 
 Released on 2026-09-27: tagged from `67e89a7` after [PR #23](https://github.com/SzuDesktopTeam/szudesktop/pull/23) merged, with the [beta0.9.3 release checks](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36339282225) passing. Upgrading from the published beta0.9.2 installer preserved garden and study records, encrypted account data and pet settings, removed obsolete program resources, trimmed the locale packs, and passed backup export/restoration, reopening, coexistence with a portable engine and uninstall checks (uninstalling also removes the launch-at-login entry). These checks use synthetic data; live school-account boundaries remain in [STATUS](STATUS.md).
+
+Release preparation: dependency updates from PRs #24 and #25 are merged. The second-audit fixes are waiting for [PR #26](https://github.com/SzuDesktopTeam/szudesktop/pull/26) CI and the installer-upgrade smoke test before beta0.9.4 can be published. The latest public installer remains beta0.9.3. Tests use synthetic data; real school accounts, booking submission and college piano permissions still need on-site acceptance.
 
 **beta0.9.3 update:** the courtyard becomes the whole-app environment (Pixel Courtyard plus three toon-rendered scenes); course notes with Feishu course documents; five default companions with 648 animation frames; 2048 tied back into the garden economy with requests and construction; and the review fixes, including per-run local API credentials, campus-network password redaction and automatic save recovery. Full entries are in [CHANGELOG](../CHANGELOG.md) (Chinese). The previous beta0.9.2 (2026-09-26) delivered four companions with synchronized desktop selection, paginated score reads and school-login fixes.
 
@@ -239,9 +241,9 @@ New saves start with **Libao, Chestnut, Xiaobai the egret, Pingu and Skipper**; 
 
 ![Companion selection cards in the companion room, using an isolated test save](screenshot-pets-preview.png)
 
-Export a backup from Settings before upgrading. A clean Windows CI environment passed the real beta0.9.2 → beta0.9.3 installation upgrade, data preservation and backup export/restoration checks. New installers are still downloaded manually; automatic updates are not implemented.
+Export a backup from Settings before upgrading. A clean Windows CI environment passed the beta0.9.2 → beta0.9.3 installation upgrade, data preservation and backup export/restoration checks. The beta0.9.3 → beta0.9.4 upgrade check is pending candidate CI. New installers are still downloaded manually; automatic updates are not implemented.
 
-The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Five default companions are released and the beta0.9.2 → beta0.9.3 upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Open items are summarised in [STATUS section 1.1](STATUS.md#s1-1); school-service acceptance details stay in [section 50.2](STATUS.md#s50-2). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
+The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Five default companions are released and the beta0.9.2 → beta0.9.3 upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and feedback from real students. Open items are summarised in [STATUS section 1.1](STATUS.md#s1-1); school-service acceptance details stay in [section 50.2](STATUS.md#s50-2). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
 
 ### First run
 
@@ -522,6 +524,8 @@ python desktop/make_release.py     # produce the release package (only when actu
 ```
 
 `desktop/run-checks.mjs` discovers `desktop/check-*.mjs`, `desktop/electron/check-*.mjs` and `desktop/check_*.py` (release notes, licences, the Windows version resource and so on) and runs them one by one, after a module syntax and link check (`desktop/module-links.mjs`). It prints a summary of failures and exits non-zero if any failed; add `--only-node` to run just the Node checks. A new check is picked up as long as it is named `check-*.mjs` or `check_*.py` and placed in one of those directories, so there is no list to update.
+
+The second release audit added reproducible property-based tests and fixed the issues they exposed. Verification, PRs and release assets are tracked in [STATUS section 67](STATUS.md#s67). beta0.9.4 is not yet published; downloads currently point to beta0.9.3 CI assets.
 
 `python desktop/electron/smoke_installer.py` installs, reopens, reinstalls and uninstalls the final package only on a disposable GitHub Windows runner. It must not be run as an installation check on a development machine. PR and tag workflows retain all build and installer checks; release assets are published only after they succeed.
 

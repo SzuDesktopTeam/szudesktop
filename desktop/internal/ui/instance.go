@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -87,7 +88,7 @@ func (i *desktopInstance) close() { _ = os.Remove(i.path); i.release() }
 // 单次不超过 1 秒；已经没有剩余时间就直接放弃。
 func activateInstance(record instanceRecord, open bool, timeout time.Duration) error {
 	u, err := url.Parse(record.URL)
-	if err != nil || u.Scheme != "http" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Port() == "" {
+	if err != nil || strings.ContainsAny(record.URL, "?#") || u.Scheme != "http" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Port() == "" {
 		return errors.New("无效的本机地址")
 	}
 	ip := net.ParseIP(u.Hostname())

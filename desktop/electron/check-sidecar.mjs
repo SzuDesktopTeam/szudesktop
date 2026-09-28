@@ -14,6 +14,7 @@ import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const fake=path.join(here,'testdata','fake-sidecar.mjs');
+const currentVersion=fs.readFileSync(new URL('../../internal/version/VERSION',import.meta.url),'utf8').trim();
 const fixture=path.join(here,'testdata','fake-lifecycle.mjs');
 const tests=[];
 const alive=pid=>{try{process.kill(pid,0);return true;}catch{return false;}};
@@ -250,11 +251,11 @@ for(const mode of ['unhealthy','hanging','hanging-body','wrong-app'])test('start
 });
 
 test('startSidecar: 版本匹配的已有服务可复用，停止不杀已有引擎',async()=>{
-  const server=http.createServer((req,res)=>res.end(JSON.stringify({ok:true,app:'szuDesktop',app_version:'beta0.9.3'})));
+  const server=http.createServer((req,res)=>res.end(JSON.stringify({ok:true,app:'szuDesktop',app_version:currentVersion})));
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const baseUrl='http://127.0.0.1:'+server.address().port;
   try{
-    const handle=await startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:'beta0.9.3'});
+    const handle=await startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:currentVersion});
     assert.equal(handle.owned,false);
     assert.equal(handle.baseUrl,baseUrl);
     assert.equal(handle.token,FAKE_TOKEN,'复用时交出正在运行那份服务的凭据');
@@ -273,7 +274,7 @@ for(const version of ['beta0.9.1',undefined])test('startSidecar: '+(version||'�
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const baseUrl='http://127.0.0.1:'+server.address().port;
   try{
-    await assert.rejects(startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:'beta0.9.3'}),/请先退出旧版.*便携版/);
+    await assert.rejects(startSidecar({command:process.execPath,args:[fixture,'reuse',baseUrl],expectedVersion:currentVersion}),/请先退出旧版.*便携版/);
     assert.equal((await fetch(baseUrl+'/api/health')).status,200);
     assert.ok(!requests.includes('/api/shutdown'),'不得关闭不属于当前外壳的服务');
   }finally{await new Promise(resolve=>server.close(resolve));}

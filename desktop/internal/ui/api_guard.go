@@ -143,7 +143,7 @@ func guardAPI(authorized func(*http.Request) bool, next http.HandlerFunc, method
 		}
 		if origin := r.Header.Get("Origin"); origin != "" {
 			u, err := url.Parse(origin)
-			if err != nil || u.Scheme != "http" || !strings.EqualFold(u.Host, r.Host) || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+			if err != nil || strings.ContainsAny(origin, "?#") || u.Scheme != "http" || !strings.EqualFold(u.Host, r.Host) || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
 				writeAPIError(w, http.StatusForbidden, errors.New("请求来源不匹配"))
 				return
 			}

@@ -459,7 +459,7 @@ test('act(decor) 对不存在的装饰应以友好提示拒绝，而不是 TypeE
 
 test('unlock 永远不会增加荔枝币：解锁地块少于 3 块的存档下开垦费用变成负数（修复前失败）',()=>{
   // normalize 接受 6 块全锁的农田；act(unlock) 的费用 60+(n-3)*30 在 n<3 时为负，check(coins>=负数) 必过，coins-=负数 反而加钱。
-  const s=createState(NOW);s.game.plots=Array(6).fill('locked');
+  const s=createState(NOW);s.game.plots=Array(6).fill('locked');s.game.coins=100;
   const loaded=normalize(clone(s),NOW),after=act(loaded,{type:'unlock',index:0},NOW);
   assert.ok(after.game.coins<loaded.game.coins,`开垦应扣费，实际 ${loaded.game.coins} -> ${after.game.coins}`);
 });
