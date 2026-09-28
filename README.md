@@ -17,7 +17,7 @@
 
 学生自制 · 与深圳大学官方无关
 
-**[下载 Windows 安装版 · beta0.9.3](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**
+**[下载 Windows 安装版 · beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.4/szuDesktop-Setup-0.9.4.exe)**
 
 [其他下载与版本说明](#下载) · [功能](#功能) · [反馈与建议](https://github.com/SzuDesktopTeam/szudesktop/issues) · [常见问题](#常见问题) · [开发状态](docs/STATUS.md)
 
@@ -25,9 +25,9 @@
 
 ---
 
-## beta0.9.4 发布候选与完整能力
+## beta0.9.4 发布与完整能力
 
-**beta0.9.4 正在等待 PR 检查与发布构建；当前最新公开版仍是 beta0.9.3，上方下载指向这一版。** 候选版本修复第二轮发布审查发现的存档恢复、校园网凭据脱敏、窗口退出、文字计数和冲突同步问题，并统一所有构建检查读取的版本号。详细改动见 [CHANGELOG](CHANGELOG.md) 与 [STATUS 第 67 节](docs/STATUS.md#s67)。beta0.9.4 延续下方 beta0.9.3 的完整功能；学校真实业务和飞书多人协作的验收边界不变。
+**beta0.9.4 于 2026-09-28 发布，上方下载就是最新版。** 本版修复第二轮发布审查发现的存档恢复、校园网凭据脱敏、窗口退出、文字计数和冲突同步问题，并统一所有构建检查读取的版本号。详细改动见 [CHANGELOG](CHANGELOG.md) 与 [STATUS 第 67 节](docs/STATUS.md#s67)。beta0.9.4 延续下方 beta0.9.3 的完整功能；学校真实业务和飞书多人协作的验收边界不变。
 
 ### 每一页，都住在同一个庭院里
 
@@ -188,7 +188,7 @@ beta0.9.3 还包含：
 
 ## 现在可以用它做什么
 
-以下介绍目前可下载的 **beta0.9.3**。
+以下介绍 beta0.9.3 引入的完整功能；当前可下载版本为 **beta0.9.4**。
 
 - **让伙伴陪在桌面上。** 荔宝、栗栗、小白、Pingu 和 Skipper，选一位陪你读书或工作；旧存档里的阿青留在「老朋友」中。点击照料，拖到喜欢的位置，滚轮调整大小；名字和成长都会留在本机。
 - **给专注留一点小奖励。** 写下待办，开始 5、25、45 分钟或自定时长的专注，完成后领取伙伴成长与荔枝币。种菜、浇水、布置小屋，离线时作物也会继续生长。
@@ -204,21 +204,21 @@ beta0.9.3 还包含：
 
 ## 下载
 
-当前公开版为 **[szuDesktop-Setup-0.9.3.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**，运行安装程序后打开 szuDesktop。安装版自带窗口运行时，无需额外安装浏览器或开发环境。便携版、命令行和校验文件见 [beta0.9.3 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3)。
+当前公开版为 **[szuDesktop-Setup-0.9.4.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.4/szuDesktop-Setup-0.9.4.exe)**，运行安装程序后打开 szuDesktop。安装版自带窗口运行时，无需额外安装浏览器或开发环境。便携版、命令行和校验文件见 [beta0.9.4 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)。
 
 | 项 | 说明 |
 | :-- | :---- |
 | Windows 安装版 | Electron 独立窗口，内含 Go 引擎；同名 `.sha256` 文件可用于校验下载 |
-| Windows 便携版 | `szudesktop-beta0.9.3-windows-amd64.zip`，解压后双击 `szudesktop.exe`，使用本机 Edge / Chrome 开窗 |
+| Windows 便携版 | `szudesktop-beta0.9.4-windows-amd64.zip`，解压后双击 `szudesktop.exe`，使用本机 Edge / Chrome 开窗 |
 | 命令行 | Windows / macOS / Linux 单文件 `szunet`，继续提供；自 beta0.9.3 起单文件版和命令行版也各带同名 `.sha256` |
-| 当前版本 | `beta0.9.3` · 2026-09-27 发布；通过 beta0.9.2 → beta0.9.3 安装升级与数据保留检查 |
+| 当前版本 | `beta0.9.4` · 2026-09-28 发布；通过 beta0.9.3 → beta0.9.4 安装升级与数据保留检查 |
 | 存档 | 两种 Windows 版本使用同一份本机庭院与学习记录，更新前可在设置中导出备份 |
 
 安装版提供常驻桌面宠物、系统托盘和 40%–200% 大小调节。关主窗口后宠物继续陪伴，可从宠物菜单选择「打开主窗口」，或点击托盘重开。学校登录和预约原页面可在安装版内打开，不再要求普通用户复制 Cookie。校历识别优先使用中文语言包。真实学校账号业务的验收边界见 [STATUS](docs/STATUS.md)。安装版可在「设置 → 桌面陪伴 → 登录 Windows 时启动」主动开启自启，默认不开启；开启后登录 Windows 的实际启动仍待验收。
 
 2026-09-27 发布：[PR #23](https://github.com/SzuDesktopTeam/szudesktop/pull/23) 合并后从 `67e89a7` 打 tag，[beta0.9.3 发布检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36339282225)通过。从已发布 beta0.9.2 安装包升级，已验证庭院、学习记录、加密账号配置和宠物设置保留，以及旧程序资源清理、语言包裁剪、备份导出与恢复、重开、与便携版后台共存和卸载（卸载时清除自启项）。测试使用合成数据；真实学校业务边界见 [STATUS](docs/STATUS.md)。
 
-发布准备中：PR #24 和 #25 的依赖更新已合入 main；第二轮审查修复等待 [PR #26](https://github.com/SzuDesktopTeam/szudesktop/pull/26) 完成 CI 与安装升级冒烟后再发布 beta0.9.4。当前公开安装包仍为 beta0.9.3。验证使用合成数据；真实学校账号、预约提交与学院琴房权限尚未通过现场验收。
+2026-09-28 发布：PR #24、#25 的依赖更新先合入 main，第二轮审查修复通过 [PR #26](https://github.com/SzuDesktopTeam/szudesktop/pull/26) 合并并标记 beta0.9.4。[标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36403210612)全部通过，含 Windows 安装升级与数据保留冒烟；发布页提供 16 个附件及校验文件。验证使用合成数据；真实学校账号、预约提交与学院琴房权限尚未通过现场验收。
 
 **beta0.9.3 更新**：庭院成为全应用环境（像素庭院与三套三渲二风景）、课程笔记与飞书课程文档接入、五位新档伙伴与 648 帧动作、2048 接回庭院经济与委托建设闭环，以及本机接口凭据、校园网密码脱敏、存档自动恢复等审查修复；完整条目见 [CHANGELOG](CHANGELOG.md)。上一版 beta0.9.2（2026-09-26）交付四位伙伴与桌面同步切换、成绩逐页读取和学校登录修复。
 
@@ -237,9 +237,9 @@ beta0.9.3 还包含：
 
 ![伙伴小屋的选择卡片，使用隔离测试存档](docs/screenshot-pets-preview.png)
 
-升级前可在设置中导出备份。beta0.9.2 → beta0.9.3 已在干净的 Windows CI 环境通过安装升级、数据保留、备份导出与恢复检查。beta0.9.3 → beta0.9.4 的升级检查等待候选 CI。当前仍需手动下载新安装包，不提供自动更新。
+升级前可在设置中导出备份。beta0.9.3 → beta0.9.4 已在干净的 Windows CI 环境通过安装升级、数据保留、备份导出与恢复检查。当前仍需手动下载新安装包，不提供自动更新。
 
-1.0 先完成桌面版，**暂不部署校内后端或 Docker**。五位新档伙伴已发布，beta0.9.2 → beta0.9.3 升级已验证；剩余重点为校园网现场认证、安装版真实学校会话接回、本科/研究生课表与成绩、应用内预约和学院琴房权限，以及真实用户试用后的修订。当前未完成事项汇总在 [STATUS 第 1.1 节](docs/STATUS.md#s1-1)，学校业务的验收细节见[第 50.2 节](docs/STATUS.md#s50-2)。后端、云同步和自动更新延期；当前安装包未签名。
+1.0 先完成桌面版，**暂不部署校内后端或 Docker**。五位新档伙伴已发布，beta0.9.3 → beta0.9.4 升级已验证；剩余重点为校园网现场认证、安装版真实学校会话接回、本科/研究生课表与成绩、应用内预约和学院琴房权限，以及真实用户试用后的修订。当前未完成事项汇总在 [STATUS 第 1.1 节](docs/STATUS.md#s1-1)，学校业务的验收细节见[第 50.2 节](docs/STATUS.md#s50-2)。后端、云同步和自动更新延期；当前安装包未签名。
 
 面向首批用户的产品审查、UX01–UX26 的任务与验收和七日试用计划记录在 [STATUS 第 54 节](docs/STATUS.md#s54)，仍未完成的项汇总在[第 1.1 节](docs/STATUS.md#s1-1)。真实同学试用、物理多屏和完整宣传录屏仍未完成，不能用内部测试替代。
 
@@ -277,7 +277,7 @@ beta0.9.3 还包含：
 
 ## 功能
 
-以下说明 beta0.9.3 的实际能力。已验证的桌面功能与查询、待验收的学校账号业务分别标明，详细状态统一见 STATUS.md。
+以下说明 beta0.9.4 的实际能力。已验证的桌面功能与查询、待验收的学校账号业务分别标明，详细状态统一见 STATUS.md。
 
 | 能力 | 状态 | 说明 |
 | :--- | :--- | :---- |
@@ -485,7 +485,7 @@ python desktop/make_release.py     # 生成发布包（只在真的要发布时�
 
 `desktop/run-checks.mjs` 自动找到 `desktop/check-*.mjs`、`desktop/electron/check-*.mjs` 与 `desktop/check_*.py`（发布说明、许可、Windows 版本资源等）并逐个运行（第一步是模块语法与链接检查 `desktop/module-links.mjs`），最后汇总失败项、以非零退出码结束；只跑 Node 检查时加 `--only-node`。新增检查按 `check-*.mjs` 或 `check_*.py` 命名放进这些目录即可被发现，不用再改任何清单。
 
-第二轮发布审查加入了可复现的性质测试，并修复它们揭示的问题；验收、PR 与发布附件记录在 [STATUS 第 67 节](docs/STATUS.md#s67)。beta0.9.4 尚未发布；当前下载以 beta0.9.3 Release 的 CI 附件为准。
+第二轮发布审查加入了可复现的性质测试，并修复它们揭示的问题；全部验收与发布附件记录在 [STATUS 第 67 节](docs/STATUS.md#s67)。beta0.9.4 下载页提供 CI 构建的安装包、便携版、命令行版及 SHA-256 校验文件。
 
 `python desktop/electron/smoke_installer.py` 只在一次性的 GitHub Windows runner 安装、重开、重装和卸载最终安装包；本机开发环境不运行这项安装检查。PR 与标签流水线保留所有构建和安装检查，成功后才发布附件。
 
