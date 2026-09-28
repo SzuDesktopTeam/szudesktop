@@ -11,8 +11,8 @@
 
 ## 1. 当前状态
 
-- **本轮进展（2026-09-28）**：beta0.9.3 已于 2026-09-27 从 PR #23 合并后的 `67e89a7` 打 tag 发布。PR #24、#25 已合并到 main（当前远端 `58876c1`）；beta0.9.4 第二轮审查揭示的问题已修复，本机 `go test ./...`、`go vet ./...` 与 `desktop/run-checks.mjs` 全部通过。候选分支仍需通过 GitHub PR 的 Windows／macOS 工作和 beta0.9.3 → beta0.9.4 安装升级冒烟，之后才能打 beta0.9.4 标签。
-- **公开版本**：[beta0.9.3](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3)（2026-09-27，预发布）。[发布检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36339282225)通过，含 beta0.9.2 → beta0.9.3 安装升级、数据保留与卸载验收；发布页 16 个附件（安装版、便携版、单文件 EXE 与五个平台的 `szunet`，各带同名 `.sha256`），公开安装包校验值见 65.2 的后续更正。
+- **本轮进展（2026-09-28）**：beta0.9.4 已从 `main@00f1c00` 发布；PR #24、#25 依赖更新与 PR #26 第二轮审查修复均已合并。`go test ./...`、`go vet ./...`、`go mod tidy -diff`、`desktop/run-checks.mjs` 与标签 CI 全部通过。中英文 README 和本状态页已更新至 beta0.9.4。
+- **公开版本**：[beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)（2026-09-28，预发布）。[标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36403210612)通过，含 beta0.9.3 → beta0.9.4 安装升级、数据保留与卸载验收；发布页 16 个附件（Windows 安装版、便携版、单文件 EXE 与五个平台的 `szunet`，各带同名 `.sha256`）。安装版 SHA-256：`c21e771aa8ac5097852fc8e1e18a9df1bb4a8b5a5f97e193201066ff7a2366da`。
 - **源码已包含**：PR #19 合并的 Pingu／Skipper 阵容、六物种 648 帧与 1,656 句、庭院委托和建设闭环、2048 庭院素材，以及三套三渲二风景；PR #20 合并课程书架、可靠保存、选句转待办和从笔记开始专注。PR #21 补大纲跳转、归入课程、最近一页继续、设置备份与学院公告自动读取；本轮新增设置分区、完整子路由、草稿保留和全局材质修正。新档默认五位伙伴，阿青在旧档「老朋友」中保留，已有成长不变。
 - **飞书边界**：本机笔记独立保存；可绑定共享文档，原页共编，CLI 只读导入本机副本。不做双向同步，项目组织加入入口未配置；真实授权、文档权限和多人协作待验收，见 NOTE03–NOTE05。
 - **学校业务边界**：研究生原页登录、备用登录与当前课表读取已有部分真实证据；本科、成绩、安装版会话接回、完整预约及琴房权限仍未验收通过，见第 47 节。本轮没有把这些任务关闭。
@@ -28,7 +28,6 @@
 
 | 类别 | 事项（编号） | 重要 / 难度 | 当前缺口 | 原节 |
 |---|---|---|---|---|
-| 发布 | beta0.9.4 候选 CI 与升级验收 | P0 / M | 本机全量检查通过；待 GitHub PR 的 Windows／macOS CI、Release 资源构建和 beta0.9.3 安装升级冒烟通过后合并并打标签 | [67](#s67) |
 | 发布 | 正式版 1.0 交付（R09、R10） | P1 / M | 最终候选包仍缺对应的跨版本升级证据和安装、启动、退出检查；版本、截图、中英 README、更新说明与附件要逐项对应 | [50.2](#502-10-剩余任务暂不部署后端) |
 | 发布 | 发布者签名与程序更新 | P2 / L | 安装包未签名；自动下载安装更新未实现，已有的只是手动版本查询（UX21）。可信下载、重启安装与回退方案待做 | [50.4](#504-内容刷新与程序更新)、[32](#32-当前总清单2026-09-26-更新) |
 | 学校业务 | 校园网真实认证闭环（R01、F18） | P0 / M | 教学区与宿舍区各自的真实认证、失败提示、注销与重连未现场验收；外网在线或教务登录不能代替 | [50.2](#502-10-剩余任务暂不部署后端)、[3.1](#31-功能安全与工程) |
@@ -3001,9 +3000,9 @@ NSIS 安装包构建与跨版本升级/卸载验收（含桌宠点穿、语言�
 
 <a id="s67"></a>
 
-## 67. 第二轮发布审查与 beta0.9.4 候选（2026-09-28）
+## 67. 第二轮发布审查与 beta0.9.4 发布（2026-09-28）
 
-**写入时发布状态**：GitHub 最新公开版仍是 [beta0.9.3](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3)，来自 `main@67e89a7`。PR #24、#25 已合并，beta0.9.4 候选在 `fix/audit-round2`；README 与发布说明已同步到候选版本。标签与安装包必须等候选 PR 的全部 CI 工作、跨版本安装冒烟通过后再发布。
+**发布状态**：GitHub 最新版为 [beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)，从 PR #26 合并后的 `main@00f1c00` 打标签发布。PR #24、#25、#26 均已合并；中英文 README 和本状态页已同步到最新发布。
 
 本轮新增可复现的性质测试，默认种子为 `20260928`，可通过 `PROPERTY_SEED` 重放；不引入第三方依赖。新检查由 `desktop/run-checks.mjs` 自动发现，Go 性质检查由 `go test ./...` 执行。
 
@@ -3015,4 +3014,4 @@ NSIS 安装包构建与跨版本升级/卸载验收（含桌宠点穿、语言�
 - **Electron 退出与提示**：退出路径即使关窗异常仍会停引擎并放行退出；错误文本按完整 Unicode 字符截断，去掉截断后残留的标点。
 - **版本来源**：版本资源、关于页、反馈、sidecar 与更新检查均读取 `internal/version/VERSION`；历史升级基线和旧存档夹具保留其原版本，供迁移和升级测试使用。
 
-本机完整验证通过：`go test ./...`、`go vet ./...`，以及 `node desktop/run-checks.mjs`（44 项 JavaScript 检查、4 项 Python 检查）；其中新增庭院、笔记、Electron 性质检查均通过。PR 的 Windows／macOS CI、正式安装包构建与 beta0.9.3 升级冒烟仍是打标签前的最后门槛。真实学校账号、课表、预约提交与琴房权限仍按第 50.2 节单独验收，以上本机测试不构成学校业务验收。
+本机完整验证通过：`go test ./...`、`go vet ./...`、`go mod tidy -diff`，以及 `node desktop/run-checks.mjs`（44 项 JavaScript 检查、4 项 Python 检查）；新增庭院、笔记、Electron 性质检查均通过。[PR #26 检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36402192088)与[正式标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36403210612)全部通过，含 Windows 安装包构建、beta0.9.3 → beta0.9.4 安装升级、资料保留与卸载冒烟。发布安装包 SHA-256 为 `c21e771aa8ac5097852fc8e1e18a9df1bb4a8b5a5f97e193201066ff7a2366da`，与发布附件 `.sha256` 一致。真实学校账号、课表、预约提交与琴房权限仍按第 50.2 节单独验收；上述本机与 CI 检查不构成学校业务验收。
