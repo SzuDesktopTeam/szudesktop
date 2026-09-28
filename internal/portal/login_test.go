@@ -78,3 +78,26 @@ func TestDrcomLoginEndToEndAgainstPortal(t *testing.T) {
 		t.Fatalf("unexpected result: saw=%v result=%+v", sawLogin, res)
 	}
 }
+
+// Dr.COM 只有 result 明确为 1 才算认证成功：缺少 result、result 为空或别的取值，
+// 都不能因为“不是 0”就报成功——用户上不了网却看到「认证成功」。
+func TestDrcomLoginRequiresExplicitSuccessResult(t *testing.T) {
+	for _, body := range []string{
+		`dr1003({"msg":"认证失败：系统繁忙"})`,
+		`dr1003({"result":"","msg":"系统繁忙"})`,
+		`dr1003({"result":null,"msg":"系统繁忙"})`,
+		`dr1003({"result":2,"msg":"系统繁忙"})`,
+	} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write([]byte(body))
+		}))
+		res, err := NewDrcomClient(srv.URL, "123456", "pw").Login()
+		srv.Close()
+		if err != nil {
+			t.Fatalf("%s: %v", body, err)
+		}
+		if res.OK || !strings.Contains(res.Message, "认证失败") {
+			t.Fatalf("%s 不是成功响应，却判成了：%+v", body, res)
+		}
+	}
+}

@@ -121,6 +121,41 @@ func autoLoginStatus(t *testing.T, s *Server) (map[string]json.RawMessage, *auto
 	return raw, &result
 }
 
+// 教学区门户把密码原样写进 error_msg 时（深澜的兜底提示会把 error/error_msg 原文拼进 Message），
+// /api/status 里的自动登录说明仍然不能出现密码：这一层 scrubSecret 是独立于 portal 层的最后一道兜底，
+// 不能因为宿舍区门户已经隐去正文就当它没用。
+func TestAutoLoginScrubsPasswordEchoedBySrunPortal(t *testing.T) {
+	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
+	const password = "S3cretPass"
+	var logins int32
+	srun := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/cgi-bin/rad_user_info":
+			_, _ = w.Write([]byte(`_({"error":"not_online_error"})`))
+		case "/cgi-bin/get_challenge":
+			_, _ = w.Write([]byte(`_({"challenge":"0123456789abcdef","client_ip":"10.0.0.8","error":"ok"})`))
+		case "/cgi-bin/srun_portal":
+			atomic.AddInt32(&logins, 1)
+			_, _ = w.Write([]byte(`_({"error":"E2616","error_msg":"portal echoed ` + password + ` back"})`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srun.Close()
+	s := New(Options{SrunHost: srun.URL, DrcomHost: srun.URL, AutoLogin: true, AcID: "12"})
+	s.store = &guardTestStore{value: credential.Credentials{Username: "123456", Password: password}}
+	s.detect = func() *portal.DetectResult { return &portal.DetectResult{Zone: portal.ZoneTeaching} }
+	s.probe = func() *portal.DetectResult { return &portal.DetectResult{Zone: portal.ZoneTeaching, Probed: true} }
+	s.runAutoLogin()
+	_, got := autoLoginStatus(t, s) // 状态正文里出现密码会直接 Fatal
+	if atomic.LoadInt32(&logins) != 1 || got == nil || got.Result != autoLoginFailed {
+		t.Fatalf("logins=%d auto_login=%+v", logins, got)
+	}
+	if strings.Contains(got.Message, password) || !strings.Contains(got.Message, "***") {
+		t.Fatalf("门户回显的密码没有被隐去：%q", got.Message)
+	}
+}
+
 // 启动时自动连接校园网：本机已在线就跳过，失败要在 /api/status 里看得到，
 // 而且说明里不能带密码；没保存账号时不算尝试，字段省略。
 func TestAutoLoginOutcomesAreReportedInStatus(t *testing.T) {

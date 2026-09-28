@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createFeedbackUI,environmentSummary} from './assets/garden/feedback.mjs';
+const version=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 globalThis.document={getElementById:()=>null};
-const environment={version:'beta0.9.2',mode:'electron',navigatorInfo:{platform:'Win32',userAgent:'private-user-path-token',cookie:'secret-cookie',username:'student'}};
+const environment={version,mode:'electron',navigatorInfo:{platform:'Win32',userAgent:'private-user-path-token',cookie:'secret-cookie',username:'student'}};
 const summary=environmentSummary(environment);
-assert.equal(summary,'szuDesktop beta0.9.2\n系统：Windows\n界面：安装版桌面窗口');
+assert.equal(summary,`szuDesktop ${version}\n系统：Windows\n界面：安装版桌面窗口`);
 assert.doesNotMatch(summary,/private|secret|student/);assert.match(environmentSummary({version:'<script>',navigatorInfo:{platform:'MacIntel'}}),/未知构建\n系统：macOS/);
 let copied='',toast='';
 const ui=createFeedbackUI({getVersion:()=>environment.version,getMode:()=>environment.mode,toast:value=>{toast=value},clipboard:{writeText:async value=>{copied=value}}});

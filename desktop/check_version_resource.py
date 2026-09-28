@@ -10,6 +10,7 @@ smoke_windows.py 用 GetFileVersionInfoW / ExtractIconExW 核对。
 """
 import struct
 import sys
+from pathlib import Path
 
 # 与其它检查脚本一致：GitHub 的 Windows runner 可能是 CP1252，中文检查名统一按 UTF-8 输出。
 for _stream in (sys.stdout, sys.stderr):
@@ -18,7 +19,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 import add_resource  # noqa: E402
 
-VERSION = "beta0.9.3"
+VERSION = (Path(__file__).resolve().parents[1] / "internal" / "version" / "VERSION").read_text(encoding="ascii").strip()
 BLOB = add_resource.version_info(VERSION, "szudesktop")
 EXPECTED = {
     "CompanyName": "SZUNet",
@@ -65,13 +66,15 @@ def test_root_header():
 
 def test_fixed_versions():
     fixed, _ = add_resource.parse_version_info(BLOB)
-    assert fixed["file_version"] == (0, 9, 3, 0), fixed
-    assert fixed["product_version"] == (0, 9, 3, 0), fixed
+    expected = add_resource.version_numbers(VERSION)
+    assert fixed["file_version"] == expected, fixed
+    assert fixed["product_version"] == expected, fixed
     assert fixed["file_os"] == 0x40004 and fixed["file_type"] == 1, "应标记为 Windows NT 上的应用程序"
 
 
 def test_version_numbers():
-    assert add_resource.version_numbers("beta0.9.3") == (0, 9, 3, 0)
+    major, minor, patch = VERSION.removeprefix("beta").split(".")
+    assert add_resource.version_numbers(VERSION) == (int(major), int(minor), int(patch), 0)
     assert add_resource.version_numbers("beta0.1") == (0, 1, 0, 0)
     assert add_resource.version_numbers("0.1.0-beta.1") == (0, 1, 0, 1)
     assert add_resource.version_numbers("v1.2.3.4.5") == (1, 2, 3, 4)

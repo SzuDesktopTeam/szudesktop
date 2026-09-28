@@ -13,7 +13,9 @@ export function normalizeNotebook(input){
  if(!ids.has(data.preferences.selectedCourseId))data.preferences.selectedCourseId='';
  return data;
 }
-export function wordCount(text){return (String(text).match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]|[\p{L}\p{N}]+/gu)||[]).length}
+const CJK=/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+const LETTER_OR_NUMBER=/[\p{L}\p{N}]/u;
+export function wordCount(text){let count=0,inWord=false;for(const char of String(text)){if(CJK.test(char)){count++;inWord=false}else if(LETTER_OR_NUMBER.test(char)){if(!inWord)count++;inWord=true}else inWord=false}return count}
 export function latestNotebookNote(data){return data.notes.filter(note=>!note.deletedAt).reduce((latest,note)=>!latest||note.updatedAt>latest.updatedAt?note:latest,null)}
 // Preserve the original character offsets so outline jumps work with CRLF imports too.
 export function noteHeadings(source){

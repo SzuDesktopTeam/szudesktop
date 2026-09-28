@@ -13,6 +13,10 @@ for(const url of ['https://accounts.feishu.cn/accounts/page/login','https://pass
 }
 for(const url of ['http://course.feishu.cn/docx/ABC123','https://course.feishu.cn.evil.test/docx/ABC123','https://user@course.feishu.cn/docx/ABC123','https://course.feishu.cn:444/docx/ABC123','https://127.0.0.1/docx/ABC123','https://evil.test/#https://course.feishu.cn/docx/ABC123','file:///C:/test','javascript:alert(1)','lark://open','https://course.feishu.cn/docx/%41BC123'])assert.equal(isFeishuDocumentURL(url),false,url);
 for(const url of ['https://course.feishu.cn/base/ABC123','https://course.feishu.cn/docx/ABC123/extra'])assert.equal(isFeishuDocumentURL(url),false,url);
+// Official domains match exactly or as a dot-separated parent: a hostname that merely ends with "feishu.cn" is someone else's site.
+for(const url of ['https://evilfeishu.cn/docx/ABC123','https://notlarksuite.com/wiki/ABC123','https://xlarkoffice.com/','https://feishu.cn.evil.test/docx/ABC123']){
+  assert.equal(isOfficialFeishuURL(url),false,url);assert.equal(isFeishuDocumentURL(url),false,url);assert.equal(isFeishuPermissionAllowed('fullscreen',url),false,url);
+}
 
 const windows=[],external=[],cleared=[],errors=[],messages=[];
 let loadResult=()=>Promise.resolve(),expectError=false;

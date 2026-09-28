@@ -3,12 +3,15 @@ package ui
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/SzuDesktopTeam/szudesktop/internal/version"
 )
 
 type releaseTransport func(*http.Request) (*http.Response, error)
@@ -68,7 +71,7 @@ func TestReleaseMissingAndFailures(t *testing.T) {
 func TestReleaseCheckCachesAndRevalidates(t *testing.T) {
 	var requests []string
 	status, etag := http.StatusOK, `W/"v1"`
-	body := `[{"tag_name":"beta0.9.3","prerelease":true,"published_at":"2026-09-27"}]`
+	body := fmt.Sprintf(`[{"tag_name":%q,"prerelease":true,"published_at":"2026-09-27"}]`, version.Current)
 	client := &http.Client{Transport: releaseTransport(func(r *http.Request) (*http.Response, error) {
 		if r.URL.String() != releasesAPI+"?per_page=10" {
 			t.Fatalf("unexpected request: %s", r.URL)
@@ -86,10 +89,10 @@ func TestReleaseCheckCachesAndRevalidates(t *testing.T) {
 		_ = json.Unmarshal(w.Body.Bytes(), &info)
 		return w.Code, info
 	}
-	if code, info := get(); code != 200 || info.Version != "beta0.9.3" {
+	if code, info := get(); code != 200 || info.Version != version.Current {
 		t.Fatalf("first check: %d %+v", code, info)
 	}
-	if code, info := get(); code != 200 || info.Version != "beta0.9.3" || len(requests) != 1 {
+	if code, info := get(); code != 200 || info.Version != version.Current || len(requests) != 1 {
 		t.Fatalf("fresh result must come from memory: %d %+v requests=%q", code, info, requests)
 	}
 	expire := func() {
@@ -101,14 +104,14 @@ func TestReleaseCheckCachesAndRevalidates(t *testing.T) {
 	}
 	expire()
 	status, body = http.StatusNotModified, ""
-	if code, info := get(); code != 200 || info.Version != "beta0.9.3" || info.Stale || len(requests) != 2 || requests[1] != `W/"v1"` {
+	if code, info := get(); code != 200 || info.Version != version.Current || info.Stale || len(requests) != 2 || requests[1] != `W/"v1"` {
 		t.Fatalf("expired entry must revalidate with ETag: %d %+v requests=%q", code, info, requests)
 	}
 	// 额度用完时，给出这次运行里上一次成功的结果，而不是报错；
 	// 但要标明是旧结果、是多久以前的，学生才不会以为刚刚查过。
 	expire()
 	status, body = http.StatusForbidden, `{"message":"API rate limit exceeded"}`
-	if code, info := get(); code != 200 || info.Version != "beta0.9.3" || len(requests) != 3 || !info.Stale || !strings.Contains(info.Message, "GitHub 暂时不可用，显示的是 15 分钟前的检查结果") {
+	if code, info := get(); code != 200 || info.Version != version.Current || len(requests) != 3 || !info.Stale || !strings.Contains(info.Message, "GitHub 暂时不可用，显示的是 15 分钟前的检查结果") {
 		t.Fatalf("rate limit must fall back to the last good result and say it is stale: %d %+v", code, info)
 	}
 	if info := staleRelease(releaseInfo{Message: "所选渠道暂时没有公开版本。"}, 3*time.Hour); !strings.HasPrefix(info.Message, "GitHub 暂时不可用，显示的是 3 小时前") || !strings.HasSuffix(info.Message, "所选渠道暂时没有公开版本。") {

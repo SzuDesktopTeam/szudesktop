@@ -10,6 +10,7 @@ import {act,createState} from './assets/garden/engine.mjs';
 import {focusKey,restoreFocus,refreshDraft} from './assets/garden/shell-repaint.mjs';
 import {exitHint,stampVersion,createConfirm} from './assets/garden/app-logic.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
+const currentVersion=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const start=source.indexOf('async function run('),end=source.indexOf("document.addEventListener('submit'",start);
 assert.ok(start>=0&&end>start);
@@ -619,13 +620,13 @@ await check('checking for updates returns focus to the check button after the ca
  const {doc,main}=fakeDocument(),previousDocument=globalThis.document,job=deferred();
  try{
   globalThis.document=doc;
-  const ui=createReleaseUI({api:()=>job.promise,getVersion:()=>'beta0.9.3'});
+  const ui=createReleaseUI({api:()=>job.promise,getVersion:()=>currentVersion});
   main.innerHTML=`<div class="settings-layout">${ui.card()}</div>`;
   const button=main.querySelector('[data-action="release-check"]');button.focus();
   const pending=ui.click('release-check');
   const during=main.querySelector('[data-action="release-check"]');
   assert.equal(during.disabled,true);assert.equal(doc.activeElement.textContent,'版本与更新','检查期间按钮被禁用，焦点先停在卡片标题上');
-  job.resolve({version:'beta0.9.3',url:'https://github.com/SzuDesktopTeam/szudesktop/releases',prerelease:true});await pending;
+  job.resolve({version:currentVersion,url:'https://github.com/SzuDesktopTeam/szudesktop/releases',prerelease:true});await pending;
   const after=main.querySelector('[data-action="release-check"]');
   assert.notEqual(after,button);assert.equal(after.disabled,false);assert.equal(doc.activeElement,after,'检查结束后回到「检查更新」按钮');
  }finally{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;}

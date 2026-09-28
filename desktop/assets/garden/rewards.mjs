@@ -17,7 +17,8 @@ export function actionReward(before,after,action){
   if(!claim||old.puzzle?.earnedDay===g.puzzle.earnedDay||!increase(old.seeds[claim.crop],g.seeds[claim.crop])||!coins)return null;
   const pet=g.pets[g.active],beforePet=old.pets.find(p=>p.species===pet.species);
   const xp=increase(beforePet?.xp,pet.xp),bond=increase(beforePet?.bond,pet.bond);
-  return {title:'备种礼已收进背包',items:[`${CROPS[claim.crop].name}种子 +${claim.quantity}`,`荔枝币 +${coins}`,`${pet.name}成长 +${xp} · 亲密 +${bond}`],levelUp:beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
+  const care=bond?` · 亲密 +${bond}`:'';
+  return {title:'备种礼已收进背包',items:[`${CROPS[claim.crop].name}种子 +${claim.quantity}`,`荔枝币 +${coins}`,`${pet.name}成长 +${xp}${care}`],levelUp:beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
  }
  case 'orderDeliver':{
   const order=g.orders?.offers.find(o=>o.id===action.id);
@@ -25,7 +26,8 @@ export function actionReward(before,after,action){
   const pet=g.pets.find(p=>p.species===order.pet),beforePet=old.pets.find(p=>p.species===order.pet);
   const given=Object.entries(order.needs).map(([id,n])=>`${CROPS[id].name} −${n}`).join('、');
   const xp=increase(beforePet?.xp,pet?.xp),bond=increase(beforePet?.bond,pet?.bond);
-  return {title:`${pet?.name||'伙伴'}收到了你的心意`,items:[given,`荔枝币 +${increase(old.coins,g.coins)}`,`${pet?.name||'伙伴'}成长 +${xp} · 亲密 +${bond}`],levelUp:pet&&beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
+  const care=bond?` · 亲密 +${bond}`:'';
+  return {title:`${pet?.name||'伙伴'}收到了你的心意`,items:[given,`荔枝币 +${increase(old.coins,g.coins)}`,`${pet?.name||'伙伴'}成长 +${xp}${care}`],levelUp:pet&&beforePet?Math.min(20,1+Math.floor(pet.xp/50))>Math.min(20,1+Math.floor(beforePet.xp/50)):false};
  }
  case 'decor':{
   const project=PROJECTS[action.id];

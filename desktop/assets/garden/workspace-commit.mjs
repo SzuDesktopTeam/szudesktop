@@ -8,7 +8,7 @@ export function createWorkspaceCommit({api,normalize,read,setRevision,setState,p
   try{const result=await api('/api/workspace',{version:1,revision,data:next});setRevision(result.revision);setState(next);repaint()}
   catch(e){
    if(e.code===409){
-    const latest=await api('/api/workspace');setRevision(latest.revision);setState(normalize(latest.data));repaint();
+    const latest=await api('/api/workspace'),synchronized=normalize(latest.data);setRevision(latest.revision);setState(synchronized);repaint();
     if(draft){const form=byId(draft.formId);for(const [name,value] of Object.entries(draft.values)){const field=form?.elements.namedItem(name);if(field){if(field.type==='checkbox')field.checked=!!value;else field.value=value}}}
     // 冲突也可能是服务端刚用备份恢复了损坏的存档（409 或重读的响应带恢复标记），这时不能说成另一个窗口。
     throw Error((e.recovered||latest.recovered?'存档文件损坏，已恢复到上一次成功保存的版本':'另一个窗口有新记录，已同步')+'。本次操作尚未保存，请再试一次。');

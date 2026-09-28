@@ -254,7 +254,9 @@ test('adding or retiring crops, daily goals and statistics keeps old saves reada
  assert.deepEqual(Object.keys(s.game.seeds),Object.keys(CROPS));assert.equal(s.game.seeds.lychee,0);assert.equal(s.game.stats.tasks,0);assert.equal(s.game.daily.care,0);
  assert.equal(s.game.daily.order,undefined);assert.equal(s.game.stats.retired,undefined);assert.equal(s.game.stock.melon,undefined);
  // Damaged values are still errors rather than silently becoming zero.
- for(const damage of [g=>{g.seeds.radish=-1},g=>{g.stock.radish=1.5},g=>{g.daily.care='x'},g=>{g.stats.harvest=-2},g=>{g.seeds=null},g=>{g.plots[0].ready='soon'}]){
+ // The field is exactly six plots: a save with a seventh (or a missing) plot is corrupt, not "at least six".
+ for(const damage of [g=>{g.seeds.radish=-1},g=>{g.stock.radish=1.5},g=>{g.daily.care='x'},g=>{g.stats.harvest=-2},g=>{g.seeds=null},g=>{g.plots[0].ready='soon'},
+  g=>{g.plots.push(null)},g=>{g.plots.push('locked')},g=>{g.plots.pop()},g=>{g.coins=-1},g=>{g.food=-0.5}]){
   const broken=structuredClone(old);damage(broken.game);assert.throws(()=>normalize(broken,now),/格式错误|数值错误/);
  }
 });

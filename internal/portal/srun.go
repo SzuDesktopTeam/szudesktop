@@ -367,7 +367,7 @@ func (c *SrunClient) loginOnce() (res *Result, acIDRejected bool, err error) {
 // srunRejectMarkers 是 error=ok 时仍说明「这次没登上」的关键词，
 // 和 friendlySrunError 认的那几类失败一一对应。
 var srunRejectMarkers = []string{
-	"ac-type", "ac_id", "auth_info", "sign_error", "sign error", "ldap", "userid",
+	"ac-type", "ac_id", "auth_info", "sign_error", "sign error", "sign-", "signature", "signerror", "ldap", "userid",
 	"decrypt", "challenge_expire", "bad_request", "login_error",
 }
 
@@ -375,6 +375,7 @@ var srunRejectMarkers = []string{
 // error 字段本身是 ok，所以只看另外三个字段。
 func srunLoginRejected(resp srunPortalResp) bool {
 	text := strings.ToLower(strings.Join([]string{resp.ErrorMsg, resp.Res, resp.SucMsg}, " "))
+	text = strings.Join(strings.Fields(text), " ")
 	for _, m := range srunRejectMarkers {
 		if strings.Contains(text, m) {
 			return true

@@ -134,6 +134,12 @@ test('orders round-trip with frozen prices and discard foreign fields without in
  const clean=normalizeOrders(g.orders,CROPS);assert.equal(JSON.stringify(clean).includes('secret'),false);
  assert.deepEqual(normalizeOrders(clean,CROPS),clean);
  assert.deepEqual(normalizeOrders(undefined,CROPS),createOrders());
+ // Completed IDs are only ever today's three offers: foreign or duplicated IDs in a save
+ // cannot raise the lifetime total or mint keepsakes.
+ const forged=normalizeOrders({...clean,completed:['2099-01-01:0','junk',day+':7',day+':1',day+':1'],total:0},CROPS);
+ assert.deepEqual(forged.completed,[day+':1']);assert.equal(forged.total,1);assert.deepEqual(forged.keepsakes,[]);
+ const foreign=normalizeOrders({...clean,completed:['2099-01-01:0','2099-01-01:1','2099-01-01:2'],total:0},CROPS);
+ assert.deepEqual(foreign.completed,[]);assert.equal(foreign.total,0);
 });
 
 test('offers saved under older rules are rebuilt for the same day without paying twice',()=>{

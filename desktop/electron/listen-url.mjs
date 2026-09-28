@@ -55,7 +55,8 @@ export function redactToken(text,token){
 export const STARTUP_REASON_MAX=300;
 export const STDERR_DETAIL_MAX=200;
 const stderrLines=stderr=>String(stderr||'').split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
-const tidy=(line,max)=>line.replace(/[。.！!；;，,\s]+$/,'').slice(0,max);
+const trailingMarks=/[。.！!；;，,\s]+$/;
+const tidy=(line,max)=>{let result='',units=0;for(const char of line.replace(trailingMarks,'')){if(units+char.length>max)break;result+=char;units+=char.length}return result.replace(trailingMarks,'')};
 export function startupFailureReason(stderr){
   const line=stderrLines(stderr).findLast(value=>/^启动失败\s*[:：]/.test(value));
   return line?tidy(line.replace(/^启动失败\s*[:：]\s*/,''),STARTUP_REASON_MAX):'';

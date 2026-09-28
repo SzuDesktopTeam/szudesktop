@@ -17,7 +17,7 @@ Your everyday campus tools live here too.
 
 Unofficial · Built by a student · Not affiliated with Shenzhen University
 
-**[Download for Windows · beta0.9.2](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.2/szuDesktop-Setup-0.9.2.exe)**
+**[Download for Windows · beta0.9.3](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**
 
 [Other downloads and release details](#download) · [Features](#features) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues) · [FAQ](#faq) · [Development status](STATUS.md)
 
@@ -25,9 +25,9 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 ---
 
-## Source preview: preparing for beta0.9.3
+## beta0.9.4 release candidate and complete feature set
 
-**These changes are not publicly released; the download above remains beta0.9.2.** Course notes, Feishu document entry points, courtyard environments and the daily desk are already in the source. This iteration improves page layout, dusk readability and section navigation. Issues and verification stay in [STATUS section 65](STATUS.md#s65). Real school transactions and Feishu collaboration retain their existing acceptance limits.
+**beta0.9.4 is waiting for PR checks and release packaging; beta0.9.3 remains the latest public release, and the download above points to it.** The candidate fixes issues found in the second release audit: save recovery, campus credential redaction, app shutdown, CJK word counting and conflict synchronisation. Every build check now reads the single version source. See [CHANGELOG](../CHANGELOG.md) and [STATUS section 67](STATUS.md#s67) for the full record. beta0.9.4 retains the complete feature set introduced in beta0.9.3; real school transactions and Feishu collaboration keep their existing acceptance limits.
 
 ### One courtyard, across every page
 
@@ -49,7 +49,7 @@ The preceding PR #21 was viewed at regular desktop width and 420px, in daylight 
 
 The network page starts with connection status, refresh and diagnosis. When internet access is available, expand the login form only when connecting or changing accounts. Learning spaces now have one primary **Open school booking** action and a secondary availability lookup. Library links appear before the detailed, expandable rules. Entering the notices section automatically reads the remembered department once; failures remain visible and can be retried manually, without background polling.
 
-The installer also checks that its complete version matches the background engine. A mismatch asks the user to exit the older version and reopen the app; it does not terminate an existing portable engine. These are source changes, and the limits on verified school bookings and account permissions remain unchanged.
+The installer also checks that its complete version matches the background engine. A mismatch asks the user to exit the older version and reopen the app; it does not terminate an existing portable engine. This behavior has been retained since beta0.9.3; the limits on verified school bookings and account permissions remain unchanged.
 
 ### From the courtyard to your study desk
 
@@ -59,17 +59,17 @@ Turn a selected sentence into a study task, or start **25 minutes of focus** fro
 
 Import Markdown/TXT, export an individual `.md`, or export and restore the whole notebook as JSON, including courses, notes, current drafts and trash. **Back up course notes** in Settings now directly exports the whole notebook; the course shelf's backup control remains available. Notes live in `.szunet/notebook-v1.json` as **unencrypted local text**, separately from `workspace-v1.json`; back up both when moving computers. This is currently a text notebook: AI assistance, PDF/slide parsing, image attachments and cloud sync are not implemented.
 
-![Course-note source preview using an isolated acceptance-test course and test content](screenshot-study-notes-preview.png)
+![Course-note preview using an isolated acceptance-test course and test content](screenshot-study-notes-preview.png)
 
 The previous PR #20 passed Go tests and static checks, 30 desktop check scripts and 8 Electron check groups. An isolated profile exercised creation, saving on navigation, engine-restart recovery, reading, search, trash restoration, selection-to-task and focus; that packaged application also passed its companion, backup and normal-exit checks. The image shows that **isolated acceptance-test course**, not a user's class materials, and predates the new outline controls. Its width and runtime evidence remain in STATUS section 63.4; UI, build and PR acceptance for the current changes are tracked in section 64.
 
 ### Shared course work in Feishu, personal notes on your machine
 
-Each course can link to a Feishu Docx or Wiki document the user has permission to access. **Open shared document** opens the official Feishu page in a separate window in the Electron source build, or a browser in portable/browser mode. Feishu handles collaborative editing, comments and permissions.
+Each course can link to a Feishu Docx or Wiki document the user has permission to access. **Open shared document** opens the official Feishu page in a separate window in the installer edition, or a browser in portable/browser mode. Feishu handles collaborative editing, comments and permissions.
 
 To import content, the app calls **the user's own installed and configured `lark-cli`**, uses that user's authorization, and creates a new local note with its source link. The connection control opens official read-only authorization. Without a configured CLI, the shared original can still be opened. **This is not two-way sync**: local edits are not written back, and the app does not substitute a shared developer account for the user.
 
-The official window's login and CLI read authorization are separate. The window retains its session only during the current application run; CLI credentials remain managed by the user's CLI. The installed CLI was detected on the actual machine, and its missing user authorization was reported correctly; authorization was not started and private documents were not imported. This update does not create an organization, invite members or change document permissions. A project-specific organization joining flow still needs configuration. Real Feishu login, permission-constrained document import and multi-user collaboration remain unverified; implementation alone is not evidence of those workflows passing.
+The official window's login and CLI read authorization are separate. The window retains its session only during the current application run; CLI credentials remain managed by the user's CLI. The installed CLI was detected on the actual machine, and its missing user authorization was reported correctly; authorization was not started and private documents were not imported. This release does not create an organization, invite members or change document permissions. A project-specific organization joining flow still needs configuration. Real Feishu login, permission-constrained document import and multi-user collaboration remain unverified; implementation alone is not evidence of those workflows passing.
 
 ### A different window onto campus
 
@@ -91,7 +91,7 @@ The visible page uses one shared scene canvas: home has the full landscape, othe
 
 Pet care and task saves reuse the same canvas, keeping background animation continuous. A small nameplate replaces the idle companion bubble; replies expand briefly and fold away again. Dusk text contrast, distant greenery and bookshop paving have also been refined.
 
-The bottom hint bar now follows the active companion, keeping its portrait and name consistent after switching, renaming, navigation and reopening. This fix is available in source and the local preview, but not in a public installer yet; see STATUS section 60.4 for verification.
+The bottom hint bar now follows the active companion, keeping its portrait and name consistent after switching, renaming, navigation and reopening. This fix is included in the beta0.9.3 installer; see STATUS section 60.4 for verification.
 
 ### Bring the harvest to the companion table
 
@@ -158,44 +158,44 @@ This garden iteration does not close unverified school-account workflows or depl
 
 ### Earlier candidate interfaces and verification
 
-The earlier baseline `09c2240` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980) while [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19) was a draft, including a beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those historical results do not cover the later penguins, catalog changes or this notebook. PR #19 subsequently completed its final checks and merged, as recorded in STATUS section 62; public downloads remain beta0.9.2.
+The earlier baseline `09c2240` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36259475980) while [PR #19](https://github.com/SzuDesktopTeam/szudesktop/pull/19) was a draft, including a beta0.9.1 → beta0.9.3 installation upgrade, saved-data preservation and backup restoration. Those historical results do not cover the later penguins, catalog changes or this notebook. PR #19 subsequently completed its final checks and merged, as recorded in STATUS section 62; this work was eventually published in beta0.9.3 on 2026-09-27.
 
-**These changes are not publicly released; the download above is still beta0.9.2.** The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks. The source now also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#s56).
+The earlier beta0.9.3 candidate passed local build, key browser workflow and Windows CI installation checks; the release also includes two penguins and refreshed companion artwork. The home, farm, study and postcard images come from the earlier candidate; the new roster is shown separately, with its validation recorded in [STATUS section 56](STATUS.md#s56).
 
-![Home page preview from the earlier unreleased candidate](screenshot-home-preview.png)
+![Home page preview from an earlier beta0.9.3 candidate build](screenshot-home-preview.png)
 
 An original pixel-art lakeside scene now surrounds six working plots. Select a plot, then choose seeds, plant, water or harvest from one tool panel. The companion room brings care, growth and daily goals together. Reward messages show actual gains, and the crop collection only lights up after a real harvest.
 
-![Unreleased lakeside farm preview using a separate test save](screenshot-farm-preview.png)
+![Lakeside farm preview using a separate test save](screenshot-farm-preview.png)
 
 [Earlier candidate companion room](screenshot-garden-preview.png) · [Study and weekly review](screenshot-study-preview.png) · [An actual exported garden postcard](screenshot-share-preview.png). Existing local saves remain compatible, with revised progression rules. Crops do not wither, and daily goals require no streak. The original garden backdrop was generated with the built-in image tool and is bundled with the app.
 
 Meet **Pingu** and **Skipper**, the penguin captain from *Madagascar*: one waddles and says Noot Noot; the other takes your rest breaks very seriously. Both penguins have normal, happy, low-mood and sleeping states. Xiaobai, the campus egret, stays. Chestnut returns to its original chunky, abstract pixel proportions: utterly serious about occupying a cardboard box, and unaware of its own odd charm. New saves start with five companions. A-Qing remains under “Old friends” in existing saves, preserving names, growth and the active selection.
 
-![Unreleased penguin companions and the abstract Chestnut](screenshot-pets-preview.png)
+![The penguin companions and the abstract Chestnut, released in beta0.9.3](screenshot-pets-preview.png)
 
 [Chestnut’s four expressions](cat-rough-preview.png): it takes being a cat seriously and never jokes about its own looks.
 
 Penguin integration baseline `1f5a23b` passed [all 9 CI jobs](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36261199079), including installation upgrades and native rendering and switching for both penguins. Chestnut’s subsequent return to abstract proportions and matter-of-fact dialogue has passed real-room, interaction-line and four-state artwork checks, and the local candidate packages have been rebuilt; the earlier CI remains the penguin integration baseline. Progress and artifact records are in [STATUS section 56](STATUS.md#s56).
 
-Implemented in the current source:
+beta0.9.3 also includes:
 
 - **A clearer study workflow.** Separate focus, timetable and grades views; editable todos with dates, completion records, archives and restoration. Focus accepts 1–120 minutes and an optional todo, with completed sessions in a seven-day review. It does not automatically mark the todo complete.
 - **Fairer progression.** Each completed and claimed focus minute gives one garden coin and one growth point. Switching companions no longer removes crop unlocks; longer crops give more per harvest. Each companion's first three pats per day give growth, with further interaction still available.
 - **Something to return to.** Seven non-consecutive visiting days unlock campus stories and keepsakes. The four static states remain, with dialogue and motion expanded to the 1,656 lines and 648 frames above. Preview and save a local card with the pixel campus, active companion and actual garden/focus totals, without student IDs, timetables or grades.
-- **Quieter desktop company.** Installer source adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
+- **Quieter desktop company.** The installer adds focus notifications, do-not-disturb, remembered visibility and always-on-top choices, plus opt-in Windows launch at login. Full application exit stops notifications. CI verified saved visibility preferences and writes to the always-on-top and do-not-disturb settings. Real notification display and launching after login with startup enabled remain unverified.
 - **Remembered choices and clearer status.** Notice sources and undergraduate/graduate choices persist. Settings can manually check stable/beta releases, open release notes and copy credential-free feedback information. Updates are not downloaded or installed automatically.
 
 For the earlier baseline, all 25 relevant check scripts and the Go checks passed. Real browser workflows covered focus, todo editing and archiving, planting, watering, harvesting, restored preferences, release lookup and PNG preview/save. The final farm scrolls fully without horizontal overflow at 420px; candidate files, build resources and license materials were checked. The CI build passed installation, upgrades, uninstall-with-data-retention and pet interaction checks using synthetic data on one display. Full art consistency, actual notification and startup triggers, school services, long-running resource use and longer-term balance still need their respective validation or trials. That candidate’s implementation, checksums and evidence stay in [STATUS section 55](STATUS.md#s55); the new roster, shared catalog and artwork extension guide are in [section 56](STATUS.md#s56).
 
-The product review, the UX01–UX26 tasks and acceptance criteria, and the proposed seven-day trial are recorded in [STATUS section 54](STATUS.md#s54); open items are summarised in [section 1.1](STATUS.md#s1-1). Source improvements are not yet part of the downloadable installer. Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
+The product review, the UX01–UX26 tasks and acceptance criteria, and the proposed seven-day trial are recorded in [STATUS section 54](STATUS.md#s54); open items are summarised in [section 1.1](STATUS.md#s1-1). Student trials, physical multi-display testing and a complete promotional recording remain undone; internal tests do not replace them.
 
 ## What you can do today
 
-The following describes the downloadable **beta0.9.2** release.
+The following describes the downloadable **beta0.9.3** release.
 
-- **Keep a companion on your desktop.** Choose Libao, Chestnut, Xiaobai or A-Qing to accompany your work. Click to care for them, drag them into place and scroll to resize. Their names and growth stay in your local save.
-- **Give focus a small reward.** Write a todo, start a 5, 25 or 45-minute focus session, then claim companion growth and garden coins. Grow crops, water them and decorate your room; crops keep growing while you are away.
+- **Keep a companion on your desktop.** Choose Libao, Chestnut, Xiaobai, Pingu or Skipper to accompany your work; A-Qing stays under “Old friends” in existing saves. Click to care for them, drag them into place and scroll to resize. Their names and growth stay in your local save.
+- **Give focus a small reward.** Write a todo, start a 5, 25 or 45-minute focus session (or set your own length), then claim companion growth and garden coins. Grow crops, water them and decorate your room; crops keep growing while you are away.
 - **Find campus tools in one place.** Read public college notices and the official calendar, open common school services and run diagnostics when the campus network will not connect.
 
 The garden, todos and focus timer work offline without a school account. The floating desktop companion is included in the Windows installer; macOS and Linux currently have command-line tools.
@@ -208,23 +208,25 @@ The garden, todos and focus timer work offline without a school account. The flo
 
 ## Download
 
-The current installer is **[szuDesktop-Setup-0.9.2.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.2/szuDesktop-Setup-0.9.2.exe)**. Run it, then open szuDesktop. The Windows installer includes its window runtime and Go engine. Portable downloads, CLI binaries and checksums are on the [beta0.9.2 release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.2).
+The current public installer is **[szuDesktop-Setup-0.9.3.exe](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.3/szuDesktop-Setup-0.9.3.exe)**. Run it, then open szuDesktop. The Windows installer includes its window runtime and Go engine. Portable downloads, CLI binaries and checksums are on the [beta0.9.3 release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.3).
 
 | Item | Detail |
 | :--- | :----- |
 | Windows installer | An independent Electron window; a matching `.sha256` file verifies the download |
-| Windows portable | `szudesktop-beta0.9.2-windows-amd64.zip`; unzip and run `szudesktop.exe`, using the local Edge / Chrome browser |
-| Command line | Windows / macOS / Linux `szunet` binaries remain available |
-| Current version | `beta0.9.2` · Released; four companions, cross-version upgrade and backup restoration checked |
+| Windows portable | `szudesktop-beta0.9.3-windows-amd64.zip`; unzip and run `szudesktop.exe`, using the local Edge / Chrome browser |
+| Command line | Windows / macOS / Linux `szunet` binaries remain available; since beta0.9.3 the single-file EXE and every CLI binary also ship with a matching `.sha256` |
+| Current version | `beta0.9.3` · Released 2026-09-27; beta0.9.2 → beta0.9.3 installer upgrade checked |
 | Saved data | Both Windows editions use the same local garden and study records; export a backup from Settings before updating |
 
-The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. The published beta0.9.2 installer cannot enable launch at login; the local beta0.9.3 candidate adds this option, with actual launch-at-login behavior still awaiting validation.
+The installer provides a floating desktop pet, a system tray and 40%–200% scaling. Closing the main window keeps the pet available; choose **Open main window** from the pet menu, or click the tray to reopen. Official school login and booking pages open inside the installer edition, without a cookie-copy workflow. Calendar OCR prefers Chinese. See [STATUS](STATUS.md) for the limits of live account validation. The installer can enable launch at login from **Settings → Desktop companion → Launch when signing in to Windows**; it is off by default, and the actual launch after signing in still awaits validation.
 
-Released on 2026-09-26: [PR #17](https://github.com/SzuDesktopTeam/szudesktop/pull/17) is merged and the [beta0.9.2 release checks](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36242237913) passed. Upgrading from the published beta0.9.1 installer preserved garden and study records, encrypted account data and pet settings, removed obsolete program resources, and passed backup export/restoration, reopening and uninstall checks. These checks use synthetic data; live school-account boundaries remain in [STATUS](STATUS.md).
+Released on 2026-09-27: tagged from `67e89a7` after [PR #23](https://github.com/SzuDesktopTeam/szudesktop/pull/23) merged, with the [beta0.9.3 release checks](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36339282225) passing. Upgrading from the published beta0.9.2 installer preserved garden and study records, encrypted account data and pet settings, removed obsolete program resources, trimmed the locale packs, and passed backup export/restoration, reopening, coexistence with a portable engine and uninstall checks (uninstalling also removes the launch-at-login entry). These checks use synthetic data; live school-account boundaries remain in [STATUS](STATUS.md).
 
-**beta0.9.2 update:** four companions and synchronized desktop selection; paginated scores using the school-reported total without treating failed or timed-out reads as complete; stale account cleanup after school sign-out; and preservation of specific permission errors. The pixel campus, timber navigation, scaling and dragging remain. Changes and verification stay in [STATUS](STATUS.md).
+Release preparation: dependency updates from PRs #24 and #25 are merged. The second-audit fixes are waiting for [PR #26](https://github.com/SzuDesktopTeam/szudesktop/pull/26) CI and the installer-upgrade smoke test before beta0.9.4 can be published. The latest public installer remains beta0.9.3. Tests use synthetic data; real school accounts, booking submission and college piano permissions still need on-site acceptance.
 
-### Desktop companion (beta0.9.2 installer)
+**beta0.9.3 update:** the courtyard becomes the whole-app environment (Pixel Courtyard plus three toon-rendered scenes); course notes with Feishu course documents; five default companions with 648 animation frames; 2048 tied back into the garden economy with requests and construction; and the review fixes, including per-run local API credentials, campus-network password redaction and automatic save recovery. Full entries are in [CHANGELOG](../CHANGELOG.md) (Chinese). The previous beta0.9.2 (2026-09-26) delivered four companions with synchronized desktop selection, paginated score reads and school-login fixes.
+
+### Desktop companion (installer)
 
 - **Left-click or right-click** the pet to open its menu, view its current state, pat, feed, play or toggle sleep. Care uses the existing garden rules and local save; insufficient food, low energy and cooldowns are reported.
 - **Scroll while hovering over the pet** to change its size by 10 percentage points, from 40% to 200%. Menu controls, the Settings slider and tray presets are also available.
@@ -233,17 +235,17 @@ Released on 2026-09-26: [PR #17](https://github.com/SzuDesktopTeam/szudesktop/pu
 - The floating pet and these desktop controls are part of the **Electron installer edition**. The portable edition keeps garden care inside its main window and has no separate pet window.
 - Actual checks used one display. Physical multi-display setups have not been tested; geometry-rule tests do not replace that verification.
 
-### Four companions
+### Companions
 
-The released installer includes **Libao, Chestnut, Xiaobai the egret and A-Qing the turtle**. Select a portrait in the garden or use **Switch companion** from the desktop pet menu; both choices synchronize immediately. Existing saves receive missing base companions while retaining names, growth and the active choice. Rules, actual window switching, switching with the main window hidden, restart restoration and a 420px layout check passed.
+New saves start with **Libao, Chestnut, Xiaobai the egret, Pingu and Skipper**; A-Qing the turtle stays under “Old friends” in existing saves. Select a portrait in the garden or use **Switch companion** from the desktop pet menu; both choices synchronize immediately. Existing saves receive missing base companions while retaining names, growth and the active choice. Rules, actual window switching, switching with the main window hidden, restart restoration and a 420px layout check passed.
 
-![Four companion selection cards](screenshot-companions.png)
+![Companion selection cards in the companion room, using an isolated test save](screenshot-pets-preview.png)
 
-Export a backup from Settings before upgrading. A clean Windows environment passed the real beta0.9.1 → beta0.9.2 installation upgrade and data preservation checks, plus export, cancelled restoration and confirmed restoration. New installers are still downloaded manually; automatic updates are not implemented.
+Export a backup from Settings before upgrading. A clean Windows CI environment passed the beta0.9.2 → beta0.9.3 installation upgrade, data preservation and backup export/restoration checks. The beta0.9.3 → beta0.9.4 upgrade check is pending candidate CI. New installers are still downloaded manually; automatic updates are not implemented.
 
-The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Four companions are released and this cross-version upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and final 1.0 candidate delivery. Open items are summarised in [STATUS section 1.1](STATUS.md#s1-1); school-service acceptance details stay in [section 50.2](STATUS.md#s50-2). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
+The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment are deferred**. Five default companions are released and the beta0.9.2 → beta0.9.3 upgrade is verified. Remaining work covers on-site campus authentication, real installer school-session handoff, undergraduate/graduate timetables and scores, in-app booking, college piano permissions and feedback from real students. Open items are summarised in [STATUS section 1.1](STATUS.md#s1-1); school-service acceptance details stay in [section 50.2](STATUS.md#s50-2). Backend services, cloud sync and automatic updates are deferred. The installer remains unsigned.
 
-### First run (released beta0.9.2)
+### First run
 
 1. Open **Lychee Garden → Companion room** and choose a companion. The installer edition also switches the floating desktop pet.
 2. Visit **My farm** to see your first radishes already planted; they are ready in about a minute. Or write a todo and try a 5-minute focus session. No school account is needed.
@@ -251,7 +253,7 @@ The 1.0 plan focuses on the desktop app; **campus backend and Docker deployment 
 
 To connect to the campus network, open **Campus network**, enter your campus card number and unified identity password, then sign in. Tick **Remember** if you want credentials saved after a successful sign-in. Run **Diagnostics** if the connection fails. Campus network authentication and school business login are separate.
 
-### Your first session in the source preview
+### Your first session with a new save
 
 A new save starts with 40 garden coins, three pet snacks, four radish seeds, two strawberry seeds and one already planted radish plot. Choose a companion, write a small todo and try five minutes of focus; completing and claiming it gives five coins and five growth points. Radishes take about one minute, or about 45 seconds if watered immediately, and yield two radishes plus one growth point. No school account is needed.
 
@@ -266,7 +268,7 @@ The story progresses over seven different visiting days without resetting when y
   (meant for headless / sidecar use — the Electron shell starts the Go engine the same way)
 - A short, skippable guide appears on first launch; it explains where your data lives,
   how to quit, and what to try first
-- The published beta0.9.2 installer can disable an existing autostart entry but does not create one. Portable and CLI autostart remain available; unreadable status is reported explicitly. The source preview's new opt-in control is described above and is not enabled on the user's behalf
+- The installer never registers launch at login by itself: **Settings → Desktop companion → Launch when signing in to Windows** registers it only when you turn it on, and uninstalling removes it. Portable and CLI autostart remain available; unreadable status is reported explicitly
 
 ### Where my data lives
 
@@ -278,14 +280,14 @@ The story progresses over seven different visiting days without resetting when y
   writing a plain-text file (F24, fixed)
 - Garden saves are `workspace-v1.json`, plain JSON you can back up yourself; an export
   never contains your campus account or password
-- In the beta0.9.3 source preview, course notes are stored separately in **unencrypted** `notebook-v1.json`. Use **Back up course notes** in Settings or the course shelf's import/backup menu. The garden backup does not include notes
+- Course notes are stored separately in **unencrypted** `notebook-v1.json`. Use **Back up course notes** in Settings or the course shelf's import/backup menu. The garden backup does not include notes
 - Before switching computers, export your save in Settings and import it on the new one
 
 ---
 
 ## Features
 
-These entries describe beta0.9.2. Verified desktop features and queries are distinguished from pending school-account workflows below, with evidence in STATUS.md.
+These entries describe beta0.9.3. Verified desktop features and queries are distinguished from pending school-account workflows below, with evidence in STATUS.md.
 
 | Capability | Status | Notes |
 | :--------- | :----- | :---- |
@@ -293,18 +295,18 @@ These entries describe beta0.9.2. Verified desktop features and queries are dist
 | Access point ID (`ac_id`) discovery | ✅ | Tries in order: your manual value → what worked on this port before → the gateway redirect → a guess. Guesses are labelled as such |
 | Connection diagnostics | ✅ | Lists zone decision, portal reachability, protocol fingerprint and the conclusion |
 | Credential storage | ✅ | Windows DPAPI / macOS Keychain / Linux Secret Service; saved **only after a successful sign-in and only if you ticked "remember"**. Without a system secure store it refuses to save and says why — **no plain-text fallback** (F24, fixed). The macOS save path was validated on a real CI runner for beta0.7.3 |
-| Notices | Partial | Current source groups notices by college or department: 28 academic-unit links, 17 readable college columns, plus Academic Affairs and the Graduate School. Dates and original links are preserved with a 10-minute cache; other units link to their official sites |
+| Notices | Partial | Notices are grouped by college or department: 28 academic-unit links, 17 readable college columns, plus Academic Affairs and the Graduate School. Dates and original links are preserved with a 10-minute cache; other units link to their official sites |
 | Room availability and booking | Partial | Live community rooms and half-hour availability on the campus network (read-only). The interface opens the official school page for login and booking and never asks users to copy booking cookies. The server has **no booking write endpoints left** (F23, removed). Library services use a separate official system |
 | Calendar and timetables | Partial | Official calendar updates and manual week overrides. Graduate alternative login and timetable reading passed with a real account, distinguishing no scheduled classes from selected courses without arrangements. Undergraduate access, populated schedules and the installer session handoff remain unverified |
 | Study reminders | ✅ | Add a reminder manually, export a standard ICS calendar (15 minutes before start). **A reminder is not a booking** |
 | Common contacts | Partial | Only numbers verifiable on official school pages (library help desks); other offices link to their official pages |
 | Grades and GPA | Partial | Paste or import CSV / TSV grade tables and calculate GPA locally. School queries follow pages using the reported total, remain pending live account validation and do not update local GPA records automatically. **No PDF / image / XLSX parsing** |
-| Todo and focus timer | ✅ | Todo list plus 5 / 25 / 45-minute focus sessions |
+| Todo and focus timer | ✅ | Editable todos with dates and archives; 5 / 25 / 45-minute or custom 1–120-minute focus sessions, optionally linked to a todo |
 | Desktop pet (installer) | Released and verified | Transparent pet window, left/right-click care menu, 40%–200% wheel/slider scaling, dragging and persistent size/position. Actual shell and installer checks passed; physical multi-display setups remain untested |
 | College piano rooms | Experimental | Login, paginated rooms and read-only reservations; memory-only session, pending validation with an authorized account |
 | Lychee Garden | ✅ | Companion care and growth, crops, plots, watering, harvest, decorations, daily goals, achievements and a field guide. No purchases, no real-money trading |
 | Save file | ✅ | Fixed local file, survives restarts and port changes, supports export / import and multi-window conflict protection |
-| Launch at login | Partial (Windows only) | Portable and CLI editions retain silent autostart; the installer can disable old entries but does not create new ones. macOS / Linux explicitly report unsupported |
+| Launch at login | Partial (Windows only) | Portable and CLI editions retain silent autostart; the installer registers launch at login only when enabled in Settings (off by default) and removes it on uninstall; the actual launch after signing in remains unverified. macOS / Linux explicitly report unsupported |
 
 **Current limitations:** actual score fields and pagination still need live validation; balance is not integrated. Graduate alternative login and the current timetable have live evidence. The undergraduate page returned 403 for the test account, the official graduate scores page did not render its list, and the college piano service could not be reached. The official browser allowed slot selection and opened the booking confirmation form; no reservation was submitted. Installer room details and subsequent browser connectivity still have unresolved acceptance gaps. Full booking and business-session handoff require validation. See [STATUS.md](STATUS.md).
 
@@ -481,7 +483,7 @@ a wrong password won't overwrite the stored one. You can clear it at any time wi
 
 ## Privacy and security
 
-- **No usage telemetry or analytics**: garden saves and personal notes stay local by default. Opening official school or Feishu pages uses those services. The source preview's Feishu importer requests only the selected document the user can access; personal drafts are not automatically uploaded
+- **No usage telemetry or analytics**: garden saves and personal notes stay local by default. Opening official school or Feishu pages uses those services. The Feishu importer requests only the selected document the user can access; personal drafts are not automatically uploaded
 - **Notes are not credentials**: `notebook-v1.json` and note exports are unencrypted. The Feishu window does not pass its login to the local notebook service; the user's CLI manages its own authorization
 - **Credentials encrypted locally**: Windows DPAPI, undecryptable on another machine or
   under another user account; macOS Keychain; Linux Secret Service. No plain-text fallback —
@@ -522,6 +524,8 @@ python desktop/make_release.py     # produce the release package (only when actu
 ```
 
 `desktop/run-checks.mjs` discovers `desktop/check-*.mjs`, `desktop/electron/check-*.mjs` and `desktop/check_*.py` (release notes, licences, the Windows version resource and so on) and runs them one by one, after a module syntax and link check (`desktop/module-links.mjs`). It prints a summary of failures and exits non-zero if any failed; add `--only-node` to run just the Node checks. A new check is picked up as long as it is named `check-*.mjs` or `check_*.py` and placed in one of those directories, so there is no list to update.
+
+The second release audit added reproducible property-based tests and fixed the issues they exposed. Verification, PRs and release assets are tracked in [STATUS section 67](STATUS.md#s67). beta0.9.4 is not yet published; downloads currently point to beta0.9.3 CI assets.
 
 `python desktop/electron/smoke_installer.py` installs, reopens, reinstalls and uninstalls the final package only on a disposable GitHub Windows runner. It must not be run as an installation check on a development machine. PR and tag workflows retain all build and installer checks; release assets are published only after they succeed.
 

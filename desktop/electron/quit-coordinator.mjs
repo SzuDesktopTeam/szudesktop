@@ -42,9 +42,9 @@ export function createQuitCoordinator({app,dialog,getMainWindow,showMainWindow,w
       }
       quitting=true;
       // Close our renderer first so its event stream cannot delay Go's graceful shutdown.
-      await closeWindows();
-      try{await stopEngine();}
-      finally{quitReady=true;app.quit();}
+      try{await closeWindows();}catch{}
+      try{await stopEngine();}catch{}
+      quitReady=true;app.quit();
     })();
   }
   return {isQuitting:()=>quitting,requestRendererSave,prepared,sessionEnd,beforeQuit};
