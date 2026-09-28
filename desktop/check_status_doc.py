@@ -1,6 +1,6 @@
 """文档锚点与 STATUS 标题检查：python desktop/check_status_doc.py
 
-README 中英两版、CHANGELOG、SECURITY、CONTRIBUTING 都深链到 docs/STATUS.md 的某一节，
+README 中英两版、CHANGELOG、SECURITY、CONTRIBUTING 和 docs/guide/ 使用指南都深链到 docs/STATUS.md 的某一节，
 文件内部也有不少 `#锚点` 跳转。STATUS 以前把「未发布」「源码候选」这类会变的状态写在
 标题里，一改标题，按标题生成的锚点就变，外部链接悄无声息地断掉；已经公开发布的章节
 标题还挂着「未发布」，读者会误判状态（见 STATUS 开头的「标题与链接」约定）。
@@ -31,6 +31,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATUS = "docs/STATUS.md"
 # 被检查的文件（仓库相对路径）。不存在的跳过，方便以后增删。
 DOCS = ["README.md", "docs/README_en.md", "CHANGELOG.md", STATUS, "SECURITY.md", "CONTRIBUTING.md"]
+# 使用指南按目录收录：新增页面放进来就会被检查，不用改这里。
+GUIDE = "docs/guide"
 # 仓库自己的 GitHub 地址：写成绝对链接的深链也按仓库内文件核对。
 REPO_URL = re.compile(r"^https://github\.com/SzuDesktopTeam/szudesktop/(?:blob|tree)/[^/]+/(.+)$", re.I)
 
@@ -154,7 +156,9 @@ def check_docs(docs):
 
 def load(root):
     docs = {}
-    for rel in DOCS:
+    guide = os.path.join(root, *GUIDE.split("/"))
+    pages = sorted(GUIDE + "/" + name for name in os.listdir(guide) if name.endswith(".md")) if os.path.isdir(guide) else []
+    for rel in DOCS + pages:
         path = os.path.join(root, *rel.split("/"))
         if os.path.isfile(path):
             with open(path, encoding="utf-8") as handle:
