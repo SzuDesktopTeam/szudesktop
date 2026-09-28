@@ -288,8 +288,9 @@ class Smoke:
                                 stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
         self.running.append(proc)
         log.close()
-        # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；Rosetta 下更慢，真卡死仍会超时报错。
-        deadline = time.monotonic() + 180
+        # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；真卡死仍会超时报错。
+        # Rosetta 下整套首开冒烟在 CI 上就要 180 秒上下（原生约 20 秒），总时限随等待倍数一起放宽。
+        deadline = time.monotonic() + (540 if self.wait_scale else 180)
         while not report.exists() and time.monotonic() < deadline:
             if proc.poll() is not None:
                 raise RuntimeError(label + ": app exited (%s) before its rendered-page report" % proc.returncode)
