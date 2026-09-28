@@ -263,6 +263,9 @@ class Smoke:
         self.app = root / "应用 副本" / (PRODUCT + ".app")
         self.engine = ROOT / "dist" / ("szudesktop-darwin-" + GO_ARCH[args.arch])
         self.running = []
+        # Rosetta 转译下界面往返明显变慢（CI 上一次首开冒烟就要约 2 分钟），宠物菜单存档偶尔超过 6 秒；
+        # 只放宽这一种情况的等待，原生运行和 Windows 冒烟仍按原来的时限。
+        self.wait_scale = "4" if args.arch == "x64" and smoke_macos.native_arch() == "arm64" else None
 
     def env(self, report, shot, quit_after, trace):
         env = {key: value for key, value in os.environ.items()
@@ -272,6 +275,8 @@ class Smoke:
             env["SZU_SMOKE_QUIT_AFTER_REPORT"] = "1"
         if trace:
             env["SZU_SMOKE_QUIT_TRACE"] = str(trace)
+        if self.wait_scale:
+            env["SZU_SMOKE_WAIT_SCALE"] = self.wait_scale
         return env
 
     def start(self, label, quit_after=True, trace=None):

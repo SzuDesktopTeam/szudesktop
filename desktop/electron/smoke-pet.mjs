@@ -27,8 +27,10 @@ function evalWithin(win,label,source,ms=15000){
   return Promise.race([win.webContents.executeJavaScript(source),timeout]).finally(()=>clearTimeout(timer));
 }
 
+// 慢环境（Apple 芯片上经 Rosetta 跑 x64 包）由冒烟脚本放宽等待；没设置时仍是 6 秒，Windows 冒烟不受影响。
+const WAIT_SCALE=Math.max(1,Number(process.env.SZU_SMOKE_WAIT_SCALE)||1);
 async function until(read, message) {
-  const end=Date.now()+6000;
+  const end=Date.now()+6000*WAIT_SCALE;
   while(Date.now()<end){if(await read())return;await new Promise(r=>setTimeout(r,50));}
   throw Error(message);
 }
