@@ -42,12 +42,16 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.3"
+BASELINE_VERSION = "beta0.9.4"
+# Checked against the beta0.9.4 tag (00f1c00): desktop/electron/package-lock.json
+# pins electron 44.4.5, and the release asset digest reported by GitHub for
+# szuDesktop-Setup-0.9.4.exe equals this SHA-256.
 BASELINE_ELECTRON = "44.4.5"
-BASELINE_SHA256 = "581d6b99370ebe7c5ecb1ae33d078599a7d576d313425341fb6035da0c869a02"
+BASELINE_SHA256 = "c21e771aa8ac5097852fc8e1e18a9df1bb4a8b5a5f97e193201066ff7a2366da"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
-# A fresh beta0.9.3 save carries exactly these companions, in this order; the
-# turtle is retired to the "old friends" of saves that already had it.
+# A fresh beta0.9.4 save carries exactly these companions, in this order (its
+# pet-catalog.mjs AVAILABLE_PETS, same five as beta0.9.3); the turtle is retired
+# to the "old friends" of saves that already had it.
 BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "pingu", "skipper"]
 # Engines since beta0.9.3 announce a per-run session token ("szuDesktop 会话")
 # and refuse /api/* calls without it; older engines print no such line and
@@ -311,7 +315,7 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             check(label + ": scale survives restart or upgrade", pet["initialScale"] == initial_scale)
             # Candidate-only expectations: they compare the packaged app with the
             # current source (catalog, penguins, click-through), which the published
-            # baseline may legitimately predate even though beta0.9.3 reports them too.
+            # baseline may legitimately predate even though beta0.9.3 and later report them too.
             if version != BASELINE_VERSION:
                 check(label + ": catalog companion selection", pet.get("petSelection") is True and pet.get("petSelectionSync") is True)
                 check(label + ": packaged roster matches source catalog", pet.get("defaultCompanions") == default_companions())
@@ -460,10 +464,11 @@ def seed_upgrade_data(engine):
     game["stats"].update({"focus": 3, "minutes": 75, "tasks": 1})
     game["pets"][0].update({"name": "留住荔宝", "xp": 125, "hunger": 100})
     game["pets"][1].update({"name": "留住栗栗", "xp": 75})
-    # The turtle is retired from new saves (a fresh beta0.9.3 save has none), but
-    # saves from before beta0.9.3 still carry it under "old friends". Keep that
-    # path covered: add one shaped like the baseline's own pet records, and the
-    # upgrade must keep it intact, in place, with its name and progression.
+    # The turtle is retired from new saves (fresh saves since beta0.9.3, the
+    # baseline's included, have none), but saves from before beta0.9.3 still
+    # carry it under "old friends". Keep that path covered: add one shaped
+    # like the baseline's own pet records, and the upgrade must keep it intact,
+    # in place, with its name and progression.
     turtle = json.loads(json.dumps(game["pets"][2]))
     turtle.update({"species": "turtle", "name": "留住阿青", "xp": 40, "say": "", "saidAt": 0})
     game["pets"].append(turtle)
@@ -560,8 +565,9 @@ def main():
                 check("upgrade preserves " + file.name + " byte for byte before opening", file.read_bytes() == contents)
             check("installed Go engine matches final build", sidecar.read_bytes()
                   == (ROOT / "dist" / "szudesktop-windows-amd64.exe").read_bytes())
-            # beta0.9.3 already ships only these two Chromium locales; the upgrade
-            # must keep the trimmed set and never bring the others back.
+            # Releases since beta0.9.3 (the baseline included) ship only these two
+            # Chromium locales; the upgrade must keep the trimmed set and never
+            # bring the others back.
             locales = install_dir / "locales"
             check("only zh-CN and en-US Chromium locales installed", locales.is_dir()
                   and sorted(path.name for path in locales.iterdir()) == EXPECTED_LOCALES)

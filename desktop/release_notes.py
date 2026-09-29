@@ -41,17 +41,31 @@ DOWNLOADS = """### 下载
 ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版（Electron 窗口），旁边是同名 `.sha256` 校验文件\n"
 
 # macOS 版按芯片各一个 DMG（electron-builder.yml 的 dmg.artifactName），各带同名 .sha256。
-# MAC_SINCE 既是 DMG 发布的开关，也是第一个带 DMG 的版本号。B1–B9 真机验收（docs/STATUS.md 68.2）全部通过之前
-# 保持 None：下载清单不列 DMG，release.yml 也不上传、不等 macOS 的 job，Windows 版照常发布。验收通过后，
-# 在同一个 PR 里把它设成那一版的版本号，并按 release.yml 里 Intel 冒烟 job 上方的注释接上 needs、下载和附件；
-# 回看更早的版本不会虚构附件。check_release_notes.py 核对这几处与 STATUS 68.2 一致。
-MAC_SINCE = None
+# MAC_SINCE 既是 DMG 发布的开关，也是第一个带 DMG 的版本号：这一版及以后的下载清单列出两个 DMG，
+# release.yml 的 release job 等 macOS 打包和真 Intel 冒烟两个 job、上传两个 DMG；回看更早的版本不会虚构附件。
+# 原定 B1–B9 真机验收（docs/STATUS.md 68.2）全部通过才开启；维护者 2026-09-29 决定 macOS 版以预览版随 beta0.9.5
+# 发布（STATUS 68.4），所以从 0.9.5 开启，真机验收仍待做。check_release_notes.py 核对这里、release.yml 与 STATUS 一致。
+MAC_SINCE = (0, 9, 5)
+# 预览版开关：值是 STATUS 里记录维护者预览版决定那一节的锚点（<a id="…"></a>）。68.2 的 B1–B9 还有没通过的，
+# 它就必须指向那条决定，每一版的发布说明都带上下面的预览版说明；B1–B9 全部通过后改回 None，说明随之去掉。
+# check_release_notes.py 两个方向都核对：有待验收的项却没开、全部通过了还开着，都会失败。
+MAC_PREVIEW = "s68-4"
 MAC_DOWNLOADS = (
     "- `szuDesktop-__SEMVER__-mac-arm64.dmg` — macOS 版，Apple 芯片（M1 及更新）选这个，旁边是同名 `.sha256` 校验文件\n"
     "- `szuDesktop-__SEMVER__-mac-x64.dmg` — macOS 版，Intel 处理器选这个，旁边是同名 `.sha256` 校验文件\n"
 )
 # 没有公证，第一次打开会被系统拦下；不写清怎么放行，用户只会以为包坏了。
 MAC_NOTE = "\nmacOS 版未经 Apple 公证，需要 macOS 13 或更高版本；首次打开时到「系统设置 → 隐私与安全性」点「仍要打开」。\n"
+# 预览版说明紧跟在放行步骤之后：哪些还没有人在真机上验过（对应 68.2 的 B1–B9）、遇到问题去哪里说。
+# 这一版的 CHANGELOG 正文会写得更细；这里是下载清单旁的简短提示，之后的版本正文不再重复时也不会漏掉。
+# 反馈目前只有 GitHub Issues；不需要 GitHub 账号的渠道还没定（STATUS 1.1），定了再改这里。
+MAC_PREVIEW_NOTE = (
+    "\nmacOS 版目前是预览版：已通过自动化的打包、安装和启动检查，但浏览器下载后的首次放行、注销与登录时启动、"
+    "系统通知、钥匙串、多显示器、macOS 13 和 14、校园网里的「本地网络」授权等，还没有人在真机上逐项验收"
+    "（[进度](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/STATUS.md#s68-2)）。"
+    "遇到问题请在 [GitHub Issues](https://github.com/SzuDesktopTeam/szudesktop/issues/new/choose) 选「问题反馈」"
+    "（需要 GitHub 账号），写明芯片（Apple 芯片或 Intel）和 macOS 版本。\n"
+)
 
 # beta0.9.3 起，单文件 EXE 与每个命令行版也各带同名 .sha256；更早的版本没有，不能虚构。
 ALL_CHECKSUMS_SINCE = (0, 9, 3)
@@ -139,13 +153,15 @@ def render(text, version, release=False):
         downloads = downloads.replace("### 下载\n\n", "### 下载\n\n" + installer)
     if mac:
         downloads += MAC_NOTE
+        if MAC_PREVIEW:
+            downloads += MAC_PREVIEW_NOTE
     body = extract(text, version, release)
-    # 这一版不发 DMG，正文却在介绍 DMG：发布页上会写着不存在的附件，等于把没验收过的包说成能下载。
+    # 这一版不发 DMG，正文却在介绍 DMG：发布页上会写着不存在的附件，等于把没发布的包说成能下载。
     # 只在打 tag 时拦（test job 第一步就会失败），「未发布」一节平时照常可以先写好 macOS 的条目。
     if release and not mac and ".dmg" in body:
         raise NotesError(
-            "CHANGELOG.md 的 `## %s` 一节提到了 .dmg，但这一版不发布 DMG（desktop/release_notes.py 的 MAC_SINCE 没有开启）："
-            "B1–B9 真机验收通过之前，把 macOS 桌面版的条目留在「未发布」一节；验收通过后按 CONTRIBUTING.md「发布」一节开启 DMG 发布"
+            "CHANGELOG.md 的 `## %s` 一节提到了 .dmg，但这一版不发布 DMG（desktop/release_notes.py 的 MAC_SINCE 没有覆盖这个版本）："
+            "把 macOS 桌面版的条目留在「未发布」一节，或按 CONTRIBUTING.md「发布」一节开启 DMG 发布"
             % version)
     return body + "\n\n---\n\n" + downloads
 

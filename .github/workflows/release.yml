@@ -499,12 +499,14 @@ jobs:
 
   # Rosetta 会掩盖只在 Intel 上出现的问题，发布前要在真 Intel 机器上跑一遍 x64 包。
   # 这种 runner 排队慢、预计 2027 年 8 月前后下线，所以只在推到 main、打 tag 和手动触发时运行，不卡 PR。
+  # 打 tag 是 push 事件，这个 job 一定会跑；release 在 needs 里等它，它失败或被跳过时 release 也不会运行。
+  # 这里不要加 continue-on-error，也不要把 if 改得会跳过 tag：check_release_notes.py 会拦下。
   #
-  # DMG 暂不进 release：B1–B9 真机验收（docs/STATUS.md 68.2）全部通过之前不发布带 DMG 的版本，
-  # 这三个 macOS job 也就不在 release 的 needs 里，Windows 版照常发布，不必等它们（test-macos 仍在 needs 里）。
-  # 验收通过后在同一个 PR 里开启：把 build-desktop-electron-macos 和本 job 加进 release 的 needs，
-  # 下载 szudesktop-electron-macos 到 dist，files 里加两个 DMG 及其 .sha256，并把 desktop/release_notes.py 的
-  # MAC_SINCE 设成那一版；check_release_notes.py 核对这几处与 STATUS 68.2 一致，缺一处就失败。
+  # DMG 从 beta0.9.5 起随版本发布（维护者 2026-09-29 决定以预览版发布，B1–B9 真机验收仍待做，
+  # 见 docs/STATUS.md 68.4）：build-desktop-electron-macos 和本 job 都在 release 的 needs 里，release 下载
+  # szudesktop-electron-macos 到 dist，附件里有两个 DMG 及其 .sha256；desktop/release_notes.py 的 MAC_SINCE 是 (0, 9, 5)。
+  # check_release_notes.py 核对这几处与 STATUS 68.2 / 68.4 一致，缺一处就失败。
+  # 这个镜像下线时删掉本 job，同时从 release 的 needs 里去掉（见 CONTRIBUTING.md「发布」）。
   smoke-desktop-electron-macos-intel:
     needs: build-desktop-electron-macos
     if: github.event_name != 'pull_request'
@@ -553,10 +555,14 @@ jobs:
   release:
     # test-macos 也在里面：它守着 macOS 凭据这条路。beta0.7.1 / beta0.7.2 之所以
     # 带着「macOS 存不了凭据」发出去，就是因为当时这个 job 失败不阻断发布（F26）。
-    needs: [build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos]
+    # 两个 DMG 要等 arm64 与 x64（Rosetta）的打包冒烟、再加真 Intel 机器上的冒烟都通过才发。
+    # 下面的 if 没有写 always() 之类的状态函数，GitHub 会隐含加上 success()：needs 里任何一个失败、取消或被跳过，都不发布。
+    needs: [build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos, build-desktop-electron-macos, smoke-desktop-electron-macos-intel]
     if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/beta')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 两个 DMG 各一百多 MB，附件总量比只有 Windows 版时多了一倍多；给下载和上传留足时间，
+    # 免得超时停在半路，留下附件不全的 Release。
+    timeout-minutes: 25
     # 整个 workflow 里只有这里能写仓库。
     permissions:
       contents: write
@@ -587,6 +593,12 @@ jobs:
         with:
           name: szunet-cli
           path: dist
+      # 两个 DMG 与各自的 .sha256（.sha256 里是不带路径的文件名，下载到 dist 后在 dist 里核对）。
+      # 裸的 szudesktop-darwin-* 引擎只在 job 之间传递，不下载、不发布。
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: szudesktop-electron-macos
+          path: dist
       - name: 上传前核对全部校验文件
         working-directory: dist
         run: sha256sum --strict -c ./*.sha256
@@ -611,6 +623,10 @@ jobs:
             dist/szunet-linux-amd64.sha256
             dist/szunet-linux-arm64
             dist/szunet-linux-arm64.sha256
+            dist/szuDesktop-*-mac-arm64.dmg
+            dist/szuDesktop-*-mac-arm64.dmg.sha256
+            dist/szuDesktop-*-mac-x64.dmg
+            dist/szuDesktop-*-mac-x64.dmg.sha256
           fail_on_unmatched_files: true
           # 按 action 文档：提供了 body 时，body 在前，自动生成的 compare 链接追加在后
           generate_release_notes: true
