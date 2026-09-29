@@ -19,9 +19,9 @@
 
 桌面应用支持 Windows 与 macOS（macOS 为预览版）· Linux 可下载校园网命令行 szunet（见[下载](#下载)）
 
-**[下载 Windows 安装版 · beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.4/szuDesktop-Setup-0.9.4.exe)**
+**[下载 Windows 安装版 · beta0.9.5](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-Setup-0.9.5.exe)**
 
-macOS 预览版（Apple 芯片与 Intel 各一个 DMG）从 beta0.9.5 起在[发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)提供，第一次打开要手动放行，见[下载](#下载)
+macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-x64.dmg)，第一次打开要手动放行，见[下载](#下载)
 
 [下载](#下载) · [功能](#功能) · [已知限制](#已知限制) · [安全与隐私](#安全与隐私) · [使用指南](docs/guide/README.md) · [常见问题](#常见问题) · [反馈与建议](https://github.com/SzuDesktopTeam/szudesktop/issues)
 
@@ -85,9 +85,9 @@ macOS 预览版（Apple 芯片与 Intel 各一个 DMG）从 beta0.9.5 起在[发
 
 ## 下载
 
-Windows 用户直接下载上方的安装版，运行安装程序后打开 szuDesktop。安装版自带窗口运行时，不需要另装浏览器或开发环境。macOS 预览版从 beta0.9.5 起提供，Mac 用户在发布页按芯片选择对应的 DMG（见下表）。其他形式也都在[发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)。
+Windows 用户直接下载上方的安装版，运行安装程序后打开 szuDesktop。安装版自带窗口运行时，不需要另装浏览器或开发环境。macOS 预览版自 beta0.9.5 起提供，Mac 用户按芯片选择对应的 DMG（见下表）。其他形式也都在[发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
-当前版本：**beta0.9.4**（2026-09-28 发布，预发布）· 安装版 `szuDesktop-Setup-0.9.4.exe`（约 108 MB）· 便携版 `szudesktop-beta0.9.4-windows-amd64.zip`（约 6.5 MB）· [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)
+当前版本：**beta0.9.5**（2026-09-29 发布，预发布）· 安装版 `szuDesktop-Setup-0.9.5.exe`（约 98 MB）· 便携版 `szudesktop-beta0.9.5-windows-amd64.zip`（约 6.5 MB）· macOS 预览版 `szuDesktop-0.9.5-mac-arm64.dmg`（约 123 MB）与 `szuDesktop-0.9.5-mac-x64.dmg`（约 130 MB）· [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.5)
 
 | 形式 | 文件 | 怎么打开 | 桌面伙伴与托盘 |
 | :-- | :-- | :-- | :-- |
@@ -98,7 +98,7 @@ Windows 用户直接下载上方的安装版，运行安装程序后打开 szuDe
 | macOS 命令行 | `szunet-darwin-amd64`（Intel）、`szunet-darwin-arm64`（Apple 芯片） | 在终端中运行，只做校园网认证与诊断 | 没有 |
 | Linux 命令行 | `szunet-linux-amd64`、`szunet-linux-arm64` | 在终端中运行，只做校园网认证与诊断 | 没有桌面应用 |
 
-安装版和 DMG 的文件名只写数字版本号，便携版 ZIP 写完整的发布标签，以上面「当前版本」一行和发布页上的实际文件名为准。命令行 szunet 每个平台一个单文件，约 6.3–7.1 MB；装好后占用多少磁盘还没有实测。
+安装版和 DMG 的文件名只写数字版本号，便携版 ZIP 写完整的发布标签，以上面「当前版本」一行和发布页上的实际文件名为准。命令行 szunet 每个平台一个单文件，约 6.4–7.2 MB；装好后占用多少磁盘还没有实测。
 
 **macOS 版是预览版**，需要 macOS 13 或更高版本。Apple 芯片（M1 及更新）选 `mac-arm64.dmg`，Intel 处理器选 `mac-x64.dmg`，在「苹果菜单 → 关于本机」里看「芯片」或「处理器」一栏。应用未经 Apple 公证，第一次打开会被系统拦下：macOS 15 及以后，到「系统设置 → 隐私与安全性」底部点「仍要打开」；macOS 13 和 14，在「应用程序」里按住 Control 点按 szuDesktop，选「打开」。每次更新到新版本都要再放行一次。一部分行为还没在真机上验收，见[已知限制](#已知限制)；完整步骤见[下载、安装与更新](docs/guide/install.md)。
 
@@ -193,7 +193,7 @@ szunet logout        # 注销下线
 
 ## 更新日志
 
-当前版本 **beta0.9.4**（2026-09-28）在 beta0.9.3 的基础上修正问题：登录失败的提示不再带出账号密码，认证失败也不会误显示成成功；损坏的庭院存档恢复得更可靠；两个窗口冲突时保存状态保持一致；窗口关闭异常时也会尝试完整退出。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)，历次下载见 [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases)。
+当前版本 **beta0.9.5**（2026-09-29）第一次提供 macOS 桌面版预览（Apple 芯片与 Intel 各一个 DMG，真机验收尚未进行）。Windows 版同步更新：人在校外不再误报「校园认证待确认」，网络诊断能认出代理软件接管了学校域名，存档多留最近 3 个使用日的备份，第一次打开更顺，安装包小了约 10 MB，并新增中文使用指南。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)，历次下载见 [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
 ## 致谢
 
