@@ -193,11 +193,15 @@ check("发布模式下标签与 VERSION 不一致时报错",
       lambda: expect_error(lambda: release_notes.check_release_tag("beta0.9.4", "beta0.9.3"), "标签不一致"))
 
 
-# ───── macOS DMG（MAC_SINCE 开关）─────
+# ───── macOS DMG（MAC_SINCE 与 MAC_PREVIEW 开关）─────
 # DMG 的名字写在三处：electron-builder.yml 的 dmg.artifactName（打包）、release.yml 的附件清单（上传）、
-# 这里的下载说明（给用户看）。B1–B9 真机验收（STATUS 68.2）通过之前 MAC_SINCE 为 None：release 不等 macOS 的 job、
-# 不上传 DMG，说明里也不列，Windows 版照常发布。开启时这几处要在同一个 PR 里一起改，STATUS 68.2 也必须全部通过；
-# 任何一处没跟上，发布页上就会写着不存在的文件，或者发出没验收过的包。
+# 这里的下载说明（给用户看）。开关、release.yml 与 STATUS 要在同一个 PR 里一起改：
+# - MAC_SINCE 为 None：release 不等 macOS 的 job、不上传 DMG，说明里也不列，Windows 版照常发布。
+# - MAC_SINCE 开启：release 的 needs 有打包和真 Intel 冒烟两个 job，下载并上传两个 DMG 及其 .sha256；
+#   这两个 job 不能在 tag 上被跳过，也不能 continue-on-error，否则没通过冒烟的 DMG 也会发出去。
+# - STATUS 68.2 的 B1–B9 还有没通过的：MAC_PREVIEW 必须指向维护者的预览版决定（STATUS 里写明预览版和起始版本），
+#   发布说明带预览版说明；全部通过后 MAC_PREVIEW 改回 None，说明随之去掉。
+# 任何一处没跟上，发布页上就会写着不存在的文件，或者把没人验收过的包说成验收过。
 import contextlib  # noqa: E402
 import fnmatch  # noqa: E402
 import os  # noqa: E402
@@ -206,17 +210,24 @@ import re  # noqa: E402
 MAC_BODY = "## beta0.9.5\n\n- macOS 版\n"
 # 开启 DMG 发布时 release 必须等的两个 job：打包加 Apple 芯片冒烟、真 Intel 机器冒烟。
 MAC_JOBS = ("build-desktop-electron-macos", "smoke-desktop-electron-macos-intel")
+# 这两个 job 的 job 级 if 只允许排除 PR（Intel runner 排队慢，不卡 PR）；打 tag 是 push 事件，照样运行。
+MAC_JOB_IF = {"github.event_name != 'pull_request'"}
+# 维护者 2026-09-29 的预览版决定在 STATUS 里的锚点（68.4）。
+PREVIEW_DECISION = "s68-4"
+KEEP = object()
 
 
 @contextlib.contextmanager
-def mac_since(value):
-    """临时改掉 DMG 发布开关，核对开启（或关闭）时的渲染结果；结束时还原。"""
-    saved = release_notes.MAC_SINCE
+def mac_since(value, preview=KEEP):
+    """临时改掉 DMG 发布开关（和预览版开关），核对开启（或关闭）时的渲染结果；结束时还原。"""
+    saved = release_notes.MAC_SINCE, release_notes.MAC_PREVIEW
     release_notes.MAC_SINCE = value
+    if preview is not KEEP:
+        release_notes.MAC_PREVIEW = preview
     try:
         yield
     finally:
-        release_notes.MAC_SINCE = saved
+        release_notes.MAC_SINCE, release_notes.MAC_PREVIEW = saved
 
 
 def read_repo(*parts):
@@ -236,12 +247,16 @@ def dmg_names(semver):
     return names
 
 
-def release_job(workflow):
-    """release.yml 里 release job 的原文，到下一个 job 或文件末尾为止。"""
+def job_text(workflow, name):
+    """release.yml 里某个 job 的原文，到下一个 job 或文件末尾为止（下一个 job 上方的注释也算在里面）。"""
     lines = workflow.splitlines()
-    start = lines.index("  release:")
+    start = lines.index("  %s:" % name)
     end = next((i for i in range(start + 1, len(lines)) if re.fullmatch(r"  [a-z][a-z0-9-]*:", lines[i])), len(lines))
     return "\n".join(lines[start:end])
+
+
+def release_job(workflow):
+    return job_text(workflow, "release")
 
 
 def release_files(job):
@@ -264,6 +279,18 @@ def release_needs(job):
     return [name.strip() for name in found.group(1).split(",")]
 
 
+def job_gate_problems(workflow, name):
+    """release 等的 macOS job 在 tag 上一定运行，失败就算失败。"""
+    code = "\n".join(line for line in job_text(workflow, name).splitlines() if not line.lstrip().startswith("#"))
+    problems = []
+    condition = re.search(r"^    if: (.+?)\s*$", code, re.M)
+    if condition and condition.group(1) not in MAC_JOB_IF:
+        problems.append("%s 的 if（%s）可能在 tag 上跳过它：release 会跟着被跳过，或者要改成绕过它才能发布" % (name, condition.group(1)))
+    if re.search(r"^\s+continue-on-error:(?!\s*false\s*$)", code, re.M):
+        problems.append("%s 里有 continue-on-error：失败会被当成成功，没通过冒烟的 DMG 也会发出去" % name)
+    return problems
+
+
 def b_status(status):
     """STATUS 68.2 表格里 B1–B9 各行的「状态」列。"""
     start = status.index('<a id="s68-2"></a>')
@@ -276,8 +303,18 @@ def b_status(status):
     return rows
 
 
-def mac_release_problems(since, workflow, status):
-    """DMG 发布开关与 release.yml、STATUS 68.2 是否一致；返回问题清单，空表示一致。"""
+def status_section(status, anchor):
+    """STATUS 里从 <a id="anchor"></a> 到下一个显式锚点的原文；没有这个锚点返回 None。"""
+    marker = '<a id="%s"></a>' % anchor
+    start = status.find(marker)
+    if start < 0:
+        return None
+    end = status.find('<a id="', start + len(marker))
+    return status[start:] if end < 0 else status[start:end]
+
+
+def mac_release_problems(since, preview, workflow, status):
+    """DMG 发布开关、预览版开关与 release.yml、STATUS 68.2 / 预览版决定是否一致；返回问题清单，空表示一致。"""
     job = release_job(workflow)
     files, needs = release_files(job), release_needs(job)
     problems = []
@@ -286,6 +323,8 @@ def mac_release_problems(since, workflow, status):
         if "szudesktop-electron-macos" in job:
             problems.append("MAC_SINCE 没有开启，release job 却下载了 DMG 产物")
         problems += ["MAC_SINCE 没有开启，release 却在等 %s：Windows 版会被 macOS 的 job 卡住" % j for j in MAC_JOBS if j in needs]
+        if preview:
+            problems.append("MAC_SINCE 没有开启，MAC_PREVIEW 却开着")
         return problems
     for name in dmg_names(".".join(map(str, since))):
         for asset in (name, name + ".sha256"):
@@ -294,13 +333,38 @@ def mac_release_problems(since, workflow, status):
     if not re.search(r"^\s+name: szudesktop-electron-macos$", job, re.M):
         problems.append("release job 没有下载 szudesktop-electron-macos")
     problems += ["release 的 needs 里没有 " + j for j in MAC_JOBS if j not in needs]
+    for j in MAC_JOBS:
+        problems += job_gate_problems(workflow, j)
     rows = b_status(status)
     if sorted(rows) != sorted("B%d" % i for i in range(1, 10)):
         problems.append("STATUS 68.2 应当正好是 B1–B9 九行，读到 " + "、".join(sorted(rows)))
     pending = sorted(k for k, v in rows.items() if not v.startswith("通过"))
-    if pending:
-        problems.append("STATUS 68.2 还有没通过的真机验收：" + "、".join(pending))
+    if pending and not preview:
+        problems.append("STATUS 68.2 还有没通过的真机验收（%s），MAC_PREVIEW 却没有指向维护者的预览版决定：发布说明不会说明这是预览版"
+                        % "、".join(pending))
+    elif pending:
+        decision = status_section(status, preview)
+        version = ".".join(map(str, since))
+        if decision is None:
+            problems.append("MAC_PREVIEW 指向的 STATUS 锚点 %s 不存在：没有记录维护者的预览版决定" % preview)
+        elif "预览版" not in decision or version not in decision:
+            problems.append("STATUS 的 %s 一节没有写明 macOS 以预览版从 %s 起发布" % (preview, version))
+    elif preview:
+        problems.append("STATUS 68.2 已全部通过，MAC_PREVIEW 还开着：发布说明会继续说还没有人在真机上验收")
     return problems
+
+
+def unwire_mac_release(workflow):
+    """从接好的 release.yml 里撤掉 DMG 发布（needs、下载、附件），只用来核对上面的检查认得出没接好的样子。"""
+    job = release_job(workflow)
+    stripped = job.replace(", " + ", ".join(MAC_JOBS) + "]", "]")
+    stripped = re.sub(r"\n      - uses: actions/download-artifact@[^\n]*\n        with:\n"
+                      r"          name: szudesktop-electron-macos\n          path: dist(?=\n)", "", stripped)
+    stripped = re.sub(r"\n +dist/szuDesktop-\*-mac-[a-z0-9]+\.dmg(?:\.sha256)?(?=\n)", "", stripped)
+    assert stripped != job and "szudesktop-electron-macos" not in stripped and ".dmg" not in stripped \
+        and not any(j in release_needs(stripped) for j in MAC_JOBS), \
+        "release.yml 的 release job 变了，unwire_mac_release 需要跟着改"
+    return workflow.replace(job, stripped)
 
 
 def wire_mac_release(workflow):
@@ -321,35 +385,76 @@ def wire_mac_release(workflow):
     return wired
 
 
+def set_b_status(status, value):
+    """把 STATUS 68.2 里 B1–B9 的状态列都改成 value（只用于核对检查本身）。"""
+    return re.sub(r"(\|\s*B\d+\s*\|.*\|\s*)(?:待验收|通过[^|]*?)(\s*\|\s*)$", r"\g<1>%s\2" % value, status, flags=re.M)
+
+
 def test_mac_switch_matches_workflow_and_status():
     workflow, status = read_repo(".github", "workflows", "release.yml"), read_repo("docs", "STATUS.md")
-    problems = mac_release_problems(release_notes.MAC_SINCE, workflow, status)
-    assert not problems, "DMG 发布开关与 release.yml / STATUS 68.2 对不上：" + "；".join(problems)
+    problems = mac_release_problems(release_notes.MAC_SINCE, release_notes.MAC_PREVIEW, workflow, status)
+    assert not problems, "DMG 发布开关与 release.yml / STATUS 对不上：" + "；".join(problems)
 
 
-def test_mac_gate_blocks_until_wired_and_accepted():
+def test_mac_gate_blocks_until_wired_and_decided():
     workflow, status = read_repo(".github", "workflows", "release.yml"), read_repo("docs", "STATUS.md")
-    wired = wire_mac_release(workflow)
-    accepted = re.sub(r"(\|\s*B\d+\s*\|.*\|\s*)待验收(\s*\|\s*)$", r"\1通过\2", status, flags=re.M)
+    pending, accepted = set_b_status(status, "待验收"), set_b_status(status, "通过")
+    assert all(v == "待验收" for v in b_status(pending).values()) and all(v == "通过" for v in b_status(accepted).values())
+    since, preview = (0, 9, 5), PREVIEW_DECISION
+    if release_notes.MAC_SINCE is None:
+        unwired, wired = workflow, wire_mac_release(workflow)
+    else:
+        wired, unwired = workflow, unwire_mac_release(workflow)
+        # 撤掉以后按注释接回去，也要认得出是接好的（以后关掉开关时，这个检查还靠 wire_mac_release）。
+        assert mac_release_problems(since, None, wire_mac_release(unwired), accepted) == [], "按注释接回去以后仍报问题"
     # 只改开关、不接 release.yml：缺附件、缺下载、缺 needs 都要报出来。
-    alone = "；".join(mac_release_problems((0, 9, 5), workflow, accepted))
+    alone = "；".join(mac_release_problems(since, None, unwired, accepted))
     for part in ("不会上传 szuDesktop-0.9.5-mac-arm64.dmg", "不会上传 szuDesktop-0.9.5-mac-x64.dmg.sha256",
                  "没有下载 szudesktop-electron-macos", "needs 里没有 smoke-desktop-electron-macos-intel"):
         assert part in alone, "只开开关时没有报出：" + part
-    # 接好了但真机验收还没做完：必须拦下。
-    if "待验收" in status:
-        assert any("没通过的真机验收" in p for p in mac_release_problems((0, 9, 5), wired, status)), "B 类没通过也放行了 DMG"
-    # 接好、验收全部通过：放行。
-    assert mac_release_problems((0, 9, 5), wired, accepted) == [], "接好且验收通过时不应再报问题"
+    # 接好了、真机验收没做完、也没有预览版决定：必须拦下。
+    assert any("MAC_PREVIEW 却没有指向" in p for p in mac_release_problems(since, None, wired, pending)), "B 类没通过也放行了 DMG"
+    # 指向的决定不存在，或那一节没写预览版：同样拦下。
+    gone = pending.replace('<a id="%s"></a>' % preview, '<a id="%s-gone"></a>' % preview)
+    assert any("不存在" in p for p in mac_release_problems(since, preview, wired, gone)), "决定的锚点不见了也放行"
+    section = status_section(pending, preview)
+    assert section and "预览版" in section, "STATUS 里没有维护者的预览版决定（%s）" % preview
+    vague = pending.replace(section, section.replace("预览版", "试用"))
+    assert any("没有写明" in p for p in mac_release_problems(since, preview, wired, vague)), "决定里没写预览版也放行"
+    # 接好、B 类待验收但有预览版决定：放行（维护者 2026-09-29 的决定）。
+    assert mac_release_problems(since, preview, wired, pending) == [], "有预览版决定时不应再报问题"
+    # 接好、验收全部通过：预览版开关必须关掉，关掉后放行。
+    assert any("还开着" in p for p in mac_release_problems(since, preview, wired, accepted)), "全部通过后仍标预览版时没有报出"
+    assert mac_release_problems(since, None, wired, accepted) == [], "接好且验收通过时不应再报问题"
     # 反过来，没开开关却接上了：同样要报，免得悄悄上传没在说明里写的 DMG。
-    assert len(mac_release_problems(None, wired, status)) >= 3, "没开开关却上传 DMG、等 macOS 的 job 时没有报出"
+    assert len(mac_release_problems(None, None, wired, status)) >= 3, "没开开关却上传 DMG、等 macOS 的 job 时没有报出"
+    assert mac_release_problems(None, None, unwired, status) == [], "没开开关、也没接上时不应报问题"
+    assert any("MAC_PREVIEW 却开着" in p for p in mac_release_problems(None, preview, unwired, status)), "没开 DMG 却开着预览版时没有报出"
+
+
+def test_mac_jobs_run_on_tags():
+    workflow, status = read_repo(".github", "workflows", "release.yml"), read_repo("docs", "STATUS.md")
+    wired = workflow if release_notes.MAC_SINCE is not None else wire_mac_release(workflow)
+    intel = job_text(wired, "smoke-desktop-electron-macos-intel")
+    assert re.search(r"^    if: github\.event_name != 'pull_request'$", intel, re.M), "Intel 冒烟 job 的 if 变了，核对它在 tag 上仍会运行"
+    assert not any(job_gate_problems(wired, j) for j in MAC_JOBS), "；".join(p for j in MAC_JOBS for p in job_gate_problems(wired, j))
+    skip_tags = wired.replace("    if: github.event_name != 'pull_request'\n    runs-on: macos-15-intel",
+                              "    if: github.event_name == 'workflow_dispatch'\n    runs-on: macos-15-intel")
+    assert any("可能在 tag 上跳过" in p for p in job_gate_problems(skip_tags, MAC_JOBS[1])), "Intel 冒烟在 tag 上被跳过时没有报出"
+    soft = wired.replace("    runs-on: macos-15-intel\n", "    runs-on: macos-15-intel\n    continue-on-error: true\n")
+    assert any("continue-on-error" in p for p in job_gate_problems(soft, MAC_JOBS[1])), "Intel 冒烟失败不阻断时没有报出"
+    soft_step = wired.replace("        run: python desktop/electron/smoke_dmg.py --arch arm64\n",
+                              "        run: python desktop/electron/smoke_dmg.py --arch arm64\n        continue-on-error: true\n")
+    assert any("continue-on-error" in p for p in job_gate_problems(soft_step, MAC_JOBS[0])), "DMG 冒烟某一步失败不阻断时没有报出"
+    assert any(p for p in mac_release_problems((0, 9, 5), PREVIEW_DECISION, soft, set_b_status(status, "待验收"))), \
+        "mac_release_problems 没有带上 job 的放行检查"
 
 
 def test_mac_off_keeps_windows_notes():
     with mac_since(None):
         for version in ("beta0.9.5", "v1.0.0", "beta0.9.4"):
             out = release_notes.render("## %s\n\n- 正文\n" % version, version, release=True)
-            assert ".dmg" not in out and "Apple 公证" not in out, version + "：DMG 发布没开启时不能列出 DMG"
+            assert ".dmg" not in out and "Apple 公证" not in out and "预览版" not in out, version + "：DMG 发布没开启时不能列出 DMG"
         # 这一版不发 DMG 而 CHANGELOG 正文在介绍 DMG：打 tag 时拦下；平时预览照常。
         mac_entry = "## beta0.9.5\n\n- macOS 桌面版：Apple 芯片选 `mac-arm64.dmg`\n"
         expect_error(lambda: release_notes.render(mac_entry, "beta0.9.5", release=True), "不发 DMG 的版本正文里写了 DMG")
@@ -380,6 +485,27 @@ def test_mac_note_and_placeholders():
     assert "__" not in out, "DMG 下载清单还留着占位符"
 
 
+def test_mac_preview_note():
+    status = read_repo("docs", "STATUS.md")
+    with mac_since((0, 9, 5), preview=PREVIEW_DECISION):
+        lines = release_notes.render(MAC_BODY, "beta0.9.5", release=True).splitlines()
+        later = release_notes.render("## beta0.9.6\n\n- 正文\n", "beta0.9.6", release=True)
+        before = release_notes.render("## beta0.9.4\n\n- 正文\n", "beta0.9.4", release=True)
+    with mac_since((0, 9, 5), preview=None):
+        accepted = release_notes.render(MAC_BODY, "beta0.9.5", release=True)
+    note = next(i for i, line in enumerate(lines) if line.startswith("macOS 版目前是预览版"))
+    unlock = next(i for i, line in enumerate(lines) if line.startswith("macOS 版未经 Apple 公证"))
+    assert note > unlock, "预览版说明应跟在放行步骤之后"
+    # 维护者要求写明的几项（对应 68.2 的 B1、B6、B5、B7、B3、B8、B9），以及反馈去处和要写的信息。
+    for part in ("浏览器下载后的首次放行", "注销与登录时启动", "系统通知", "钥匙串", "多显示器", "macOS 13 和 14",
+                 "「本地网络」授权", "还没有人在真机上逐项验收", "「问题反馈」", "issues/new/choose", "Apple 芯片或 Intel", "macOS 版本"):
+        assert part in lines[note], "预览版说明缺了「%s」" % part
+    anchors = re.findall(r"docs/STATUS\.md#([\w-]+)\)", lines[note])
+    assert anchors and all('<a id="%s"></a>' % a in status for a in anchors), "预览版说明链接的 STATUS 锚点不存在：%r" % anchors
+    assert "macOS 版目前是预览版" in later, "预览版开关开着时，之后的版本也要带预览版说明"
+    assert "预览版" not in before and "预览版" not in accepted, "没有 DMG 的旧版本、或验收全部通过后，不应再出现预览版说明"
+
+
 def test_no_dmg_before_mac_since():
     with mac_since((0, 9, 5)):
         for version in ("beta0.9.4", "beta0.9.3", "beta0.8.0", "beta0.7.1"):
@@ -396,11 +522,13 @@ def test_dmg_names_match_packaging():
         assert "`%s`" % name in out, "下载说明里的 DMG 名与 dmg.artifactName 的展开结果不一致：" + name
 
 
-check("DMG 发布开关与 release.yml、STATUS 68.2 一致（没开启时 release 不等 macOS 的 job、不上传 DMG）", test_mac_switch_matches_workflow_and_status)
-check("开启 DMG 发布要同时接好 needs、下载与附件，且 B1–B9 全部通过", test_mac_gate_blocks_until_wired_and_accepted)
+check("DMG 发布开关、预览版开关与 release.yml、STATUS 68.2 / 68.4 一致", test_mac_switch_matches_workflow_and_status)
+check("开启 DMG 发布要接好 needs、下载与附件；B1–B9 没全部通过时必须有预览版决定，全部通过后关掉预览版", test_mac_gate_blocks_until_wired_and_decided)
+check("release 等的 macOS job 在 tag 上一定运行，失败不能被当成成功", test_mac_jobs_run_on_tags)
 check("DMG 发布没开启时说明不列 DMG，正文介绍 DMG 的版本打 tag 时被拦下", test_mac_off_keeps_windows_notes)
 check("开启后两个 DMG 紧跟在 Windows 安装包之后，各带 .sha256", test_mac_downloads_follow_installer)
 check("DMG 版本写明未公证、最低 macOS 13 与首次打开的放行步骤，不留占位符", test_mac_note_and_placeholders)
+check("预览版说明写明哪些还没真机验收、怎么反馈，只在预览版开关开着时出现", test_mac_preview_note)
 check("开启后 MAC_SINCE 之前的版本仍不出现 DMG", test_no_dmg_before_mac_since)
 check("DMG 名与 dmg.artifactName 的展开结果一致", test_dmg_names_match_packaging)
 

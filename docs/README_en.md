@@ -8,7 +8,7 @@ Choose a pixel companion, spend a little time focusing, and come back to a harve
 Your everyday campus tools live here too.
 
 <p>
-  <img alt="desktop platform" src="https://img.shields.io/badge/desktop-Windows-4a6fa5?style=flat-square">
+  <img alt="desktop platform" src="https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20preview-4a6fa5?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-2f7d32?style=flat-square">
   <img alt="release" src="https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=c9a227">
 </p>
@@ -17,9 +17,11 @@ Your everyday campus tools live here too.
 
 Unofficial · Built by a student · Not affiliated with Shenzhen University
 
-Desktop app: Windows only · macOS / Linux: campus-network command line szunet (see [Download](#download))
+Desktop app: Windows and macOS (macOS is a preview) · Linux: campus-network command line szunet (see [Download](#download))
 
 **[Download for Windows · beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.4/szuDesktop-Setup-0.9.4.exe)**
+
+The macOS preview (one DMG each for Apple silicon and Intel) is available on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) from beta0.9.5; you need to allow it by hand the first time you open it, see [Download](#download)
 
 [Download](#download) · [Features](#features) · [Known limitations](#known-limitations) · [Privacy and security](#privacy-and-security) · [User guide (Chinese)](guide/README.md) · [FAQ](#faq) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues)
 
@@ -31,12 +33,12 @@ Desktop app: Windows only · macOS / Linux: campus-network command line szunet (
 
 ![Home page: the study-desk entrance and the After-rain Bookshop scene](screenshot-home-daily-preview.png)
 
-- **Keep a companion on your desktop.** Choose Libao (荔宝), Chestnut (栗栗), Xiaobai (小白), Pingu or Skipper to keep you company while you study or work. Click to care for them, drag them where you like and scroll to resize; their names and growth stay on your computer. The desktop companion needs the Windows installer; the portable edition has no standalone desktop companion.
+- **Keep a companion on your desktop.** Choose Libao (荔宝), Chestnut (栗栗), Xiaobai (小白), Pingu or Skipper to keep you company while you study or work. Click to care for them, drag them where you like and scroll to resize; their names and growth stay on your computer. The desktop companion needs the Windows installer or the macOS app; the Windows portable edition has no standalone desktop companion.
 - **Give focus a small reward.** Write a todo, start a 5, 25 or 45-minute focus session (or set your own length), then claim companion growth and garden coins (荔枝币). Grow crops, water them and build up the garden; crops keep growing while you are away.
 - **Keep what you learn in class.** Write notes by course in the Study bookshop, with templates, search and Markdown. When you want to work on them with classmates, open the Feishu shared document linked to the course.
 - **Spend less time hunting for school links.** Read public college notices and the official calendar, open common school services in one place, and run diagnostics when the campus network will not connect.
 
-In the Windows desktop app, the garden, todos, focus sessions and course notes need no school account and work offline.
+In the desktop app (Windows and macOS), the garden, todos, focus sessions and course notes need no school account and work offline.
 
 [Companion room](screenshot-pets-preview.png) · [Course notes](screenshot-study-notes-preview.png) · [Garden construction](screenshot-garden-goal-preview.png)
 
@@ -50,14 +52,14 @@ The app interface and the detailed [user guide](guide/README.md) are currently i
 | :-- | :-- | :-- | :-- |
 | Lychee Garden | ✅ Available | Companion care, four crops, 2048 at the companion table, requests, the market, garden construction, visit stories and postcards, all running offline; no purchases or real-money trading | [Garden and companions](guide/garden.md) |
 | Companions | ✅ Available | Five companions for new saves plus A-Qing (阿青), who stays under “Old friends” (老朋友) in older saves; 648 animation frames and 1,656 dialogue lines (in Chinese). Switch in the companion room or from the desktop companion menu | [Garden and companions](guide/garden.md) |
-| Desktop companion | ✅ Available | Windows installer only: transparent window, left/right-click menu for care and switching companions, 40%–200% wheel scaling, dragging, hiding and a tray icon; size and position are restored after restart | [Garden and companions](guide/garden.md) |
+| Desktop companion | ✅ Available (Windows) · 🧪 Testing (macOS) | Windows installer: transparent window, left/right-click menu for care and switching companions, 40%–200% wheel scaling, dragging, hiding and a tray icon; size and position are restored after restart. The macOS app has the same features with a menu bar icon instead of the tray, but has not been verified on a real Mac; see the “macOS desktop app” row | [Garden and companions](guide/garden.md) |
 | Environments | ✅ Available | Pixel Courtyard, Lakeside Daylight, After-rain Bookshop and Blue-hour Terrace; every page shares the chosen scene. With animation off it shows a still frame, and without 3D support it falls back to Pixel Courtyard | [Garden and companions](guide/garden.md) |
 | Todos and focus | ✅ Available | Todos can be edited, dated, archived and restored; focus sessions last 5 / 25 / 45 minutes or a custom 1–120 minutes and can be linked to a todo. Each completed and claimed minute gives 1 garden coin and 1 growth point | [Study](guide/study.md) |
-| Focus completion notifications | 🧪 Testing | Installer only: turn on focus completion reminders and **Do not disturb** (勿扰) | [Study](guide/study.md) |
+| Focus completion notifications | 🧪 Testing | Windows installer and macOS app: turn on focus completion reminders and **Do not disturb** (勿扰). On the Mac, if a notification cannot be delivered, the desktop companion reminds you with a speech bubble instead | [Study](guide/study.md) |
 | Course notes | ✅ Available | Local text notes: courses created by hand, templates, search, Markdown, trash, page outline, turning a selected sentence into a todo, import/export and whole-notebook backup | [Study](guide/study.md) |
 | Feishu course documents | 🧪 Testing | Each course can link to one Feishu document you have permission to access and open the original page; you can also import a read-only local copy with your own lark-cli. This is not two-way sync | [Study](guide/study.md) |
 | College notices | 🟡 Partial | Of 28 colleges and faculties, 17 can be read in the app (with dates and original links) and the rest link to the official site; notices from Academic Affairs and the Graduate School can also be read in the app. The first visit asks you to choose your college, or you can fill in your college in Settings | [Campus services](guide/campus.md) |
-| Official calendar and teaching week | ✅ Available | Checks the school's calendar page daily and reads new images with the OCR built into Windows; the teaching week can be adjusted by hand, and a failed read keeps the cache and explains why | [Campus services](guide/campus.md) |
+| Official calendar and teaching week | ✅ Available | Checks the school's calendar page daily and reads new images with the text recognition built into the system (both the Windows and macOS apps); the teaching week can be adjusted by hand, and a failed read keeps the cache and explains why | [Campus services](guide/campus.md) |
 | School login | 🧪 Testing | Sign in on the official school page, then return to the app to read that login; it is kept only until you exit the app | [Campus services](guide/campus.md) |
 | Timetable | 🧪 Testing | Reads the undergraduate or graduate timetable according to your programme level; shown only for the current run | [Campus services](guide/campus.md) |
 | Grades and GPA | 🟡 Partial | Paste or import CSV / TSV grades and calculate GPA locally. Online reading after login is still being tested and is not added to GPA automatically; PDF, image and XLSX files are not parsed | [Campus services](guide/campus.md) |
@@ -71,12 +73,13 @@ The app interface and the detailed [user guide](guide/README.md) are currently i
 | Connection diagnostics | ✅ Available | Lists the zone decision, portal reachability, protocol fingerprint, whether a proxy has taken over the school domains, and a conclusion, in both the desktop app and the command line. Off campus it shows a neutral grey note instead of a warning | [Campus network](guide/network.md) |
 | Connect to the campus network at startup | 🧪 Testing | Signs in at most once at startup with the remembered account, skipping when already online or when no sign-in portal is found; can be turned off | [Campus network](guide/network.md) |
 | Command line szunet | 🧪 Testing | Single-file binaries for Windows, macOS and Linux that sign in, sign out, show status, detect the zone, run diagnostics and save the account (in the Keychain on macOS, in Secret Service on Linux) | [Campus network](guide/network.md) |
-| Credential storage | ✅ Available | The desktop app encrypts the campus network account and password with Windows DPAPI. It saves them only after a successful sign-in with **Remember account and password after successful sign-in** (认证成功后记住账号密码) ticked; without a system secure store it refuses to save and never writes plain text | [Data and privacy](guide/data-and-privacy.md) |
+| Credential storage | ✅ Available (Windows) · 🧪 Testing (macOS) | The Windows desktop app encrypts the campus network account and password with DPAPI, and the macOS app stores them in the system Keychain (saving and reading them on a real Mac has not been verified yet). It saves them only after a successful sign-in with **Remember account and password after successful sign-in** (认证成功后记住账号密码) ticked; without a system secure store it refuses to save and never writes plain text | [Data and privacy](guide/data-and-privacy.md) |
 | Saves and backups | ✅ Available | The garden and notes are saved separately on this computer, and a damaged save is restored from the previous copy automatically; daily backups of the last 3 days you used the app are kept as well. Export and import are available, and multiple windows do not overwrite each other; exported saves contain no campus network account or password | [Data and privacy](guide/data-and-privacy.md) |
 | Feedback and diagnostic report | ✅ Available | Copy your version and system details, or a diagnostic report that contains only structure (zone, portals, which fields school services returned); preview it before copying, nothing is uploaded. Feedback currently goes through GitHub Issues and needs a GitHub account | [Data and privacy](guide/data-and-privacy.md) |
-| Launch at login | 🧪 Testing | Windows only: the installer registers it only when you turn it on in Settings (uninstalling removes it); the portable edition and `szunet autostart` can also set it | [Install and update](guide/install.md) |
+| Launch at login | 🧪 Testing | The Windows installer registers it only when you turn it on in Settings (uninstalling removes it), and the portable edition and `szunet autostart` can also set it. On the Mac it is **Launch when signing in to Mac** (登录 Mac 时启动), which needs the app in the Applications folder | [Install and update](guide/install.md) |
 | Automatic updates | — Not supported | Nothing is downloaded or installed automatically; check for a new version by hand in **Settings → About and updates** (设置 → 关于与更新) and open the download page | [Install and update](guide/install.md) |
-| macOS / Linux desktop | — Not supported | Only the command-line szunet for now; a desktop version is on the roadmap as a low-priority to-do | [Install and update](guide/install.md) |
+| macOS desktop app | 🧪 Testing | Preview: one DMG each for Apple silicon and Intel, macOS 13 or later. Same features as the Windows installer, with a menu bar icon instead of the tray. Not notarised by Apple, so you allow it by hand the first time you open it. None of the real-Mac checks has been done yet; the behaviour still to be confirmed is listed under [Known limitations](#known-limitations) | [Install and update](guide/install.md) |
+| Linux desktop | — Not supported | Only the command-line szunet; a Linux desktop version is on the roadmap as a low-priority to-do | [Install and update](guide/install.md) |
 
 Legend: ✅ Available · 🟡 Partial (covers only part of the scope, or has clear prerequisites) · 🧪 Testing (implemented, not yet verified in real use) · — Not supported
 
@@ -84,7 +87,7 @@ The specific gaps behind Partial and Testing are listed under [Known limitations
 
 ## Download
 
-Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases).
+Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. The macOS preview is available from beta0.9.5; Mac users pick the DMG for their chip on the releases page (see the table below). Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) too.
 
 Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `szuDesktop-Setup-0.9.4.exe` (about 108 MB) · portable `szudesktop-beta0.9.4-windows-amd64.zip` (about 6.5 MB) · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)
 
@@ -92,22 +95,26 @@ Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `
 | :-- | :-- | :-- | :-- |
 | Windows installer (recommended) | `szuDesktop-Setup-<version number>.exe` | Run the installer, then open szuDesktop; a standalone window with the background engine built in | Yes |
 | Windows portable | `szudesktop-<release tag>-windows-amd64.zip`, or the single file `szudesktop-windows-amd64.exe` | Unzip and double-click `szudesktop.exe`; it opens a window in the local Edge / Chrome | No (the garden inside the window works as usual) |
-| macOS command line | `szunet-darwin-amd64` (Intel), `szunet-darwin-arm64` (Apple silicon) | Run it in a terminal; campus network sign-in and diagnostics only | No desktop app |
+| macOS app · Apple silicon (preview) | `szuDesktop-<version number>-mac-arm64.dmg` | Open the DMG, drag szuDesktop into Applications, then open it; allow it the first time (see below) | Yes, with a menu bar icon at the top of the screen instead of the tray |
+| macOS app · Intel (preview) | `szuDesktop-<version number>-mac-x64.dmg` | As above | Yes, with a menu bar icon at the top of the screen instead of the tray |
+| macOS command line | `szunet-darwin-amd64` (Intel), `szunet-darwin-arm64` (Apple silicon) | Run it in a terminal; campus network sign-in and diagnostics only | No |
 | Linux command line | `szunet-linux-amd64`, `szunet-linux-arm64` | Run it in a terminal; campus network sign-in and diagnostics only | No desktop app |
 
-The installer's file name carries only the numeric version, while the portable ZIP carries the full release tag; the current version line above shows both. Each command-line szunet build is a single file of about 6.3–7.1 MB. Disk space used after installation has not been measured yet.
+The installer and DMG file names carry only the numeric version, while the portable ZIP carries the full release tag; the current version line above and the actual file names on the releases page show them. Each command-line szunet build is a single file of about 6.3–7.1 MB. Disk space used after installation has not been measured yet.
 
-**macOS and Linux have no desktop version yet.** Use the command-line szunet there to sign in to the campus network and run diagnostics; a desktop version is on the roadmap as a low-priority to-do. On Windows you can also download the command-line `szunet-windows-amd64.exe` on its own.
+**The macOS app is a preview** and needs macOS 13 or later. Choose `mac-arm64.dmg` for Apple silicon (M1 and later) and `mac-x64.dmg` for an Intel processor; **Apple menu → About This Mac** shows the chip or processor. The app is not notarised by Apple, so macOS blocks it the first time you open it. On macOS 15 and later, go to **System Settings → Privacy & Security** and click **Open Anyway** near the bottom; on macOS 13 and 14, Control-click szuDesktop in Applications and choose **Open**. You need to do this again after every update. Some behaviour has not been verified on a real Mac yet, see [Known limitations](#known-limitations); the full steps are in [Download, install and update](guide/install.md) (Chinese).
+
+Linux has only the command-line szunet for now, with no desktop version. On Windows you can also download the command-line `szunet-windows-amd64.exe` on its own.
 
 - **Verify downloads**: every file has a matching `.sha256` for checking that the download is complete; it does not replace a publisher signature.
-- **No code signing**: the installer and programs are unsigned, so SmartScreen or antivirus software may warn you on first run. The code is open source: you can read it, or build it yourself and compare.
-- **Manual updates**: there are no automatic updates. Before upgrading, open **Settings → Backups and privacy** (设置 → 存档与隐私) and click **Export garden and todos** (导出庭院与待办) and **Back up course notes** (备份课程笔记), then download and install the new version. An installer upgrade keeps the garden, study records, the encrypted account configuration and desktop companion settings; both Windows editions share the same local records.
+- **No code signing or notarisation**: the Windows installer and programs are unsigned, so SmartScreen or antivirus software may warn you on first run; the macOS app is not notarised by Apple, so allow it as described above. The code is open source: you can read it, or build it yourself and compare.
+- **Manual updates**: there are no automatic updates. Before upgrading, open **Settings → Backups and privacy** (设置 → 存档与隐私) and click **Export garden and todos** (导出庭院与待办) and **Back up course notes** (备份课程笔记), then download and install the new version. A Windows installer upgrade keeps the garden, study records, the encrypted account configuration and desktop companion settings; both Windows editions share the same local records. On the Mac, quit with ⌘Q, drag the new version into Applications to replace the old one, and allow it again; your saves, notes and the account in the Keychain are not affected.
 
 Checksum steps, uninstalling, opening and exiting, and launch at login are covered in [Download, install and update](guide/install.md) (Chinese).
 
 ## Getting started
 
-1. A welcome guide appears the first time you open the app. Click **Meet my companion →** (去认识我的伙伴 →) and choose a companion in the companion room; in the installer edition the desktop companion switches too. On the day you start, the **Who keeps you company today?** (今天谁陪你？) bar on the home page is open as well, so you can switch there.
+1. A welcome guide appears the first time you open the app. Click **Meet my companion →** (去认识我的伙伴 →) and choose a companion in the companion room; in the Windows installer and the macOS app the desktop companion switches too. On the day you start, the **Who keeps you company today?** (今天谁陪你？) bar on the home page is open as well, so you can switch there.
 2. Back on the home page, click **Start 5 minutes** (开始 5 分钟) and a focus session starts right away. When it ends, click **Complete and claim the reward** (完成并领取奖励) in **Study bookshop → Focus and tasks** (学习书屋 → 专注与小事) to get 5 garden coins and 5 growth points. The guide's **Focus for 5 minutes first** (先专注 5 分钟) button also starts 5 minutes right away and opens that page.
 3. The home page's **Next step** (下一步) points to your first radish: it ripens in about a minute. Harvest it in **Lychee Garden → My farm** (荔枝庭院 → 我的农田) for 2 radishes and 1 growth point.
 4. When you need the internet, open **Campus network** (校园网), enter your campus card number and unified identity password, and click **Sign in to the campus network** (登录校园网). If it fails, click **Run network diagnostics** (运行网络诊断). Off campus, the campus sign-in row shows a grey note, which is normal. Signing in to school services is separate from campus network sign-in; handle each when you need it.
@@ -118,11 +125,12 @@ None of the first three steps needs a school account, and all of them work offli
 
 - **Personal school services are still being tested**: undergraduate timetables, graduate timetables with scheduled classes, online grades, the installer's school-login handoff and signing in again after expiry, the complete in-app booking flow and college piano rooms have not passed real-account verification, so reads may fail or be incomplete. Room availability requires this computer to reach the school's internal services directly (usually on the campus network). Acceptance details are in [STATUS](STATUS.md#s50-2) (Chinese).
 - **Campus network sign-in awaits on-site verification**: full sign-in, error messages, sign-out and reconnection in the teaching and dormitory areas have not been verified item by item on site, and automatic access point ID discovery behind a router before sign-in has not been tested. If detection fails, enter the ID by hand under **Advanced settings** (高级设置) in the sign-in form. Connecting at startup and the szunet command line use the same sign-in, so they share this status.
-- **The desktop app supports Windows x64 only**: macOS and Linux have only the command-line szunet. On macOS the command line stores credentials in the Keychain, and the full save-then-read path has not been verified on a real Mac; Linux needs Secret Service (`secret-tool`) and refuses to save without it.
-- **Unsigned, no automatic updates, no cloud sync**: you may see a security warning on first run, and new versions are downloaded by hand. Data stays on this computer; the project runs no backend and offers no cloud sync.
+- **The macOS app is a preview**: none of the real-Mac checks has been done yet. First-open approval after downloading in a browser, the menu bar icon and the Dock, closing windows and full screen, saving before every way of quitting, the **Page** (页面) menu and copy and paste in the school and Feishu windows, Control-clicking the desktop companion and multiple displays, system notification permission and delivery, signing out and launch at login, saving and reading the account in the Keychain, macOS 13 and 14, and whether a “Local Network” permission prompt appears on the campus network all still need to be confirmed item by item on a real Mac; progress is in [STATUS](STATUS.md#s68-2) (Chinese). You need to allow the app again after every update. Hiding the app with ⌘H hides the desktop companion too; click **Show pet** (显示宠物) in the menu bar icon to bring back just the companion. When both the main window and the companion are hidden, focus reminders may arrive slightly late. This is the first macOS version, so upgrading between versions has not been verified. If something goes wrong, open a **Bug report** (问题反馈) in [Issues](https://github.com/SzuDesktopTeam/szudesktop/issues) with your macOS version, chip (Apple silicon or Intel) and the step where you got stuck.
+- **No desktop app on Linux**: only the command-line szunet, which needs Secret Service (`secret-tool`) to save the account and refuses to save without it. On macOS the command line stores credentials in the Keychain, and the full save-then-read path has not been verified on a real Mac.
+- **Unsigned, not notarised, no automatic updates, no cloud sync**: the Windows edition may show a security warning on first run and the macOS app must be allowed by hand; new versions are downloaded by hand. Data stays on this computer; the project runs no backend and offers no cloud sync.
 - **Notes and Feishu**: course notes are text only, with no image attachments, slide parsing, formulas or AI summaries. The local Feishu copy is never written back, so this is not two-way sync; real authorisation, document import and multi-user collaboration are not verified.
-- **Desktop behaviour awaiting real tests**: whether focus completion notifications actually appear, whether the app really starts after you sign in again with **Launch when signing in to Windows** (登录 Windows 时启动) turned on, and behaviour with multiple displays, over long runs (resource use) and after sleep and wake.
-- **Not integrated yet**: campus network balance, data usage, time and plans. Notices from 11 colleges are official-site links only. New calendar images depend on the OCR built into Windows, and recognition with an English system language still needs rechecking.
+- **Desktop behaviour awaiting real tests**: on Windows, whether focus completion notifications actually appear, whether the app really starts after you sign in again with **Launch when signing in to Windows** (登录 Windows 时启动) turned on, and behaviour with multiple displays, over long runs (resource use) and after sleep and wake (for the macOS items, see above).
+- **Not integrated yet**: campus network balance, data usage, time and plans. Notices from 11 colleges are official-site links only. New calendar images depend on the text recognition built into the system, and recognition on Windows with an English system language still needs rechecking.
 - **No real student trial yet**: the garden's pacing and long-term content will be adjusted based on trial feedback.
 
 All open items are listed in [STATUS: current open items](STATUS.md#s1-1) (Chinese).
@@ -143,7 +151,7 @@ The installer and programs have no code signature, which can trigger these warni
 
 ### Does it keep running after I close the window?
 
-In the installer edition the desktop companion and tray keep running; quit fully with **Quit app** (退出应用) from the desktop companion menu or Settings, or **Exit** (退出) from the tray. The portable edition exits about 10 seconds after all its windows close. See the [install guide](guide/install.md) (Chinese).
+In the Windows installer the desktop companion and tray keep running; quit fully with **Quit app** (退出应用) from the desktop companion menu or Settings, or **Exit** (退出) from the tray. In the macOS app the desktop companion and menu bar icon keep running; click the Dock icon to bring the main window back and press ⌘Q to quit fully. The portable edition exits about 10 seconds after all its windows close. See the [install guide](guide/install.md) (Chinese).
 
 ### Does it reconnect on its own in the background?
 
@@ -151,7 +159,7 @@ Not on a timer: the only automatic attempt is a single sign-in at startup with t
 
 ### Can I use it on a Mac or Linux?
 
-Only the command-line szunet, for campus network sign-in and diagnostics; there is no desktop app or desktop companion. See the [install guide](guide/install.md) (Chinese).
+On a Mac you can use the macOS desktop app preview (macOS 13 or later), with the desktop companion and a menu bar icon. Allow it the first time you open it as described under [Download](#download); some behaviour has not been verified on a real Mac yet, and feedback in Issues is welcome. Linux has only the command-line szunet, for campus network sign-in and diagnostics, with no desktop app or desktop companion. See the [install guide](guide/install.md) (Chinese).
 
 Where your account and password are stored, moving to a new computer, a warning that the background engine is outdated and other questions are answered on the [FAQ page](guide/faq.md) (Chinese).
 

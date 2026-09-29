@@ -198,8 +198,9 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
   全程设置 `SZUNET_CONFIG_DIR`，只碰带 `-test-` 的钥匙串条目，不登记登录项、不注销、不打开系统设置、不改通知权限。
 - **B 类**（B1–B9，清单见 [STATUS 68.2](docs/STATUS.md#s68-2)）：必须由人在**独立的 macOS 用户账户或虚拟机**里做，
   不在日常使用的账户上做——注销会结束当前会话，从「应用程序」直接运行会读写与命令行版共用的真实钥匙串条目，
-  登记登录项和改通知权限会改动真实系统。B 类全部通过前不发布带 DMG 的版本，由 `desktop/release_notes.py` 的 `MAC_SINCE`
-  开关把关（见[发布](#发布)）。
+  登记登录项和改通知权限会改动真实系统。维护者 2026-09-29 决定 DMG 从 beta0.9.5 起以预览版随版本发布，不再等 B 类全部通过
+  （[STATUS 68.4](docs/STATUS.md#s68-4)）；B 类仍要逐项做，全部通过之前每一版的发布说明都带预览版说明，
+  由 `desktop/release_notes.py` 的 `MAC_PREVIEW` 开关把关（见[发布](#发布)）。
 - CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
 - 第一个 macOS 版本发布前没有可作升级基线的旧版，`smoke_dmg.py` 不做跨版本升级；首个版本发布后再按
   `smoke_installer.py` 的做法固定基线。
@@ -341,9 +342,10 @@ node desktop/electron/check-pet-view.mjs
   提交哈希或测试过程，需要佐证时链接 STATUS 的显式锚点。
 - **状态和待办只在 STATUS.md**：`docs/guide/` 属于用户文档，和 README 一样随版本更新，不是另一套维护清单；
   指南里不列任务。
-- **版本号**：README 里只出现在下载按钮、下载区的「当前版本」一行和更新日志段落。发版时同步中英两版 README
-  的这三处：标题区下载按钮（URL 和文字）、「当前版本」一行（版本、日期、发布页链接、两个安装文件名和它们的下载大小，
-  大小照发布页附件的字节数四舍五入）、「更新日志」段。`docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
+- **版本号**：README 里只出现在标题区的下载链接、下载区的「当前版本」一行和更新日志段落。发布成功后（不是发版准备时：
+  标签构建成功之前，这些链接指向的附件还不存在）同步中英两版 README 的这三处：标题区的下载链接（Windows 安装版按钮，
+  以及 macOS 预览版 Apple 芯片、Intel 两个 DMG 的直链，URL 和文字）、「当前版本」一行（版本、日期、发布页链接、
+  Windows 两个安装文件名和两个 DMG 的文件名，以及它们的下载大小，大小照发布页附件的字节数四舍五入）、「更新日志」段。`docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
   另外核对便携 ZIP 的 `README-快速开始.txt` 模板与当前界面一致：它只留十来行（打开方式、第一次该做什么、数据存哪、
   密码怎么存、不代提交、测试版边界），细节链接到使用指南，`make_release.py` 打包前用 `quickstart_problems()` 自检，`check_licenses.py` 在 `run-checks.mjs` 里也调用它。
   使用指南里的下载大小写的是近几个版本的大致数字，变化不大时不用每版改。
@@ -362,8 +364,8 @@ node desktop/electron/check-pet-view.mjs
 
 提 PR 前先确认改动在当前范围内（依据 [STATUS 1.1 节](docs/STATUS.md#s1-1)和 [第 50.2 节](docs/STATUS.md#s50-2)）：
 
-- 1.0 先完成 Windows 桌面版（安装版与便携版）。macOS 桌面版（按芯片两个 DMG）已实现，B1–B9 真机验收通过后
-  才随版本发布（[STATUS 第 68 节](docs/STATUS.md#s68)）；Linux 仍只发命令行 `szunet`，桌面端是 X06 的剩余部分。
+- 1.0 先完成 Windows 桌面版（安装版与便携版）。macOS 桌面版（按芯片两个 DMG）从 beta0.9.5 起以预览版随版本发布，
+  B1–B9 真机验收仍待做（[STATUS 68.4](docs/STATUS.md#s68-4)）；Linux 仍只发命令行 `szunet`，桌面端是 X06 的剩余部分。
 - 暂不部署校内后端、Docker 或服务器发布流程；云同步与好友庭院、内容和素材热更新、自动下载安装更新、
   整机 VPN、图书馆选座、余额与流量都已延期，方案保留在 STATUS 原章节。
 - Windows 安装包未签名，macOS 包只有 ad-hoc 签名、未经公证；目前只有手动版本查询（UX21），没有自动更新。
@@ -406,21 +408,31 @@ node desktop/electron/check-pet-view.mjs
     核对包里的引擎与冒烟通过的字节一致，再对 arm64 与 x64（Rosetta）各跑一遍 `smoke_dmg.py`。真实 quit Apple Event 那一步
     如被 runner 的系统拒绝（-1743），脚本记为跳过并打印警告。
   - `smoke-desktop-electron-macos-intel`（`macos-15-intel`）在真 Intel 机器上再跑一遍 x64 的两种冒烟：Rosetta 会掩盖只在
-    Intel 上出现的问题。这种 runner 排队慢，所以只在推到 main、打标签和手动触发时运行，不卡 PR。镜像预计 2027 年 8 月前后下线：
-    届时删掉这个 job（DMG 发布已开启的话，同时从 `release` 的 `needs` 里去掉），x64 包只在 Rosetta 下验证，
-    发布前另在 Intel Mac 上人工抽测一遍。
-  - 最后 `release` 等 `[build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos]`
-    全绿，核对全部 `.sha256` 后才发。整个 workflow 默认只读，只有 `release` 有写权限；
-    action 都固定在提交 SHA 上，由 Dependabot 提 PR 升级。
-- **DMG 暂不随版本发布。** B1–B9 真机验收（[STATUS 68.2](docs/STATUS.md#s68-2)）全部通过之前，`desktop/release_notes.py`
-  的 `MAC_SINCE` 保持 `None`：`release` 不等上面三个 macOS 打包与冒烟 job、不上传 DMG，发布说明也不列 DMG，
-  Windows 版照常发布，不会被 macOS 的 job 或 Intel runner 卡住。CHANGELOG 里介绍 DMG 的条目先留在「未发布」一节：
-  打标签时（`--release`）正文提到 `.dmg` 而这一版不发 DMG，`release_notes.py` 直接失败。
-  - 验收通过后在同一个 PR 里开启：`MAC_SINCE` 设成那一版的版本号；`release` 的 `needs` 加上
-    `build-desktop-electron-macos` 和 `smoke-desktop-electron-macos-intel`；下载 `szudesktop-electron-macos` 到 `dist`；
-    `files` 加两个 DMG 及其 `.sha256`（这几步也写在 release.yml Intel 冒烟 job 上方的注释里）。
-  - `check_release_notes.py` 核对开关、`release.yml` 与 STATUS 68.2 一致：只改了其中一处，或 B1–B9 还有没标「通过」的，检查就失败。
-  - 开启后 macOS 只发两个 DMG 及其 `.sha256`，裸的 `szudesktop-darwin-*` 引擎只在 job 之间传递。
+    Intel 上出现的问题。这种 runner 排队慢，所以只在推到 main、打标签和手动触发时运行，不卡 PR，PR 的 CI 也就看不到它的结果。
+    镜像预计 2027 年 8 月前后下线：届时删掉这个 job，同时从 `release` 的 `needs` 里去掉，并改掉 `check_release_notes.py`
+    里要求它在 `needs` 里的核对；之后 x64 包只在 Rosetta 下验证，发布前另在 Intel Mac 上人工抽测一遍。
+  - 最后 `release` 等 `[build-cli, build-desktop-windows, build-desktop-electron-windows, test-macos,
+    build-desktop-electron-macos, smoke-desktop-electron-macos-intel]` 全绿，下载各 job 的产物（含 `szudesktop-electron-macos`
+    里的两个 DMG），核对全部 `.sha256` 后才发。`release` 的 `if` 没写状态函数，GitHub 隐含 `success()`：`needs` 里任何一个
+    失败、取消或被跳过都不发布，**macOS 的 job 失败会连带挡住 Windows 版的发布**。整个 workflow 默认只读，只有 `release`
+    有写权限；action 都固定在提交 SHA 上，由 Dependabot 提 PR 升级。
+- **DMG 从 beta0.9.5 起以预览版随版本发布**（维护者 2026-09-29 决定，[STATUS 68.4](docs/STATUS.md#s68-4)）。B1–B9 真机验收
+  （[STATUS 68.2](docs/STATUS.md#s68-2)）还没做完，发布说明、README 和 STATUS 都要如实写明哪些没在真机上验收，并给出反馈方式。
+  - `desktop/release_notes.py` 有两个开关。`MAC_SINCE = (0, 9, 5)` 是 DMG 发布开关，也是第一个带 DMG 的版本：这一版及以后的
+    下载清单列出两个 DMG 和首次打开的放行步骤，更早的版本不列；打标签时（`--release`）正文提到 `.dmg` 而这一版不发 DMG，
+    `release_notes.py` 直接失败。`MAC_PREVIEW` 是预览版开关，值是 STATUS 里记录预览版决定那一节的锚点（现为 `s68-4`）：
+    开着时每一版的发布说明都在下载清单后带一段预览版说明；B1–B9 全部标「通过」后改回 `None`。
+  - `release.yml` 的对应接线：`release` 的 `needs` 有 `build-desktop-electron-macos` 和 `smoke-desktop-electron-macos-intel`；
+    下载 `szudesktop-electron-macos` 到 `dist`；`files` 有两个 DMG 及其 `.sha256`。这两个 job 的 `if` 只能排除 PR 事件，
+    不能加 `continue-on-error`（release.yml Intel 冒烟 job 上方的注释也写着）。
+  - `check_release_notes.py` 核对开关、`release.yml` 与 STATUS 68.2 / 68.4 一致：开关开着却缺一处接线、两个 macOS job 可能在
+    标签上被跳过或带 `continue-on-error`、68.2 还有待验收的项而 `MAC_PREVIEW` 没指向写明「预览版」和起始版本的决定、
+    B1–B9 全部通过了 `MAC_PREVIEW` 还开着，检查都会失败。
+  - macOS 只发两个 DMG 及其 `.sha256`，裸的 `szudesktop-darwin-*` 引擎只在 job 之间传递。
+- **打标签前**：PR 的 CI 全绿还不够。`smoke-desktop-electron-macos-intel` 不在 PR 上运行，发版 PR 合入 main 后，
+  先确认有一次 main 推送运行或手动触发运行全部通过、而且这个 job 真正运行并通过（不是被跳过），再在这次运行的同一提交上打标签。
+  否则标签构建就是它在这份代码上的第一次运行，它一失败，整次发布连同 Windows 版都发不出去：偶发失败可以重跑失败的 job，
+  要改代码就只能删掉标签、在修好的提交上重打。任何 job 失败都先修好或查明是偶发，不要为了发布去掉 `needs` 或加 `continue-on-error`。
 - **`test-macos` 会阻断发布**——它在 `release.needs` 里。它曾经带 `continue-on-error`，
   把真实的失败显示成 success，于是 beta0.7.1 / beta0.7.2 带着「macOS 上存不了凭据」
   发了出去（F26）；修好之后那个开关就被摘掉了，原委见 `docs/STATUS.md` 第 39.4 节。
