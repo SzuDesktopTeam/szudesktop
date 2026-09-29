@@ -35,6 +35,52 @@ async function until(read, message) {
   throw Error(message);
 }
 
+// 首次打开有欢迎引导。选「去认识我的伙伴」后，页面要等主窗口画出下一帧才收到引导的 close 事件（Chromium 把它排在动画帧里），
+// 然后保存「已看过引导」、切到伙伴小屋。这次保存不经过页面的写入锁：主窗口在页面处理完它的回应之前就藏起的话
+// （macOS 上藏起的页面调度优先级被降低，机器一忙就要拖几百毫秒到几秒），接着的宠物指令会带着旧修订号保存，被引擎按冲突（409）拒掉。
+// 用户关引导时主窗口就在眼前；冒烟也按这个顺序：引擎里已记下「已看过引导」，页面也切到了伙伴小屋
+// （路由在这次保存返回、换上新修订号之后才切），才返回让调用方藏主窗口。
+// 存档里已经看过引导时（重开、升级存档、Windows 安装版冒烟）页面不弹引导，直接返回 false。
+export async function waitGuideSaved({main,onboarded,until}){
+  if(await onboarded())return false;
+  await until(()=>main("Boolean(document.querySelector('#guide[open]'))"),'first-run guide did not open');
+  await main(`document.querySelector('#guide[open] button[value="garden"]').click()`);
+  await until(async()=>await onboarded()&&await main("!document.querySelector('#guide[open]')&&location.hash==='#garden/pet'"),'first-run guide choice was not saved before hiding the main window');
+  return true;
+}
+
+// 页面执行完宠物指令会经 petResult 回报结果，主进程据此让宠物说话。冒烟旁听主窗口发出的这条消息（只多挂一个监听，不改变消息去向），
+// 指令没生效时在报错里写明：页面回报了什么（忙碌被拒、存档冲突等），还是点击之后一直没有回报（页面还没处理这条指令或它的保存回应）。
+const petReplyLogs=new WeakMap();
+export function listenPetReplies(webContents){
+  if(!petReplyLogs.has(webContents)){
+    const log=[];
+    petReplyLogs.set(webContents,log);
+    webContents.on('ipc-message',(_event,channel,result)=>{if(channel==='szu:pet-result')log.push({at:Date.now(),ok:result?.ok===true,message:String(result?.message??'')});});
+  }
+  return petReplyLogs.get(webContents);
+}
+export function describePetReplies(replies,clickedAt,now=Date.now()){
+  const seconds=ms=>(ms/1000).toFixed(1);
+  if(!replies.length)return `点击后 ${seconds(now-clickedAt)} 秒内页面没有回报结果`;
+  return replies.map(reply=>`页面在点击后 ${seconds(reply.at-clickedAt)} 秒回报${reply.ok?'成功':'失败'}：${reply.message||'（无文字）'}`).join('；');
+}
+// 依次点宠物菜单里的指令。点下一项之前先等页面回报上一项：回报发出时页面的写入锁已经放开，早一步点就会被「正在保存或处理上一项操作」拒掉。
+// 主窗口藏起、机器又忙时，页面要过十几秒才回报，宠物窗却可能先由每 30 秒的定时刷新换上新立绘，只看立绘或存档就会点得太早。
+// 返回这条指令之后用的等待：超时的报错带上页面对这条指令的回报，或者写明点击后一直没有回报。
+// 菜单里点已经在陪伴的伙伴不会发出指令，调用方传 expectReply:false，下一项就不等它的回报。
+export function createPetCommands({click,replies,until}){
+  let unfinished=null;
+  return async function petCommand(id,{expectReply=true}={}){
+    if(unfinished)await unfinished();
+    const since=replies.length,clickedAt=Date.now();
+    click(id);
+    const after=(read,message)=>until(read,message).catch(error=>{error.message+='；'+describePetReplies(replies.slice(since),clickedAt);throw error;});
+    unfinished=expectReply?()=>after(()=>replies.length>since,`main window did not report the result of ${id}`):null;
+    return after;
+  };
+}
+
 // Migration adds only these defaults to old personal records. Keep every old
 // field in the comparison so accepting new fields cannot hide lost user data.
 function personalAfterMigration(data){
@@ -133,8 +179,8 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   const pet=source=>evalWithin(petWin,'桌宠',source);
   const menu=label=>getMenu().items.find(item=>item.label===label);
   const sizeItems=()=>menu('宠物大小').submenu.items;
-  await main("document.querySelector('#guide[open] button')?.click()");
-  await until(()=>main("!document.querySelector('#guide[open]')"),'first-run guide did not close');
+  const workspace=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return (await r.json()).data;};
+  await waitGuideSaved({main,onboarded:async()=>(await workspace()).preferences?.onboarded===true,until});
   await until(()=>pet("Boolean(window.szuPet && document.querySelector('#pet-use')?.getAttribute('href'))"),'pet preload/render not ready');
   assert.equal(await main('window.szuDesktop.petScale()'),initialScale);
   assert.equal(readPetSettings(userData).scale,initialScale,'scale loaded from previous launch');
@@ -180,20 +226,21 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   assert.equal(mainWin.isVisible(),false,'click opens a menu without opening main');
   getPetMenu().closePopup(petWin);
   trace('menu-closed');
-  const game=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return (await r.json()).data.game;};
+  const game=async()=>(await workspace()).game;
   const active=g=>g.pets[g.active]||g.pets[0];
+  const petCommand=createPetCommands({click:id=>getPetMenu().getMenuItemById(id).click(),replies:listenPetReplies(mainWin.webContents),until});
   for(let i=0;i<2;i++){
     trace('sleep-'+i);
     const before=active(await game()).sleeping;
-    getPetMenu().getMenuItemById('sleep').click();
-    await until(async()=>active(await game()).sleeping!==before,'pet sleep menu did not save');
+    const afterSleep=await petCommand('sleep');
+    await afterSleep(async()=>active(await game()).sleeping!==before,'pet sleep menu did not save');
     const savedPet=active(await game());
-    await until(()=>pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(savedPet.say.slice(0,60))}`),'saved personality dialogue did not reach the pet bubble');
+    await afterSleep(()=>pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(savedPet.say.slice(0,60))}`),'saved personality dialogue did not reach the pet bubble');
   }
   const beforeFeed=await game(),canFeed=!active(beforeFeed).sleeping&&active(beforeFeed).hunger<98&&beforeFeed.food>0;
   trace('feed');
-  getPetMenu().getMenuItemById('feed').click();
-  await until(async()=>{
+  const afterFeed=await petCommand('feed');
+  await afterFeed(async()=>{
     if(canFeed){
       const current=await game();
       // The previous action's bubble also matches its previous saved line.
@@ -212,9 +259,9 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   assert.ok(companionSpecies.every(id=>Object.hasOwn(PETS,id)),'old companions still have registered artwork');
   for(const [index,companion] of [...companions.entries()].reverse()){
     const sprite=PETS[companion.species].sprite;
-    getPetMenu().getMenuItemById(`switchPet:${index}`).click();
-    await until(async()=>(await game()).active===index,'menu choice did not persist');
-    await until(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(companion.species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop frame did not follow the choice');
+    const afterChoice=await petCommand(`switchPet:${index}`,{expectReply:(await game()).active!==index});
+    await afterChoice(async()=>(await game()).active===index,'menu choice did not persist');
+    await afterChoice(()=>pet(`document.querySelector('#pet').dataset.species===${JSON.stringify(companion.species)} && /^#(?:petanim-)?${sprite}-/.test(document.querySelector('#pet-use').getAttribute('href'))`),'desktop frame did not follow the choice');
     const rendered=await pet("(()=>{const svg=document.querySelector('#pet'),use=document.querySelector('#pet-use'),box=use.getBBox();return {sprite:use.getAttribute('href').slice(1),action:svg.dataset.action,viewBox:svg.getAttribute('viewBox'),width:box.width,height:box.height}})()");
     assert.equal(rendered.viewBox,PETS[companion.species].viewBox,'desktop uses the catalog viewBox');
     if(rendered.sprite.startsWith('petanim-'))assert.ok(PET_CLIPS[companion.species][rendered.action].frames.some(f=>f.id===rendered.sprite),'desktop renders a registered frame');
@@ -223,11 +270,11 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
     await pet('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
     writeFileSync(path.join(evidenceDir,`companion-${sprite}.png`),(await petWin.webContents.capturePage()).toPNG());
   }
-  getPetMenu().getMenuItemById('garden').click();
-  await until(()=>main(`document.querySelectorAll('.companion-choice').length===${companions.length}`),'companion picker did not render the saved roster');
+  const afterGarden=await petCommand('garden');
+  await afterGarden(()=>main(`document.querySelectorAll('.companion-choice').length===${companions.length}`),'companion picker did not render the saved roster');
   // navigate() renders before its async command finishes. Its result confirms
   // that the main window has released the command lock and accepts the click.
-  await until(()=>pet("document.querySelector('#bubble-text').textContent==='伙伴小屋已打开'"),'garden menu command did not complete');
+  await afterGarden(()=>pet("document.querySelector('#bubble-text').textContent==='伙伴小屋已打开'"),'garden menu command did not complete');
   for(const species of ['pingu','skipper','chestnut',DEFAULT_PET]){
     trace('garden-selection-'+species);
     const index=companionSpecies.indexOf(species),sprite=PETS[species].sprite;
