@@ -19,9 +19,9 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 Desktop app: Windows and macOS (macOS is a preview) · Linux: campus-network command line szunet (see [Download](#download))
 
-**[Download for Windows · beta0.9.4](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.4/szuDesktop-Setup-0.9.4.exe)**
+**[Download for Windows · beta0.9.5](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-Setup-0.9.5.exe)**
 
-The macOS preview (one DMG each for Apple silicon and Intel) is available on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) from beta0.9.5; you need to allow it by hand the first time you open it, see [Download](#download)
+macOS preview: [Apple silicon DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-x64.dmg); you need to allow it by hand the first time you open it, see [Download](#download)
 
 [Download](#download) · [Features](#features) · [Known limitations](#known-limitations) · [Privacy and security](#privacy-and-security) · [User guide (Chinese)](guide/README.md) · [FAQ](#faq) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues)
 
@@ -87,9 +87,9 @@ The specific gaps behind Partial and Testing are listed under [Known limitations
 
 ## Download
 
-Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. The macOS preview is available from beta0.9.5; Mac users pick the DMG for their chip on the releases page (see the table below). Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) too.
+Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. The macOS preview has been available since beta0.9.5; Mac users pick the DMG for their chip (see the table below). Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) too.
 
-Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `szuDesktop-Setup-0.9.4.exe` (about 108 MB) · portable `szudesktop-beta0.9.4-windows-amd64.zip` (about 6.5 MB) · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)
+Current version: **beta0.9.5** (released 2026-09-29, pre-release) · installer `szuDesktop-Setup-0.9.5.exe` (about 98 MB) · portable `szudesktop-beta0.9.5-windows-amd64.zip` (about 6.5 MB) · macOS preview `szuDesktop-0.9.5-mac-arm64.dmg` (about 123 MB) and `szuDesktop-0.9.5-mac-x64.dmg` (about 130 MB) · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.5)
 
 | Edition | File | How to open | Desktop companion and tray |
 | :-- | :-- | :-- | :-- |
@@ -100,7 +100,7 @@ Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `
 | macOS command line | `szunet-darwin-amd64` (Intel), `szunet-darwin-arm64` (Apple silicon) | Run it in a terminal; campus network sign-in and diagnostics only | No |
 | Linux command line | `szunet-linux-amd64`, `szunet-linux-arm64` | Run it in a terminal; campus network sign-in and diagnostics only | No desktop app |
 
-The installer and DMG file names carry only the numeric version, while the portable ZIP carries the full release tag; the current version line above and the actual file names on the releases page show them. Each command-line szunet build is a single file of about 6.3–7.1 MB. Disk space used after installation has not been measured yet.
+The installer and DMG file names carry only the numeric version, while the portable ZIP carries the full release tag; the current version line above and the actual file names on the releases page show them. Each command-line szunet build is a single file of about 6.4–7.2 MB. Disk space used after installation has not been measured yet.
 
 **The macOS app is a preview** and needs macOS 13 or later. Choose `mac-arm64.dmg` for Apple silicon (M1 and later) and `mac-x64.dmg` for an Intel processor; **Apple menu → About This Mac** shows the chip or processor. The app is not notarised by Apple, so macOS blocks it the first time you open it. On macOS 15 and later, go to **System Settings → Privacy & Security** and click **Open Anyway** near the bottom; on macOS 13 and 14, Control-click szuDesktop in Applications and choose **Open**. You need to do this again after every update. Some behaviour has not been verified on a real Mac yet, see [Known limitations](#known-limitations); the full steps are in [Download, install and update](guide/install.md) (Chinese).
 
@@ -195,7 +195,7 @@ Issues and pull requests are welcome. The build environment, pre-commit checks, 
 
 ## Changelog
 
-Current version **beta0.9.4** (2026-09-28) fixes issues on top of beta0.9.3: a failed sign-in no longer echoes your account or password in the error message, and a failed authentication is no longer shown as success; damaged garden saves are recovered more reliably; saves stay consistent when two windows conflict; and the app still tries to quit fully when a window closes abnormally. The full version history is in [CHANGELOG.md](../CHANGELOG.md) (Chinese), and every download is on [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases).
+Current version **beta0.9.5** (2026-09-29) is the first release with a macOS desktop preview (one DMG each for Apple silicon and Intel; on-device acceptance has not been done yet). The Windows edition is updated too: off campus it no longer falsely reports “campus authentication pending”, network diagnostics recognise when a proxy has taken over school domains, saves keep backups from the last 3 days of use, the first run is smoother, the installer is about 10 MB smaller, and a Chinese user guide has been added. The full version history is in [CHANGELOG.md](../CHANGELOG.md) (Chinese), and every download is on [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases).
 
 ## Acknowledgements
 

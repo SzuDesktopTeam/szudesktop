@@ -32,16 +32,16 @@ Windows 上三种形态的区别：
 
 | 文件 | 是什么 | 下载大小（约） |
 | :-- | :-- | :-- |
-| `szuDesktop-Setup-<版本号>.exe` | Windows 安装版 | 约 100 MB，自带窗口运行时 |
+| `szuDesktop-Setup-<版本号>.exe` | Windows 安装版 | 98 MB，自带窗口运行时 |
 | `szudesktop-<发布标签>-windows-amd64.zip` | Windows 便携版，解压后双击里面的 `szudesktop.exe` | 6.5 MB |
 | `szudesktop-windows-amd64.exe` | 便携版里的同一个程序，单文件下载 | 13 MB |
-| `szuDesktop-<版本号>-mac-arm64.dmg` | macOS 版（预览），Apple 芯片（M1 及更新） | 以发布页显示为准 |
-| `szuDesktop-<版本号>-mac-x64.dmg` | macOS 版（预览），Intel 处理器 | 以发布页显示为准 |
-| `szunet-windows-amd64.exe` | 命令行，Windows x64 | 7.1 MB |
+| `szuDesktop-<版本号>-mac-arm64.dmg` | macOS 版（预览），Apple 芯片（M1 及更新） | 123 MB |
+| `szuDesktop-<版本号>-mac-x64.dmg` | macOS 版（预览），Intel 处理器 | 130 MB |
+| `szunet-windows-amd64.exe` | 命令行，Windows x64 | 7.2 MB |
 | `szunet-darwin-amd64` / `szunet-darwin-arm64` | 命令行，macOS Intel / Apple 芯片 | 7.0 MB / 6.5 MB |
-| `szunet-linux-amd64` / `szunet-linux-arm64` | 命令行，Linux amd64 / arm64 | 6.8 MB / 6.3 MB |
+| `szunet-linux-amd64` / `szunet-linux-arm64` | 命令行，Linux amd64 / arm64 | 6.8 MB / 6.4 MB |
 
-大小是近几个版本的大致数字，每一版略有不同，以发布页上显示的为准；装好后占用多少磁盘还没有实测。
+大小按 beta0.9.5 的发布附件取整，每一版略有不同，以发布页上显示的为准；装好后占用多少磁盘还没有实测。
 
 文件名里的 `<版本号>` 只有数字（形如 `x.y.z`，不带 beta），`<发布标签>` 是发布页上这一版的标签名（目前的测试版是 `beta` 加版本号）。拿不准时，对照发布页上的实际文件名。
 
