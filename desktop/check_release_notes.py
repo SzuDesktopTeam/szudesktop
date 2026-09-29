@@ -404,4 +404,95 @@ check("DMG 版本写明未公证、最低 macOS 13 与首次打开的放行步�
 check("开启后 MAC_SINCE 之前的版本仍不出现 DMG", test_no_dmg_before_mac_since)
 check("DMG 名与 dmg.artifactName 的展开结果一致", test_dmg_names_match_packaging)
 
+
+# ───── 升级基线缓存（build-desktop-electron-windows）─────
+# 以前每次运行都从 Releases 下载一次基线安装包，CI 的下载量盖过了真实用户，而下载计数是估计试用规模的唯一客观数字。
+# 现在按 smoke_installer.py 固定的 SHA-256 取缓存，未命中才下载，核对哈希后紧接着存回缓存（后面的冒烟失败也不耽误下次命中）。
+# 有人把下载挪回取缓存之前、删掉保存或把保存挪到冒烟之后，这里就失败。
+import subprocess  # noqa: E402
+
+BASELINE_KEY = "szu-upgrade-baseline-${{ steps.baseline.outputs.sha256 }}"
+
+
+def job_steps(workflow, name):
+    """某个 job 的各个步骤原文（去掉整行注释），按 `      - ` 切开。"""
+    lines = workflow.splitlines()
+    start = lines.index("  %s:" % name)
+    end = next((i for i in range(start + 1, len(lines)) if re.fullmatch(r"  [a-z][a-z0-9-]*:", lines[i])), len(lines))
+    steps = []
+    for line in lines[start + 1:end]:
+        if line.lstrip().startswith("#"):
+            continue
+        if line.startswith("      - "):
+            steps.append(line)
+        elif steps:
+            steps[-1] += "\n" + line
+    return steps
+
+
+def baseline_cache_problems(steps):
+    """升级基线是否先取缓存、未命中才下载、下载核对后立即存回；返回问题清单，空表示接好了。"""
+    at = lambda pred: [i for i, step in enumerate(steps) if pred(step)]
+    baseline = at(lambda s: re.search(r"^\s+id: baseline$", s, re.M))
+    restore = at(lambda s: "uses: actions/cache/restore@" in s and "key: " + BASELINE_KEY in s)
+    download = at(lambda s: "gh release download" in s)
+    save = at(lambda s: "uses: actions/cache/save@" in s and "key: " + BASELINE_KEY in s)
+    smoke = at(lambda s: re.search(r"run: python desktop/electron/smoke_installer\.py$", s, re.M))
+    problems = []
+    if len(baseline) != 1 or "smoke_installer.py --baseline" not in steps[baseline[0]] or "sha256=" not in steps[baseline[0]]:
+        problems.append("没有一步（id: baseline）从 smoke_installer.py --baseline 读出标签、附件名和 SHA-256")
+    if len(restore) != 1 or not re.search(r"^\s+id: baseline-cache$", steps[restore[0]], re.M):
+        problems.append("没有按固定 SHA-256 取缓存的 actions/cache/restore（id: baseline-cache）")
+    if len(download) != 1:
+        problems.append("基线下载应当正好出现在一步里，读到 %d 步" % len(download))
+    elif restore and restore[0] > download[0]:
+        problems.append("gh release download 出现在取缓存之前，每次运行都会下载")
+    elif not all(part in steps[download[0]] for part in ("Get-FileHash", "BASELINE_SHA256")):
+        problems.append("下载那一步没有先核对缓存里的哈希、下载后也没有核对固定的 SHA-256")
+    if len(save) != 1 or "if: steps.baseline-cache.outputs.cache-hit != 'true'" not in steps[save[0]]:
+        problems.append("没有只在缓存未命中时执行的 actions/cache/save")
+    elif len(download) == 1 and save[0] != download[0] + 1:
+        problems.append("保存缓存要紧跟在下载那一步之后，冒烟失败也不影响下次命中")
+    if len(smoke) != 1 or (save and smoke[0] < save[0]):
+        problems.append("安装冒烟应当在准备好基线之后运行")
+    paths = {m for i in restore + save for m in re.findall(r"^\s+path: (.+)$", steps[i], re.M)}
+    if len(paths) != 1:
+        problems.append("取缓存和存缓存的 path 不一致：" + "、".join(sorted(paths)))
+    return problems
+
+
+def test_baseline_cache_wiring():
+    steps = job_steps(read_repo(".github", "workflows", "release.yml"), "build-desktop-electron-windows")
+    problems = baseline_cache_problems(steps)
+    assert not problems, "升级基线缓存没接好：" + "；".join(problems)
+    # 反过来确认这条检查认得出坏掉的接法：删掉取缓存、下载挪到取缓存之前、保存挪到冒烟之后。
+    find = lambda needle: next(i for i, s in enumerate(steps) if needle in s)
+    restore, download, save = find("actions/cache/restore@"), find("gh release download"), find("actions/cache/save@")
+    smoke = next(i for i, s in enumerate(steps) if s.rstrip().endswith("run: python desktop/electron/smoke_installer.py"))
+    without = steps[:restore] + steps[restore + 1:]
+    assert any("actions/cache/restore" in p for p in baseline_cache_problems(without)), "没取缓存时没有报出"
+    early = list(steps)
+    early[restore], early[download] = steps[download], steps[restore]
+    assert any("取缓存之前" in p for p in baseline_cache_problems(early)), "下载在取缓存之前时没有报出"
+    late = steps[:save] + steps[save + 1:smoke + 1] + [steps[save]] + steps[smoke + 1:]
+    assert any("紧跟" in p for p in baseline_cache_problems(late)), "保存挪到冒烟之后时没有报出"
+
+
+def test_baseline_cli_matches_pin():
+    source = read_repo("desktop", "electron", "smoke_installer.py")
+    pinned = re.search(r'^BASELINE_SHA256 = "([0-9a-f]{64})"$', source, re.M)
+    assert pinned, "smoke_installer.py 里没有固定的 BASELINE_SHA256"
+    script = os.path.join(release_notes.ROOT, "desktop", "electron", "smoke_installer.py")
+    out = subprocess.run([sys.executable, script, "--baseline"], capture_output=True, text=True, encoding="utf-8",
+                         timeout=60, check=True).stdout.split()
+    assert len(out) == 3, "--baseline 应当只输出标签、附件名和 SHA-256 三项，读到：%r" % out
+    tag, asset, digest = out
+    assert re.fullmatch(r"(?:beta|v)\d+\.\d+(?:\.\d+)?", tag), "基线标签格式不对：" + tag
+    assert asset == "szuDesktop-Setup-%s.exe" % re.sub(r"^(?:beta|v)", "", tag), "附件名与标签对不上：" + asset
+    assert digest == pinned.group(1), "--baseline 输出的 SHA-256 与固定值不一致，缓存键会和冒烟核对的哈希对不上"
+
+
+check("升级基线先按固定 SHA-256 取缓存，未命中才下载，核对后紧接着存回缓存", test_baseline_cache_wiring)
+check("smoke_installer.py --baseline 输出标签、附件名和固定的 SHA-256", test_baseline_cli_matches_pin)
+
 print("%d release-notes checks passed" % count)

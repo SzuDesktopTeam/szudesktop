@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import vm from 'node:vm';
 import {CROPS,DECOR,createState,level,gardenLevel,normalize,settle,dayKey,act,activePet,plotUnlockCost} from './assets/garden/engine.mjs';
 import {todoView,focusView,weeklyView} from './assets/garden/productivity.mjs';
@@ -12,7 +12,14 @@ import {homeSkinPicker} from './assets/garden/home-skins.mjs';
 import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
 import {readRoute,routeHash} from './assets/garden/routes.mjs';
-import {countdown,remaining,recordOnboarded} from './assets/garden/app-logic.mjs';
+import {countdown,remaining,recordOnboarded,isReturningVisit} from './assets/garden/app-logic.mjs';
+import {PETS,PET_SPRITES,AVAILABLE_PETS,petSprite} from './assets/garden/pet-catalog.mjs';
+import {homeSkinDetails} from './assets/garden/home-skins.mjs';
+import {campusRoomHeader,campusSceneLinks} from './assets/garden/campus-world.mjs';
+import {cropIcon} from './assets/garden/garden-items.mjs';
+import {gardenNextStep} from './assets/garden/garden-path.mjs';
+import {unverifiedBadge} from './assets/garden/labels.mjs';
+import {networkSummaryHTML} from './assets/garden/network-status.mjs';
 const currentVersion=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 import {focusKey,restoreFocus,formEdited,refreshDraft} from './assets/garden/shell-repaint.mjs';
@@ -747,5 +754,92 @@ await check('a degraded workspace never lets the puzzle write over the unreadabl
  const moves=f.context.state.game.puzzle.moves;for(const direction of ['left','right','up','down'])f.context.puzzleMove(direction);
  assert.equal(f.context.state.game.puzzle.moves,moves,'降级时不再应用走子');
  await quit();assert.equal(f.writes.length,0,'没有待存走子，退出不被拦下');
+});
+// O3：「看过引导」不等于「回访」。首访当天（或第一次重启前）关掉引导后，首页仍是首访标题、展开的伙伴栏，主按钮直接开始 5 分钟专注。
+function homeFixture(state,{firstSession=false}={}){
+ const context=vm.createContext({state,firstSession,net:null,settle,activePet,petSprite,PETS,PET_SPRITES,level,esc,homeSkinPicker,homeSkinDetails,projectScene,campusSceneLinks,cropIcon,gardenNextStep,unverifiedBadge,networkSummaryHTML,isReturningVisit,
+  notebookUI:{summaryHTML:()=>''},todoHTML:()=>'',Date});
+ vm.runInContext(section('const pageIcons=','const pageTips=')+section('const sprite=','let petPlayer=')+section('const btn=','function paintGardenPath(')+section('function companionRoster(','function renderStudyProgress(')+section('function home(){','function network(){'),context);
+ const html=context.home(),letter=/<div class="home-letter">[\s\S]*?<p class="home-local">/.exec(html)?.[0]||'';
+ return {html,title:/<h1 id="home-title">([\s\S]*?)<\/h1>/.exec(html)?.[1]||'',primary:/<div class="actions">([\s\S]*?)<\/div>/.exec(letter)?.[1]||'',companions:/<details class="home-companions" id="home-companions" ?(open)?>/.exec(html)};
+}
+await check('closing the guide on the first day keeps the first-visit home; the next day it welcomes the student back',()=>{
+ const day=24*3600*1000,fresh=createState(),guided=structuredClone(fresh);guided.preferences.onboarded=true;
+ for(const [label,state,options] of [['还没看引导',fresh,{}],['当天关掉引导',guided,{}]]){
+  const view=homeFixture(state,options);
+  assert.doesNotMatch(view.title,/欢迎回来/,label+'：标题不能是「欢迎回来」');assert.match(view.title,/在荔园/);
+  assert.ok(view.companions?.[1],label+'：伙伴栏保持展开');assert.doesNotMatch(view.html,/returning-home/);
+  assert.match(view.primary,/data-action="focusStart" data-minutes="5"[^>]*>[\s\S]*开始 5 分钟<\/button>/,label+'：首访主按钮是「开始 5 分钟」');
+ }
+ const yesterday=structuredClone(guided);yesterday.game.created-=day;
+ const back=homeFixture(yesterday);
+ assert.match(back.title,/欢迎回来/);assert.equal(back.companions?.[1],undefined,'回访时伙伴栏收起');assert.match(back.html,/returning-home/);assert.match(back.primary,/去我的书桌/);
+ const overnight=homeFixture(yesterday,{firstSession:true});
+ assert.doesNotMatch(overnight.title,/欢迎回来/,'第一次重启之前（跨过午夜也算）仍按首访显示');assert.match(overnight.primary,/开始 5 分钟/);
+ const focusing=structuredClone(guided);focusing.game.focus={startedAt:Date.now(),end:Date.now()+300000,duration:5,todoId:'',task:''};
+ assert.match(homeFixture(focusing).primary,/继续我的专注/);
+ assert.equal(isReturningVisit(guided),false);assert.equal(isReturningVisit(yesterday),true);assert.equal(isReturningVisit(yesterday,{freshSession:true}),false);assert.equal(isReturningVisit(null),false);
+ assert.match(source,/if\(!workspaceFailure&&!snapshot\.data\)\{firstSession=true;/,'只有本次打开时新建的存档才算第一次会话');
+ assert.match(source,/companions\.open=companionsOpen/,'同学自己收起伙伴栏后，照料带来的重绘不能又把它展开');
+ assert.match(readFileSync(new URL('./assets/garden/productivity.css',import.meta.url),'utf8'),/\n\.home-companions\{display:block;/,'展开的伙伴栏是 <details>，不能靠 flex 排版，否则名册挤成一列');
+});
+await check('the welcome guide shows current companions and its second choice starts a 5-minute focus',async()=>{
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ const scene=/<div class="guide-scene" aria-hidden="true">([\s\S]*?)<\/div>/.exec(html)?.[1]||'',shown=[...scene.matchAll(/<use href="#([\w-]+)">/g)].map(m=>m[1]);
+ const current=new Set(AVAILABLE_PETS.flatMap(id=>[PETS[id].sprite,...['normal','happy','sad','sleep'].map(mood=>PETS[id].sprite+'-'+mood)]));
+ assert.ok(shown.length>=3&&shown.length<=4,'欢迎图放 3–4 位伙伴');
+ for(const id of shown)assert.ok(current.has(id),`欢迎图里的 #${id} 不是现在可选的伙伴（阿青已退到「老朋友」）`);
+ assert.match(html,/<div class="guide-choices"><button class="primary" value="garden">去认识我的伙伴 →<\/button><button value="focus">先专注 5 分钟<\/button><\/div>/);
+ let onClose,routes=[],events=[];const guide={open:false,returnValue:'',showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
+ const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate')},
+  act,state:null,run:async work=>{await work()},commit:async next=>{context.state=next;events.push('commit')},reactPet:action=>events.push(action)});
+ vm.runInContext(section('function showGuide(){','function markOnboarded('),context);
+ for(const [value,expected] of [['focus',[['study','focus']]],['garden',[['garden','pet']]],['ok',[]],['',[]]]){guide.open=false;routes=[];events=[];context.state=createState();context.showGuide();guide.returnValue=value;await onClose();assert.deepEqual(routes,expected,value);
+  // 按钮写的是「先专注 5 分钟」：和首页主按钮一样真的开始 5 分钟，再打开专注页；其余选项不开始专注。
+  if(value==='focus'){assert.equal(context.state.game.focus?.duration,5,'「先专注 5 分钟」要真的开始 5 分钟');assert.deepEqual(events,['commit','focusStart','navigate'],'先开始专注再打开专注页')}
+  else assert.equal(context.state.game.focus,null,value+' 不能开始专注');
+ }
+ const focusing=createState();focusing.game.focus={startedAt:Date.now(),end:Date.now()+1500000,duration:25,todoId:'',task:''};
+ guide.open=false;routes=[];events=[];context.state=focusing;context.showGuide();guide.returnValue='focus';await onClose();
+ assert.equal(context.state,focusing,'已经在专注时不重开一段');assert.deepEqual(routes,[['study','focus']]);
+});
+// O8：页脚按钮叫「欢迎引导」，旁边的「使用指南 ↗」去 docs/guide；关于页的功能状态只链接 README 功能表（诊断结果旁的校园网指南见 check-network-ui.mjs）。
+await check('footer and about link to the user guide and README instead of copying their content',()=>{
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8'),external='target="_blank" rel="noopener noreferrer"';
+ assert.match(html,/<button class="quiet" data-action="showGuide">欢迎引导<\/button>/,'页脚按钮打开的是欢迎引导，要叫这个名字');
+ assert.ok(html.includes(`<a href="https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/README.md" ${external}>使用指南 ↗</a>`));
+ const settingsSource=section('function settings(){','function loadPetScale(){');
+ assert.ok(settingsSource.includes(`<a href="https://github.com/SzuDesktopTeam/szudesktop#%E5%8A%9F%E8%83%BD" ${external}>README 的功能表 ↗</a>`),'关于页的功能状态链接到 README 功能表');
+ assert.doesNotMatch(settingsSource,/学校服务目前支持到哪里|余额尚未同步/,'功能状态只留 README 一个来源');
+});
+// O12：导航名、页标题和面包屑用同一个名字；面包屑的根写「今日」，按钮也回到今日。
+await check('each page uses one name in navigation, title and breadcrumb, and the breadcrumb root is 今日',()=>{
+ const pages=Function(`return ${/const pages=(\{[^}]*\});/.exec(source)[1]}`)();
+ assert.equal(pages.home,'今日');
+ for(const [page,name] of Object.entries(pages)){
+  if(page==='home')continue;
+  for(const header of [campusRoomHeader({page,title:name}),campusRoomHeader({page})]){
+   assert.match(header,/<button type="button" data-action="navigate" data-page="home" aria-label="回到今日">今日<\/button>/);
+   assert.equal(/<span aria-hidden="true">\/<\/span><span>([^<]*)<\/span>/.exec(header)?.[1],name,page+' 的面包屑');
+   assert.equal(/<h1>([^<]*)<\/h1>/.exec(header)?.[1],name,page+' 的页标题');
+  }
+ }
+ const titles=[...source.matchAll(/\bhead\('([^']+)'/g)].map(m=>m[1]);
+ assert.deepEqual(titles.sort(),Object.values(pages).filter(name=>name!=='今日').sort(),'页头标题与导航名一一对应');
+});
+// O12：术语表（CONTRIBUTING「界面用词」）里不再用的名字不能回到页面上。扫页面源码和 index.html，整行注释和 HTML 注释不算。
+// 伙伴台词（pet-dialogue.mjs）是角色说的话，「安静陪伴」在那里是普通说法，不是开关名，不扫；
+// Electron 外壳的托盘和伙伴菜单还叫「宠物」，排在 STATUS 1.1「术语统一的剩余部分」，不在这些文件里。
+await check('retired names from the terminology table do not come back in the page text',()=>{
+ const retired=['今日手帐','连接小站','连接站','荔园告示板','公告板','伙伴的后院','小屋与菜畦','庭院书屋','我的小屋','收纳柜','学习工具','宠物','安静陪伴','饱腹','饱食度','课程手帐'];
+ const dir=new URL('./assets/garden/',import.meta.url);
+ const files=readdirSync(dir).filter(name=>name.endsWith('.mjs')&&name!=='pet-dialogue.mjs').map(name=>[name,readFileSync(new URL(name,dir),'utf8')]);
+ files.push(['index.html',readFileSync(new URL('./index.html',import.meta.url),'utf8')]);
+ assert.ok(files.length>20,'没有读到页面源码');
+ for(const [name,text] of files){
+  const code=text.replace(/<!--[\s\S]*?-->/g,'').split('\n').filter(line=>!/^\s*\/\//.test(line)).join('\n');
+  for(const word of retired)assert.ok(!code.includes(word),`${name} 里又出现了术语表不再用的「${word}」`);
+ }
+ assert.ok(source.includes('桌面伙伴</h2><label for="pet-scale">伙伴大小</label>'),'设置页「桌面伙伴」卡片的滑杆也叫伙伴');
 });
 console.log(`${checks} workspace UI checks passed`);

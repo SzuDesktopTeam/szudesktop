@@ -2,6 +2,8 @@
 // 拿不到平台（旧 preload、便携版浏览器页）或 platform==='win32' 时，下面每一句都必须与加入 macOS 分支之前一字不差，
 // 期望值取自改动前的页面输出。macOS 文案另由 check-macos-copy.mjs 断言。
 // 末尾打印全部 Windows 渲染结果的摘要：改文案前后各跑一次，两次摘要相同，说明不只是这些关键句，整段输出都没变。
+// 例外是按术语表统一的名字（O12）：「桌面宠物」→「桌面伙伴」、设置里的「安静陪伴」→与托盘同名的「勿扰」、「学习工具」「今日手帐」→导航里的「学习书屋」「今日」。
+// 这几处是有意改名，期望值随之更新；其余句子仍逐字不变。
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
@@ -25,13 +27,13 @@ const pageSource=section('function showGuide(){','function markOnboarded(')+sect
 const text=value=>value.replace(/<[^>]+>/g,'');
 
 const WIN={
- exitElectron:'关闭主窗口后桌面宠物仍会常驻；要完全退出请用托盘菜单「退出」或「设置 → 关于与更新 → 退出应用」，下次打开可继续使用。',
+ exitElectron:'关闭主窗口后桌面伙伴仍会常驻；要完全退出请用托盘菜单「退出」或「设置 → 关于与更新 → 退出应用」，下次打开可继续使用。',
  exitBrowser:'关闭所有应用窗口约 10 秒后自动退出；想立即退出走「设置 → 关于与更新 → 退出应用」。刷新页面不会结束服务。',
- rows:[['专注完成时提醒我','主窗口隐藏时也可提醒；完全退出后不提醒。'],['安静陪伴','暂停专注通知，不改变计时、互动或奖励。'],['显示桌面伙伴','关闭后可从托盘恢复，重启保留选择。'],['伙伴保持置顶','关闭后，其他窗口可以盖住伙伴。'],['启动时自动连接校园网','使用已记住的账号；本机已在线时跳过，下次启动生效。'],['登录 Windows 时启动','只在主动开启后登记，开机不弹出主窗口。']],
+ rows:[['专注完成时提醒我','主窗口隐藏时也可提醒；完全退出后不提醒。'],['勿扰','暂停专注通知，不改变计时、互动或奖励。'],['显示桌面伙伴','关闭后可从托盘恢复，重启保留选择。'],['伙伴保持置顶','关闭后，其他窗口可以盖住伙伴。'],['启动时自动连接校园网','使用已记住的账号；本机已在线时跳过，下次启动生效。'],['登录 Windows 时启动','只在主动开启后登记，开机不弹出主窗口。']],
  noNotifications:'此系统暂不支持通知，主窗口仍显示完成状态。',
  noLoginItem:'仅支持已安装的 Windows 版本。',
  petMenu:'<p class="muted">点击或右键伙伴可打开菜单，摸摸、喂食、陪玩和休息都会保存到同一份庭院存档。拖动伙伴可以移动位置，悬停时滚轮每次调整 10%；也可以用滑杆在 40–200% 之间细调。</p>',
- petTray:'<p class="muted">菜单还能打开农田、学习工具与今日手帐，托盘里也可快速切换大小。</p>',
+ petTray:'<p class="muted">菜单还能打开农田、学习书屋与今日，托盘里也可快速切换大小。</p>',
  autostart:['<p class="muted">登录 Windows 时静默启动并自动连接一次校园网。需要界面时，再双击程序打开。</p>','<small>可在这里或 Windows 的「启动应用」中关闭。</small>'],
  archive:'<p class="notice">存档默认位于用户目录下的 .szunet / workspace-v1.json。换电脑前，请先导出存档。</p>',
  dpapi:'<p class="muted">Windows 使用系统 DPAPI 保护密码。查看卡号需要在校园网页主动点击，不会出现在首页或导出的存档里。</p>',
@@ -113,7 +115,7 @@ for(const [label,bridge] of [['没有 platform',{shell:'electron'}],['platform:\
   assert.equal(hinted.rows[5][1],WIN.noLoginItem);
   return [ok,unsupported,hinted];
  });
- await check(`${label}：设置页的桌面宠物、存档位置、DPAPI 与退出说明逐字不变`,()=>withBridge(bridge,()=>{
+ await check(`${label}：设置页的桌面伙伴、存档位置、DPAPI 与退出说明逐字不变`,()=>withBridge(bridge,()=>{
   const page=appPage(bridge);
   assert.ok(page.desktop.includes(WIN.petMenu),'滚轮每次调整 10% 的原句');assert.ok(page.desktop.includes(WIN.petTray));
   assert.ok(page.data.includes(WIN.archive));assert.ok(page.data.includes(WIN.dpapi));

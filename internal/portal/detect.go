@@ -1,10 +1,10 @@
 package portal
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"io"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -34,6 +34,10 @@ type DetectResult struct {
 	DormPortalOK  bool // 宿舍区门户（172.30.255.42）通不通
 	TeachPortalOK bool // 教学区门户（net.szu.edu.cn）通不通
 	SrunDNSOK     bool // 教学区门户的域名能不能解析出来
+	// SrunDNSFakeIP 表示 net.szu.edu.cn 解析进了 198.18.0.0/15，也就是本机代理的 Fake-IP
+	// 模式接管了学校域名（见 fakeip.go）。这时解析「能成功」，SrunDNSOK 是 true，
+	// 但地址是代理发的假地址，访问学校的流量都先进代理。
+	SrunDNSFakeIP bool
 	SrunUsable    bool // 深澜的 get_challenge 是不是真的能用（协议指纹）
 	DormUsable    bool // 宿舍区 ePortal 的登录接口是不是真的在（协议指纹）
 	Notes         []string
@@ -54,12 +58,15 @@ func Detect() *DetectResult {
 	r := &DetectResult{}
 
 	parallel(
-		func() { r.SrunDNSOK = dnsResolvable("net.szu.edu.cn") },
+		func() { r.SrunDNSOK, r.SrunDNSFakeIP = resolveSchoolDNS() },
 		func() { r.InternetOK = internetReachable() },
 	)
 	if r.InternetOK {
 		r.Zone = ZoneOnline
 		r.Notes = append(r.Notes, "能正常访问外网，当前不需要认证")
+		if r.SrunDNSFakeIP {
+			r.Notes = append(r.Notes, fakeIPWarning)
+		}
 		// 已经联网时不需要认证，所以不再跑门户和指纹探测（能省两秒）。
 		// 但要把 Probed 留成 false，让调用方知道"这几个字段没意义"，
 		// 别把它们误读成"探测失败"。
@@ -92,7 +99,7 @@ func Probe() *DetectResult {
 
 	// 不提前返回，把探测做完。六项互不依赖，一起跑。
 	parallel(
-		func() { r.SrunDNSOK = dnsResolvable("net.szu.edu.cn") },
+		func() { r.SrunDNSOK, r.SrunDNSFakeIP = resolveSchoolDNS() },
 		func() { r.InternetOK = internetReachable() },
 		func() { probePortals(r) },
 	)
@@ -116,6 +123,9 @@ func concludeProbe(r *DetectResult) {
 	}
 	if !r.SrunDNSOK {
 		r.Notes = append(r.Notes, dnsWarning)
+	}
+	if r.SrunDNSFakeIP {
+		r.Notes = append(r.Notes, fakeIPWarning)
 	}
 }
 
@@ -234,6 +244,16 @@ func (r *DetectResult) AuthenticationZone() Zone {
 const dnsWarning = "注意：net.szu.edu.cn 这个域名解析不出来。如果开着代理或 DoH，" +
 	"它可能把域名解析抢走了，可以先关掉代理（或者在代理规则里让 net.szu.edu.cn 直连）再试"
 
+// fakeIPWarning 是 net.szu.edu.cn 解析进 Fake-IP 段时的说明。上面的门户探测也经过了代理，
+// 结论可能不准，所以把原因和做法一起写明。
+const fakeIPWarning = "注意：net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址。" + ProxyTakeoverHint
+
+// resolveSchoolDNS 解析教学区门户的域名：能不能解析出来、是不是被 Fake-IP 接管。
+// 探测的其余各项都有自己的超时，这里和以前一样用系统解析器的默认超时。
+func resolveSchoolDNS() (ok, fakeIP bool) {
+	return resolveHost(context.Background(), "net.szu.edu.cn")
+}
+
 // internetReachable 检查是否真的能上外网。
 func internetReachable() bool {
 	client := &http.Client{
@@ -348,15 +368,4 @@ func drcomUsable() bool {
 	}
 	// ePortal 无论成功失败都返回 dr1003(...) 这种 JSONP，拿它当指纹。
 	return strings.Contains(string(body), "dr1003")
-}
-
-// dnsResolvable 检查一个域名能不能解析出地址。
-func dnsResolvable(host string) bool {
-	host = strings.TrimPrefix(host, "http://")
-	host = strings.TrimPrefix(host, "https://")
-	if i := strings.IndexAny(host, "/:"); i >= 0 {
-		host = host[:i]
-	}
-	_, err := net.LookupHost(host)
-	return err == nil
 }

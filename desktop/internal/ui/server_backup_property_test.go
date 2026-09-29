@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // fileKind 是模型里一份文件的状态。
@@ -66,12 +67,15 @@ func writeModel(t *testing.T, path string, f modelFile) {
 func TestPropertyStoreFileRecoversLastGoodVersion(t *testing.T) {
 	r := propertyRand(t)
 	cases := 0
+	// 时钟固定在开始这一刻：模型里没有按天备份，测试跨过午夜也不会多出一份（见 server_backup_daily_test.go）。
+	start := time.Now()
 	// 30 轮 × 11 步 = 330 次读取；每步都真的落盘（fsync），Windows 上一次约 30 毫秒。
 	for round := 0; round < 30; round++ {
 		dir := t.TempDir()
 		f := storeFile[workspaceSnapshot]{
 			path: filepath.Join(dir, "workspace-v1.json"), tmpPattern: ".workspace-*.tmp",
 			empty: workspaceSnapshot{Version: 1, Data: json.RawMessage(`null`)}, parse: parseWorkspace,
+			now: func() time.Time { return start },
 		}
 		main, bak := modelFile{}, modelFile{}
 		revision := uint64(0)

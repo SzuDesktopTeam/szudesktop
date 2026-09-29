@@ -12,6 +12,8 @@ README 中英两版、CHANGELOG、SECURITY、CONTRIBUTING 和 docs/guide/ 使用
    这几份文件之间互相深链的锚点也必须存在。
 3. STATUS.md 的节标题（## 及以下）不含「未发布」「未合并」「源码候选」「开发中」这类会变的
    发布状态；「已随 beta0.x 发布」是终态，允许保留。已公开发布版本的章节因此不会再标成未发布。
+另外核对新建 issue 选择页（.github/ISSUE_TEMPLATE/config.yml）：安全问题链接与 SECURITY.md 的私有报告入口一致，
+链到仓库里的文件都存在，并且链到了使用指南。
 
 新增检查按 desktop/check_*.py 命名，desktop/run-checks.mjs 会自动发现并运行。
 """
@@ -154,6 +156,29 @@ def check_docs(docs):
     return problems
 
 
+# 新建 issue 的选择页。应用里的「提交反馈」也打开这一页：安全问题那一项必须指向 SECURITY.md 写的私有报告入口，
+# 另一项指向使用指南；两处各写一份，改了一处忘了另一处，同学就会被带到错的地方。
+ISSUE_CONFIG = ".github/ISSUE_TEMPLATE/config.yml"
+PRIVATE_REPORT = re.compile(r"https://github\.com/SzuDesktopTeam/szudesktop/security/advisories/new")
+GUIDE_HOME = GUIDE + "/README.md"
+
+
+def issue_config_problems(config, security, exists):
+    """config：config.yml 原文；security：SECURITY.md 原文；exists(仓库相对路径) 判断文件在不在。返回问题清单。"""
+    urls = re.findall(r"^\s*url:\s*(\S+)\s*$", config, re.M)
+    private = set(PRIVATE_REPORT.findall(security))
+    problems = []
+    if not private:
+        problems.append("SECURITY.md 里找不到私有漏洞报告入口")
+    elif not private & set(urls):
+        problems.append("%s 的安全问题链接与 SECURITY.md 的私有漏洞报告入口不一致：%s" % (ISSUE_CONFIG, "、".join(urls)))
+    repo = [REPO_URL.match(url).group(1).split("#", 1)[0] for url in urls if REPO_URL.match(url)]
+    problems += ["%s 链接的 %s 在仓库里不存在" % (ISSUE_CONFIG, rel) for rel in repo if not exists(rel)]
+    if GUIDE_HOME not in repo:
+        problems.append("%s 没有链接到使用指南 %s" % (ISSUE_CONFIG, GUIDE_HOME))
+    return problems
+
+
 def load(root):
     docs = {}
     guide = os.path.join(root, *GUIDE.split("/"))
@@ -205,6 +230,14 @@ def self_test():
     assert any("s99" in line and "没有这个锚点" in line for line in problems), problems
     assert any("源码未发布" in line and "STATUS.md:" in line for line in problems), problems
 
+    security = "[私有漏洞报告入口](https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new)"
+    config = ("contact_links:\n  - name: 安全\n    url: https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new\n"
+              "  - name: 指南\n    url: https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/README.md\n")
+    assert issue_config_problems(config, security, lambda rel: True) == []
+    moved = config.replace("security/advisories/new", "issues/new")
+    assert any("不一致" in line for line in issue_config_problems(moved, security, lambda rel: True))
+    assert any("不存在" in line for line in issue_config_problems(config, security, lambda rel: rel != GUIDE_HOME))
+
     en = Doc("docs/README_en.md", "# Readme\n\n[status](STATUS.md#s1-1) [zh](../README.md#下载) [bad](../README.md#nope)\n")
     problems = check_docs({**docs, "docs/README_en.md": en})
     assert len(problems) == 1 and "#nope" in problems[0], problems
@@ -217,6 +250,11 @@ def main():
         print("!! 找不到 %s，请从仓库里运行" % STATUS)
         return 1
     problems = check_docs(docs)
+    config = os.path.join(ROOT, *ISSUE_CONFIG.split("/"))
+    if os.path.isfile(config):
+        with open(config, encoding="utf-8") as handle, open(os.path.join(ROOT, "SECURITY.md"), encoding="utf-8") as sec:
+            problems += issue_config_problems(handle.read(), sec.read(),
+                                              lambda rel: os.path.exists(os.path.join(ROOT, *rel.split("/"))))
     for line in problems:
         print("!!", line)
     links = sum(len(doc.links) for doc in docs.values())

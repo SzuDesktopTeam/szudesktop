@@ -1,5 +1,5 @@
 // macOS 外壳装配的纯逻辑检查：应用菜单模板与「页面」菜单登记、学校和飞书窗口交出的菜单、报错文案、主窗口的全屏关闭与激活、
-// 启动失败文案、退出轨迹、冒烟里的 macOS 核对（checkMacRuntime 用假对象走通过与失败两条路），以及 POSIX 上按进程组清理引擎。
+// 启动失败文案、退出轨迹、冒烟里的 macOS 核对（checkMacRuntime 用假对象走通过与失败两条路；宠物冒烟藏主窗口前先等引导存好，指令超时时带上页面的回报），以及 POSIX 上按进程组清理引擎。
 // 只用 Node 内置模块和 testdata 里的假对象，三个平台的 CI 都能跑；同时核对不传 platform（Windows 今天的调用方式）时文案和行为逐字不变。
 // main.mjs 把这些接对了没有由 check-main-wiring.mjs 负责，真实 Electron 上的表现由 smoke-macos.mjs 和人工验收负责。
 import assert from 'node:assert/strict';
@@ -19,8 +19,9 @@ import {createEngineMonitor} from './engine-monitor.mjs';
 import {createQuitCoordinator} from './quit-coordinator.mjs';
 import {createQuitTrace} from './smoke-report.mjs';
 import {checkMacRuntime,menuRoles} from './smoke-macos.mjs';
+import {checkPetRuntime,waitGuideSaved,listenPetReplies,describePetReplies,createPetCommands} from './smoke-pet.mjs';
 import {startSidecar,stopSidecar,startupErrorText} from './sidecar.mjs';
-import {fakeDialog,fakeNativeImage,fakeWindowClass,settle} from './testdata/fake-electron.mjs';
+import {FakeWebContents,fakeDialog,fakeNativeImage,fakeWindowClass,settle} from './testdata/fake-electron.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const EDIT_ROLES=['undo','redo','cut','copy','paste','pasteAndMatchStyle','delete','selectAll'];
@@ -34,6 +35,99 @@ const top=(template,label)=>template.find(item=>item.label===label);
   assert.deepEqual(lines,["if(smoke.enabled&&mac)app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');"],
     'the occlusion switch is appended once, only in macOS smoke runs');
   assert.ok(source.indexOf(lines[0])<source.indexOf('app.whenReady()'),'Chromium switches must be appended before the app is ready');
+}
+
+// ───────────── 宠物冒烟先等欢迎引导的选择存好，再藏主窗口 ─────────────
+// 引导的 close 事件要等主窗口画出下一帧才派发，随后页面不经写入锁保存「已看过引导」，保存返回后才切到伙伴小屋。
+// 主窗口在页面处理完这次保存的回应之前就藏起的话，macOS 上藏起的页面在机器忙时要拖几百毫秒到几秒才处理它，
+// 接着的宠物指令带着旧修订号保存、被引擎按冲突拒掉（DMG 冒烟偶发的「pet sleep menu did not save」）。
+// 这里用假页面按真实顺序真的走一遍 checkPetRuntime 的开头：点引导后引擎先存下，页面过一阵才切路由；主窗口藏起那一刻两件事都必须已经发生。
+// 页面脚本原文交给 vm 在假 document 上执行，所以删掉等待、只在注释里留着条件，或把等待挪到藏主窗口之后，这里都会失败。
+{
+  // saveMs 后引擎记下「已看过引导」，再过 routeMs 页面才处理完回应、切到伙伴小屋；routeMs 为 null 表示页面一直没处理完。
+  function fakePage({onboarded,guideShown=!onboarded,saveMs=20,routeMs=150}){
+    const page={engineOnboarded:onboarded,guideOpen:guideShown,hash:'#home',clicks:0};
+    const garden={click(){
+      page.clicks++;page.guideOpen=false;
+      setTimeout(()=>{page.engineOnboarded=true;if(routeMs!==null)setTimeout(()=>{page.hash='#garden/pet';},routeMs);},saveMs);
+    }};
+    const guide={};
+    const document={querySelector:selector=>{
+      if(selector==='#guide[open]')return page.guideOpen?guide:null;
+      // 引导里第一个按钮就是「去认识我的伙伴」（value="garden"）。
+      if(selector==='#guide[open] button'||selector==='#guide[open] button[value="garden"]')return page.guideOpen?garden:null;
+      return null;
+    }};
+    const context=vm.createContext({document,location:{get hash(){return page.hash;}},window:{szuDesktop:{petScale:()=>1}}});
+    page.run=source=>vm.runInContext(source,context);
+    return page;
+  }
+  // 从头跑 checkPetRuntime，到它第一次藏主窗口（mainWin.close）为止：记下那一刻的页面与引擎，然后中止。
+  async function stateWhenMainHides(page){
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'szu-pet-smoke-'));
+    const stop=Error('main window hidden');
+    let atHide=null;
+    const mainContents=new FakeWebContents();mainContents.executeJavaScript=async source=>page.run(source);
+    const mainWin={webContents:mainContents,isDestroyed:()=>false,isVisible:()=>true,
+      close(){atHide={engineOnboarded:page.engineOnboarded,hash:page.hash,guideOpen:page.guideOpen,clicks:page.clicks};throw stop;}};
+    const petContents=new FakeWebContents();petContents.executeJavaScript=async()=>true;
+    const petWin={webContents:petContents,isDestroyed:()=>false,isVisible:()=>true,isAlwaysOnTop:()=>true,getBounds:()=>({x:0,y:0,width:260,height:320})};
+    const realFetch=globalThis.fetch;
+    globalThis.fetch=async()=>({ok:true,json:async()=>({revision:1,data:{preferences:{onboarded:page.engineOnboarded}}})});
+    try{
+      await assert.rejects(checkPetRuntime({mainWin,petWin,tray:{isDestroyed:()=>false},getMenu:()=>({items:[]}),getPetMenu:()=>null,
+        getPetMouse:()=>({}),getPetHitLog:()=>[],screen:{},initialScale:1,userData:dir,evidenceDir:dir,baseUrl:'http://127.0.0.1:9',token:'test'}),
+      error=>error===stop,'the pet smoke reaches the point where it hides the main window');
+    }finally{globalThis.fetch=realFetch;fs.rmSync(dir,{recursive:true,force:true});}
+    return atHide;
+  }
+  assert.deepEqual(await stateWhenMainHides(fakePage({onboarded:false})),{engineOnboarded:true,hash:'#garden/pet',guideOpen:false,clicks:1},
+    'first open: the guide choice is saved and applied by the page before the main window hides');
+  assert.deepEqual(await stateWhenMainHides(fakePage({onboarded:true})),{engineOnboarded:true,hash:'#home',guideOpen:false,clicks:0},
+    'already onboarded (reopen, upgrade data, Windows installer smoke): no guide, nothing clicked, same path as before');
+  // 失败的两条路用短等待直接调 waitGuideSaved，报错要说清卡在哪一步。
+  const quick=async(read,message)=>{for(let i=0;i<40;i++){if(await read())return;await new Promise(r=>setTimeout(r,5));}throw Error(message);};
+  const guideParts=page=>({main:async source=>page.run(source),onboarded:async()=>page.engineOnboarded,until:quick});
+  await assert.rejects(waitGuideSaved(guideParts(fakePage({onboarded:false,guideShown:false}))),/^Error: first-run guide did not open$/);
+  const unrouted=fakePage({onboarded:false,routeMs:null});
+  await assert.rejects(waitGuideSaved(guideParts(unrouted)),/^Error: first-run guide choice was not saved before hiding the main window$/,
+    'the engine has the save but the page has not applied it yet: keep waiting instead of hiding the main window');
+  assert.equal(unrouted.engineOnboarded,true);
+
+  // 页面对宠物指令的回报：只收 szu:pet-result，每个窗口只挂一个监听；报错里写明回报内容和点击后多久，没有回报也要说出来。
+  const contents=new FakeWebContents();
+  const log=listenPetReplies(contents);
+  assert.equal(listenPetReplies(contents),log);
+  assert.equal(contents.listenerCount('ipc-message'),1);
+  contents.emit('ipc-message',{},'szu:desktop-settings-get');
+  contents.emit('ipc-message',{},'szu:pet-result',{ok:false,message:'另一个窗口有新记录，已同步。本次操作尚未保存，请再试一次。'});
+  assert.equal(log.length,1);
+  assert.equal(describePetReplies(log,log[0].at-4230),'页面在点击后 4.2 秒回报失败：另一个窗口有新记录，已同步。本次操作尚未保存，请再试一次。');
+  assert.equal(describePetReplies([{at:1300,ok:true,message:''}],1000),'页面在点击后 0.3 秒回报成功：（无文字）');
+  assert.equal(describePetReplies([],1000,25000),'点击后 24.0 秒内页面没有回报结果');
+
+  // 宠物菜单指令依次执行：页面回报上一项之前不点下一项（否则会被「正在保存或处理上一项操作」拒掉）；
+  // 点已在陪伴的伙伴不发指令，也就不等回报；一直等不到回报时，报错写明是哪一项、点击后多久。
+  const replies=[],clicks=[];
+  const petCommand=createPetCommands({click:id=>clicks.push(id),replies,until:quick});
+  await petCommand('sleep');
+  const feed=petCommand('feed');
+  await new Promise(r=>setTimeout(r,30));
+  assert.deepEqual(clicks,['sleep'],'the next command waits until the page has reported the previous one');
+  replies.push({at:Date.now(),ok:true,message:'晚安，荔宝'});
+  await feed;
+  assert.deepEqual(clicks,['sleep','feed']);
+  replies.push({at:Date.now(),ok:true,message:'吃饱啦，谢谢你'});
+  await petCommand('switchPet:0',{expectReply:false});
+  await petCommand('garden');
+  assert.deepEqual(clicks,['sleep','feed','switchPet:0','garden'],'a click on the current companion sends nothing, so nothing is awaited');
+  await assert.rejects(petCommand('farm'),/^Error: main window did not report the result of garden；点击后 0\.\d 秒内页面没有回报结果$/);
+  assert.deepEqual(clicks,['sleep','feed','switchPet:0','garden']);
+  const answered=[];
+  const conflicted=createPetCommands({click:()=>answered.push({at:Date.now(),ok:false,message:'另一个窗口有新记录，已同步。本次操作尚未保存，请再试一次。'}),replies:answered,until:quick});
+  const afterSleep=await conflicted('sleep');
+  await assert.rejects(afterSleep(()=>false,'pet sleep menu did not save'),
+    /^Error: pet sleep menu did not save；页面在点击后 0\.0 秒回报失败：另一个窗口有新记录，已同步。本次操作尚未保存，请再试一次。$/);
 }
 
 // ───────────── 应用菜单模板：安装版与开发模式只差开发者工具；「页面」没有内容时置灰 ─────────────

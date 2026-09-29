@@ -200,7 +200,7 @@ func casDo(ctx context.Context, client *http.Client, address string, form url.Va
 		if errors.Is(err, errSessionInvalid) {
 			return 0, nil, nil, errSessionInvalid
 		}
-		return 0, nil, nil, errors.New("学校系统暂时无法连接，请检查校园网后重试")
+		return 0, nil, nil, schoolConnectionError("学校系统暂时无法连接", "学校系统暂时无法连接，请检查校园网后重试", req.URL, err)
 	}
 	defer res.Body.Close()
 	b, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))

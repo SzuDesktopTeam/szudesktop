@@ -1,0 +1,10 @@
+# 新建 issue 时的选择页（应用里的「提交反馈」也打开这一页）：安全问题走私有报告，使用问题先看指南。
+# 空白 issue 保持原来的可用状态。
+blank_issues_enabled: true
+contact_links:
+  - name: 安全问题（私下报告）
+    url: https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new
+    about: 可被利用的漏洞、可能泄露账号密码或 Cookie 的问题，请在这里私下报告，只有维护者能看到；不要开公开 issue。
+  - name: 使用指南
+    url: https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/README.md
+    about: 安装与更新、连校园网、学校登录、数据备份等用法和常见问题，提问前可以先在这里找找。

@@ -260,24 +260,45 @@ func cmdLogin(args []string) {
 
 // loginByZone 按区域挑对应协议发一次认证请求。
 func loginByZone(zone portal.Zone, o *options, user, pass string) (*portal.Result, error) {
-	switch zone {
-	case portal.ZoneDorm:
-		c := portal.NewDrcomClient(o.drcomHost, user, pass)
-		if o.serverIP != "" {
-			c.SetServerIP(o.serverIP)
-		}
-		return c.Login()
-	default:
-		c := portal.NewSrunClient(o.srunHost, user, pass)
-		if o.acID != "" {
-			c.AcID = o.acID
-		}
-		if o.serverIP != "" {
-			c.SetServerIP(o.serverIP)
-		}
-		attachAcIDCache(c)
-		return c.Login()
+	if zone == portal.ZoneDorm {
+		return drcomClient(o, user, pass).Login()
 	}
+	return srunClient(o, user, pass).Login()
+}
+
+// logoutByZone 按区域注销，客户端设置和 loginByZone 是同一份。
+//
+// 以前 logout 自己 new 裸客户端：--ip 被忽略（域名被代理抢走时 login 能成、logout 却失败），
+// ac_id 也不看 --ac-id 和这张网的缓存、自己重新探测，门户入口不通时退到兜底的 "1"，
+// 和登录用的编号对不上，教学区「注销与重连」的验收就可能得出错误结论。
+func logoutByZone(zone portal.Zone, o *options, user, pass string) (*portal.Result, error) {
+	if zone == portal.ZoneDorm {
+		return drcomClient(o, user, pass).Logout()
+	}
+	return srunClient(o, user, pass).Logout()
+}
+
+// srunClient 按命令行参数配好深澜客户端：--ac-id、--ip，再接上这张网缓存的 ac_id。
+// login、logout、detect 都从这里拿客户端，免得哪条路径又漏掉一项设置。
+func srunClient(o *options, user, pass string) *portal.SrunClient {
+	c := portal.NewSrunClient(o.srunHost, user, pass)
+	if o.acID != "" {
+		c.AcID = o.acID
+	}
+	if o.serverIP != "" {
+		c.SetServerIP(o.serverIP)
+	}
+	attachAcIDCache(c)
+	return c
+}
+
+// drcomClient 按命令行参数配好 Dr.COM 客户端（--ip）。
+func drcomClient(o *options, user, pass string) *portal.DrcomClient {
+	c := portal.NewDrcomClient(o.drcomHost, user, pass)
+	if o.serverIP != "" {
+		c.SetServerIP(o.serverIP)
+	}
+	return c
 }
 
 // attachAcIDCache 让客户端复用上次这张网成功的 ac_id，成功后写回缓存。
@@ -319,11 +340,8 @@ func cmdLogout(args []string) {
 	zone, _ := probeForAuth(&o)
 
 	switch zone {
-	case portal.ZoneTeaching:
-		res, err := portal.NewSrunClient(o.srunHost, user, pass).Logout()
-		reportResult(res, err, zone, o.asJSON, o.verbose)
-	case portal.ZoneDorm:
-		res, err := portal.NewDrcomClient(o.drcomHost, user, pass).Logout()
+	case portal.ZoneTeaching, portal.ZoneDorm:
+		res, err := logoutByZone(zone, &o, user, pass)
 		reportResult(res, err, zone, o.asJSON, o.verbose)
 	default:
 		fail(fmt.Errorf("不在校园网内，没有可注销的会话"))
@@ -433,19 +451,20 @@ func cmdDetect(args []string) {
 
 	if o.asJSON {
 		printJSON(map[string]any{
-			"zone":            det.Zone,
-			"zone_label":      det.Zone.Label(),
-			"internet_ok":     det.InternetOK,
-			"probed":          det.Probed,
-			"dorm_portal_ok":  det.DormPortalOK,
-			"teaching_portal": det.TeachPortalOK,
-			"srun_usable":     det.SrunUsable,
-			"dorm_usable":     det.DormUsable,
-			"srun_dns_ok":     det.SrunDNSOK,
-			"ac_id":           acID,
-			"ac_id_source":    string(acIDSource),
-			"ac_id_trusted":   acIDSource != "" && acIDSource != portal.AcIDSourceGuess,
-			"notes":           det.Notes,
+			"zone":             det.Zone,
+			"zone_label":       det.Zone.Label(),
+			"internet_ok":      det.InternetOK,
+			"probed":           det.Probed,
+			"dorm_portal_ok":   det.DormPortalOK,
+			"teaching_portal":  det.TeachPortalOK,
+			"srun_usable":      det.SrunUsable,
+			"dorm_usable":      det.DormUsable,
+			"srun_dns_ok":      det.SrunDNSOK,
+			"srun_dns_fake_ip": det.SrunDNSFakeIP, // 学校域名被代理的 Fake-IP 接管
+			"ac_id":            acID,
+			"ac_id_source":     string(acIDSource),
+			"ac_id_trusted":    acIDSource != "" && acIDSource != portal.AcIDSourceGuess,
+			"notes":            det.Notes,
 		})
 		return
 	}
@@ -505,15 +524,7 @@ func acIDForDetect(o *options, det *portal.DetectResult) (string, portal.AcIDSou
 
 // detectAcID 算一次接入点编号，并说明它是否可信。
 func detectAcID(o *options, user, pass string) (string, portal.AcIDSource) {
-	c := portal.NewSrunClient(o.srunHost, user, pass)
-	if o.acID != "" {
-		c.AcID = o.acID
-	}
-	if o.serverIP != "" {
-		c.SetServerIP(o.serverIP)
-	}
-	attachAcIDCache(c)
-	return c.ResolveAcIDWithSource()
+	return srunClient(o, user, pass).ResolveAcIDWithSource()
 }
 
 // describeAcID 把接入点编号和它的可信度讲成人话。
@@ -544,17 +555,18 @@ func cmdDiag(args []string) {
 
 	if o.asJSON {
 		out := map[string]any{
-			"zone":            rep.Detect.Zone,
-			"zone_label":      rep.Detect.Zone.Label(),
-			"internet_ok":     rep.Detect.InternetOK,
-			"probed":          rep.Detect.Probed,
-			"dorm_portal_ok":  rep.Detect.DormPortalOK,
-			"teaching_portal": rep.Detect.TeachPortalOK,
-			"srun_usable":     rep.Detect.SrunUsable,
-			"dorm_usable":     rep.Detect.DormUsable,
-			"srun_dns_ok":     rep.Detect.SrunDNSOK,
-			"notes":           rep.Detect.Notes,
-			"advices":         rep.Advices,
+			"zone":             rep.Detect.Zone,
+			"zone_label":       rep.Detect.Zone.Label(),
+			"internet_ok":      rep.Detect.InternetOK,
+			"probed":           rep.Detect.Probed,
+			"dorm_portal_ok":   rep.Detect.DormPortalOK,
+			"teaching_portal":  rep.Detect.TeachPortalOK,
+			"srun_usable":      rep.Detect.SrunUsable,
+			"dorm_usable":      rep.Detect.DormUsable,
+			"srun_dns_ok":      rep.Detect.SrunDNSOK,
+			"srun_dns_fake_ip": rep.Detect.SrunDNSFakeIP,
+			"notes":            rep.Detect.Notes,
+			"advices":          rep.Advices,
 		}
 		if rep.Online != nil {
 			out["online"] = rep.Online.Online

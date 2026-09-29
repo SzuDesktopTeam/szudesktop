@@ -7,6 +7,22 @@
 功能范围、验收记录和发布历史都在那里。本文只讲「怎么改代码、怎么验证」，
 不重复维护另一套任务清单。
 
+## 第一次贡献
+
+不用先装 Windows 或 Electron，在任何系统上都能在浏览器里预览界面：
+
+```text
+python3 desktop/sync-assets.py                  # 把页面源文件同步进内嵌目录
+SZUNET_CONFIG_DIR=$(mktemp -d) go run ./desktop/cmd/szudesktop --no-auto-login   # 用临时配置目录启动，默认浏览器会打开页面
+node desktop/run-checks.mjs                     # 改完跑全部检查
+```
+
+- `SZUNET_CONFIG_DIR` 让预览用一个空的临时目录，不碰你自己的庭院存档。账号只在 Windows 和 macOS 上跟着隔离：Windows 的加密账号文件就在这个目录里，macOS 上桌面服务改用带 `-test-` 后缀的钥匙串条目。`--no-auto-login` 让启动时不拿已保存的账号去连校园网。
+- Linux 的 Secret Service 条目不随 `SZUNET_CONFIG_DIR` 隔离，预览读到的就是你真实保存的 `szunet` 账号：别去掉 `--no-auto-login`，登录时也不要勾选「认证成功后记住账号密码」，否则会覆盖真实的条目。
+- macOS 上实测过（2026-09-29）：同步、编译、用临时配置目录启动都正常，首页和 `/api/health` 可以访问（加 `--no-open` 时不自动开浏览器，要自己打开 `<终端里打印的地址>/?launch=<「szuDesktop 会话」那一行的值>`）。Linux 上 CI 会编译并测试桌面服务，打开浏览器用的是 `xdg-open`，但还没人在 Linux 上实际预览过。Windows 上 `python` 可能不叫 `python3`，临时目录换成 `$env:TEMP` 下自己建的文件夹。
+- 适合先上手的事：[STATUS 1.1 节](docs/STATUS.md#s1-1)里「其余 11 个学院公告栏目」中能套用通用解析器的学院（改一行目录、加一个 HTML 夹具，不需要账号）；计算机与软件学院和外国语学院不在其列。
+- 界面上用词以下面的[界面用词](#界面用词)为准。
+
 ## 环境
 
 | 依赖 | 用途 |
@@ -20,10 +36,11 @@
 不依赖 Windows 专属工具（CI 只在 Windows runner 上跑它）；需要 Edge 或 Chrome 的是整机冒烟
 `smoke_windows.py`，它只能在 Windows 上运行（冒烟会起真实浏览器窗口）。macOS / Linux 上，本文命令里的 `python` 通常要写成 `python3`。
 
-**本地试用界面**：在 Windows 上跑完 `python desktop/build-windows.py` 后，直接运行
+**本地试用界面**：任何系统上都可以按[第一次贡献](#第一次贡献)用 `go run ./desktop/cmd/szudesktop` 在浏览器里预览
+（桌面服务入口是 `desktop/cmd/szudesktop`；macOS 已实测，Linux 只有 CI 的编译与测试，Linux 桌面端也不在发布范围内，
+见[范围与非目标](#范围与非目标)）。在 Windows 上跑完 `python desktop/build-windows.py` 后，也可以直接运行
 `dist/szudesktop-windows-amd64.exe`（就是便携版里的 `szudesktop.exe`，用本机 Edge / Chrome 开窗）。
-桌面服务入口是 `desktop/cmd/szudesktop`；在 Linux 上 `go run ./desktop/cmd/szudesktop`
-没有验证过，Linux 桌面端也不在发布范围内（见[范围与非目标](#范围与非目标)）。macOS 的开发模式与打包见[macOS 桌面版](#macos-桌面版)。
+macOS 的开发模式与打包见[macOS 桌面版](#macos-桌面版)。
 
 ## 界面资源的规矩
 
@@ -38,6 +55,28 @@
   和星露谷字体 `svbold.ttf` / `svthin.ttf`）已从仓库删除（STATUS 第 30.1 节），`smoke_windows.py`
   断言 `/assets/art/m1.png` 与 `/assets/fonts/svbold.ttf` 返回 404，防止它们回到包里。
   实验 VPN 协议同样不在默认构建里，见[实验 VPN 模块](#实验-vpn-模块)。
+
+## 界面用词
+
+一个东西只用一个名字：导航名、页标题和页面顶部的路径（面包屑）用同一个词，界面、README 中英两版和 `docs/guide/` 都照这张表写。
+页名写在 `desktop/assets/garden/app.mjs` 的 `pages`（导航）和 `campus-world.mjs` 的 `ROOMS`（页头与路径）两处，`check-workspace-ui.mjs` 核对导航、页标题和路径一致，改名时三处一起改。
+
+| 东西 | 只用这个名字 | 不再用 |
+|---|---|---|
+| 首页 | 今日（导航名，也是各页路径的根；「深大校园生活手帐」只作品牌副标题） | 今日手帐、庭院（作为路径的根） |
+| 其余各页 | 校园网、校园服务、荔枝庭院、学习书屋、设置 | 连接小站、连接站、荔园告示板、公告板、伙伴的后院、小屋与菜畦、庭院书屋、我的小屋、收纳柜、学习工具 |
+| 荔枝庭院的分区 | 伙伴小屋、我的农田、庭院集市、伙伴小桌、回忆与建设 | 我的小屋（容易和伙伴小屋混淆） |
+| 桌面上常驻的伙伴 | 桌面伙伴 | 桌面宠物、宠物 |
+| 暂停专注通知的开关 | 勿扰（设置和托盘同名） | 安静陪伴 |
+| 伙伴的三项数值 | 饱食、精力、心情 | 饱腹、饱食度 |
+| 页脚的两个入口 | 欢迎引导（应用内的引导框）、使用指南 ↗（`docs/guide/`） | 用「使用指南」指引导框 |
+| 首页的笔记卡片 | 我的课程笔记 | 我的课程手帐、课程手帐 |
+| 学校个人业务的未验收标记 | 暂时保持「接入测试 · 未经真实验收」；以后改措辞，必须保留「没用真实账号验收过」的意思 | — |
+
+- 首页风景里的「去书屋写笔记」「看看告示板」「去后院转转」是场景文案，不当页名用。
+- `check-workspace-ui.mjs` 扫描 `desktop/assets/garden/` 的页面源码和 `index.html`（整行注释、HTML 注释和伙伴台词 `pet-dialogue.mjs` 除外），表里「不再用」的名字一出现就失败；往表里加旧名时，同步加进那项检查的名单。
+- Electron 外壳（`desktop/electron/` 的托盘、伙伴菜单和通知）还写着「宠物」「饱腹」「学习工具」，改名排在 [STATUS 1.1 节](docs/STATUS.md#s1-1)「术语统一的剩余部分」；改完之前，文档里描述这些菜单时照界面实际显示的字写。
+- 界面文字不小于 12px，`check-ui.mjs` 静态扫描 CSS 守着；唯一的例外是 2048 棋盘上五位以上的数字，靠 `clamp` 缩放才放得进格子。
 
 ## 提交前请跑
 
@@ -54,9 +93,9 @@ go test ./...
 和 `desktop/check_*.py`，逐个运行、最后汇总失败。新增检查只要按这个命名放进对应目录，
 本地和 CI 都会跑到，**不要**再往 CI、Makefile 或文档里手抄清单（以前就是这样抄漏的）。
 `--only-node` 只跑 JS 检查。运行前它会先做一次模块语法与链接检查（`desktop/module-links.mjs`）：对页面和 Electron 的全部 `.mjs` 做语法检查，并核对每个相对导入的文件存在、具名导入确有导出。
-`desktop/check_*.py` 目前有四个：发布说明抽取（`check_release_notes.py`）、许可文件与第三方哈希
-（`check_licenses.py`）、Windows 版本资源（`check_version_resource.py`）和文档锚点
-（`check_status_doc.py`，见[文档与截图](#文档与截图)）。有任何一项失败，`run-checks.mjs` 汇总后以非零码退出；
+`desktop/check_*.py` 目前有五个：发布说明抽取（`check_release_notes.py`）、许可文件与第三方哈希
+（`check_licenses.py`）、Windows 版本资源（`check_version_resource.py`）、macOS 构建与冒烟脚本的纯逻辑
+（`check_macos_scripts.py`）和文档锚点（`check_status_doc.py`，见[文档与截图](#文档与截图)）。有任何一项失败，`run-checks.mjs` 汇总后以非零码退出；
 单个检查超过 5 分钟没结束也算失败（`TIMEOUT_MS`）。
 
 性质测试（`desktop/check-properties*.mjs` 和 Go 的 `*_property_test.go`）默认种子是 `20260928`，
@@ -88,6 +127,9 @@ python desktop/make_release.py       # 生成便携 ZIP（只在真的要发布�
 也是 Electron 安装包里的 Go sidecar（`electron-builder.yml` 的 `extraResources`）。`build.mjs` 默认先调用
 `build-windows.py` 重编这份引擎，加 `--skip-sidecar` 则直接用已有产物（CI 就这样复用冒烟通过的那份）；
 安装包和同名 `.sha256` 输出到 `desktop/electron/release/`。
+NSIS 安装包关掉了差分打包（`electron-builder.yml` 的 `nsis.differentialPackage: false`）：改用整体压缩，
+安装包约小 10MB，也不再生成 `.blockmap`，代价是打包慢一些。项目没有接自动更新，用不上差分包；以后真接自动更新时再评估要不要改回
+（`check-packaging.mjs` 锁着这一行，改回时一起改断言）。
 
 `python desktop/electron/smoke_installer.py` 只在一次性的 GitHub Windows runner 上安装、重开、重装和卸载最终安装包：
 不是 Windows、或没有 `GITHUB_ACTIONS=true` 和 `RUNNER_TEMP` 时它直接拒绝运行，什么都不安装。
@@ -188,10 +230,25 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
 - `cmd/szunet/status_query_test.go` — F22：CLI 没账号时跳过在线查询
 - `desktop/internal/ui/booking_test.go` — F23：预约写端点必须不存在（断言 404）
 - `internal/credential/store_unavailable_test.go` — F24：没有密钥环时拒绝把密码写成明文
+- `cmd/szunet/logout_settings_test.go` — `szunet logout` 要沿用 `login` 的 `--ac-id`、`--ip` 和接入点缓存（假门户、子进程跑真实命令行）
 
 新发现的问题请按 STATUS.md 的编号体系追加一行（功能/安全/工程用 `F`，
 排版与交互用 `U`），写清重要程度（P0–P3）、难度（S/M/L）、状态和验收标准。
 「已完成」必须附验收证据；没验证过的就写「未验证」，不要含糊过去。
+
+## 存档兼容
+
+庭院存档 `workspace-v1.json` 是同学手里唯一的一份记录，旧版本和新版本常常混用（便携版、单文件版和安装版共用 `~/.szunet`）。
+`engine.mjs` 的 `normalize` 只留下本版本认识的键和取值，所以：
+
+- 存档里只要会出现新的键或取值（新作物、装饰、建设、成就、伙伴、台词情境、纪念物、风景，或新的字段），就把 `engine.mjs` 的
+  `SAVE_SCHEMA` 加一，`normalize` 继续接受旧的结构版本，然后运行 `node desktop/check-save-compat.mjs --print`，
+  把输出贴进同一文件的 `SCHEMA_VOCABULARY`。加了键却没加版本号，`check-save-compat.mjs` 会失败并列出多出来的内容。
+- 读到比自己新的结构版本时，旧版本拒读、进入只读的存档失败页，不改原文件；已发布的 beta0.9.x 本来只认 2 和 3，
+  所以不要另加一个版本字段来代替 `schema`，那些版本会把它连同新数据一起丢掉。
+- 提升 `SAVE_SCHEMA` 的那一版，发版时在升级冒烟里加一步：新结构的存档交给上一版读取，应拒读且文件不变。
+- 存档与笔记每次保存都更新 `.bak`，每天第一次保存另存 `<文件名>.bak-YYYY-MM-DD`，保留最近 3 个使用日
+  （`desktop/internal/ui/server_backup.go` 的 `dailyBackupKeep`）；读档按 `.bak`、按天备份从新到旧的顺序恢复。
 
 ## 扩展伙伴
 
@@ -208,6 +265,8 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
 | `pet-animation.mjs` | 18 组动作（`PET_ACTIONS`）的时序、标签（`ACTION_LABELS`）、速度（`SPECIES_PACE`）和空闲安排（`IDLE_ROUTINES`）；`signatureLabel()` 给出各物种的拿手动作名 |
 | `pet-animation-art.mjs` | 逐帧画法：每组 6 帧，每帧一张独立完整画面，整数像素坐标，不超出该物种的原画布；不能拿同一张图挪位置充当全部帧。`animationContactSheet(species)` 输出逐帧检查表 |
 | `pet-player.mjs` | 主窗口和桌宠共用的播放器：动作映射（`petReaction`）、优先级（睡眠和专注优先）、减少动态处理 |
+
+新物种的 ID 会写进存档，加物种也要按[存档兼容](#存档兼容)提升 `SAVE_SCHEMA`。
 
 `desktop/electron/` 下同名的 `pet-*.mjs` 只是开发用的转导模块（`export *` 同一份源文件）。打包时
 `electron-builder.yml` 的 `files` 把 `../assets/garden` 里这六个模块直接映射进 `app.asar`，转导模块不进包。
@@ -283,9 +342,11 @@ node desktop/electron/check-pet-view.mjs
 - **状态和待办只在 STATUS.md**：`docs/guide/` 属于用户文档，和 README 一样随版本更新，不是另一套维护清单；
   指南里不列任务。
 - **版本号**：README 里只出现在下载按钮、下载区的「当前版本」一行和更新日志段落。发版时同步中英两版 README
-  的这三处：标题区下载按钮（URL 和文字）、「当前版本」一行（版本、日期、发布页链接和两个安装文件名）、
-  「更新日志」段。`docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
-  另外核对便携 ZIP 的 `README-快速开始.txt` 模板与当前界面一致。
+  的这三处：标题区下载按钮（URL 和文字）、「当前版本」一行（版本、日期、发布页链接、两个安装文件名和它们的下载大小，
+  大小照发布页附件的字节数四舍五入）、「更新日志」段。`docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
+  另外核对便携 ZIP 的 `README-快速开始.txt` 模板与当前界面一致：它只留十来行（打开方式、第一次该做什么、数据存哪、
+  密码怎么存、不代提交、测试版边界），细节链接到使用指南，`make_release.py` 打包前用 `quickstart_problems()` 自检，`check_licenses.py` 在 `run-checks.mjs` 里也调用它。
+  使用指南里的下载大小写的是近几个版本的大致数字，变化不大时不用每版改。
 - **链接 STATUS**：一律指向标题前的显式锚点 `<a id="sNN"></a>`（如 `docs/STATUS.md#s65`），不要用标题生成的锚点；
   需要新的外部链接时，先在 STATUS 目标标题前补一行锚点（STATUS 开头「标题与链接」的约定）。
   指南页之间、README 到指南页只链到文件，不带 `#片段`。
@@ -293,6 +354,7 @@ node desktop/electron/check-pet-view.mjs
   `docs/README_en.md`、`CHANGELOG.md`、`SECURITY.md`、`CONTRIBUTING.md` 和 `docs/guide/*.md`：
   指向 STATUS 的链接必须落在显式锚点上，文件内的 `#锚点` 要能按 GitHub 的标题 slug 规则找到；
   它也拦下 STATUS 标题里「未发布」「源码候选」这类会变的状态。
+- **用词**：界面、README 和使用指南都按[界面用词](#界面用词)那张表写；界面还没改名的地方（如托盘菜单），照界面实际显示的字写。
 - **截图**：`docs/screenshot-*.png` 用 `SZUNET_CONFIG_DIR` 隔离出的合成存档制作，不能出现真实账号、课表或成绩；
   同一张图不在同一个文件里用两次。
 
@@ -306,6 +368,7 @@ node desktop/electron/check-pet-view.mjs
   整机 VPN、图书馆选座、余额与流量都已延期，方案保留在 STATUS 原章节。
 - Windows 安装包未签名，macOS 包只有 ad-hoc 签名、未经公证；目前只有手动版本查询（UX21），没有自动更新。
 - 学校业务（R01–R07）以真实账号验收为准，本机和 CI 检查不能代替；没验收的不要在文档或界面里写成可用。
+  1.0 只等 R01，R02–R07 保留「测试中」随版本发布，之后按试用同学交回的诊断报告逐项关闭（[STATUS 第 69.2 节](docs/STATUS.md#s69-2)）。
 
 ## 发布
 
@@ -336,7 +399,8 @@ node desktop/electron/check-pet-view.mjs
     `run-checks.mjs`、整机冒烟和打包——Windows 专属的 Go 测试只有这里会运行。
   - `build-desktop-electron-windows` 等 `build-desktop-windows` 通过后，**直接用它上传的那份引擎**
     打 NSIS 安装包（不重新编译），并核对安装包里的引擎与冒烟通过的字节一致，
-    再从最新公开版安装、升级、重开、卸载一遍。
+    再从最新公开版安装、升级、重开、卸载一遍；其间还按安装版自己登记的开机自启命令（含 `--autostart`）启动一次，
+    确认主窗口在冒烟主动打开之前保持隐藏。
   - macOS 这条线与 Windows 并行：`test` 通过后，`build-desktop-macos`（arm64 runner）编两个架构的引擎并 ad-hoc 签名，
     arm64 原生、amd64 经 Rosetta 各跑一遍 `smoke_macos.py`；`build-desktop-electron-macos` **直接用这两份引擎**打两个 DMG，
     核对包里的引擎与冒烟通过的字节一致，再对 arm64 与 x64（Rosetta）各跑一遍 `smoke_dmg.py`。真实 quit Apple Event 那一步
@@ -371,7 +435,7 @@ node desktop/electron/check-pet-view.mjs
   `-test-<配置目录哈希>`（`internal/credential/keychain_namespace.go`），测试与冒烟不碰真实条目；命令行版 `szunet`
   不开这个开关，已发布用户的服务名不变。
   **仍未完成**：真机上先 `szunet config set`、再 `szunet config show` 或 `szunet login` 的完整保存再读取没有验证
-  （[STATUS 1.1 节](docs/STATUS.md#s1-1)的 F21；那里写的 `config get` 实际对应 `config show`，szunet 没有 `get` 子命令），
+  （[STATUS 1.1 节](docs/STATUS.md#s1-1)的 F21，步骤见 [69.4 清单](docs/STATUS.md#s69-4)；szunet 没有 `config get` 子命令），
   CI 探针只覆盖 `security` 本身的行为，文档里不要写成「已在真机验证」。
 - **不要在未发布的改动上跑 `python desktop/make_release.py`**：它会覆盖
   与 GitHub Release 对应的本地包，导致线上附件没法再和本地产物逐字节核对。
@@ -381,7 +445,17 @@ node desktop/electron/check-pet-view.mjs
 - 发布后把安装升级验收的基线挪到刚发布的版本：改 `desktop/electron/smoke_installer.py` 里的
   `BASELINE_VERSION`、`BASELINE_SHA256`（发布页和同名 `.sha256` 附件上都有）、
   `BASELINE_ELECTRON` 与 `BASELINE_COMPANIONS`。现有用户是从最新公开版升级上来的，
-  验收也要从它开始；CI 下载哪个附件由这里决定，workflow 里不再另写一份。
+  验收也要从它开始；CI 下载哪个附件由这里决定，workflow 里不再另写一份。这一步就是原来的 R09
+  （跨版本升级与数据恢复），2026-09-29 起它是发版流程的固定一步，不再单列为开放任务（[STATUS 第 69.2 节](docs/STATUS.md#s69-2)）。
+  CI 先按 `BASELINE_SHA256` 从 `actions/cache` 取基线安装包，缓存没有或哈希不对时才从发布页下载一次、核对后存进缓存，
+  免得每次运行都把发布页的下载数抬高；挪了基线，缓存键跟着变，不用手动清缓存。`check_release_notes.py` 核对这几步的先后顺序。
+- **分支保护**：`main` 的必需检查要从只有 `test` 扩展到每个 PR 都会跑的 job：`test`、`test-macos`、`build-cli`、
+  `build-desktop-windows`、`build-desktop-electron-windows`、`build-desktop-macos`、`build-desktop-electron-macos`
+  （2026-09-29 定下，由维护者在仓库设置里改，进度见 [STATUS 1.1 节](docs/STATUS.md#s1-1)）。以后新增在 PR 上运行的 job，
+  也同步加进必需检查。`smoke-desktop-electron-macos-intel` 和 `release` 不在 PR 上运行，不设为必需。
+  协作者都是管理员，没开 enforce_admins 时管理员仍能绕过，要不要开由负责人决定。
+- **1.0 门槛**（维护者 2026-09-29 决定）：R01、R10 和首轮试用达到基本标准；R02–R07 带「测试中」随 1.0 发布，
+  R10 的完成标准含「附本次候选包的资源基线」。细节见 [STATUS 第 69.2 节](docs/STATUS.md#s69-2)。
 
 ## 验收与设计记录
 
@@ -398,6 +472,7 @@ node desktop/electron/check-pet-view.mjs
 | [66](docs/STATUS.md#s66)、[66.1](docs/STATUS.md#s66-1)、[66.2](docs/STATUS.md#s66-2)、[66.3](docs/STATUS.md#s66-3) | 代码审查与全面修复：主要修复、验收、未在本机验证的部分 |
 | [67](docs/STATUS.md#s67) | 第二轮发布审查：性质测试、修复与发布附件 |
 | [68](docs/STATUS.md#s68)、[68.2](docs/STATUS.md#s68-2) | macOS 桌面版：实现取舍、自动验收覆盖与 B1–B9 真机验收清单 |
+| [69](docs/STATUS.md#s69)、[69.4](docs/STATUS.md#s69-4)、[69.5](docs/STATUS.md#s69-5) | 优化评估落地、1.0 门槛、1.1 整理依据、R01 教学区验收清单与试用自查清单 |
 
 Electron 外壳加 Go sidecar 的由来见[迁移设计](docs/superpowers/specs/2026-09-24-electron-migration-design.md)和
 [阶段 0–1 实施计划](docs/superpowers/plans/2026-09-24-electron-phase-0-1-shell.md)。它们是历史设计记录：

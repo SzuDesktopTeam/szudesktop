@@ -50,8 +50,16 @@ const KEEPSAKE_ICONS={hello:'i-lantern',lake:'i-quill',shade:'i-flower',rain:'i-
 export function journeyKeepsakes(g){return journeyList(g).filter(c=>c.claimed).map(c=>({id:c.id,name:c.keepsake,icon:KEEPSAKE_ICONS[c.id],storyTitle:c.title}))}
 const dailyState=now=>({day:dayKey(now),gift:false,...Object.fromEntries(Object.keys(QUESTS).map(k=>[k,0])),claimed:[],pats:[],todoRewards:0});
 const STAT_KEYS=['harvest','focus','minutes','planted','tasks'];
+// 存档结构版本。normalize 只留下本版本认识的键和取值，旧版本读到新版本多出来的作物、装饰、成就或字段会直接丢掉，
+// 下次自动保存就写回磁盘。所以存档里只要会出现新的键或取值，就把它加一，并在 normalize 里继续接受旧版本：
+// 已经发布的各版本都只认 2 和 3，读到更高的版本会拒读、进入只读的存档失败页，不会覆盖原文件。
+// 用它而不另加字段，正是因为这些已发布的版本不认识新字段，只会把它和其他新数据一起丢掉。
+// desktop/check-save-compat.mjs 登记了每个版本的键和取值，改了却没加版本号时会失败。
+export const SAVE_SCHEMA=3;
+// 更新版本写的存档。读成本版本认识的样子再保存，新版本的内容就没了，所以宁可拒读。
+export const saveFromNewerVersion=raw=>!!raw&&typeof raw==='object'&&Number.isInteger(raw.schema)&&raw.schema>SAVE_SCHEMA;
 export function createState(now=Date.now()){
- return {schema:3,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
+ return {schema:SAVE_SCHEMA,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:cropBag({radish:4,strawberry:2}),stock:cropBag(),
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
  pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,puzzle:createPuzzle(now),orders:createOrders(),
@@ -70,7 +78,9 @@ export function normalize(input,now=Date.now()){
  // schema 2 是早期的单伙伴存档：只有 g.pet。这里统一升级成 pets 数组，
  // 用户改过的名字原样保留（迁移不覆盖用户数据），species 记为栗栗。
  const raw=input&&typeof input==='object'?structuredClone(input):null;
- check(raw&&(raw.schema===2||raw.schema===3)&&raw.game&&Array.isArray(raw.game.plots),'不支持的存档格式，请选择本应用导出的存档');
+ // 只在确认是更新版本后才拼提示：schema 可能是任意垃圾对象，提前转成字符串本身就会抛 TypeError。
+ if(saveFromNewerVersion(raw))throw Error(`这份存档来自更新版本的荔枝庭院（存档结构 ${raw.schema}，当前版本只认识到 ${SAVE_SCHEMA}），直接读取会丢掉新版本的内容。请先把应用更新到最新版再打开，原文件不会被改动。`);
+ check(raw&&Number.isInteger(raw.schema)&&raw.schema>=2&&raw.schema<=SAVE_SCHEMA&&raw.game&&Array.isArray(raw.game.plots),'不支持的存档格式，请选择本应用导出的存档');
  const s=structuredClone(raw),g=s.game;
  for(const key of ['coins','food']){check(Number.isFinite(g[key])&&g[key]>=0&&g[key]<=1e8,'存档资源格式错误')}
  check(g.plots.length===6,'农田存档格式错误');
@@ -130,7 +140,7 @@ export function normalize(input,now=Date.now()){
 	s.courses=(Array.isArray(s.courses)?s.courses:[]).slice(0,300).filter(x=>x&&Number.isFinite(x.credit)&&Number.isFinite(x.point)&&x.credit>0&&x.credit<=100&&x.point>=0&&x.point<=5).map(x=>({name:limitedText(x.name,100,'课程')||'课程',credit:x.credit,point:x.point,term:limitedText(x.term,40),code:limitedText(x.code,40),level:['undergrad','graduate'].includes(x.level)?x.level:'',grade:limitedText(x.grade,20),source:limitedText(x.source,30,'手动录入')||'手动录入',included:x.included!==false}));
  s.reminders=(Array.isArray(s.reminders)?s.reminders:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.place==='string'&&Number.isFinite(x.start)&&Number.isFinite(x.end)&&x.end>x.start&&x.end-x.start<=86400000).slice(0,50).map(x=>({id:x.id.slice(0,80),place:x.place.slice(0,80),start:x.start,end:x.end}));
  s.semester=/^\d{4}-\d{2}-\d{2}$/.test(s.semester||'')?s.semester:'';
- const clean={schema:3,profile:s.profile,preferences:s.preferences,todos:s.todos,courses:s.courses,reminders:s.reminders,semester:s.semester,game:{}};
+ const clean={schema:SAVE_SCHEMA,profile:s.profile,preferences:s.preferences,todos:s.todos,courses:s.courses,reminders:s.reminders,semester:s.semester,game:{}};
  for(const k of Object.keys(createState(now).game))clean.game[k]=g[k];
  clean.game.pets=g.pets;clean.game.active=g.active;
  const settled=settle(clean,now);

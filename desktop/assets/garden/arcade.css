@@ -39,9 +39,9 @@
 .arcade-tile[data-kind="celebration"] { --tile-bg:#e7c474; --tile-edge:#b88b37; box-shadow:inset 0 0 0 2px #f8df9e,0 2px #65462640; }
 .arcade-harvest-trail { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 0; margin-top:12px; border-bottom:1px dashed #d7c7a5; }
 .arcade-trail-current,.arcade-trail-next { display:flex; align-items:center; gap:7px; min-width:0; }
-.arcade-harvest-trail small { display:block; font-size:11px; line-height:1.6; color:#887552; }
+.arcade-harvest-trail small { display:block; font-size:12px; line-height:1.6; color:#887552; }
 .arcade-harvest-trail strong { display:block; font-size:12px; line-height:1.6; color:#536844; }
-.arcade-harvest-trail b { color:#8b6738; font-size:11px; font-weight:500; }
+.arcade-harvest-trail b { color:#8b6738; font-size:12px; font-weight:500; }
 .arcade-trail-arrow { color:#9d875b; font-size:18px; }
 .arcade-trail-finish { color:#84633a; font-size:12px; line-height:1.7; text-align:right; }
 .arcade-tile-guide { margin-top:20px; color:#796344; font-size:12px; line-height:1.7; }
@@ -51,7 +51,7 @@
 .arcade-tile-guide .arcade-tile-art { width:40px; height:40px; }
 .arcade-tile-guide b,.arcade-tile-guide small { display:block; font-weight:500; }
 .arcade-tile-guide b { font:17px/1.6 var(--pixel); color:#60492f; }
-.arcade-tile-guide small { font-size:11px; }
+.arcade-tile-guide small { font-size:12px; }
 .arcade-tile-guide p { color:#887557; }
 .arcade-flight-layer { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .arcade-flight { position:absolute; }
@@ -161,4 +161,4 @@
 @media(max-width:480px){.arcade-heading{flex-direction:column;gap:13px}.arcade-scores{width:100%}.arcade-scores>div{flex:1;min-width:0}.arcade-side{grid-template-columns:1fr}.arcade-partner{grid-column:auto}.arcade-table{padding:11px}.arcade-board{padding:6px;border-width:3px}.arcade-grid{gap:6px}.arcade-controls{gap:10px}.arcade-directions button{width:35px;min-height:36px}.arcade-tools button{padding:6px 8px;font-size:12px}.orders-heading{align-items:start;gap:10px}.orders-heading h2{font-size:24px}.orders-tally{padding:5px 7px}.order-keepsakes ul{grid-template-columns:1fr 1fr;gap:8px}.order-keepsakes li{padding:7px;gap:7px}}
 @media(prefers-reduced-motion:reduce){.garden-arcade *{animation:none!important;transition:none!important}}
 
-@media(max-width:480px){.arcade-harvest-trail{gap:4px}.arcade-harvest-trail .arcade-tile-art{width:31px;height:31px}.arcade-trail-current,.arcade-trail-next{gap:4px}.arcade-harvest-trail strong{font-size:11px}.arcade-harvest-trail small,.arcade-harvest-trail b{font-size:10px}.arcade-tile-guide ol{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-tile strong{padding:1px 2px}}
+@media(max-width:480px){.arcade-harvest-trail{gap:4px}.arcade-harvest-trail .arcade-tile-art{width:31px;height:31px}.arcade-trail-current,.arcade-trail-next{gap:4px}.arcade-harvest-trail strong{font-size:12px}.arcade-harvest-trail small,.arcade-harvest-trail b{font-size:12px}.arcade-tile-guide ol{grid-template-columns:repeat(3,minmax(0,1fr))}.arcade-tile strong{padding:1px 2px}}

@@ -42,7 +42,7 @@ In the Windows desktop app, the garden, todos, focus sessions and course notes n
 
 The app interface and the detailed [user guide](guide/README.md) are currently in Chinese only: interface labels below give the English meaning followed by the Chinese text, and links to Chinese pages are marked (Chinese).
 
-[Tell us what was awkward or what you would like next](https://github.com/SzuDesktopTeam/szudesktop/issues). Describe what you were trying to do and where you got stuck. Please leave out passwords, cookies and personal grades.
+[Tell us what was awkward or what you would like next](https://github.com/SzuDesktopTeam/szudesktop/issues). Describe what you were trying to do and where you got stuck. Please leave out passwords, cookies and personal grades. If the network or a school service is failing, you can attach the diagnostic report copied from **Settings → About and updates → Feedback and suggestions** (设置 → 关于与更新 → 反馈与建议): it contains only structure, with no account, grades or timetable, and you can preview it before copying.
 
 ## Features
 
@@ -53,10 +53,10 @@ The app interface and the detailed [user guide](guide/README.md) are currently i
 | Desktop companion | ✅ Available | Windows installer only: transparent window, left/right-click menu for care and switching companions, 40%–200% wheel scaling, dragging, hiding and a tray icon; size and position are restored after restart | [Garden and companions](guide/garden.md) |
 | Environments | ✅ Available | Pixel Courtyard, Lakeside Daylight, After-rain Bookshop and Blue-hour Terrace; every page shares the chosen scene. With animation off it shows a still frame, and without 3D support it falls back to Pixel Courtyard | [Garden and companions](guide/garden.md) |
 | Todos and focus | ✅ Available | Todos can be edited, dated, archived and restored; focus sessions last 5 / 25 / 45 minutes or a custom 1–120 minutes and can be linked to a todo. Each completed and claimed minute gives 1 garden coin and 1 growth point | [Study](guide/study.md) |
-| Focus completion notifications | 🧪 Testing | Installer only: turn on focus completion reminders and the “Quiet company” (安静陪伴) do-not-disturb mode | [Study](guide/study.md) |
+| Focus completion notifications | 🧪 Testing | Installer only: turn on focus completion reminders and **Do not disturb** (勿扰) | [Study](guide/study.md) |
 | Course notes | ✅ Available | Local text notes: courses created by hand, templates, search, Markdown, trash, page outline, turning a selected sentence into a todo, import/export and whole-notebook backup | [Study](guide/study.md) |
 | Feishu course documents | 🧪 Testing | Each course can link to one Feishu document you have permission to access and open the original page; you can also import a read-only local copy with your own lark-cli. This is not two-way sync | [Study](guide/study.md) |
-| College notices | 🟡 Partial | Of 28 colleges and faculties, 17 can be read in the app (with dates and original links) and the rest link to the official site; notices from Academic Affairs and the Graduate School can also be read in the app | [Campus services](guide/campus.md) |
+| College notices | 🟡 Partial | Of 28 colleges and faculties, 17 can be read in the app (with dates and original links) and the rest link to the official site; notices from Academic Affairs and the Graduate School can also be read in the app. The first visit asks you to choose your college, or you can fill in your college in Settings | [Campus services](guide/campus.md) |
 | Official calendar and teaching week | ✅ Available | Checks the school's calendar page daily and reads new images with the OCR built into Windows; the teaching week can be adjusted by hand, and a failed read keeps the cache and explains why | [Campus services](guide/campus.md) |
 | School login | 🧪 Testing | Sign in on the official school page, then return to the app to read that login; it is kept only until you exit the app | [Campus services](guide/campus.md) |
 | Timetable | 🧪 Testing | Reads the undergraduate or graduate timetable according to your programme level; shown only for the current run | [Campus services](guide/campus.md) |
@@ -68,11 +68,12 @@ The app interface and the detailed [user guide](guide/README.md) are currently i
 | Common contacts | 🟡 Partial | Only numbers published on the university library's official website; other offices link to their official pages | [Campus services](guide/campus.md) |
 | Campus network sign-in | 🧪 Testing | Detects the teaching area (SRun, 深澜) or the dormitory area (Dr.COM) and signs in; you can also sign out or choose the zone by hand | [Campus network](guide/network.md) |
 | Access point ID (`ac_id`) | 🟡 Partial | Picks the ID in this order: set by hand → what worked on this port on this machine → the gateway redirect → trying IDs one by one, labelling IDs found by trying. If detection fails you can enter the ID by hand | [Campus network](guide/network.md) |
-| Connection diagnostics | ✅ Available | Lists the zone decision, portal reachability, protocol fingerprint and a conclusion, in both the desktop app and the command line | [Campus network](guide/network.md) |
+| Connection diagnostics | ✅ Available | Lists the zone decision, portal reachability, protocol fingerprint, whether a proxy has taken over the school domains, and a conclusion, in both the desktop app and the command line. Off campus it shows a neutral grey note instead of a warning | [Campus network](guide/network.md) |
 | Connect to the campus network at startup | 🧪 Testing | Signs in at most once at startup with the remembered account, skipping when already online or when no sign-in portal is found; can be turned off | [Campus network](guide/network.md) |
 | Command line szunet | 🧪 Testing | Single-file binaries for Windows, macOS and Linux that sign in, sign out, show status, detect the zone, run diagnostics and save the account (in the Keychain on macOS, in Secret Service on Linux) | [Campus network](guide/network.md) |
 | Credential storage | ✅ Available | The desktop app encrypts the campus network account and password with Windows DPAPI. It saves them only after a successful sign-in with **Remember account and password after successful sign-in** (认证成功后记住账号密码) ticked; without a system secure store it refuses to save and never writes plain text | [Data and privacy](guide/data-and-privacy.md) |
-| Saves and backups | ✅ Available | The garden and notes are saved separately on this computer, and a damaged save is restored from the previous copy automatically. Export and import are available, and multiple windows do not overwrite each other; exported saves contain no campus network account or password | [Data and privacy](guide/data-and-privacy.md) |
+| Saves and backups | ✅ Available | The garden and notes are saved separately on this computer, and a damaged save is restored from the previous copy automatically; daily backups of the last 3 days you used the app are kept as well. Export and import are available, and multiple windows do not overwrite each other; exported saves contain no campus network account or password | [Data and privacy](guide/data-and-privacy.md) |
+| Feedback and diagnostic report | ✅ Available | Copy your version and system details, or a diagnostic report that contains only structure (zone, portals, which fields school services returned); preview it before copying, nothing is uploaded. Feedback currently goes through GitHub Issues and needs a GitHub account | [Data and privacy](guide/data-and-privacy.md) |
 | Launch at login | 🧪 Testing | Windows only: the installer registers it only when you turn it on in Settings (uninstalling removes it); the portable edition and `szunet autostart` can also set it | [Install and update](guide/install.md) |
 | Automatic updates | — Not supported | Nothing is downloaded or installed automatically; check for a new version by hand in **Settings → About and updates** (设置 → 关于与更新) and open the download page | [Install and update](guide/install.md) |
 | macOS / Linux desktop | — Not supported | Only the command-line szunet for now; a desktop version is on the roadmap as a low-priority to-do | [Install and update](guide/install.md) |
@@ -85,7 +86,7 @@ The specific gaps behind Partial and Testing are listed under [Known limitations
 
 Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases).
 
-Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `szuDesktop-Setup-0.9.4.exe` · portable `szudesktop-beta0.9.4-windows-amd64.zip` · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)
+Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `szuDesktop-Setup-0.9.4.exe` (about 108 MB) · portable `szudesktop-beta0.9.4-windows-amd64.zip` (about 6.5 MB) · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.4)
 
 | Edition | File | How to open | Desktop companion and tray |
 | :-- | :-- | :-- | :-- |
@@ -94,7 +95,7 @@ Current version: **beta0.9.4** (released 2026-09-28, pre-release) · installer `
 | macOS command line | `szunet-darwin-amd64` (Intel), `szunet-darwin-arm64` (Apple silicon) | Run it in a terminal; campus network sign-in and diagnostics only | No desktop app |
 | Linux command line | `szunet-linux-amd64`, `szunet-linux-arm64` | Run it in a terminal; campus network sign-in and diagnostics only | No desktop app |
 
-The installer's file name carries only the numeric version, while the portable ZIP carries the full release tag; the current version line above shows both.
+The installer's file name carries only the numeric version, while the portable ZIP carries the full release tag; the current version line above shows both. Each command-line szunet build is a single file of about 6.3–7.1 MB. Disk space used after installation has not been measured yet.
 
 **macOS and Linux have no desktop version yet.** Use the command-line szunet there to sign in to the campus network and run diagnostics; a desktop version is on the roadmap as a low-priority to-do. On Windows you can also download the command-line `szunet-windows-amd64.exe` on its own.
 
@@ -106,12 +107,12 @@ Checksum steps, uninstalling, opening and exiting, and launch at login are cover
 
 ## Getting started
 
-1. Open **Lychee Garden → Companion room** (荔枝庭院 → 伙伴小屋) and choose a companion; in the installer edition the desktop companion switches too. A short, skippable guide also appears the first time you open the app.
-2. Visit **My farm** (我的农田) to see the radishes already planted; they are ready to harvest in about a minute, and watering them right away makes it faster.
-3. In **Study bookshop → Focus and tasks** (学习书屋 → 专注与小事), write a todo and try a 5-minute focus session; completing and claiming it gives 5 garden coins and 5 growth points.
-4. When you need the internet, open **Campus network** (校园网), enter your campus card number and unified identity password, and click **Sign in to the campus network** (登录校园网). If it fails, click **Run network diagnostics** (运行网络诊断). Signing in to school services is separate from campus network sign-in; handle each when you need it.
+1. A welcome guide appears the first time you open the app. Click **Meet my companion →** (去认识我的伙伴 →) and choose a companion in the companion room; in the installer edition the desktop companion switches too. On the day you start, the **Who keeps you company today?** (今天谁陪你？) bar on the home page is open as well, so you can switch there.
+2. Back on the home page, click **Start 5 minutes** (开始 5 分钟) and a focus session starts right away. When it ends, click **Complete and claim the reward** (完成并领取奖励) in **Study bookshop → Focus and tasks** (学习书屋 → 专注与小事) to get 5 garden coins and 5 growth points. The guide's **Focus for 5 minutes first** (先专注 5 分钟) button also starts 5 minutes right away and opens that page.
+3. The home page's **Next step** (下一步) points to your first radish: it ripens in about a minute. Harvest it in **Lychee Garden → My farm** (荔枝庭院 → 我的农田) for 2 radishes and 1 growth point.
+4. When you need the internet, open **Campus network** (校园网), enter your campus card number and unified identity password, and click **Sign in to the campus network** (登录校园网). If it fails, click **Run network diagnostics** (运行网络诊断). Off campus, the campus sign-in row shows a grey note, which is normal. Signing in to school services is separate from campus network sign-in; handle each when you need it.
 
-None of the first three steps needs a school account, and all of them work offline. The full walkthrough is in [Getting started](guide/getting-started.md) (Chinese).
+None of the first three steps needs a school account, and all of them work offline. To see the welcome guide again, click **Welcome guide** (欢迎引导) at the bottom of the page; the **User guide ↗** (使用指南 ↗) link next to it opens the full guide. The full walkthrough is in [Getting started](guide/getting-started.md) (Chinese).
 
 ## Known limitations
 
@@ -131,6 +132,10 @@ All open items are listed in [STATUS: current open items](STATUS.md#s1-1) (Chine
 ### Sign-in fails once I plug in my own router
 
 The access point ID (`ac_id`) belongs to the wall port, not to the router; if detection fails, enter it under **Advanced settings** in the sign-in form, or use `--ac-id` on the command line. See the [campus network guide](guide/network.md) (Chinese).
+
+### School systems won't open while a proxy is running
+
+The Fake-IP mode of proxies such as Clash resolves school domains to fake addresses. If diagnostics or an error message says a proxy has taken over the school domains (代理软件接管了学校域名), set `szu.edu.cn` to connect directly, and in Fake-IP mode also add it to `fake-ip-filter` (the list of domains that do not get fake addresses). See the [campus network guide](guide/network.md) (Chinese).
 
 ### My antivirus or SmartScreen flags it
 

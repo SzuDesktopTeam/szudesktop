@@ -106,7 +106,7 @@ func academicRequest(ctx context.Context, client *http.Client, address string, f
 		if errors.Is(err, errSessionInvalid) {
 			return nil, errSessionInvalid
 		}
-		return nil, errors.New("学校系统暂时无法连接，请检查校园网后重试")
+		return nil, schoolConnectionError("学校系统暂时无法连接", "学校系统暂时无法连接，请检查校园网后重试", req.URL, err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 401 {

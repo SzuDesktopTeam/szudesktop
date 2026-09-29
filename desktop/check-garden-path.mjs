@@ -109,4 +109,18 @@ test('construction and surplus receipts reflect actual spending and never repeat
  const failed=structuredClone(sold);failed.game.coins=after.game.coins;assert.equal(actionReward(after,failed,sale),null);
 });
 
+// O3：新存档的前三分钟是「选伙伴 → 开始 5 分钟专注 → 收萝卜」。建档时种下的第一块萝卜还没收过，「下一步」就先提示它，
+// 而不是在第一分钟里把同学引去为委托补种草莓。专注进行中仍以专注为先，萝卜熟了就去收。
+test('a new save points to its first radish before any order, and stays out of the way of focus',()=>{
+ const state=fresh();
+ let step=gardenNextStep(state,now+1000);
+ assert.equal(step.action,'gardenRoute');assert.equal(step.tab,'farm');assert.equal(step.index,0);assert.equal(step.crop,'radish');
+ assert.match(step.title,/第一颗小萝卜快熟了/);assert.doesNotMatch(step.title,/委托|草莓/);
+ isFocus(gardenNextStep(act(state,{type:'focusStart',minutes:5},now),now+1000));
+ step=gardenNextStep(state,now+60000);assert.match(step.title,/可以收了/);assert.equal(step.label,'去收获');
+ const harvested=act(state,{type:'harvest',index:0},now+60000);
+ assert.doesNotMatch(gardenNextStep(harvested,now+61000).title,/第一颗/,'收过一次就回到平常的建议');
+ const replanted=quiet();replanted.game.plots[2]={crop:'radish',planted:now,ready:now+60000,watered:false};
+ assert.doesNotMatch(gardenNextStep(replanted,now).title,/第一颗/,'只认建档时种下的第 1 块田');
+});
 console.log(`\n${checks} garden next-step and reward checks passed.`);

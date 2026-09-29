@@ -6,8 +6,8 @@
 
 **请不要开公开 issue 描述可利用细节。**
 
-- 优先尝试仓库的 [私有漏洞报告入口](https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new)。这需要维护者启用 GitHub Private vulnerability reporting；入口不可用时不要把漏洞细节改发到公开页面。
-- 若入口不可用，可在 [Issues](https://github.com/SzuDesktopTeam/szudesktop/issues/new) 仅申请「需要私密安全报告渠道」，等待维护者提供渠道。组织主页没有私信功能，请不要写「已私信」或在公开 issue 中附上凭据、个人数据与可利用细节。
+- 请通过仓库的 [私有漏洞报告入口](https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new) 提交。仓库已启用 GitHub Private vulnerability reporting，报告只有你和维护者能看到；提交需要登录 GitHub 账号。新建 issue 的选择页里也列着这个入口。
+- 万一这个入口打不开，也不要把漏洞细节改发到公开页面：可以在 [Issues](https://github.com/SzuDesktopTeam/szudesktop/issues/new) 只写「需要私密安全报告渠道」，等待维护者提供渠道。组织主页没有私信功能，请不要写「已私信」，也不要在公开 issue 中附上凭据、个人数据与可利用细节。
 
 请在报告里写清：受影响的版本或提交、复现步骤、影响范围（本机 / 校园网 / 学校系统）、
 以及你是否已经公开过这个细节。

@@ -90,6 +90,17 @@ def self_test_mac_app():
             raise AssertionError(".app license check accepted a bundle with a " + label)
 
 
+def check_quickstart():
+    """便携 ZIP 里的快速开始模板：make_release.py 打包前会自检，这里在 run-checks 里提前核对，
+    免得模板被改长、或删掉「不代提交」这类说明，要等到发版打包时才发现。也确认自检认得出坏模板。"""
+    import make_release  # 同目录；只取模板和自检函数，不打包
+
+    problems = make_release.quickstart_problems()
+    assert problems == [], "便携版快速开始模板不合约定：" + "；".join(problems)
+    assert make_release.quickstart_problems(make_release.README.replace("不代提交", "")), "删掉「不代提交」时自检没有报出"
+    assert make_release.quickstart_problems(make_release.README + "补充说明\n" * 6), "模板超过 12 行时自检没有报出"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--portable", type=Path)
@@ -107,6 +118,7 @@ def main():
             for name, source in EXPECTED.items():
                 assert archive.read(name) == source.read_bytes(), f"Portable license differs: {name}"
     self_test_mac_app()
+    check_quickstart()
     if args.electron and args.electron.name.endswith(".app"):
         check_mac_app(args.electron)
     elif args.electron:
@@ -116,6 +128,7 @@ def main():
             assert (args.electron / name).stat().st_size > 0, f"Runtime license missing: {name}"
     print(f"PASS {vendored} vendored files match SOURCE.json sha256")
     print("PASS macOS .app license layout self-test")
+    print("PASS portable quickstart template is short, links the guide and keeps the data, password and no-submission notes")
     print("PASS license sources and package configuration" + ("; built artifact contents verified" if args.portable or args.electron else " (artifacts not inspected)"))
 
 

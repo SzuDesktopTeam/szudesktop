@@ -18,6 +18,10 @@ export function gardenNextStep(state,now=Date.now()){
  if(g.focus)return {title:g.focus.end<=now?'这一段专注完成了':'先安心做眼前这一件事',detail:g.focus.end<=now?`${g.focus.duration} 荔枝币和成长等你领取，回来继续准备庭院。`:'田里的作物会继续长，成熟后也不会枯萎。',label:g.focus.end<=now?'领取专注收获':'回到专注',action:'navigate',page:'study',tab:'focus',icon:'i-book'};
  const ripe=g.plots.findIndex(p=>p&&p!=='locked'&&p.ready<=now);
  if(ripe>=0){const crop=g.plots[ripe].crop;return garden(`${CROPS[crop].name}可以收了`,cropPurpose(g,crop),'去收获',{crop,index:ripe,icon:'i-chest'})}
+ // 新存档的前三分钟：选伙伴 → 开始 5 分钟专注 → 收萝卜。建档时种下的第一块萝卜还没收过，就先提示它，
+ // 不在第一分钟里就把同学引去为委托补种别的作物。只认建档时那一块（第 1 块田、种下时间等于建档时间）。
+ const first=g.plots[0];
+ if(!g.stats.harvest&&first&&first!=='locked'&&first.planted===g.created)return garden(`第一颗${CROPS[first.crop].name}快熟了`,`${CROPS[first.crop].name} ${CROPS[first.crop].time/60000} 分钟就成熟，收下它就是庭院的第一份收成。先专注一会儿再来收也可以，成熟后不会枯萎。`,'去看看农田',{crop:first.crop,index:0,icon:'i-seed'});
  const order=readyOrders(g)[0];
  if(order)return garden(`${PETS[order.pet].name}的收成准备好了`,`${order.title} · 送达后获得 ${order.coins} 币，也让这位伙伴更亲近。`,'交付给伙伴',{tab:'market',order:order.id,icon:'i-heart'});
  if(project&&projectStatus(g,project.id).ready)return garden(`${project.name}可以建好了`,'材料和荔枝币都已备齐，建成后会真实出现在庭院里。','一起建设',{tab:'journal',anchor:'garden-projects',icon:'i-cottage'});
