@@ -48,7 +48,7 @@ const WIN={
 // 每个用例都把全局桥和 document 还原成进来之前的样子，互不串味。
 async function withBridge(bridge,fn){
  const previous={bridge:globalThis.szuDesktop,document:globalThis.document};
- try{if(bridge===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=bridge;globalThis.document={getElementById:()=>null,body:{classList:{toggle(){}}}};return await fn()}
+ try{if(bridge===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=bridge;globalThis.document={querySelector:()=>null,getElementById:()=>null,body:{classList:{toggle(){}}}};return await fn()}
  finally{if(previous.bridge===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previous.bridge;if(previous.document===undefined)delete globalThis.document;else globalThis.document=previous.document}
 }
 
