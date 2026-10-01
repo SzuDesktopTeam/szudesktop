@@ -11,7 +11,16 @@ export function smokeMode(env){
   const report=env.SZU_SMOKE_REPORT;
   const enabled=Boolean(report&&path.isAbsolute(report)&&env.SZUNET_CONFIG_DIR&&path.isAbsolute(env.SZUNET_CONFIG_DIR));
   return {enabled,report,profile:enabled?path.join(env.SZUNET_CONFIG_DIR,'electron-profile'):null,
-    screenshot:env.SZU_SMOKE_SCREENSHOT,quitAfterReport:env.SZU_SMOKE_QUIT_AFTER_REPORT==='1'};
+    screenshot:env.SZU_SMOKE_SCREENSHOT,quitAfterReport:env.SZU_SMOKE_QUIT_AFTER_REPORT==='1',
+    quitTrace:enabled&&env.SZU_SMOKE_QUIT_TRACE&&path.isAbsolute(env.SZU_SMOKE_QUIT_TRACE)?env.SZU_SMOKE_QUIT_TRACE:null};
+}
+export async function publishSmokeReport(report,payload,stopWatchdog){
+  mkdirSync(path.dirname(report),{recursive:true});
+  writeFileSync(report+'.tmp',JSON.stringify(payload,null,2));
+  // External native drivers may send quit immediately after this rename.
+  // Terminate the test worker first, so it cannot delay exit or overwrite success.
+  await stopWatchdog();
+  renameSync(report+'.tmp',report);
 }
 // 退出轨迹：只有冒烟模式开启、且 SZU_SMOKE_QUIT_TRACE 是绝对路径时，才把退出协调走过的每一步按行追加成 JSONL，
 // 供 macOS 冒烟核对真实的 quit Apple Event 也走了保存握手；其余情况（包括 Windows 冒烟，它不设这个变量）什么也不做。
@@ -22,21 +31,26 @@ export function createQuitTrace(env){
     try{mkdirSync(path.dirname(file),{recursive:true});appendFileSync(file,JSON.stringify({event,...detail,at:Date.now()})+'\n');}catch{}
   };
 }
-export function createSmokeRecorder({enabled=false,report=null,profile=null,screenshot=null,quitAfterReport=false}={}){
+export function createSmokeRecorder({enabled=false,report=null,profile=null,screenshot=null,quitAfterReport=false,quitTrace=null}={}){
   const errors=[];
+  let watchdog=null,heartbeat=null,stopping=null;
+  const stopWatchdog=()=>{
+    if(!stopping){clearInterval(heartbeat);stopping=watchdog?watchdog.terminate():Promise.resolve();}
+    return stopping;
+  };
   // 看门狗：独立线程每秒检查主进程心跳。主进程事件循环卡住超过 20 秒时，定时器和超时都不会触发，
   // 以前只表现为“报告没出现”；这里由看门狗直接写失败报告，带上当时的冒烟阶段。
   if(enabled&&report){
     const beat=new Int32Array(new SharedArrayBuffer(4));
     const stageFile=path.join(path.dirname(report),'pet-progress.json');
-    const worker=new Worker(`const {workerData:{beat,report,stageFile}}=require('node:worker_threads');const fs=require('node:fs');
+    watchdog=new Worker(`const {workerData:{beat,report,stageFile}}=require('node:worker_threads');const fs=require('node:fs');
 let last=Atomics.load(beat,0),same=0;
 setInterval(()=>{const now=Atomics.load(beat,0);if(now!==last){last=now;same=0;return;}if(++same<20)return;
 let stage=null;try{stage=JSON.parse(fs.readFileSync(stageFile,'utf8')).stage}catch{}
 try{fs.writeFileSync(report+'.tmp',JSON.stringify({error:'Electron 主进程事件循环卡住超过 20 秒',stage},null,2));fs.renameSync(report+'.tmp',report)}catch{}
 process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
-    worker.unref();
-    const timer=setInterval(()=>Atomics.add(beat,0,1),500);timer.unref?.();
+    watchdog.unref();
+    heartbeat=setInterval(()=>Atomics.add(beat,0,1),500);heartbeat.unref?.();
   }
   const wantsShot=()=>Boolean(screenshot&&path.isAbsolute(screenshot));
   // 只在冒烟模式下记录，最多 10 条；返回是否记下，调用方据此决定要不要另外打印。
@@ -80,11 +94,14 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
       const shot=await mainWin.webContents.capturePage();
       writeFileSync(screenshot,shot.toPNG());
     }
-    mkdirSync(path.dirname(report),{recursive:true});
-    writeFileSync(report+'.tmp',JSON.stringify({version:status.app_version,packageVersion:app.getVersion(),electron:process.versions.electron,
+    if(quitTrace&&path.isAbsolute(quitTrace)){
+      const note=(event,details={})=>{try{appendFileSync(quitTrace,JSON.stringify({event,...details,at:Date.now()})+'\n');}catch{}};
+      app.once('will-quit',()=>note('will-quit'));
+      app.once('quit',(_event,exitCode)=>note('quit',{exitCode}));
+    }
+    await publishSmokeReport(report,{version:status.app_version,packageVersion:app.getVersion(),electron:process.versions.electron,
       appPid:process.pid,sidecarPid:handle.owned?handle.child.pid:null,owned:handle.owned,
-      baseUrl:handle.baseUrl,title:mainWin.getTitle(),rendered,pet,platform:process.platform,arch:process.arch,...mac},null,2));
-    renameSync(report+'.tmp',report);
+      baseUrl:handle.baseUrl,title:mainWin.getTitle(),rendered,pet,platform:process.platform,arch:process.arch,...mac},stopWatchdog);
     if(quitAfterReport)app.quit();
   }
   // 启动失败：尽量带上页面现场，整份报告写盘前抹掉会话凭据（页面地址、loadURL 的报错都可能含有它）。
@@ -104,6 +121,7 @@ process.exit(0)},1000);`,{eval:true,workerData:{beat,report,stageFile}});
       }
     }catch(snapshotError){failure.snapshotError=snapshotError.message;}
     save();
+    await stopWatchdog();
   }
 
   return {enabled,profile,errors,record,watch,writeReport,writeFailure};
