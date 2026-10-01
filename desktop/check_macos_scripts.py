@@ -29,6 +29,7 @@ DESKTOP = ROOT / "desktop"
 BUILD = DESKTOP / "build-macos.py"
 SMOKE_ENGINE = DESKTOP / "smoke_macos.py"
 SMOKE_DMG = DESKTOP / "electron" / "smoke_dmg.py"
+UPGRADE = DESKTOP / "electron" / "mac_upgrade.py"
 # 冒烟脚本的钥匙串规则按 os.path 的 POSIX 语义写（/tmp/szu-cfg/ 在 Windows 上不是绝对路径），只在 POSIX 宿主上导入核对。
 POSIX = os.sep == "/"
 
@@ -139,9 +140,30 @@ def test_dmg_pure_rules():
     assert token not in text and "<redacted>" in text and other in text and "e" * 65 in text, text
 
 
+def test_upgrade_copy_target():
+    dmg = load("smoke_dmg_copy_under_check", SMOKE_DMG)
+    with tempfile.TemporaryDirectory(prefix="szu-check-macos-") as tmp:
+        target = Path(tmp) / "application-copy" / "szuDesktop.app"
+        dmg.prepare_copy_target(target)
+        # Upgrade removes the old app while retaining its parent directory.
+        target.mkdir()
+        target.rmdir()
+        dmg.prepare_copy_target(target)
+        target.mkdir()
+        marker = target / "preserved"
+        marker.write_text("old app", encoding="utf-8")
+        try:
+            dmg.prepare_copy_target(target)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("copy must refuse merging into an existing app")
+        assert marker.read_text(encoding="utf-8") == "old app"
+
+
 def test_smoke_scripts_refuse_without_local():
     for script in (SMOKE_ENGINE, SMOKE_DMG):
-        r = run_refusing([SMOKE_ENGINE, SMOKE_DMG], script, "--arch", "arm64")
+        r = run_refusing([SMOKE_ENGINE, SMOKE_DMG, UPGRADE], script, "--arch", "arm64")
         want = "什么都没做" if sys.platform == "darwin" else "只能在 macOS 上运行"
         assert r.returncode != 0 and want in r.stderr, (script.name, r.returncode, r.stdout, r.stderr)
         assert "PASS" not in r.stdout, "%s 被拒绝前就开始核对了" % script.name
@@ -151,6 +173,7 @@ check("build-macos.py: engine identifier, arch map and signIgnore agree", test_b
 check("build-macos.py: deletes old output first, signs, writes LF .sha256, --dev deletes before copy", test_build_source_rules)
 check("build-macos.py: refuses bad invocations before syncing or building", test_build_refuses_before_building)
 if POSIX:
+    check("smoke_dmg.py: upgrade reuses parent but refuses an existing app", test_upgrade_copy_target)
     check("smoke scripts: keychain suffix equals the Go known answer (no symlink resolution)", test_keychain_suffix_matches_go)
     check("smoke_dmg.py: quit trace as a subsequence, volume whitelist, token redaction", test_dmg_pure_rules)
     check("smoke scripts: refuse to run on a non-runner host without --local", test_smoke_scripts_refuse_without_local)

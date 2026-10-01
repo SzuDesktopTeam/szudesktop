@@ -475,6 +475,27 @@ jobs:
         run: |
           python desktop/check_licenses.py --electron desktop/electron/release/mac-arm64/szuDesktop.app
           python desktop/check_licenses.py --electron desktop/electron/release/mac/szuDesktop.app
+      - name: 读取固定 DMG 升级基线缓存键
+        id: dmg-baseline
+        run: echo "key=$(python desktop/electron/mac_upgrade.py --cache-key)" >> "$GITHUB_OUTPUT"
+      - name: 恢复固定 DMG 升级基线
+        id: dmg-baseline-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
+          key: ${{ steps.dmg-baseline.outputs.key }}
+      - name: 核对并准备 beta0.9.5 DMG 升级基线
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python desktop/electron/mac_upgrade.py --directory "$RUNNER_TEMP/szu-dmg-upgrade-baseline" --arch arm64 --arch x64
+          echo "SZU_DMG_BASELINE_DIR=$RUNNER_TEMP/szu-dmg-upgrade-baseline" >> "$GITHUB_ENV"
+      - name: 缓存已核对的 DMG 升级基线
+        if: steps.dmg-baseline-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
+          key: ${{ steps.dmg-baseline.outputs.key }}
       # quit Apple Event 一步若被系统拒绝（-1743，runner 上没有自动化授权），脚本记为跳过并打印警告，其余照常断言。
       - name: DMG 安装版冒烟（arm64，原生）
         run: python desktop/electron/smoke_dmg.py --arch arm64
@@ -542,6 +563,27 @@ jobs:
           (cd desktop/electron/release && shasum -a 256 -c szuDesktop-*-mac-*.dmg.sha256)
       - name: 引擎冒烟（amd64，Intel）
         run: python desktop/smoke_macos.py --arch amd64
+      - name: 读取固定 DMG 升级基线缓存键
+        id: dmg-baseline
+        run: echo "key=$(python desktop/electron/mac_upgrade.py --cache-key)" >> "$GITHUB_OUTPUT"
+      - name: 恢复固定 DMG 升级基线
+        id: dmg-baseline-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
+          key: ${{ steps.dmg-baseline.outputs.key }}
+      - name: 核对并准备 beta0.9.5 x64 DMG 升级基线
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python desktop/electron/mac_upgrade.py --directory "$RUNNER_TEMP/szu-dmg-upgrade-baseline" --arch x64
+          echo "SZU_DMG_BASELINE_DIR=$RUNNER_TEMP/szu-dmg-upgrade-baseline" >> "$GITHUB_ENV"
+      - name: 缓存已核对的 DMG 升级基线
+        if: steps.dmg-baseline-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
+          key: ${{ steps.dmg-baseline.outputs.key }}
       - name: DMG 安装版冒烟（x64，Intel）
         run: python desktop/electron/smoke_dmg.py --arch x64
       - name: 保存 Intel 冒烟证据（不作为发布附件）

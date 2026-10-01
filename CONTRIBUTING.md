@@ -202,8 +202,15 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
   （[STATUS 68.4](docs/STATUS.md#s68-4)）；B 类仍要逐项做，全部通过之前每一版的发布说明都带预览版说明，
   由 `desktop/release_notes.py` 的 `MAC_PREVIEW` 开关把关（见[发布](#发布)）。
 - CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
-- 第一个 macOS 版本发布前没有可作升级基线的旧版，`smoke_dmg.py` 不做跨版本升级；首个版本发布后再按
-  `smoke_installer.py` 的做法固定基线。
+- DMG 升级基线固定为已发布 beta0.9.5 的两个 DMG，版本、Electron 与 SHA-256 的唯一来源是
+  `desktop/electron/mac_upgrade.py`。CI 按组合摘要恢复缓存，每次仍核对包与校验文件；损坏或缺失时才下载。
+  `smoke_dmg.py` 在 runner 上必须有该基线：实际运行固定旧包里的引擎，写合成工作区、课程笔记与隔离钥匙串凭据，
+  原路径替换为候选应用，核对配置字节未被安装操作修改，再验证新版读写、重开后保留与合成凭据解密。
+  手动本地升级测试需在 `--local` 外传 `--baseline-dmg <已核对的旧 DMG>`；不会写入「应用程序」。
+  下次 VERSION 升级时同步推进 Windows 与 Mac 的公开升级基线，不能让候选版本与基线相同。
+- 原生安装版笔记失败验收只在隔离 smoke profile 中执行：临时把笔记锁路径换成目录，真实 Go API 返回 503，
+  核对原笔记字节完整、离开被阻止、编辑草稿与导出备份完整；还原锁后通过原界面重试并读取持久化结果。
+  文件权限不足、磁盘满、真实设备断电等另需验收，不能把锁故障的通过泛化到所有存储故障。
 - 多人或多个 agent 在同一个工作树里并行改动时，凡是运行 `sync-assets.py`、`go build` / `vet` / `test`、`run-checks.mjs`、
   `npm`、`electron`、`electron-builder`、`hdiutil` 的验证，都经同一把锁串行执行，例如
   `/usr/bin/lockf -k /tmp/szudesktop-verify.lock sh -c '…'`：`sync-assets.py` 会先删掉整个 `desktop/internal/ui/assets` 再复制，
