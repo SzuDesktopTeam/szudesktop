@@ -3373,3 +3373,29 @@ beta0.9.6 仅作为预发布版本。此前 45 分钟是浏览器测试版证据
 针对后台渲染器调度实现修复：主窗口保持隐藏，只有伙伴命令处理期间通过 Electron setBackgroundThrottling(false) 临时唤醒；原生桥携带独立请求编号，可信回执只结束自己的唤醒。全部待处理命令完成后恢复节流；30 秒仍未确认时恢复节流并提示打开应用核对，不自动重放操作。窗口销毁或渲染器退出时清理待处理状态，保留原有可信来源与命令白名单。Electron [官方说明](https://www.electronjs.org/docs/latest/api/web-contents#contentssetbackgroundthrottlingallowed)确认该设置影响后台动画、定时器及 Page Visibility API。
 
 本地模块、56 项 JS、5 项 Python 检查通过；增加了重叠/忙碌命令的独立回执、未知和迟到回执、超时与销毁清理检查。原生冒烟新增隐藏命令发送时已解除节流、睡眠与喂食确认后恢复节流的断言（backgroundCommandWake）。修复仍需 Windows 安装升级、arm64/x64 DMG、合并后 Intel 和标签完整检查实际通过；不放宽原有断言、等待时限或发布依赖。
+
+<a id="s71-4"></a>
+### 71.4 beta0.9.6 已发布与公开附件复核
+
+2026-10-01 完成交付：[PR #34](https://github.com/SzuDesktopTeam/szudesktop/pull/34) 和隐藏渲染器修复 [PR #35](https://github.com/SzuDesktopTeam/szudesktop/pull/35) 均先创建草稿，经适用检查通过、无合并阻塞后普通 squash 合并，没有绕过分支保护。发布源码是 [fd7af781e14be0566758c2968ee5a6aec6c1c2d7](https://github.com/SzuDesktopTeam/szudesktop/commit/fd7af781e14be0566758c2968ee5a6aec6c1c2d7)。
+
+- 修复 [PR CI 36906020377](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36906020377) 全部适用检查通过；PR 不运行 Intel 和 release job，不能据此提前打标签。
+- 同一提交的 [main CI 36908426318](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36908426318) 全部适用检查通过，真实 Intel 安装版 job 实际运行并通过后才创建 beta0.9.6 标签。
+- [标签 CI 36911168581](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36911168581) 的全部 9 个 job（包括真实 Intel 与 release）成功；[公开 Release](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) 于 2026-10-01 19:22:16 UTC 发布，`prerelease=true`、`draft=false`。71.3 的旧失败保留，不以重跑代替修复。
+
+标签的 Windows NSIS 实际安装、beta0.9.5 → beta0.9.6 升级、旧数据与伙伴进度保留、合成账号解密、重开、自启命令保持隐藏、备份恢复及卸载清理均通过。ARM64、Rosetta 与真实 Intel 的 DMG 安装、首次打开、重开、便携引擎共存及 Apple quit-event 均通过。各平台报告的 `pet.notebookReload`、`pet.backgroundCommandWake` 为 true；Apple quit-event 为 passed，没有将跳过写成通过。CI 自启命令检查不等于真实用户注销／重新登录验收，合成账号不等于真实校园登录。
+
+公开下载复核：实际下载全部 20 个附件（10 个程序／压缩包与各自校验文件），全部 SHA-256 与 GitHub 资产摘要一致；NSIS 与两个 DMG 的摘要还与标签原生验收报告一致。ZIP 内 `szudesktop.exe` 与公开单文件 EXE 逐字节相同。Windows 文件属性 FileVersion、ProductVersion 和实际引擎/API 版本均为 beta0.9.6；公开 Windows CLI `version` 也返回 beta0.9.6。公开引擎在本机隔离配置下的完整冒烟通过，包括保存跨进程／端口恢复。Release 正文与 `release_notes.py beta0.9.6 --release` 生成的更新日志、下载清单和预览边界一致。
+
+| 已公开且已核对的附件 | SHA-256 |
+|---|---|
+| `szuDesktop-Setup-0.9.6.exe` | `588cdbef9b7ce639271a72c11d048f8c33f069308b00d066d76170b55d244232` |
+| `szuDesktop-0.9.6-mac-arm64.dmg` | `2d28f939a5c8f51e5381268e037c268acf3edac831c644a7d3e7cb01c7e5a2b7` |
+| `szuDesktop-0.9.6-mac-x64.dmg` | `07e428960252c33d484e366120bd9e8248227a59e1b023e4d8eb51b829df2ac1` |
+| `szudesktop-windows-amd64.exe` | `1e775d2f540b1ddfbd41591b4430bd54b0fbd3ac57c63d0f861dd38b9e9a2327` |
+
+本轮工作区证据：`tag-windows-evidence/`、`tag-macos-evidence/`、`tag-intel-evidence/`、`release-sha256-verification.json` 与 `published-engine-smoke.log`；对应 CI 的同名 evidence artifacts 可追溯。仅 JSON 汇总用于记录，不上传带运行期会话 token 的原始 stdout 日志。
+
+未完成项保持 71.2、68.2 与 1.1 的状态：真实校园登录／校园网认证、睡眠恢复、多屏与长期用户验收、macOS 跨版本升级及 B1–B9 人工验收、macOS 13/14 真机、生产签名与公证。公开 NSIS 的 Authenticode 状态实际核对为 NotSigned，Mac 仅 ad-hoc 签名。本次不是正式版完整验收。
+
+下一版升级基线应使用以上已公开 beta0.9.6 NSIS 摘要；按脚本约定，与下一次 VERSION 升级一并推进。当前候选 VERSION 仍为 beta0.9.6，保留 beta0.9.5 基线，避免将跨版本测试误改成同版重装。
