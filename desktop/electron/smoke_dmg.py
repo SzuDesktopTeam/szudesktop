@@ -160,13 +160,18 @@ def detach(mountpoint):
     check("DMG detached", not os.path.ismount(mountpoint))
 
 
+def prepare_copy_target(target):
+    target.parent.mkdir(parents=True, exist_ok=True)
+    check("copy target does not already exist", not target.exists() and not target.is_symlink())
+
+
 def copy_from_dmg(dmg, mountpoint, target):
     attach(dmg, mountpoint)
     try:
         check("volume holds only the app and an Applications link", volume_is_clean({entry.name for entry in mountpoint.iterdir()}))
         link = mountpoint / "Applications"
         check("Applications link points to /Applications", link.is_symlink() and os.readlink(link) == "/Applications")
-        target.parent.mkdir(parents=True)
+        prepare_copy_target(target)
         # ditto 保留符号链接、扩展属性和签名；这就是用户把 .app 拖出 DMG 时得到的东西。
         subprocess.run(["/usr/bin/ditto", str(mountpoint / (PRODUCT + ".app")), str(target)], check=True)
     finally:
