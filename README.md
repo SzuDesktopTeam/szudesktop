@@ -19,9 +19,9 @@
 
 桌面应用支持 Windows 与 macOS（macOS 为预览版）· Linux 可下载校园网命令行 szunet（见[下载](#下载)）
 
-**[下载 Windows 安装版 · beta0.9.5](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-Setup-0.9.5.exe)**
+**[下载 Windows 安装版 · beta0.9.6](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-Setup-0.9.6.exe)**
 
-macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-x64.dmg)，第一次打开要手动放行，见[下载](#下载)
+macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-x64.dmg)，第一次打开要手动放行，见[下载](#下载)
 
 [下载](#下载) · [功能](#功能) · [已知限制](#已知限制) · [安全与隐私](#安全与隐私) · [使用指南](docs/guide/README.md) · [常见问题](#常见问题) · [反馈与建议](https://github.com/SzuDesktopTeam/szudesktop/issues)
 
@@ -87,7 +87,7 @@ macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudeskto
 
 Windows 用户直接下载上方的安装版，运行安装程序后打开 szuDesktop。安装版自带窗口运行时，不需要另装浏览器或开发环境。macOS 预览版自 beta0.9.5 起提供，Mac 用户按芯片选择对应的 DMG（见下表）。其他形式也都在[发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
-当前版本：**beta0.9.5**（2026-09-29 发布，预发布）· 安装版 `szuDesktop-Setup-0.9.5.exe`（约 98 MB）· 便携版 `szudesktop-beta0.9.5-windows-amd64.zip`（约 6.5 MB）· macOS 预览版 `szuDesktop-0.9.5-mac-arm64.dmg`（约 123 MB）与 `szuDesktop-0.9.5-mac-x64.dmg`（约 130 MB）· [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.5)
+beta0.9.6 预发布下载：安装包 `szuDesktop-Setup-0.9.6.exe`、便携包 `szudesktop-beta0.9.6-windows-amd64.zip`、macOS 预览版 `szuDesktop-0.9.6-mac-arm64.dmg` 与 `szuDesktop-0.9.6-mac-x64.dmg`。附件大小、校验文件与发布状态以 [Release 页面](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) 为准。
 
 | 形式 | 文件 | 怎么打开 | 桌面伙伴与托盘 |
 | :-- | :-- | :-- | :-- |
@@ -193,7 +193,7 @@ szunet logout        # 注销下线
 
 ## 更新日志
 
-当前版本 **beta0.9.5**（2026-09-29）第一次提供 macOS 桌面版预览（Apple 芯片与 Intel 各一个 DMG，真机验收尚未进行）。Windows 版同步更新：人在校外不再误报「校园认证待确认」，网络诊断能认出代理软件接管了学校域名，存档多留最近 3 个使用日的备份，第一次打开更顺，安装包小了约 10 MB，并新增中文使用指南。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)，历次下载见 [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases)。
+beta0.9.6 增加首分钟课堂笔记入口与保存后重新打开工作区，修复引导与笔记恢复中的保存并发。Windows 安装包与 macOS 预览版继续使用原生构建和隔离冒烟检查；真实校园登录、睡眠恢复、生产签名及 macOS 真机验收仍待完成。详见 [CHANGELOG.md](CHANGELOG.md) 与 [交付验证记录](docs/STATUS.md#s71)。
 
 ## 致谢
 
@@ -219,4 +219,4 @@ Pingu 与《马达加斯加》的 Skipper 是项目自行绘制的粉丝像素�
 
 ## 桌面首分钟改进
 
-正在交付的 beta0.9.6 增加课堂笔记快捷入口、保存失败保留草稿和「保存并重新打开」。见 [桌面首分钟学习与重载](docs/guide/desktop-first-minute.md)。原生构建和冒烟以对应提交的 CI 记录为准；此前 45 分钟测试仅为浏览器测试版证据。真实校园登录、睡眠恢复和生产签名仍待验收，本轮为预发布。
+beta0.9.6 增加课堂笔记快捷入口、保存失败保留草稿和「保存并重新打开」。见 [桌面首分钟学习与重载](docs/guide/desktop-first-minute.md)。原生构建和冒烟以对应提交的 CI 记录为准；此前 45 分钟测试仅为浏览器测试版证据。真实校园登录、睡眠恢复和生产签名仍待验收，本轮为预发布。

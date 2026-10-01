@@ -1,7 +1,7 @@
 # szuDesktop 项目总清单与当前状态
 
 > **唯一维护文档**：全部问题、功能计划、设计要求、执行顺序与验收记录统一在本文维护。
-> 更新：2026-09-29。合并原 STATUS、任务清单、界面重设计、本地任务副本及代码/视觉/产品审查。
+> 更新：2026-10-01。合并原 STATUS、任务清单、界面重设计、本地任务副本及代码/视觉/产品审查。
 > 原独立清单和设计方案已移除；本地原始调研只作为冻结的历史证据，不再维护另一套任务。
 > 本文是公开安全版本，不包含真实账号、内网拓扑或未公开接口细节；旧调研中的数量、规则、可达性和许可结论须在实际接入时重核。
 >
@@ -11,7 +11,7 @@
 
 ## 1. 当前状态
 
-- **本地产品打磨候选（2026-10-01，尚未发布）**：`feat/first-minute-campus-trial` 聚焦伙伴摸头的可发现性，以及首页新开课堂记录／续写最近笔记，见 [70](#s70)。已准备隔离浏览器候选与带字幕演示；没有联系试用者，没有真实一周数据，也没有关闭 R01、R10 或 macOS B1–B9。
+- **首分钟桌面交付（2026-10-01）**：[PR #34](https://github.com/SzuDesktopTeam/szudesktop/pull/34) 将首分钟学习与安全重载接入桌面源码，版本 beta0.9.6。原生 Electron 已通过隔离合成数据冒烟；安装升级和 macOS DMG 以 PR／tag CI 为准，发布状态以 [Release 页面](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) 为准。详见 [71](#s71)。此前 45 分钟仍仅为浏览器测试版证据，没有真实一周数据，没有关闭 R01、R10 或 macOS B1–B9。
 
 - **本轮进展（2026-09-29）**：beta0.9.5 已于 2026-09-29 从发版 PR #32 合并后的 `main@25113bb` 打标签发布，包含 README 重构与使用指南（PR #28）、macOS 桌面版（PR #29）、x64 冒烟时限修复（PR #31）和第一批优化（PR #30）。发布前 main 上的完整运行（[run 36519928525](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36519928525)，含真 Intel 机器上的 DMG 冒烟）与[标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36521153426)全部通过。macOS 版以预览版随本版提供两个 DMG，真机验收 B1–B9 仍待做，见 [68.4](#s68-4)。README 中英两版、使用指南的下载大小和本页已同步到 beta0.9.5；安装升级冒烟的基线仍是 beta0.9.4，挪到 beta0.9.5 并为 DMG 固定第一个升级基线见 1.1。
 - **macOS 桌面版（2026-09-29）**：PR #29 已合并到 main（`0dc9437`）：按芯片区分的两个 ad-hoc 签名 DMG（Apple 芯片 arm64、Intel x64），功能与 Windows 安装版对齐，本机自动验收（A 类）已通过。维护者 2026-09-29 决定以预览版随 beta0.9.5 发布 DMG，不再等 B1–B9；浏览器下载后的首次放行、注销与登录时启动、系统通知、真实钥匙串、多显示器、macOS 13/14、校内本地网络授权等真机验收（B1–B9）仍全部待做，发布说明、README 与本页如实写明并给出反馈方式，见 [68.4](#s68-4)。
@@ -3348,6 +3348,20 @@ szunet diag                               # 13. 结论应与上面各步一致
 - 边界：本机 Python 启动器失效、Go 1.26.5 低于要求 1.26.6，未升级，因此本轮没有原生重编译、Python／Go 本机全套通过证据。没有真实安装升级／卸载、通知、自启、钥匙串、校园登录或一周资源验证。
 - 试用：[5 人一周说明](guide/focused-trial.md)与[空白反馈表](guide/focused-trial-feedback.csv)。匿名 S01–S05 只是空白行标签，不表示已招募。名单与反馈目的地由维护者确认；没有发送邀请。展示前下载意愿、独立首次体验、自然回访及未使用原因分别记录，不要求打卡，不把合成演示内容作为用户证据。
 
-## 70. 首分钟桌面交付 beta0.9.6
+<a id="s71"></a>
+
+## 71. 首分钟桌面交付（2026-10-01）
 
 本次改进进入桌面共用源码与 Go 内嵌资源。设置页提供保存后重载，Electron 冒烟增加课堂笔记、即时离开、重载恢复和真实 API 落盘核对。验证范围与未验收项目见 [桌面首分钟说明](guide/desktop-first-minute.md)。此前 45 分钟测试仍仅为浏览器测试版证据；正式版发布门槛尚未满足。发布状态以 GitHub Actions 与 Release 记录为准。
+
+### 71.1 原生验证记录
+
+写入时状态：PR #34 已创建；发布以标签 CI 和 Release 页面为准。
+
+本机 Windows x64、Electron 44.4.5、beta0.9.6，最终运行源码 `bfbbfbf`。模块链接、55 项 JS、5 项 Python 检查，以及 `go test ./...`、`go vet ./...`、Windows 引擎构建和原生引擎冒烟通过。实际生成 NSIS 安装包；`Get-AuthenticodeSignature` 为 `NotSigned`。重新构建出的 `win-unpacked/szuDesktop.exe` 在独立配置中运行，报告 `version=beta0.9.6`、`packageVersion=0.9.6`、`rendered=true`、`pet.notebookReload=true`；托盘、伙伴窗口、菜单、拖动、选择和备份恢复检查亦通过。此项是原生应用目录运行，不是本机 NSIS 安装／升级验收。
+
+原始报告与截图在本轮工作区 `native-electron-head-evidence/`，日志在 `checks-final2.log`、`native-smoke.log`、`electron-build-head.log`；CI 结果见 PR #34 的 Actions 记录。安装升级基线已固定为已发布 beta0.9.5，安装包 SHA-256 为 `1a49da74f6ffe6c6fc7170610924ac619dbb981596c61e9bff099fe344aa566f`，来自 GitHub Release 资产元数据。macOS 真机与 DMG 升级验收仍以未完成项为准。
+
+### 71.2 发布与验收边界
+
+beta0.9.6 仅作为预发布版本。此前 45 分钟是浏览器测试版证据。真实校园账号登录、校园网认证、睡眠恢复、多屏日常使用与长时间真实用户验收尚未完成；生产代码签名和 macOS 公证尚未完成。隔离合成数据自动化冒烟不替代这些项目，不能据此宣称正式产品完整验收。
