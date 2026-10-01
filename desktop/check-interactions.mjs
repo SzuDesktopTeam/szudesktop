@@ -1,3 +1,4 @@
+import {createSafeReload} from './assets/garden/reload.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
@@ -386,9 +387,9 @@ await check('onboarding and settings explain the active shell exit behavior',()=
  const settings=source.slice(source.indexOf('function settings(){'),source.indexOf('function render(){'));
  assert.ok(settings.includes('${exitHint()}'));
 });
-await check('load failure retry works without an inline script under Electron CSP',()=>{
- const f=fixture();let reloads=0;f.context.location={reload(){reloads++}};
- f.click('reload');assert.equal(reloads,1);
+await check('load failure retry works without an inline script under Electron CSP',async()=>{
+ const f=fixture();let reloads=0;f.context.location={reload(){reloads++}};f.context.reloadWorkspace=createSafeReload({save:async()=>{},reload:()=>f.context.location.reload(),report:e=>{throw e}});
+ f.click('reload');await tick();assert.equal(reloads,1);
  assert.doesNotMatch(source,/onclick=/);assert.match(source,/data-action="reload"/);
 });
 await check('the pet size slider only exists under the Electron shell and round-trips through the bridge',()=>{

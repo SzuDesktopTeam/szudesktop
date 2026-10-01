@@ -422,7 +422,43 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   assert.equal(anonymous.status,401,'local API rejects callers without the session token');
   await anonymous.body?.cancel();
   await checkBackup(mainWin,baseUrl,token,evidenceDir);
+  await checkNotebookReload({mainWin,main,api,evidenceDir});
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
   return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,notebookReload:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
+}
+
+// Runs in the real Electron renderer against the Go notebook API. Synthetic data only.
+async function checkNotebookReload({mainWin,main,api,evidenceDir}){
+  const snapshot=async()=>{const r=await api('/api/notebook');assert.ok(r.ok);return r.json();};
+  const before=await snapshot();
+  const original=before.data||{courses:[],notes:[],preferences:{selectedNoteId:'',selectedCourseId:''}};
+  await mainWin.loadURL(mainWin.webContents.getURL().split('#')[0]+'#home');
+  await until(()=>main('Boolean(document.querySelector("[data-action=notebookLecture]"))'),'first-minute lecture entry missing');
+  await main('document.querySelector("[data-action=notebookLecture]").click()');
+  await until(()=>main('Boolean(document.querySelector("#note-body"))'),'lecture editor not opened');
+  const body='Synthetic native lecture draft '+Date.now();
+  await main('(()=>{const area=document.querySelector("#note-body");area.value='+JSON.stringify(body)+';area.dispatchEvent(new Event("input",{bubbles:true}));})()');
+  // Navigate immediately, before the autosave timer, then use the user's reload button.
+  await main('document.querySelector("[data-action=navigate][data-page=settings]").click()');
+  await until(()=>main('Boolean(document.querySelector("[data-action=reload]"))'),'safe reload entry missing');
+  const reloaded=new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>{mainWin.webContents.removeListener('did-finish-load',done);reject(Error('safe reload timed out'));},15000);
+    const done=()=>{clearTimeout(timer);resolve();};
+    mainWin.webContents.once('did-finish-load',done);
+  });
+  await main('document.querySelector("[data-action=reload]").click()');
+  await reloaded;
+  await until(()=>main('Boolean(document.querySelector("[data-action=navigate][data-page=home]"))'),'reloaded workspace not ready');
+  await main('document.querySelector("[data-action=navigate][data-page=home]").click()');
+  await until(()=>main('Boolean(document.querySelector("[data-action=notebookResume]"))'),'resume entry missing');
+  await main('document.querySelector("[data-action=notebookResume]").click()');
+  await until(()=>main('document.querySelector("#note-body")?.value==='+JSON.stringify(body)),'draft not restored after native reload');
+  const saved=await snapshot();
+  assert.ok(saved.data.notes.some(n=>n.body===body),'real Go API persisted the draft');
+  writeFileSync(path.join(evidenceDir,'notebook-reload.png'),(await mainWin.webContents.capturePage()).toPNG());
+  const restored=await api('/api/notebook',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:1,revision:saved.revision,data:original})});
+  assert.ok(restored.ok,'synthetic smoke note cleanup failed');
+  await mainWin.loadURL(mainWin.webContents.getURL().split('#')[0]+'#home');
+  await until(()=>main('Boolean(document.querySelector("[data-action=navigate][data-page=home]"))'),'workspace did not reload after cleanup');
 }

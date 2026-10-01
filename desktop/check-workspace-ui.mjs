@@ -1,3 +1,4 @@
+import {createSafeReload} from './assets/garden/reload.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import vm from 'node:vm';
@@ -734,7 +735,7 @@ await check('leaving the arcade saves pending moves right away',async()=>{
  assert.equal(unbound,1);assert.equal(f.writes.length,1,'离开伙伴小桌时立即存好走子，不等合并延迟');assert.equal(f.writes[0].moves,2);
 });
 // 退出回调就是应用注册给 Electron 的那一段；preload 会把它抛出的消息交给主进程的退出确认框。
-function quitHook(f){let quit=null;f.context.szuDesktop={onBeforeQuit:fn=>{quit=fn}};f.context.notebookUI={flush:async()=>{}};vm.runInContext(section('// 棋局冲突时已同步','async function notebookLearningAction('),f.context);assert.equal(typeof quit,'function');return quit}
+function quitHook(f){f.context.createSafeReload=createSafeReload;let quit=null;f.context.szuDesktop={onBeforeQuit:fn=>{quit=fn}};f.context.notebookUI={flush:async()=>{}};vm.runInContext(section('// 棋局冲突时已同步','async function notebookLearningAction('),f.context);assert.equal(typeof quit,'function');return quit}
 await check('quitting saves pending 2048 moves and blocks the exit only when moves really stay unsaved',async()=>{
  let f=puzzleFixture(),quit=quitHook(f);
  f.move();f.move();await quit();assert.equal(f.writes.length,1,'退出前存好合并中的走子');assert.equal(f.writes[0].moves,2);
