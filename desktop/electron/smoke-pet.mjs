@@ -434,7 +434,7 @@ async function checkNotebookReload({mainWin,main,api,evidenceDir}){
   const before=await snapshot();
   const original=before.data||{courses:[],notes:[],preferences:{selectedNoteId:'',selectedCourseId:''}};
   await mainWin.loadURL(mainWin.webContents.getURL().split('#')[0]+'#home');
-  await until(()=>main('Boolean(document.querySelector("[data-action=notebookLecture]"))'),'first-minute lecture entry missing');
+  await until(()=>main('Boolean(document.querySelector("[data-action=notebookLecture]:not(:disabled)"))'),'first-minute lecture entry missing or still loading');
   await main('document.querySelector("[data-action=notebookLecture]").click()');
   await until(()=>main('Boolean(document.querySelector("#note-body"))'),'lecture editor not opened');
   const body='Synthetic native lecture draft '+Date.now();
