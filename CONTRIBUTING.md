@@ -204,7 +204,7 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
 - CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
 - DMG 升级基线固定为已发布 beta0.9.5 的两个 DMG，版本、Electron 与 SHA-256 的唯一来源是
   `desktop/electron/mac_upgrade.py`。CI 按组合摘要恢复缓存，每次仍核对包与校验文件；损坏或缺失时才下载。
-  `smoke_dmg.py` 在 runner 上必须有该基线：先实际运行旧版，使用旧引擎写合成工作区、课程笔记与隔离钥匙串凭据，
+  `smoke_dmg.py` 在 runner 上必须有该基线：实际运行固定旧包里的引擎，写合成工作区、课程笔记与隔离钥匙串凭据，
   原路径替换为候选应用，核对配置字节未被安装操作修改，再验证新版读写、重开后保留与合成凭据解密。
   手动本地升级测试需在 `--local` 外传 `--baseline-dmg <已核对的旧 DMG>`；不会写入「应用程序」。
   下次 VERSION 升级时同步推进 Windows 与 Mac 的公开升级基线，不能让候选版本与基线相同。

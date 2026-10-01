@@ -451,15 +451,18 @@ class Smoke:
         copy_from_dmg(baseline, self.root / "baseline mount", self.app)
         check("baseline bundle version", plist_value(self.app / "Contents/Info.plist", "CFBundleShortVersionString") == "0.9.5")
         check("baseline signature verifies", run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(self.app)]).returncode == 0)
-        candidate = (self.version, self.semver, self.runtime)
-        try:
-            self.version, self.semver, self.runtime = mac_upgrade.BASELINE_VERSION, "0.9.5", mac_upgrade.BASELINE_ELECTRON
-            self.launch("baseline-open", initial_scale=1)
-        finally:
-            self.version, self.semver, self.runtime = candidate
+        # The immutable beta0.9.5 shell has the hidden-command defect fixed in
+        # beta0.9.6. Upgrade setup runs its real engine, not its full pet-menu suite.
+        # Candidate UI checks below remain complete and unchanged.
         with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, mac_upgrade.BASELINE_VERSION,
                                       self.evidence / "baseline-data.log", smoke_macos, stop_group) as engine:
             self.upgrade_data = mac_upgrade.seed(engine)
+        mac_upgrade.seed_shell_settings(self.cfg)
+        (self.evidence / "baseline-data.json").write_text(json.dumps({
+            "version": mac_upgrade.BASELINE_VERSION, "baseline_sha256": digest,
+            "real_published_engine_seeded_data": True, "shell_settings_are_synthetic_v1_fixtures": True,
+            "baseline_ui_acceptance": "not exercised; published beta0.9.5 hidden-command defect"
+        }, indent=2), encoding="utf-8")
         files = [self.cfg / "workspace-v1.json", self.cfg / "notebook-v1.json",
                  self.cfg / "electron-profile/pet-settings.json", self.cfg / "electron-profile/desktop-settings.json"]
         check("baseline data files exist", all(file.is_file() for file in files))

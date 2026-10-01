@@ -46,6 +46,21 @@ with tempfile.TemporaryDirectory(prefix="szu-dmg-upgrade-check-") as tmp:
         Path(str(file) + ".sha256").write_bytes((digest + "  wrong-name.dmg\n").encode("ascii"))
         refuses(lambda: upgrade.verify_baseline(file, "arm64"))
 print("PASS pinned baseline rejects damaged bytes/checksum names; cache avoids download and preserves unrelated files")
+with tempfile.TemporaryDirectory(prefix="szu-shell-upgrade-check-") as tmp:
+    cfg = Path(tmp)
+    upgrade.seed_shell_settings(cfg)
+    import json
+    profile = cfg / "electron-profile"
+    assert json.loads((profile / "pet-settings.json").read_text())["scale"] == 1.7
+    assert json.loads((profile / "desktop-settings.json").read_text())["autoConnectCampus"] is False
+    original = (profile / "pet-settings.json").read_bytes()
+    try:
+        upgrade.seed_shell_settings(cfg)
+    except FileExistsError:
+        pass
+    else:
+        raise AssertionError("Shell fixture must never overwrite existing data")
+    assert (profile / "pet-settings.json").read_bytes() == original
 
 expected = {"workspace": {"profile": {"name": "old"}, "courses": [{"code": "old-course"}], "semester": "old-term", "reminders": [],
                           "preferences": {"theme": "night"}, "todos": [{"id": "old-task"}],

@@ -134,6 +134,21 @@ def seed(engine):
     return {"workspace": workspace["data"], "notebook": notebook["data"], "credential": fake}
 
 
+def seed_shell_settings(cfg):
+    """Version-1 shell fixtures, not evidence of old-version UI acceptance."""
+    profile = Path(cfg) / "electron-profile"
+    profile.mkdir(parents=True, exist_ok=True)
+    settings = {"pet-settings.json": {"version": 1, "scale": 1.7},
+                "desktop-settings.json": {"version": 1, "focusNotifications": True, "doNotDisturb": False,
+                                          "petVisible": True, "petAlwaysOnTop": True, "autoConnectCampus": False,
+                                          "lastNotifiedFocus": None}}
+    for name, data in settings.items():
+        file = profile / name
+        with file.open("x", encoding="utf-8") as output:
+            json.dump(data, output)
+        file.chmod(0o600)
+
+
 def read_synthetic_credential(cfg, allowed_root):
     cfg, allowed_root = Path(cfg), Path(allowed_root)
     if not cfg.is_absolute() or not cfg.resolve().is_relative_to(allowed_root.resolve()) or cfg.resolve() == allowed_root.resolve():

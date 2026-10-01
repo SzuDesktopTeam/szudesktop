@@ -3408,9 +3408,9 @@ beta0.9.6 仅作为预发布版本。此前 45 分钟是浏览器测试版证据
 
 `electron/mac_upgrade.py` 固定 beta0.9.5 / Electron 44.4.5，Apple 芯片 DMG 摘要为 `f1d1a81a7a80ee41f7c6260bf13be196a5f1f092426ed6b84d3f38ae9f1fae4b`，x64 为 `85111f01c441a6da4f1f740d64c52dbd1571a46f448540f43b2cbce9eee66346`，来自已公开 Release 元数据。包、文件名与同名校验文件必须一致；缓存按两个固定摘要构成键，损坏才重下，不使用 latest URL。
 
-ARM64、Rosetta 及合并后真实 Intel job 都接入同一流程：在隔离临时目录复制并运行旧版，旧引擎写入合成个人资料、待办、课程、伙伴进度、课程笔记及 -test- 钥匙串凭据；旧版退出后按原 .app 路径替换为候选版。安装替换前后核对工作区、笔记、伙伴与桌面设置字节相同。候选引擎必须读出旧数据并解密合成凭据，写入新资料与笔记后，实际启动、重开和再次独立读取仍须保留。
+ARM64、Rosetta 及合并后真实 Intel job 都接入同一流程：在隔离临时目录复制旧包，实际运行其中的旧引擎写入合成个人资料、待办、课程、伙伴进度、课程笔记及 -test- 钥匙串凭据；旧引擎退出后按原 .app 路径替换为候选版。伙伴与桌面设置使用旧版 version-1 格式的合成夹具，创建时拒绝覆盖已有文件。安装替换前后核对工作区、笔记、伙伴与桌面设置字节相同。候选引擎必须读出旧数据并解密合成凭据，写入新资料与笔记后，实际启动、重开和再次独立读取仍须保留。
 
-`summary.json` 只有完成上述断言才写 `upgrade_from=beta0.9.5`、`cross_version_upgrade_preserved_data=true`、`candidate_read_write=true`、`synthetic_credential_decrypts=true`。旧版首次打开、候选首次打开／重开及数据探针各自留有 evidence。真实用户从「应用程序」拖拽替换、Gatekeeper 放行、通知／登录项和长时间使用仍由 68.2 人工清单验收，不能据此关闭 B1–B9。
+`summary.json` 只有完成上述断言才写 `upgrade_from=beta0.9.5`、`cross_version_upgrade_preserved_data=true`、`candidate_read_write=true`、`synthetic_credential_decrypts=true`。旧引擎数据建立、候选首次打开／重开及数据探针各自留有 evidence。旧包的整套伙伴 UI 不在升级夹具中验收：首次加入它时，固定 beta0.9.5 的 x64/Rosetta 隐藏睡眠菜单出现 71.3 已记载的后台调度故障（[run 36925679405](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36925679405)），不能把它写成通过。未改旧包，候选版的完整安装 UI、后台命令和保存失败断言保持不变；`baseline-data.json` 明确记录旧 UI 未验收和设置夹具来源。真实用户从「应用程序」拖拽替换、Gatekeeper 放行、通知／登录项和长时间使用仍由 68.2 人工清单验收，不能据此关闭 B1–B9。
 
 ### 安装版真实存储故障与草稿
 
