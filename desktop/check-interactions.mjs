@@ -343,12 +343,12 @@ await check('importing a backup is a way out of a failed load, and the study lev
  assert.equal(vm.runInContext('workspaceFailure',context),null,'导入通过校验的备份后解除降级');assert.equal(context.workspaceReady,true);assert.equal(context.state.profile.name,'备份里的昵称');assert.equal(toasts.at(-1),'存档已恢复');
 });
 await check('leaving notes offers a way out of saves that retrying cannot fix, but keeps outages and conflicts on the desk',async()=>{
- for(const [code,confirmed,left] of [[413,true,true],[413,false,false],[400,true,true],[409,true,false],[undefined,true,false]]){
+ for(const [code,confirmed,left] of [[413,true,true],[413,false,false],[400,true,true],[403,true,false],[409,true,false],[500,true,false],[503,true,false],[undefined,true,false]]){
   const f=noteNavigationFixture(),asked=[],classes=new Set(['note-writing-focus']);f.context.confirm=async(title,text)=>{asked.push(title+'|'+text);f.gate.saved=confirmed;return confirmed};
   f.context.document.body={classList:{remove:name=>classes.delete(name)}};
   const pending=f.context.navigate('home'),error=Error('笔记不能超过 8 MiB');if(code)error.code=code;f.gate.reject(error);
   assert.equal(await pending,left,String(code));assert.equal(f.context.page,left?'home':'study');
-  assert.equal(asked.length,code&&code!==409?1:0,'只有重试也无法成功的错误才询问是否离开');
+  assert.equal(asked.length,[400,413].includes(code)?1:0,'仅内容无效或超限才询问离开，服务故障与权限错误保留草稿等待处理');
   if(asked.length){assert.match(asked[0],/仍要离开书桌[^]*笔记不能超过 8 MiB。未保存的修改会留在书桌上[^]*导出笔记备份/);assert.doesNotMatch(asked[0],/回收站/,'这个版本还没有清空回收站的入口，不能让用户去找')}
   assert.ok(classes.has('note-writing-focus'),'专心书写由 notebook.leave() 在 finally 里收起（见 check-notebook），app 不再绕过它直接改 body 的类');
   if(left){assert.deepEqual(f.history,['#home']);assert.deepEqual(f.polls,['home'])}

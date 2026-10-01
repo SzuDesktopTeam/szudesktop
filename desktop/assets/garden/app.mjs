@@ -453,7 +453,7 @@ async function navigate(p,tab,{historyMode='push'}={}){
 async function leaveNotebook(){
  try{await notebookUI.leave()}
  catch(e){
-  if(!e.code||e.code===409)throw e;
+  if(![400,413].includes(e.code))throw e;
   const reason=String(e.message||'笔记没能保存').replace(/[。.]$/,'');
   if(!await confirm('笔记还没能保存，仍要离开书桌？',reason+'。未保存的修改会留在书桌上；关闭应用前，请回到书桌导出笔记备份，或删去部分内容后再保存。'))throw e;
  }
