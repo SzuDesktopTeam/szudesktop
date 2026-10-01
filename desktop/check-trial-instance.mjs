@@ -23,5 +23,5 @@ const restart=await acquireTrialInstance({dataDir:dir,buildHash:'fixture'});asse
 const dead=spawnSync(process.execPath,['-e','console.log(process.pid)'],{encoding:'utf8',windowsHide:true});assert.equal(dead.status,0);
 fs.writeFileSync(path.join(dir,'trial-preview.lock'),JSON.stringify({...lease.owner,pid:Number(dead.stdout.trim()),phase:'closing'}));
 const recovered=await acquireTrialInstance({dataDir:dir,buildHash:'fixture',timeoutMs:500});assert.equal(recovered.owned,true);assert.deepEqual(recovered.descriptor,descriptor);recovered.release();
-fs.writeFileSync(path.join(dir,'trial-preview-instance.json'),'{broken');await assert.rejects(acquireTrialInstance({dataDir:dir,buildHash:'fixture'}),/原记录与数据已保留/);assert.equal(fs.readFileSync(path.join(dir,'trial-preview-instance.json'),'utf8'),'{broken');assert.equal(fs.existsSync(path.join(dir,'trial-preview.lock')),false);
+fs.writeFileSync(path.join(dir,'trial-preview-instance.json'),'{broken');await assert.rejects(acquireTrialInstance({dataDir:dir,buildHash:'fixture'}),/原记录和数据已保留/);assert.equal(fs.readFileSync(path.join(dir,'trial-preview-instance.json'),'utf8'),'{broken');assert.equal(fs.existsSync(path.join(dir,'trial-preview.lock')),false);
 console.log('Trial instance checks passed: local identity, healthy-only reuse, closing gate, stable origin/session, version conflict and bounded waits');
