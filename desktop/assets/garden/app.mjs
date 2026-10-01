@@ -466,7 +466,7 @@ async function followHashRoute(){
  await navigate(target.page,target.tab,{historyMode:'replace'});
 }
 let notifiedFocus=0,visitAttemptDay='';
-function clocks(){if(!state||exiting)return;
+function clocks(){if(!state||exiting||document.hidden)return;
  refreshDay();
  if(!busy&&(page==='home'||page==='garden'))paintGardenPath(false);
  const focus=state.game.focus,bar=$('#activity-bar');bar.hidden=!focus;
@@ -585,6 +585,8 @@ window.addEventListener('pagehide',()=>windowStream?.close());
 window.addEventListener('hashchange',followHashRoute);
 window.addEventListener('pageshow',e=>{if(e.persisted){windowID=crypto.randomUUID();connectWindow()}});
 connectWindow();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){clocks();pollNetwork(true,true)}else void flushPuzzle().catch(()=>{})});
-const clockInterval=setInterval(clocks,1000),networkInterval=setInterval(()=>pollNetwork(),30000),calendarInterval=setInterval(()=>{if(!exiting&&state)academicUI.load()},3600000);
+document.addEventListener('visibilitychange',()=>{clearInterval(clockInterval);clockInterval=null;if(!document.hidden&&!exiting){clockInterval=setInterval(clocks,1000);clocks();pollNetwork(true,true)}else void flushPuzzle().catch(()=>{})});
+// Only the visual clock pauses; notebook autosave and explicit save/quit remain independent.
+let clockInterval=document.hidden?null:setInterval(clocks,1000);
+const networkInterval=setInterval(()=>pollNetwork(),30000),calendarInterval=setInterval(()=>{if(!exiting&&state)academicUI.load()},3600000);
 try{let snapshot=null;try{snapshot=await api('/api/workspace');revision=snapshot.revision;state=snapshot.data?normalize(snapshot.data):createState()}catch(e){if(!snapshot&&!e.code)throw e;enterWorkspaceFailure(e,snapshot?.data)}try{saved=(await api('/api/credential')).saved}catch{}if(!workspaceFailure&&!snapshot.data){firstSession=true;const initial=state;await commit(state).catch(e=>{if(state!==initial)return;if(!e.code)throw e;enterWorkspaceFailure(e,null)})}if(workspaceFailure||snapshot.data)render();workspaceReady=!workspaceFailure;void notebookUI.load();api('/api/health').then(v=>stampVersion(v.app_version)).catch(()=>{});pollNetwork(true);if(workspaceReady&&!state.preferences.onboarded)showGuide();campusUI.loadSession();campusUI.loadCas();campusUI.loadSources();schoolUI.load();pianoUI.load();academicUI.load()}catch(e){$('#main').innerHTML=`<section class="card"><h1>暂时没能打开庭院</h1><p class="notice error">${esc(e.message)}</p><p>原有存档不会被覆盖。请重新打开程序后再试。</p><button data-action="reload">重新读取</button></section>`}

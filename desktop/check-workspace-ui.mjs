@@ -51,6 +51,7 @@ await check('home harvest counter and invitation update together as a crop matur
  assert.equal(counter.textContent,'1');assert.match(harvest.textContent,/1 块田可以收获/);
  assert.equal(context.document.activeElement,draft);assert.equal(draft.value,'还没提交的小事');
  state.game.plots[0]=null;context.clocks();assert.equal(counter.textContent,'0');assert.match(harvest.textContent,/去看看/);
+ context.document.hidden=true;harvest.textContent='hidden unchanged';context.refreshDay=()=>{throw Error('hidden clock must not settle the day')};context.clocks();assert.equal(harvest.textContent,'hidden unchanged');
 });
 
 function sceneFixture(){
@@ -373,7 +374,7 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  assert.equal(context.state,current);assert.equal(writes.length,1,'正在写存档时不应与跨日刷新竞争');
  for(const chosen of ['2026-09-30','']){plannedDate.value=chosen;plannedDate.defaultValue='2026-09-27';context.paintDay('2026-09-27');assert.equal(plannedDate.value,chosen,'用户改过或清空的日期不能被跨日更新覆盖');}
  assert.match(source,/function clocks\(\)\{[^]*?refreshDay\(\)/);
- assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden\)\{clocks\(\)/);
+ assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{[^]*?if\(!document\.hidden&&!exiting\)\{[^]*?clocks\(\)/);
 });
 
 await check('a clock corrected back across midnight repaints once instead of every second',()=>{
