@@ -3419,3 +3419,9 @@ ARM64、Rosetta 及合并后真实 Intel job 都接入同一流程：在隔离�
 检查失败时离开笔记页被阻止、编辑器正文完整、通过原备份按钮下载的文件包含未保存草稿；恢复锁后从原界面重试，真实 API 必须读到完整新正文，并可重新打开编辑器。`notebook-save-failure.json` 记录实际 HTTP 状态与断言；最终应用报告只有通过后才写 `pet.notebookSaveFailure=true`，Windows 安装／升级／重开／自启与 Mac 安装版都会核对它。单元检查另验证保护路径、已有恢复文件拒绝和断言失败后的精确还原。
 
 这是锁路径存储故障的自动化验收，尚不等于磁盘满、真实权限拒绝、断电或长时间真人验收。没有真实校园账号、学校网络认证、生产签名或公证的新通过证据；剩余人工与权限事项继续按 1.1、68.2、71.2 执行。
+
+### 合并后的退出边界
+
+[PR #37](https://github.com/SzuDesktopTeam/szudesktop/pull/37) 在最终 [PR run 36929491061](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36929491061) 的全部适用检查通过后普通合并为 53ea4b4。Windows NSIS、ARM64 和 Rosetta 升级及真实 HTTP 503 草稿恢复均通过，两个 Mac 架构的 Apple quit event 均实际 passed。合并后的 [main run 36931584667](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36931584667) 在 Rosetta quit-event 未于 15 秒内退出而失败，Intel 未运行；不能把 PR 的绿色结果写成 main 已通过。
+
+该次轨迹中，保存回执与确认约 75ms 内完成，窗口关闭和引擎停止都已记录（引擎停止在退出请求约 12.4 秒后）；现有轨迹还不能证明后续 Electron 退出为何超时。测试看门狗在 UI 报告后仍存活，补齐其生命周期：成功报告的原子发布之前先终止看门狗线程并清除心跳计时器，失败报告也释放线程；只有测试模式接入，正常运行行为和 VERSION 不变。退出轨迹新增 will-quit / quit，原有 15 秒、保存回执、退出顺序、无残留和各安装版断言保持，仍须修复后的 PR 与完整 main（包括真实 Intel）实际成功。不重复二进制发布，不以重跑旧提交代替这项修复。

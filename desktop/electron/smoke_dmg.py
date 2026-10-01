@@ -375,11 +375,14 @@ class Smoke:
             code = proc.wait(timeout=15)
         except subprocess.TimeoutExpired:
             code = None
-        check("quit Apple Event: app exits 0 within 15s", code == 0)
+        check("quit Apple Event: app exits 0 within 15s (code %r)" % code, code == 0)
         events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()]
         check("quit trace: " + " → ".join(QUIT_TRACE), trace_in_order([event["event"] for event in events]))
         check("quit trace: renderer saved", any(event["event"] == "prepared" and event.get("ok") is True for event in events)
               and any(event["event"] == "confirmed" and event.get("saved") is True for event in events))
+        check("quit trace: Electron completed will-quit and quit",
+              any(event["event"] == "will-quit" for event in events)
+              and any(event["event"] == "quit" and event.get("exitCode") == 0 for event in events))
         check("quit trace: no session-end, cancel or timeout",
               not {event["event"] for event in events} & {"session-end", "cancelled", "prepare-timeout", "prepare-send-failed"})
         check("quit Apple Event: owned engine exits", wait_gone(result["sidecarPid"], self.marker))
