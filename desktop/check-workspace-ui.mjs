@@ -314,7 +314,7 @@ await check('dismissing the guide records it once and keeps other preferences',a
  const committed=[],toasts=[];
  const context={state:local};
  const commit=async next=>{committed.push(next);context.state=next},markOnboarded=()=>recordOnboarded(context.state,{commit,toast:m=>toasts.push(m)});
- assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(state,\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
+ assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(act\(state,\{type:'visit'\}\),\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
  await markOnboarded();
  assert.equal(committed.length,1);
  assert.equal(committed[0].preferences.onboarded,true);
@@ -343,7 +343,7 @@ await check('first run opens the guide, settings save keeps the flag',()=>{
 
 await check('midnight refresh updates daily cards without replacing drafts and writes one visit',async()=>{
  const before=new Date(2026,8,27,23,59).getTime(),now=new Date(2026,8,28,0,1).getTime();
- const current=createState(before);current.game.daily.gift=true;
+ const current=createState(before);current.preferences.onboarded=true;current.game.daily.gift=true;
  current.todos=[{id:'yesterday',text:'昨天计划的小事',done:false,archived:false,date:'2026-09-27',createdAt:before,completedAt:0}];
  current.game.focusHistory=[{endedAt:new Date(2026,8,21,12).getTime(),minutes:5,task:'滚出七日窗口的旧专注'},{endedAt:before,minutes:25,task:'最近完成的专注'}];
  const field={value:'跨日仍未提交的草稿',selectionStart:3,selectionEnd:6},form={id:'todo-form',field};
@@ -791,7 +791,7 @@ await check('the welcome guide shows current companions and its second choice st
  assert.ok(shown.length>=3&&shown.length<=4,'欢迎图放 3–4 位伙伴');
  for(const id of shown)assert.ok(current.has(id),`欢迎图里的 #${id} 不是现在可选的伙伴（阿青已退到「老朋友」）`);
  assert.match(html,/<div class="guide-choices"><button class="primary" value="garden">去认识我的伙伴 →<\/button><button value="focus">先专注 5 分钟<\/button><\/div>/);
- let onClose,routes=[],events=[];const guide={open:false,returnValue:'',showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
+ let onClose,routes=[],events=[];const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),removeEventListener(){},showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
  const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate')},
   act,state:null,run:async work=>{await work()},commit:async next=>{context.state=next;events.push('commit')},reactPet:action=>events.push(action)});
  vm.runInContext(section('function showGuide(){','function markOnboarded('),context);

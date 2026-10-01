@@ -78,7 +78,7 @@ await check('登录项按快照原因提示：不在「应用程序」里置灰�
 
 // app.mjs 的设置页、读档失败页和引导按页面里的接线放进 vm；它们就地读 globalThis.szuDesktop，卡片用真实模块渲染。
 function appPage(){
- const guide={open:false,returnValue:'',showModal(){this.open=true},addEventListener(){}},exit={textContent:''},store={textContent:'校园网密码由 Windows DPAPI 加密'};
+ const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),showModal(){this.open=true},addEventListener(){}},exit={textContent:''},store={textContent:'校园网密码由 Windows DPAPI 加密'};
  const context=vm.createContext({szuDesktop:MAC,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
   btn:(label,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`,
   desktopUI:createDesktopOptions({toast(){}}),releaseUI:createReleaseUI({api:()=>assert.fail('打开设置页不应自动检查更新'),getVersion:()=>VERSION}),

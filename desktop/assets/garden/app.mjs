@@ -259,8 +259,17 @@ function renderPetCare(resetPetForm=false){
 // 引导里「密码怎么保管」默认是 Windows 原文（index.html 的 #guide-store-text），macOS 桌面版换成钥匙串。
 // 「先专注 5 分钟」和首页主按钮一样真的开始 5 分钟，再打开专注页看计时：只跳过去的话，那页默认推的是 25 分钟，
 // 和按钮上写的对不上（O3 前三分钟：选伙伴 → 专注 5 分钟 → 收萝卜）。已经在专注时只打开专注页。
-function showGuide(){const d=$('#guide');if(!d||d.open)return;const hint=$('#exit-guide-text');if(hint)hint.textContent=exitHint();const store=$('#guide-store-text');if(store&&globalThis.szuDesktop?.platform==='darwin')store.textContent='校园网密码存进 macOS 钥匙串';d.returnValue='';d.showModal();d.addEventListener('close',async()=>{const choice=d.returnValue,route={garden:['garden','pet'],focus:['study','focus']}[choice];await markOnboarded();if(choice==='focus'&&!state.game.focus)await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart')});if(route)navigate(...route)},{once:true})}
-function markOnboarded(){return recordOnboarded(state,{commit,toast})}
+function showGuide(){
+ const d=$('#guide');if(!d||d.open)return;const hint=$('#exit-guide-text');if(hint)hint.textContent=exitHint();const store=$('#guide-store-text');if(store&&globalThis.szuDesktop?.platform==='darwin')store.textContent='校园网密码存进 macOS 钥匙串';d.returnValue='';d.showModal();
+ const form=d.querySelector('form'),status=$('#guide-save-status');if(status)status.hidden=true;let saving=false;
+ // Keep the guide modal until its write settles, so the first pet click uses the saved revision.
+ async function finish(choice){if(saving)return;saving=true;const buttons=[...form.querySelectorAll('button')].map(b=>[b,b.disabled]);buttons.forEach(([b])=>b.disabled=true);d.setAttribute('aria-busy','true');if(status){status.hidden=false;status.textContent='正在收好首次设置…'}try{await run(()=>markOnboarded(),false);if(state.preferences.onboarded)d.close(choice);else if(status)status.textContent='首次设置还没保存，请稍后重试。原存档已保留。'}finally{saving=false;d.removeAttribute('aria-busy');buttons.forEach(([b,disabled])=>b.disabled=disabled)}}
+ const submit=e=>{e.preventDefault();void finish(e.submitter?.value||'')};
+ const cancel=e=>{e.preventDefault();void finish('')};
+ form.addEventListener('submit',submit);d.addEventListener('cancel',cancel);
+ d.addEventListener('close',async()=>{form.removeEventListener('submit',submit);d.removeEventListener('cancel',cancel);const choice=d.returnValue,route={garden:['garden','pet'],focus:['study','focus']}[choice];if(choice==='focus'&&!state.game.focus)await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart')});if(route)navigate(...route)},{once:true});
+}
+function markOnboarded(){return recordOnboarded(act(state,{type:'visit'}),{commit,toast})}
 function todoHTML(){return todoView(state,todoFilter)}
 function companionRoster(g,compact=false){
  const draw=legacy=>g.pets.map((p,index)=>({p,index})).filter(({p})=>!PETS[p.species].available===legacy).map(({p,index})=>{
@@ -507,7 +516,7 @@ function refreshDay(){
  const now=Date.now(),day=dayKey(now),rolled=day>state.game.daily.day;
  if(rolled||shownDay&&shownDay!==day){const previousDay=shownDay||state.game.daily.day;if(rolled)state=settle(state,now);paintDay(previousDay)}
  shownDay=day;
- if(workspaceReady&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
+ if(workspaceReady&&state.preferences.onboarded&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
 }
 function stampVersion(v){applyVersion(v,{getVersion:()=>appVersion,setVersion:next=>{appVersion=next},document,cards:[['release-panel',releaseUI],['feedback-panel',feedbackUI]]})}
 let autostartState=null;

@@ -54,7 +54,7 @@ async function withBridge(bridge,fn){
 
 // app.mjs 的 settings()、读档失败页和 showGuide 按页面里的接线放进 vm；它们就地读 globalThis.szuDesktop。
 function appPage(bridge){
- const guide={open:false,returnValue:'',showModal(){this.open=true},addEventListener(){}},exit={textContent:'可在「设置 → 关于与更新 → 退出应用」结束本次使用，下次打开可继续。'},store={textContent:'校园网密码由 Windows DPAPI 加密'};
+ const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),showModal(){this.open=true},addEventListener(){}},exit={textContent:'可在「设置 → 关于与更新 → 退出应用」结束本次使用，下次打开可继续。'},store={textContent:'校园网密码由 Windows DPAPI 加密'};
  const context=vm.createContext({szuDesktop:bridge,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
   btn:(label,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`,
   desktopUI:{card:()=>''},releaseUI:{card:()=>''},feedbackUI:{card:()=>''},exitHint:()=>exitHint(),

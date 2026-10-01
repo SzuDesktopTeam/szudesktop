@@ -382,7 +382,7 @@ await check('onboarding and settings explain the active shell exit behavior',()=
   for(const installed of [exitHint(),exitHint('electron')]){assert.match(installed,/关闭主窗口/);assert.match(installed,/常驻/);assert.match(installed,/托盘/);assert.doesNotMatch(installed,/10 秒/)}
  }finally{if(previousShell===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previousShell}
  assert.match(source,/import \{exitHint,[^}]*\} from '\.\/app-logic\.mjs';/);
- assert.match(source,/\nfunction showGuide\(\)\{[^\n]*hint\.textContent=exitHint\(\)/);
+ assert.match(source,/\nfunction showGuide\(\)\{[^]*?hint\.textContent=exitHint\(\)/);
  const settings=source.slice(source.indexOf('function settings(){'),source.indexOf('function render(){'));
  assert.ok(settings.includes('${exitHint()}'));
 });
