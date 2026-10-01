@@ -2,7 +2,7 @@
 // pet:* 只接受宠物窗自己的页面（pet.isSender）；参数类型不对的消息直接忽略，具体处理在对应模块里。
 export const TRUSTED_INVOKE_CHANNELS=['szu:quit','szu:pet-scale-get','szu:pet-scale-set','szu:desktop-settings-get','szu:desktop-settings-set',
   'szu:school-open','szu:school-sync','szu:school-clear','szu:feishu-open'];
-export function registerIpcRoutes({ipcMain,app,isTrusted,quit,pet,preferences,getOfficial,defer=setImmediate}){
+export function registerIpcRoutes({ipcMain,app,isTrusted,quit,pet,preferences,getOfficial,defer=setImmediate,onPetResult=()=>{}}){
   const trusted=(channel,handler)=>ipcMain.handle(channel,(event,value)=>{
     if(!isTrusted(event))throw Error('请求来源不匹配');
     return handler(value);
@@ -20,6 +20,7 @@ export function registerIpcRoutes({ipcMain,app,isTrusted,quit,pet,preferences,ge
   trusted('szu:feishu-open',url=>getOfficial().feishu.open(url));
   ipcMain.on('szu:pet-result',async(event,result)=>{
     if(!isTrusted(event)||typeof result?.ok!=='boolean'||typeof result.message!=='string')return;
+    onPetResult(result);
     await pet.showResult(result);
   });
   ipcMain.on('pet:menu',event=>{if(pet.isSender(event))void pet.openMenu();});

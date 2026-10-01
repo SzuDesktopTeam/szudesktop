@@ -36,8 +36,11 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
   },
   onPetCommand: (callback) => {
     if (typeof callback !== 'function') return () => {};
-    const listener = (_event, command) => {
-      if (petCommands.has(command) || (typeof command === 'string' && /^switchPet:(?:0|[1-9]\d*)$/.test(command))) callback(command);
+    const listener = (_event, payload) => {
+      const command=typeof payload==='string'?payload:payload?.command;
+      if (!petCommands.has(command) && !(typeof command === 'string' && /^switchPet:(?:0|[1-9]\d*)$/.test(command)))return;
+      if(typeof payload==='string')callback(command);
+      else if(Number.isSafeInteger(payload?.requestId)&&payload.requestId>0)callback({command,requestId:payload.requestId});
     };
     ipcRenderer.on('szu:pet-command', listener);
     return () => ipcRenderer.removeListener('szu:pet-command', listener);
@@ -47,6 +50,7 @@ contextBridge.exposeInMainWorld('szuDesktop', Object.freeze({
     const payload={ok:result.ok,message:result.message.slice(0,120)};
     // An action only selects local animation; it cannot invoke a game command.
     if(typeof result.action==='string'&&/^[a-zA-Z]{1,32}$/.test(result.action))payload.action=result.action;
+    if(Number.isSafeInteger(result.requestId)&&result.requestId>0)payload.requestId=result.requestId;
     ipcRenderer.send('szu:pet-result',payload);
   },
   openSchool: (target) => ipcRenderer.invoke('szu:school-open', target),

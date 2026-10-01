@@ -17,6 +17,8 @@ export class FakeWebContents extends EventEmitter {
     this.sent=[];this.mainFrame={url:''};this.session=new FakeSession();this.openHandler=null;this.crashed=false;this.destroyed=false;
   }
   send(channel,payload){this.sent.push([channel,payload]);}
+  setBackgroundThrottling(value){this.backgroundThrottling=value;}
+  getBackgroundThrottling(){return this.backgroundThrottling!==false;}
   setWindowOpenHandler(fn){this.openHandler=fn;}
   isDestroyed(){return this.destroyed;}
   isCrashed(){return this.crashed;}

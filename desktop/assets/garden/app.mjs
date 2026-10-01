@@ -537,10 +537,12 @@ async function run(work,disableControls=true){if(busy){toast('正在保存或处
 // 只有下列公开查询可在后台等待；写操作仍共用 run() 的存档锁。
 async function runRead(work){if(busy){toast('正在保存或处理上一项操作，请稍后再试');return}try{await work()}catch(e){toast(e.message)}}
 function petActionMessage(action){const pet=activePet(state.game);return {pat:'摸摸头，它很开心',feed:'吃饱啦，谢谢你',play:'玩得很开心！',chat:pet.say,petSignature:pet.say,sleep:pet.sleeping?'晚安，'+pet.name:pet.name+'醒来啦',switchPet:pet.name+'来陪你啦'}[action]}
-async function handlePetCommand(command){
+async function handlePetCommand(payload){
+ const command=typeof payload==='string'?payload:payload?.command;
+ const requestId=Number.isSafeInteger(payload?.requestId)&&payload.requestId>0?payload.requestId:null;
  const care=['pat','feed','play','sleep','chat'],destinations={garden:'伙伴小屋已打开',farm:'我的农田已打开',study:'学习书屋已打开',home:'已回到今日'};
  const choice=typeof command==='string'&&/^switchPet:(?:0|[1-9]\d*)$/.test(command)?Number(command.slice(10)):null;
- const result=(ok,message,action)=>globalThis.szuDesktop?.petResult?.({ok,message,...(action?{action}:{})});
+ const result=(ok,message,action)=>globalThis.szuDesktop?.petResult?.({ok,message,...(action?{action}:{}),...(requestId?{requestId}:{})});
  if(choice===null&&!care.includes(command)&&!Object.hasOwn(destinations,command)){result(false,'暂不支持这个伙伴操作');return}
  if(!workspaceReady||!state||exiting){result(false,'庭院还没有准备好，请稍后再试');return}
  if(busy){result(false,'正在保存或处理上一项操作，请稍后再试');return}

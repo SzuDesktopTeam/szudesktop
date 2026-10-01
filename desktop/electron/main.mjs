@@ -43,6 +43,7 @@ const quit=createQuitCoordinator({app,dialog,getMainWindow:()=>mainWindow.get(),
   waitForStartup:()=>startup,closeWindows,stopEngine,trace:createQuitTrace(process.env)});
 const mainWindow=createMainWindow({BrowserWindow,preload:paths.mainPreload,smoke,isQuitting:quit.isQuitting,quit:()=>app.quit(),
   openExternal:url=>official.openExternal(url),onWorkspaceSaved:()=>focus.workspaceSaved(),
+  onCommandTimeout:()=>pet.say('这次操作未能确认，请打开应用核对后再试'),
   onRendererGone:()=>void engine.failed('窗口进程意外结束，请重新打开应用'),
   canHideToTray:()=>tray.exists(),onSessionEnd:()=>quit.sessionEnd(),platform:process.platform,activateApp});
 const engine=createEngineMonitor({app,dialog,getMainWindow:()=>mainWindow.get(),isQuitting:quit.isQuitting,activateApp});
@@ -132,7 +133,7 @@ async function boot(){
 const gotLock=app.requestSingleInstanceLock();
 if(!gotLock)app.quit();
 else{
-  registerIpcRoutes({ipcMain,app,quit,pet,preferences,getOfficial:()=>official,
+  registerIpcRoutes({ipcMain,app,quit,pet,preferences,getOfficial:()=>official,onPetResult:mainWindow.commandFinished,
     isTrusted:event=>isTrustedSender(event,mainWindow.get(),handle?.baseUrl)});
   app.on('second-instance',(_event,argv)=>{if(!isQuietStartup(argv)&&!loginReopen())mainWindow.show();});
   // macOS 上点程序坞图标（或再次打开应用）走 activate：主窗口只是藏起来了，重新显示它。退出流程中不再弹出。

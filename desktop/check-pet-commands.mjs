@@ -42,6 +42,16 @@ function assertCompanion(f,pet=activePet(f.context.state.game)){
 }
 let checks=0;
 async function check(name,work){await work();checks++;console.log('PASS',name)}
+await check('hidden care acknowledgements keep their own request IDs across a busy overlap',async()=>{
+ const f=fixture(),gate=deferred(),save=f.context.api;
+ f.context.api=async(...args)=>{await gate.promise;return save(...args)};
+ const first=f.command({command:'pat',requestId:41});
+ await f.command({command:'feed',requestId:42});
+ assert.equal(f.results.length,1);assert.equal(f.results[0].requestId,42);assert.equal(f.results[0].ok,false);
+ gate.resolve();await first;
+ assert.equal(f.results.length,2);assert.equal(f.results[1].requestId,41);assert.equal(f.results[1].ok,true);
+ assert.equal(f.writes.length,1,'the busy overlap cannot replay or duplicate a save');
+});
 await check('care commands save through the shared engine before reporting success',async()=>{
  const f=fixture(),initial=f.context.state,gate=deferred();
  const save=f.context.api;f.context.api=async(...args)=>{await gate.promise;return save(...args)};
@@ -242,13 +252,20 @@ await check('preload strips IPC events, filters command names, and restricts res
  const allowed=['pat','feed','play','sleep','garden','farm','study','home','switchPet:0','switchPet:7','switchPet:8','switchPet:10'];
  for(const command of [...allowed,'switchPet:-1','switchPet:0.5','switchPet:01','switchPet:+1','switchPet:1e1','switchPet:1\n','switchPet:','switchPet:__proto__','quit',{}])listener({sender:'private'},command);
  assert.deepEqual(calls.map(args=>args[0]),allowed);assert.ok(calls.every(args=>args.length===1));
+ listener({}, {command:'feed',requestId:41});
+ assert.equal(calls.at(-1)[0].command,'feed');assert.equal(calls.at(-1)[0].requestId,41);
+ const received=calls.length;
+ for(const payload of [{command:'feed'}, {command:'feed',requestId:-1}, {command:'feed',requestId:1.5}, {command:'quit',requestId:42}])listener({},payload);
+ assert.equal(calls.length,received);
  unsubscribe();assert.equal(removed[0],'szu:pet-command');assert.equal(removed[1],listener);
  bridge.petResult({ok:true,message:'好'.repeat(121),secret:'never forward'});
  bridge.petResult({ok:'true',message:'invalid'});bridge.petResult({ok:true,message:5});
  assert.equal(sent.length,1);assert.equal(sent[0][0],'szu:pet-result');assert.equal(sent[0][1].message.length,120);
  assert.deepEqual(Object.keys(sent[0][1]),['ok','message']);assert.equal(Object.isFrozen(bridge),true);
+ bridge.petResult({ok:false,message:'busy',requestId:41,secret:'never forward'});
+ assert.equal(sent[1][1].requestId,41);assert.deepEqual(Object.keys(sent[1][1]),['ok','message','requestId']);
  const scales=[],removeScale=bridge.onPetScale((...args)=>scales.push(args));
  for(const scale of [0.4,1.35,2,'1',Infinity,NaN,0.3,3])listener({sender:'private'},scale);
  assert.deepEqual(scales,[[0.4],[1.35],[2]]);removeScale();assert.equal(removed[0],'szu:pet-scale');assert.equal(removed[1],listener);
 });
-console.log(`${checks} pet command checks passed`);
+ console.log(`${checks} pet command checks passed`);
