@@ -69,6 +69,27 @@ expected = {"workspace": {"profile": {"name": "old"}, "courses": [{"code": "old-
             "notebook": {"courses": [], "notes": [{"id": "old-note", "body": "old body"}], "preferences": {}},
             "credential": {"username": "synthetic", "password": "synthetic-only"}}
 state = copy.deepcopy(expected)
+seeded = {}
+def fresh_call(_engine, endpoint, method="GET", data=None):
+    if endpoint == "/api/workspace":
+        if method == "GET":
+            return {"version": 1, "revision": 0, "data": None}
+        assert data["revision"] == 0
+        seeded["workspace"] = copy.deepcopy(data["data"])
+        return copy.deepcopy(data)
+    if endpoint == "/api/notebook":
+        return copy.deepcopy(data or {"version": 1, "revision": 0, "data": None})
+    if endpoint == "/api/credential":
+        seeded["credential"] = copy.deepcopy(data)
+        return {"ok": True}
+    assert endpoint == "/api/credential?reveal=1"
+    return {"saved": True, "username": seeded["credential"]["username"]}
+with patch.object(upgrade, "call", side_effect=fresh_call):
+    factory = lambda: copy.deepcopy(expected["workspace"])
+    result = upgrade.seed(None, factory)
+    assert seeded["workspace"]["game"]["coins"] == 137
+    assert result["notebook"]["notes"][0]["id"] == "mac-note"
+    assert result["credential"] == seeded["credential"]
 def call(_engine, endpoint, method="GET", data=None):
     key = {"/api/workspace": "workspace", "/api/notebook": "notebook", "/api/credential?reveal=1": "credential"}[endpoint]
     if data is not None:

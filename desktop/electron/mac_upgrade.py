@@ -6,6 +6,7 @@ import http.client
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import threading
 import time
@@ -110,8 +111,47 @@ def engine_probe(binary, cfg, version, log_path, protocol, stop):
             stop(proc); reader.join(timeout=5)
 
 
-def seed(engine):
+def initial_workspace(engine, directory):
+    """Use the immutable old engine's own pure garden rules, not current defaults."""
+    directory = Path(directory)
+    directory.mkdir()  # Never reuse or overwrite an existing module directory.
+    parsed = urlsplit(engine[0])
+    if parsed.hostname != "127.0.0.1":
+        raise AssertionError("Baseline modules must come from the owned loopback engine")
+    visited = set()
+    def copy_module(name):
+        if not re.fullmatch(r"[\w.-]+\.mjs", name):
+            raise AssertionError("Unexpected baseline module path")
+        if name in visited:
+            return
+        visited.add(name)
+        conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=10)
+        try:
+            conn.request("GET", "/assets/garden/" + name, headers={"X-SZU-Token": engine[1]})
+            response = conn.getresponse()
+            source = response.read()
+            if response.status != 200:
+                raise AssertionError("Cannot read baseline garden module")
+        finally:
+            conn.close()
+        (directory / name).write_bytes(source)
+        for specifier in re.findall(r"\b(?:from|import)\s*['\"]([^'\"]+)['\"]", source.decode("utf-8")):
+            if not re.fullmatch(r"\./[\w.-]+\.mjs", specifier):
+                raise AssertionError("Baseline garden rules must use flat local module imports")
+            copy_module(specifier[2:])
+    copy_module("engine.mjs")
+    result = subprocess.run(["node", "--input-type=module", "--eval",
+                             "import {pathToFileURL} from 'node:url'; const {createState}=await import(pathToFileURL(process.argv[1]).href); console.log(JSON.stringify(createState()));",
+                             str(directory / "engine.mjs")], capture_output=True, timeout=30)
+    if result.returncode != 0:
+        raise AssertionError("Cannot initialize state with the published baseline garden rules")
+    return json.loads(result.stdout)
+
+
+def seed(engine, initial_state):
     workspace = call(engine, "/api/workspace")
+    if workspace["data"] is None:
+        workspace["data"] = initial_state()
     data = workspace["data"]
     data["profile"] = {"name": "Mac升级验收", "college": "隔离合成资料"}
     data["preferences"].update(theme="night", motion=False, onboarded=True)

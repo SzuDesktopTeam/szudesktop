@@ -456,7 +456,7 @@ class Smoke:
         # Candidate UI checks below remain complete and unchanged.
         with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, mac_upgrade.BASELINE_VERSION,
                                       self.evidence / "baseline-data.log", smoke_macos, stop_group) as engine:
-            self.upgrade_data = mac_upgrade.seed(engine)
+            self.upgrade_data = mac_upgrade.seed(engine, lambda: mac_upgrade.initial_workspace(engine, self.root / "baseline-js"))
         mac_upgrade.seed_shell_settings(self.cfg)
         (self.evidence / "baseline-data.json").write_text(json.dumps({
             "version": mac_upgrade.BASELINE_VERSION, "baseline_sha256": digest,
