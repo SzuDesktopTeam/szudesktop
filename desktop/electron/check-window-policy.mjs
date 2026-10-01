@@ -152,7 +152,12 @@ assert.deepEqual(await guard.requestRendererSave(),{ok:true});assert.equal(sendC
   win.emit('session-end');assert.deepEqual(events,['session-end']);
   // 宠物菜单指令：需要看页面的先把窗口带到前台，其余只转交页面。
   win.minimized=true;win.visible=false;
-  mainWindow.command('pat');assert.equal(win.visible,false);assert.equal(win.webContents.last('szu:pet-command'),'pat');
+  mainWindow.command('pat');assert.equal(win.visible,false);
+  const request=win.webContents.last('szu:pet-command');
+  assert.equal(request.command,'pat');assert.ok(Number.isSafeInteger(request.requestId));
+  assert.equal(win.webContents.getBackgroundThrottling(),false);
+  mainWindow.commandFinished({requestId:request.requestId});
+  assert.equal(win.webContents.getBackgroundThrottling(),true);
   for(const command of FOREGROUND_COMMANDS){win.visible=false;mainWindow.command(command);assert.equal(win.visible,true,command);assert.equal(win.webContents.last('szu:pet-command'),command);}
   assert.equal(win.minimized,false);assert.equal(win.focused,true);
   mainWindow.send('szu:pet-scale',1.2);assert.equal(win.webContents.last('szu:pet-scale'),1.2);

@@ -3365,3 +3365,11 @@ szunet diag                               # 13. 结论应与上面各步一致
 ### 71.2 发布与验收边界
 
 beta0.9.6 仅作为预发布版本。此前 45 分钟是浏览器测试版证据。真实校园账号登录、校园网认证、睡眠恢复、多屏日常使用与长时间真实用户验收尚未完成；生产代码签名和 macOS 公证尚未完成。隔离合成数据自动化冒烟不替代这些项目，不能据此宣称正式产品完整验收。
+
+### 71.3 macOS 隐藏伙伴操作与后台调度
+
+发布阻塞记录：PR #34 的 CI 首次尝试在 x64/Rosetta 喂食阶段无回执（[run 36898231058 attempt 1](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36898231058/attempts/1)），保持断言不变的第二次尝试通过，arm64/x64 的笔记重载和 Apple quit event 均通过。合并提交 cd903780 的主分支 [run 36902454441](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36902454441) 又在 x64/Rosetta 的隐藏主窗口睡眠操作阶段无回执，24.2 秒后失败；Intel job 被跳过，尚未打 beta0.9.6 标签。不能将它视为已解决的偶发失败。
+
+针对后台渲染器调度实现修复：主窗口保持隐藏，只有伙伴命令处理期间通过 Electron setBackgroundThrottling(false) 临时唤醒；原生桥携带独立请求编号，可信回执只结束自己的唤醒。全部待处理命令完成后恢复节流；30 秒仍未确认时恢复节流并提示打开应用核对，不自动重放操作。窗口销毁或渲染器退出时清理待处理状态，保留原有可信来源与命令白名单。Electron [官方说明](https://www.electronjs.org/docs/latest/api/web-contents#contentssetbackgroundthrottlingallowed)确认该设置影响后台动画、定时器及 Page Visibility API。
+
+本地模块、56 项 JS、5 项 Python 检查通过；增加了重叠/忙碌命令的独立回执、未知和迟到回执、超时与销毁清理检查。原生冒烟新增隐藏命令发送时已解除节流、睡眠与喂食确认后恢复节流的断言（backgroundCommandWake）。修复仍需 Windows 安装升级、arm64/x64 DMG、合并后 Intel 和标签完整检查实际通过；不放宽原有断言、等待时限或发布依赖。

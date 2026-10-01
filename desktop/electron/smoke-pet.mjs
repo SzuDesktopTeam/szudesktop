@@ -228,7 +228,10 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   trace('menu-closed');
   const game=async()=>(await workspace()).game;
   const active=g=>g.pets[g.active]||g.pets[0];
-  const petCommand=createPetCommands({click:id=>getPetMenu().getMenuItemById(id).click(),replies:listenPetReplies(mainWin.webContents),until});
+  const petCommand=createPetCommands({click:id=>{
+    getPetMenu().getMenuItemById(id).click();
+    if(id==='sleep'||id==='feed')assert.equal(mainWin.webContents.getBackgroundThrottling(),false,'hidden care dispatch wakes the renderer before sending');
+  },replies:listenPetReplies(mainWin.webContents),until});
   for(let i=0;i<2;i++){
     trace('sleep-'+i);
     const before=active(await game()).sleeping;
@@ -236,6 +239,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
     await afterSleep(async()=>active(await game()).sleeping!==before,'pet sleep menu did not save');
     const savedPet=active(await game());
     await afterSleep(()=>pet(`document.querySelector('#bubble-text').textContent===${JSON.stringify(savedPet.say.slice(0,60))}`),'saved personality dialogue did not reach the pet bubble');
+    await afterSleep(()=>mainWin.webContents.getBackgroundThrottling(),'sleep acknowledgement did not restore idle throttling');
   }
   const beforeFeed=await game(),canFeed=!active(beforeFeed).sleeping&&active(beforeFeed).hunger<98&&beforeFeed.food>0;
   trace('feed');
@@ -251,6 +255,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
     return pet("/吃饱|唤醒|食物用完/.test(document.querySelector('#bubble-text').textContent)");
   },'feed result was not shown');
   assert.equal((await game()).food,beforeFeed.food-(canFeed?1:0),'food changes only after a valid meal');
+  await afterFeed(()=>mainWin.webContents.getBackgroundThrottling(),'feed acknowledgement did not restore idle throttling');
   assert.equal(mainWin.isVisible(),false,'care works with the main window hidden');
   const companions=(await game()).pets;
   trace('companion-menu-selection');
@@ -425,7 +430,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   await checkNotebookReload({mainWin,main,api,evidenceDir});
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
   return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,notebookReload:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,backgroundCommandWake:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,notebookReload:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
 }
 
 // Runs in the real Electron renderer against the Go notebook API. Synthetic data only.
