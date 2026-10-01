@@ -8,6 +8,7 @@ import {petWindowBounds,petClickThroughSupported} from './pet-policy.mjs';
 import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
 import {PET_CLIPS} from './pet-animation.mjs';
 import {TOKEN_HEADER} from './listen-url.mjs';
+import {withNotebookStorageFailure} from './notebook-storage-fault.mjs';
 
 // 冒烟里对页面执行脚本都要有上限：渲染进程崩溃或页面卡死时 executeJavaScript 永远不返回，
 // 以前只会表现为“报告一直没出现”。超时后带上窗口与渲染进程状态报错，写进失败报告。
@@ -427,14 +428,14 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   assert.equal(anonymous.status,401,'local API rejects callers without the session token');
   await anonymous.body?.cancel();
   await checkBackup(mainWin,baseUrl,token,evidenceDir);
-  await checkNotebookReload({mainWin,main,api,evidenceDir});
+  await checkNotebookReload({mainWin,main,api,evidenceDir,userData});
   await main("document.querySelector('[data-action=\"navigate\"][data-page=\"home\"]').click()");
   return {rendered:true,tray:true,closeAndReopen:true,hideAndShow:true,actionsReturnToBase:true,animationFrames,
-    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,backgroundCommandWake:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,notebookReload:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
+    initialScale,finalScale:1.7,settingsAndPresets:true,petMenu:true,hiddenCare:true,backgroundCommandWake:true,feedUsesInventory:true,menuNavigation:true,petSelection:true,petSelectionSync:true,companionSpecies,defaultCompanions:AVAILABLE_PETS,penguinSelection:true,notebookReload:true,notebookSaveFailure:true,backupRestore:true,drag:true,positionPersistence:true,clickThrough,displayCount:screen.getAllDisplays().length};
 }
 
 // Runs in the real Electron renderer against the Go notebook API. Synthetic data only.
-async function checkNotebookReload({mainWin,main,api,evidenceDir}){
+async function checkNotebookReload({mainWin,main,api,evidenceDir,userData}){
   const snapshot=async()=>{const r=await api('/api/notebook');assert.ok(r.ok);return r.json();};
   const before=await snapshot();
   const original=before.data||{courses:[],notes:[],preferences:{selectedNoteId:'',selectedCourseId:''}};
@@ -459,11 +460,43 @@ async function checkNotebookReload({mainWin,main,api,evidenceDir}){
   await until(()=>main('Boolean(document.querySelector("[data-action=notebookResume]"))'),'resume entry missing');
   await main('document.querySelector("[data-action=notebookResume]").click()');
   await until(()=>main('document.querySelector("#note-body")?.value==='+JSON.stringify(body)),'draft not restored after native reload');
+  await checkNotebookSaveFailure({mainWin,main,api,evidenceDir,userData,body});
   const saved=await snapshot();
-  assert.ok(saved.data.notes.some(n=>n.body===body),'real Go API persisted the draft');
+  assert.ok(saved.data.notes.some(n=>n.body.startsWith(body)),'real Go API persisted the draft');
   writeFileSync(path.join(evidenceDir,'notebook-reload.png'),(await mainWin.webContents.capturePage()).toPNG());
   const restored=await api('/api/notebook',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:1,revision:saved.revision,data:original})});
   assert.ok(restored.ok,'synthetic smoke note cleanup failed');
   await mainWin.loadURL(mainWin.webContents.getURL().split('#')[0]+'#home');
   await until(()=>main('Boolean(document.querySelector("[data-action=navigate][data-page=home]"))'),'workspace did not reload after cleanup');
+}
+
+async function checkNotebookSaveFailure({mainWin,main,api,evidenceDir,userData,body}){
+  const draft=body+'\nUnsaved synthetic draft during real storage failure';
+  const originalUrl=mainWin.webContents.getURL();
+  await main(`(()=>{window.__szuSmokeFailedWrites=[];window.__szuSmokeFetch=window.fetch;window.fetch=async(...args)=>{const r=await window.__szuSmokeFetch(...args);if(String(args[0]).includes('/api/notebook')&&args[1]?.method==='PUT'&&!r.ok)window.__szuSmokeFailedWrites.push(r.status);return r;};})()`);
+  try{
+    await withNotebookStorageFailure({configDir:process.env.SZUNET_CONFIG_DIR,userData,
+      reportPath:process.env.SZU_SMOKE_REPORT,allowedRoot:process.env.GITHUB_ACTIONS==='true'?process.env.RUNNER_TEMP:evidenceDir},async()=>{
+      await main('(()=>{const a=document.querySelector("#note-body");a.value='+JSON.stringify(draft)+';a.dispatchEvent(new Event("input",{bubbles:true}));})()');
+      await main('document.querySelector("[data-action=navigate][data-page=settings]").click()');
+      await until(()=>main('window.__szuSmokeFailedWrites.some(status=>status>=500)'),'real notebook storage failure did not reach renderer');
+      assert.equal(mainWin.webContents.getURL(),originalUrl,'failed save blocks leaving the note');
+      assert.equal(await main('document.querySelector("#note-body")?.value'),draft,'failed save keeps complete draft in editor');
+      const file=path.join(evidenceDir,'notebook-failed-save-backup.json');
+      let complete=false,state='';
+      const onDownload=(_event,item)=>{item.setSavePath(file);item.once('done',(_event,result)=>{state=result;complete=true;});};
+      mainWin.webContents.session.once('will-download',onDownload);
+      try{await main('document.querySelector("details.note-backup summary").click();document.querySelector("[data-note-action=backup]").click()');await until(()=>complete,'failed draft backup not downloaded');}
+      finally{mainWin.webContents.session.removeListener('will-download',onDownload);}
+      assert.equal(state,'completed');
+      assert.ok(JSON.parse(readFileSync(file,'utf8')).data.notes.some(note=>note.body===draft),'exported backup includes unsaved draft');
+      writeFileSync(path.join(evidenceDir,'notebook-failed-save.png'),(await mainWin.webContents.capturePage()).toPNG());
+    });
+    await main('document.querySelector("[data-action=navigate][data-page=settings]").click()');
+    await until(async()=>{const r=await api('/api/notebook');return r.ok&&(await r.json()).data.notes.some(note=>note.body===draft);},'restored storage did not allow draft retry');
+    await until(()=>main('Boolean(document.querySelector("[data-action=reload]"))'),'save retry did not unlock navigation');
+    writeFileSync(path.join(evidenceDir,'notebook-save-failure.json'),JSON.stringify({realFilesystemLockFailure:true,httpStatus:await main('window.__szuSmokeFailedWrites'),navigationBlocked:true,draftRetained:true,backupIncludesDraft:true,originalBytesPreserved:true,retryPersisted:true},null,2));
+    await main('document.querySelector("[data-action=navigate][data-page=study]").click()');
+    await until(()=>main('document.querySelector("#note-body")?.value==='+JSON.stringify(draft)),'retried draft did not reopen in the editor');
+  }finally{await main('if(window.__szuSmokeFetch){window.fetch=window.__szuSmokeFetch;delete window.__szuSmokeFetch;delete window.__szuSmokeFailedWrites;}');}
 }

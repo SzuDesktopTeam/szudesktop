@@ -322,6 +322,7 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
                 check(label + ": both penguins render and switch", pet.get("penguinSelection") is True
                       and all(species in pet.get("companionSpecies", []) for species in ("pingu", "skipper")))
                 check(label + ": backup export and restore", pet.get("backupRestore") is True)
+                check(label + ": real storage failure retains and retries notebook draft", pet.get("notebookSaveFailure") is True)
                 # smoke-pet reports null off Windows; this runner is Windows, so it must be true.
                 check(label + ": transparent pet area clicks through", pet.get("clickThrough") is True)
             check(label + ": normal window exit", proc.wait(timeout=25) == 0)

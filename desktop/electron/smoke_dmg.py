@@ -43,6 +43,8 @@ from urllib.parse import urlsplit
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "desktop"))
+sys.path.insert(0, str(HERE))
+import mac_upgrade
 import smoke_macos  # noqa: E402  钥匙串命名规则与只读查询共用一份
 
 APP_ID = "com.szudesktop.app"
@@ -263,6 +265,7 @@ class Smoke:
         self.app = root / "应用 副本" / (PRODUCT + ".app")
         self.engine = ROOT / "dist" / ("szudesktop-darwin-" + GO_ARCH[args.arch])
         self.running = []
+        self.upgrade_data = None
         # Rosetta 转译下界面往返明显变慢（CI 上一次首开冒烟就要约 2 分钟），宠物菜单存档偶尔超过 6 秒；
         # 只放宽这一种情况的等待，原生运行和 Windows 冒烟仍按原来的时限。
         self.wait_scale = "4" if args.arch == "x64" and smoke_macos.native_arch() == "arm64" else None
@@ -322,6 +325,9 @@ class Smoke:
         check(label + ": both penguins render and switch", pet.get("penguinSelection") is True
               and all(species in pet.get("companionSpecies", []) for species in ("pingu", "skipper")))
         check(label + ": backup export and restore", pet.get("backupRestore") is True)
+        if self.version != mac_upgrade.BASELINE_VERSION:
+            check(label + ": notebook reload and real storage failure recovery",
+                  pet.get("notebookReload") is True and pet.get("notebookSaveFailure") is True)
         check(label + ": transparent pet area clicks through", pet.get("clickThrough") is True)
         mac, failures = result.get("mac") or {}, result.get("macFailures") or {}
         for name, why in failures.items():
@@ -433,6 +439,41 @@ class Smoke:
             reader.join(timeout=5)
             log.close()
 
+    def upgrade_from_baseline(self, baseline):
+        check("candidate differs from pinned DMG baseline", self.version != mac_upgrade.BASELINE_VERSION)
+        digest = mac_upgrade.verify_baseline(baseline, self.arch)
+        check_dmg(baseline)
+        copy_from_dmg(baseline, self.root / "baseline mount", self.app)
+        check("baseline bundle version", plist_value(self.app / "Contents/Info.plist", "CFBundleShortVersionString") == "0.9.5")
+        check("baseline signature verifies", run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(self.app)]).returncode == 0)
+        candidate = (self.version, self.semver, self.runtime)
+        try:
+            self.version, self.semver, self.runtime = mac_upgrade.BASELINE_VERSION, "0.9.5", mac_upgrade.BASELINE_ELECTRON
+            self.launch("baseline-open", initial_scale=1)
+        finally:
+            self.version, self.semver, self.runtime = candidate
+        with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, mac_upgrade.BASELINE_VERSION,
+                                      self.evidence / "baseline-data.log", smoke_macos, stop_group) as engine:
+            self.upgrade_data = mac_upgrade.seed(engine)
+        files = [self.cfg / "workspace-v1.json", self.cfg / "notebook-v1.json",
+                 self.cfg / "electron-profile/pet-settings.json", self.cfg / "electron-profile/desktop-settings.json"]
+        check("baseline data files exist", all(file.is_file() for file in files))
+        before = {file: file.read_bytes() for file in files}
+        check("baseline processes exited before replacement", wait_no_process(self.marker))
+        unregister_all(self.marker)
+        check("upgrade target is confined to this isolated smoke", self.app.resolve().is_relative_to(self.root.resolve()))
+        shutil.rmtree(self.app)
+        return digest, before
+
+    def verify_upgrade(self, before, write=False):
+        if before is not None:
+            check("replacing app keeps all baseline data byte for byte", all(file.read_bytes() == data for file, data in before.items()))
+        with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, self.version,
+                                      self.evidence / ("upgrade-write.log" if write else "upgrade-reopen-data.log"),
+                                      smoke_macos, stop_group) as engine:
+            mac_upgrade.verify_data(engine, self.upgrade_data, write=write)
+        check("upgrade preserves old data and synthetic credential; candidate read/write succeeds", True)
+
     def uninstall(self):
         """用户卸载就是把 .app 拖进废纸篓：工作区与宠物设置在配置目录里，必须原封不动。"""
         data = [self.cfg / "workspace-v1.json", self.cfg / "electron-profile" / "pet-settings.json"]
@@ -541,6 +582,7 @@ def main():
     parser.add_argument("--local", action="store_true",
                         help="在开发机上运行：会启动真实窗口，结束时还原 com.szudesktop.app 偏好并从 LaunchServices 注销临时副本")
     parser.add_argument("--dmg", type=Path, help="默认 desktop/electron/release/szuDesktop-<版本>-mac-<arch>.dmg")
+    parser.add_argument("--baseline-dmg", type=Path, help="fixed published beta0.9.5 DMG; runner requires the prepared baseline")
     args = parser.parse_args()
     runner = os.environ.get("GITHUB_ACTIONS") == "true" and bool(os.environ.get("RUNNER_TEMP"))
     if sys.platform != "darwin":
@@ -553,6 +595,13 @@ def main():
     if args.arch == "x64" and native == "arm64" and run(["/usr/bin/arch", "-x86_64", "/usr/bin/true"]).returncode != 0:
         raise SystemExit("本机不能运行 x64 安装包：Apple 芯片上要先装 Rosetta")
     version, semver = version_info()
+    baseline_dir = os.environ.get("SZU_DMG_BASELINE_DIR")
+    baseline = args.baseline_dmg or (Path(baseline_dir) / mac_upgrade.baseline_name(args.arch) if baseline_dir else None)
+    if runner and baseline is None:
+        raise SystemExit("Runner requires a pinned DMG upgrade baseline; prepare mac_upgrade.py first")
+    if baseline is not None:
+        baseline = baseline.resolve()
+        mac_upgrade.verify_baseline(baseline, args.arch)
     dmg = (args.dmg or HERE / "release" / ("szuDesktop-%s-mac-%s.dmg" % (semver, args.arch))).resolve()
     evidence = HERE / "release" / ("smoke-evidence-mac-" + args.arch)
     if evidence.exists():
@@ -570,12 +619,21 @@ def main():
             summary["dmg_sha256"] = check_dmg(dmg)
             smoke = Smoke(args, root, evidence, version, semver)
             smoke.cfg.mkdir(mode=0o700)
+            preserved = None
+            if baseline is not None:
+                baseline_digest, preserved = smoke.upgrade_from_baseline(baseline)
+                summary.update(upgrade_from=mac_upgrade.BASELINE_VERSION, baseline_sha256=baseline_digest)
             copy_from_dmg(dmg, root / "挂载 点", smoke.app)
             static_checks(smoke.app, args.arch, smoke.semver, smoke.engine)
-            first = smoke.launch("first-open", initial_scale=1)
+            if baseline is not None:
+                smoke.verify_upgrade(preserved, write=True)
+            first = smoke.launch("first-open", initial_scale=1.7 if baseline is not None else 1)
             smoke.launch("reopen")
             summary["quit_apple_event"] = smoke.quit_event(runner)
             smoke.coexist_with_portable()
+            if baseline is not None:
+                smoke.verify_upgrade(None)
+                summary.update(cross_version_upgrade_preserved_data=True, candidate_read_write=True, synthetic_credential_decrypts=True)
             smoke.uninstall()
             summary.update(version=smoke.version, electron=first["electron"], mac=first["mac"],
                            click_through=first["pet"]["clickThrough"], companion_species=first["pet"]["companionSpecies"])

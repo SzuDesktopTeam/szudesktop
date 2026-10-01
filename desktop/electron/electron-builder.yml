@@ -36,6 +36,7 @@ files:
   - desktop-settings.mjs
   - focus-notifications.mjs
   - smoke-pet.mjs
+  - notebook-storage-fault.mjs
   - school-window.mjs
   - school-policy.mjs
   - feishu-window.mjs

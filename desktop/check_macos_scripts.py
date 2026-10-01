@@ -29,6 +29,7 @@ DESKTOP = ROOT / "desktop"
 BUILD = DESKTOP / "build-macos.py"
 SMOKE_ENGINE = DESKTOP / "smoke_macos.py"
 SMOKE_DMG = DESKTOP / "electron" / "smoke_dmg.py"
+UPGRADE = DESKTOP / "electron" / "mac_upgrade.py"
 # 冒烟脚本的钥匙串规则按 os.path 的 POSIX 语义写（/tmp/szu-cfg/ 在 Windows 上不是绝对路径），只在 POSIX 宿主上导入核对。
 POSIX = os.sep == "/"
 
@@ -141,7 +142,7 @@ def test_dmg_pure_rules():
 
 def test_smoke_scripts_refuse_without_local():
     for script in (SMOKE_ENGINE, SMOKE_DMG):
-        r = run_refusing([SMOKE_ENGINE, SMOKE_DMG], script, "--arch", "arm64")
+        r = run_refusing([SMOKE_ENGINE, SMOKE_DMG, UPGRADE], script, "--arch", "arm64")
         want = "什么都没做" if sys.platform == "darwin" else "只能在 macOS 上运行"
         assert r.returncode != 0 and want in r.stderr, (script.name, r.returncode, r.stdout, r.stderr)
         assert "PASS" not in r.stdout, "%s 被拒绝前就开始核对了" % script.name
