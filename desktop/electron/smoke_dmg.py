@@ -476,7 +476,8 @@ class Smoke:
         with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, self.version,
                                       self.evidence / ("upgrade-write.log" if write else "upgrade-reopen-data.log"),
                                       smoke_macos, stop_group) as engine:
-            mac_upgrade.verify_data(engine, self.upgrade_data, write=write)
+            mac_upgrade.verify_data(engine, self.upgrade_data,
+                                    lambda: mac_upgrade.read_synthetic_credential(self.cfg, self.root), write=write)
         check("upgrade preserves old data and synthetic credential; candidate read/write succeeds", True)
 
     def uninstall(self):

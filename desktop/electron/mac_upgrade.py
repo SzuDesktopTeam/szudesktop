@@ -134,7 +134,22 @@ def seed(engine):
     return {"workspace": workspace["data"], "notebook": notebook["data"], "credential": fake}
 
 
-def verify_data(engine, expected, write=False):
+def read_synthetic_credential(cfg, allowed_root):
+    cfg, allowed_root = Path(cfg), Path(allowed_root)
+    if not cfg.is_absolute() or not cfg.resolve().is_relative_to(allowed_root.resolve()) or cfg.resolve() == allowed_root.resolve():
+        raise AssertionError("Credential probe requires this smoke's isolated configuration")
+    suffix = hashlib.sha256(os.path.normpath(os.path.abspath(cfg)).encode("utf-8")).hexdigest()[:12]
+    result = subprocess.run(["/usr/bin/security", "find-generic-password", "-a", "szunet",
+                             "-s", "szunet-test-" + suffix, "-w"], capture_output=True)
+    if result.returncode != 0:
+        raise AssertionError("Cannot read the isolated synthetic credential")
+    try:
+        return json.loads(result.stdout)
+    except (ValueError, UnicodeError):
+        raise AssertionError("Isolated synthetic credential is not valid JSON") from None
+
+
+def verify_data(engine, expected, read_credential, write=False):
     workspace = call(engine, "/api/workspace")
     data, original = workspace["data"], expected["workspace"]
     for key in ("profile", "courses", "semester", "reminders"):
@@ -156,14 +171,18 @@ def verify_data(engine, expected, write=False):
     if notebook["data"] != expected["notebook"]:
         raise AssertionError("Upgrade lost notebook data")
     credential = call(engine, "/api/credential?reveal=1")
-    if any(credential.get(key) != value for key, value in expected["credential"].items()):
+    # The API deliberately never exposes passwords; successful Load proves the engine
+    # can read the entry. Compare full synthetic bytes separately, only in our namespace.
+    if credential.get("saved") is not True or credential.get("username") != expected["credential"]["username"] or "password" in credential:
+        raise AssertionError("Upgrade cannot load synthetic credentials through the private API")
+    if read_credential() != expected["credential"]:
         raise AssertionError("Upgrade cannot decrypt synthetic baseline credentials")
     if write:
         workspace["data"]["profile"]["name"] += " · 新版写入"
         notebook["data"]["notes"][0]["body"] += "\nCandidate write persisted"
         expected["workspace"] = call(engine, "/api/workspace", "POST", workspace)["data"]
         expected["notebook"] = call(engine, "/api/notebook", "PUT", notebook)["data"]
-        verify_data(engine, expected)
+        verify_data(engine, expected, read_credential)
 
 
 if __name__ == "__main__":

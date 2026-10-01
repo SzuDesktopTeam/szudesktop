@@ -58,10 +58,11 @@ def call(_engine, endpoint, method="GET", data=None):
     key = {"/api/workspace": "workspace", "/api/notebook": "notebook", "/api/credential?reveal=1": "credential"}[endpoint]
     if data is not None:
         state[key] = copy.deepcopy(data["data"])
-    return copy.deepcopy(state[key] if key == "credential" else {"version": 1, "revision": 2, "data": state[key]})
+    return copy.deepcopy({"saved": True, "username": state[key]["username"]} if key == "credential" else {"version": 1, "revision": 2, "data": state[key]})
+read_credential = lambda: copy.deepcopy(state["credential"])
 with patch.object(upgrade, "call", side_effect=call):
-    upgrade.verify_data(None, expected)
-    upgrade.verify_data(None, expected, write=True)
+    upgrade.verify_data(None, expected, read_credential)
+    upgrade.verify_data(None, expected, read_credential, write=True)
     assert state["workspace"]["profile"]["name"].endswith("新版写入")
     assert state["notebook"]["notes"][0]["body"].endswith("Candidate write persisted")
     good = copy.deepcopy(state)
@@ -72,6 +73,19 @@ with patch.object(upgrade, "call", side_effect=call):
                  lambda: state["notebook"]["notes"][0].update(body="lost"),
                  lambda: state["credential"].update(password="wrong")]
     for mutate in mutations:
-        state = copy.deepcopy(good); mutate(); refuses(lambda: upgrade.verify_data(None, expected))
+        state = copy.deepcopy(good); mutate(); refuses(lambda: upgrade.verify_data(None, expected, read_credential))
+with tempfile.TemporaryDirectory(prefix="szu-keychain-probe-check-") as tmp:
+    root = Path(tmp); cfg = root / "isolated"; cfg.mkdir()
+    with patch.object(upgrade.subprocess, "run") as run:
+        refuses(lambda: upgrade.read_synthetic_credential(root, cfg))
+        assert run.call_count == 0, "Unsafe path must never invoke security"
+        run.return_value.returncode = 0
+        run.return_value.stdout = b'{"username":"synthetic","password":"synthetic-only"}'
+        assert upgrade.read_synthetic_credential(cfg, root) == good["credential"]
+        args = run.call_args.args[0]
+        assert args[0] == "/usr/bin/security" and args[args.index("-s") + 1].startswith("szunet-test-")
+        assert "synthetic-only" not in args, "Password must never enter argv"
+        run.return_value.stdout = b"malformed synthetic entry"
+        refuses(lambda: upgrade.read_synthetic_credential(cfg, root))
 print("PASS upgrade verifies old personal records, notebook and synthetic credentials; detects losses and persists new writes")
 print("2 DMG upgrade logic checks passed")
