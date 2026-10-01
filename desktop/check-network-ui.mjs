@@ -150,15 +150,20 @@ pollCtx.document.hidden=true;pollCtx.pollNetwork(true,true);assert.equal(refresh
 pollCtx.exiting=true;pollNow+=60000;pollCtx.pollNetwork(true);pollCtx.pollNetwork(true,true);assert.equal(refreshes,4,'退出后不再探测');
 // 接线：真实地执行应用末尾的事件注册与定时器，而不是只匹配源码字样。
 const wiring=app.slice(app.indexOf("document.addEventListener('visibilitychange'"),app.indexOf('try{let snapshot=null;'));
-const events={},timers=[],calls=[];
+const events={},timers=[],calls=[],cancelled=[];
 const wiringCtx=vm.createContext({document:{hidden:false,addEventListener:(type,fn)=>{events[type]=fn}},exiting:false,state:{},
  clocks:()=>calls.push('clocks'),pollNetwork:(...args)=>calls.push('poll:'+args.join(',')),flushPuzzle:async()=>{calls.push('flush')},academicUI:{load:()=>calls.push('calendar')},
- setInterval:(fn,ms)=>{timers.push({fn,ms});return timers.length}});
+ setInterval:(fn,ms)=>{timers.push({fn,ms});return timers.length},clearInterval:id=>cancelled.push(id)});
 vm.runInContext(wiring,wiringCtx);
 assert.deepEqual(timers.map(t=>t.ms).sort((a,b)=>a-b),[1000,30000,3600000]);
 timers.find(t=>t.ms===30000).fn();assert.deepEqual(calls,['poll:'],'30 秒定时器走按页面过滤的 pollNetwork，不直接探测');
 calls.length=0;wiringCtx.document.hidden=true;events.visibilitychange();assert.deepEqual(calls,['flush'],'隐藏时只存好棋局，不探测');
 calls.length=0;wiringCtx.document.hidden=false;events.visibilitychange();assert.deepEqual(calls,['clocks','poll:true,true'],'回到可见时立即刷新一次网络状态');
+assert.ok(cancelled.includes(1),'hidden page releases its initial visual interval');
+assert.equal(timers.filter(t=>t.ms===1000).length,2,'visible again starts one visual interval');
+calls.length=0;events.visibilitychange();assert.equal(cancelled.at(-1),4,'repeated visible event cancels the prior visual clock');
+assert.deepEqual(calls,['clocks','poll:true,true']);
+wiringCtx.exiting=true;calls.length=0;events.visibilitychange();assert.deepEqual(calls,['flush']);assert.equal(timers.filter(t=>t.ms===1000).length,3,'exit never starts a new clock');
 assert.doesNotMatch(app,/setInterval\(refresh,/);
 console.log('PASS status polling runs only while a visible page shows network state');
 

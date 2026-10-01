@@ -227,4 +227,29 @@ await test('离开书桌不论保存成败都收起专心书写，标志与界�
   assert.equal(toggle.textContent,'专心书写');assert.equal(toggle.attrs['aria-pressed'],'false');
  }
 });
+
+await test('导入等待读取期间阻止新建，允许导出；读取失败后解除操作锁',async()=>{
+ const from=notebookSource.indexOf('async function importFile('),to=notebookSource.indexOf('function beforeUnload(',from);
+ let release,fail=false,created=0,exported=0;const messages=[],data=fixture();
+ const context=vm.createContext({store:{snapshot:()=>data},flush:async()=>{},markdownImport,ensureRoom(){},withNote(){},newNote(){created++},toast:text=>messages.push(text)});
+ vm.runInContext(notebookSource.slice(from,to),context);
+ const actions=createNoteOperations({run:async(action,attrs)=>{if(action==='import-file')await context.importFile(attrs.file,attrs.kind);else if(action==='backup')exported++;else created++},toast:text=>messages.push(text),settled(){}});context.perform=actions.perform;
+ const input={dataset:{noteFile:'markdown'},value:'chosen',files:[{size:30,name:'note.md',text:()=>new Promise((resolve,reject)=>{release=()=>fail?reject(Error('读取失败')):resolve('# 导入页\n\n正文')})}]};
+ const pending=context.change({target:input});await new Promise(resolve=>setImmediate(resolve));assert.equal(actions.busy,true);
+ await actions.perform('new');assert.equal(created,0);await actions.perform('backup');assert.equal(exported,1);assert.equal(actions.busy,true);
+ release();await pending;assert.equal(created,1);assert.equal(actions.busy,false);assert.equal(input.value,'');
+ fail=true;input.value='again';const retry=context.change({target:input});await new Promise(resolve=>setImmediate(resolve));release();await retry;
+ assert.equal(created,1);assert.equal(actions.busy,false);assert.equal(input.value,'');assert.equal(messages.at(-1),'读取失败');
+ await actions.perform('new');assert.equal(created,2);
+});
+await test('恢复备份读取或确认期间的新输入不能被覆盖，取消恢复也保留原稿',async()=>{
+ const from=notebookSource.indexOf('async function importFile('),to=notebookSource.indexOf('async function change(',from);
+ for(const when of ['read','confirm','cancel','unchanged']){
+  let data=fixture(),restored=0;const context=vm.createContext({store:{snapshot:()=>data},flush:async()=>{},normalizeNotebook,ensureRoom(){},confirm:async()=>{if(when==='confirm')data.notes[0].body='确认期间的新输入';return when!=='cancel'},edit:fn=>{restored++;fn(data)},chooseVisible(){},paint(){},toast(){},trash:false,query:''});
+  vm.runInContext(notebookSource.slice(from,to),context);
+  const incoming=fixture();incoming.notes[0].body='旧备份';const file={size:200,text:async()=>{if(when==='read')data.notes[0].body='读取期间的新输入';return JSON.stringify({format:'szudesktop-notebook',version:1,data:incoming})}};
+  if(['read','confirm'].includes(when)){await assert.rejects(context.importFile(file,'backup'),/已保留当前草稿/);assert.equal(restored,0);assert.match(data.notes[0].body,/期间的新输入/)}
+  else {await context.importFile(file,'backup');assert.equal(restored,when==='cancel'?0:1);assert.equal(data.notes[0].body,when==='cancel'?fixture().notes[0].body:'旧备份')}
+ }
+});
 process.stdout.write(`${checks} notebook checks passed.\n`);

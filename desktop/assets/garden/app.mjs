@@ -1,3 +1,4 @@
+import {createSafeReload} from './reload.mjs';
 import {todoView,focusView,weeklyView,journeyView,exportGardenCard} from './productivity.mjs';
 import {createReleaseUI} from './release-ui.mjs';
 import {createFeedbackUI} from './feedback.mjs';
@@ -214,7 +215,9 @@ const notebookUI=createNotebookUI({api,toast,confirm,
  onChange:()=>{const slot=document.querySelector('[data-home-notebook]');if(slot)slot.innerHTML=notebookUI.summaryHTML()}
 });
 // 棋局冲突时已同步、没有待存走子，不能因此拦下退出；真有走子没存上才报告。
-globalThis.szuDesktop?.onBeforeQuit?.(()=>Promise.all([notebookUI.flush(),flushPuzzle(true).catch(e=>{if(puzzleDirty)throw Error('2048 棋局尚未保存：'+e.message)})]));
+const saveBeforeLeave=()=>Promise.all([notebookUI.flush(),flushPuzzle(true).catch(e=>{if(puzzleDirty)throw Error('2048 棋局尚未保存：'+e.message)})]);
+globalThis.szuDesktop?.onBeforeQuit?.(saveBeforeLeave);
+const reloadWorkspace=createSafeReload({save:async()=>{if(busy)throw Error('正在保存，请稍后重试');await saveBeforeLeave();},reload:()=>location.reload(),report:e=>toast('未重新打开，草稿仍保留：'+e.message)});
 async function notebookLearningAction(action){
  if(busy)throw Error('上一项操作还在保存，请稍后再试');
  busy=true;
@@ -259,8 +262,17 @@ function renderPetCare(resetPetForm=false){
 // 引导里「密码怎么保管」默认是 Windows 原文（index.html 的 #guide-store-text），macOS 桌面版换成钥匙串。
 // 「先专注 5 分钟」和首页主按钮一样真的开始 5 分钟，再打开专注页看计时：只跳过去的话，那页默认推的是 25 分钟，
 // 和按钮上写的对不上（O3 前三分钟：选伙伴 → 专注 5 分钟 → 收萝卜）。已经在专注时只打开专注页。
-function showGuide(){const d=$('#guide');if(!d||d.open)return;const hint=$('#exit-guide-text');if(hint)hint.textContent=exitHint();const store=$('#guide-store-text');if(store&&globalThis.szuDesktop?.platform==='darwin')store.textContent='校园网密码存进 macOS 钥匙串';d.returnValue='';d.showModal();d.addEventListener('close',async()=>{const choice=d.returnValue,route={garden:['garden','pet'],focus:['study','focus']}[choice];await markOnboarded();if(choice==='focus'&&!state.game.focus)await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart')});if(route)navigate(...route)},{once:true})}
-function markOnboarded(){return recordOnboarded(state,{commit,toast})}
+function showGuide(){
+ const d=$('#guide');if(!d||d.open)return;const hint=$('#exit-guide-text');if(hint)hint.textContent=exitHint();const store=$('#guide-store-text');if(store&&globalThis.szuDesktop?.platform==='darwin')store.textContent='校园网密码存进 macOS 钥匙串';d.returnValue='';d.showModal();
+ const form=d.querySelector('form'),status=$('#guide-save-status');if(status)status.hidden=true;let saving=false;
+ // Keep the guide modal until its write settles, so the first pet click uses the saved revision.
+ async function finish(choice){if(saving)return;saving=true;const buttons=[...form.querySelectorAll('button')].map(b=>[b,b.disabled]);buttons.forEach(([b])=>b.disabled=true);d.setAttribute('aria-busy','true');if(status){status.hidden=false;status.textContent='正在收好首次设置…'}try{await run(()=>markOnboarded(),false);if(state.preferences.onboarded)d.close(choice);else if(status)status.textContent='首次设置还没保存，请稍后重试。原存档已保留。'}finally{saving=false;d.removeAttribute('aria-busy');buttons.forEach(([b,disabled])=>b.disabled=disabled)}}
+ const submit=e=>{e.preventDefault();void finish(e.submitter?.value||'')};
+ const cancel=e=>{e.preventDefault();void finish('')};
+ form.addEventListener('submit',submit);d.addEventListener('cancel',cancel);
+ d.addEventListener('close',async()=>{form.removeEventListener('submit',submit);d.removeEventListener('cancel',cancel);const choice=d.returnValue,route={garden:['garden','pet'],focus:['study','focus']}[choice];if(choice==='focus'&&!state.game.focus)await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart')});if(route)navigate(...route)},{once:true});
+}
+function markOnboarded(){return recordOnboarded(act(state,{type:'visit'}),{commit,toast})}
 function todoHTML(){return todoView(state,todoFilter)}
 function companionRoster(g,compact=false){
  const draw=legacy=>g.pets.map((p,index)=>({p,index})).filter(({p})=>!PETS[p.species].available===legacy).map(({p,index})=>{
@@ -282,11 +294,11 @@ function home(){
  const greeting=state.profile.name?esc(state.profile.name)+'，今天过得怎么样？':'你的校园小据点，随时欢迎回来';
  // 关掉引导不等于回访：首访当天（或第一次重启前）仍显示首访标题、展开伙伴栏，主按钮直接开始 5 分钟专注（选伙伴 → 专注 → 收萝卜）。
  const returning=isReturningVisit(state,{freshSession:firstSession});
- return `${homeSkinPicker(skin)}<section class="campus-home ${skin!=='pixel'?'is-scenic':''} ${returning?'returning-home':''}" aria-labelledby="home-title">
+ return `<div class="home-classroom" data-home-notebook>${notebookUI.summaryHTML()}</div>${homeSkinPicker(skin)}<section class="campus-home ${skin!=='pixel'?'is-scenic':''} ${returning?'returning-home':''}" aria-labelledby="home-title">
   <div class="home-letter"><p class="eyebrow">${greeting}</p><h1 id="home-title">${g.focus?'这一段时间，<br>留给眼前的事。':returning?'欢迎回来，<br>庭院在等你。':'在荔园，<br>过好每一天。'}</h1><p class="home-description">记下课堂里的想法，做完手边的小事。<br>${esc(pet.name)}会在这里，陪你慢慢来。</p><div class="actions">${g.focus?btn('继续我的专注 →','navigate','data-page="study" data-tab="focus"','primary'):returning?btn('去我的书桌 →','navigate','data-page="study" data-tab="notes"','primary'):btn('开始 5 分钟','focusStart','data-minutes="5"','primary')}</div><p class="home-local">${sprite('i-satchel','item-icon')}笔记和庭院，都好好收在本机</p><div class="home-day-summary" aria-label="我的日常记录"><button data-action="navigate" data-page="study" data-tab="focus"><strong>${state.todos.filter(t=>!t.done&&!t.archived).length}</strong><span>待办小事</span></button><button data-action="navigate" data-page="study" data-tab="focus"><strong>${g.stats.minutes}<small>分</small></strong><span>累计专注</span></button><button data-action="navigate" data-page="garden" data-tab="farm"><strong data-home-ready>${ready}</strong><span>等待收获</span></button></div></div>
-  <div class="home-landscape">${skin!=='pixel'?`<div class="home-scene" data-home-scene="${skin}" role="img" aria-label="${scenery.description}"><p class="scene-loading" role="status">正在展开校园小景…</p></div>`:''}${projectScene(g,{surface:'home'})}${campusSceneLinks({sprite})}<div class="landscape-caption">${scenery.caption}</div><div class="home-pet-note"><strong>${esc(pet.name)}</strong><span>${pet.sleeping?'正在休息，陪你安静待一会儿':pet.say&&Date.now()-pet.saidAt<10000?esc(pet.say):skin==='pixel'?'点点我，今天也一起加油。':'点点我 · 摸摸头'}</span></div><button class="home-pet" data-action="pat" aria-label="摸摸${esc(pet.name)}">${cat(g)}</button><button class="home-harvest" data-action="navigate" data-page="garden" data-tab="farm">${cropIcon('radish')}<span><strong id="home-harvest-label">${ready?ready+' 块田可以收获':'去看看我的农田'}</strong><small>离线也会生长</small></span><span aria-hidden="true">→</span></button></div>
+  <div class="home-landscape">${skin!=='pixel'?`<div class="home-scene" data-home-scene="${skin}" role="img" aria-label="${scenery.description}"><p class="scene-loading" role="status">正在展开校园小景…</p></div>`:''}${projectScene(g,{surface:'home'})}${campusSceneLinks({sprite})}<div class="landscape-caption">${scenery.caption}</div><div class="home-pet-note" role="status" aria-live="polite" aria-atomic="true"><strong>${esc(pet.name)}</strong><span>${pet.sleeping?'正在休息，陪你安静待一会儿':pet.say&&Date.now()-pet.saidAt<10000?esc(pet.say):skin==='pixel'?'点点我，今天也一起加油。':'点点我 · 摸摸头'}</span></div><button class="home-pet" data-action="pat" aria-label="摸摸${esc(pet.name)}的头">${cat(g)}<span class="home-pet-touch">摸摸头</span></button><button class="home-harvest" data-action="navigate" data-page="garden" data-tab="farm">${cropIcon('radish')}<span><strong id="home-harvest-label">${ready?ready+' 块田可以收获':'去看看我的农田'}</strong><small>离线也会生长</small></span><span aria-hidden="true">→</span></button></div>
  </section>
- <div class="home-next-strip"><div data-home-notebook>${notebookUI.summaryHTML()}</div>
+ <div class="home-next-strip">
  ${nextStepHTML({...state,game:g})}</div>
  <details class="home-companions" id="home-companions" ${returning?'':'open'}><summary>今天谁陪你？ <span>${esc(pet.name)}在你身边</span></summary><div class="companions-heading"><span>今天，谁陪你？</span><small>${g.pets.length} 位伙伴 · 各自成长</small></div>${companionRoster(g,true)}</details>
  <div class="home-desk">
@@ -373,7 +385,7 @@ function settings(){
  const about=`<div class="settings-layout">${releaseUI.card()}${feedbackUI.card()}<section class="card settings-about"><h2 class="icon-heading">${sprite('i-cottage','heading-icon')}关于荔枝庭院</h2><p><strong id="about-version">szuDesktop ${appVersion||'版本未知'}</strong></p><p class="muted">学生自制的校园生活工具，与深圳大学官方无关。把学校里的小事安顿好，也给每天留一点好玩的时间。</p><p class="muted">各项功能现在是可用、测试中还是部分可用，以 <a href="https://github.com/SzuDesktopTeam/szudesktop#%E5%8A%9F%E8%83%BD" target="_blank" rel="noopener noreferrer">README 的功能表 ↗</a> 为准。</p><div class="actions">${btn('退出应用','shutdown','','danger')}</div><small>${exitHint()}</small></section></div>`;
  return head('设置','收好回忆，让这里更像自己。')
  +sectionNav({appearance:'风景与偏好',desktop:'桌面陪伴',data:'存档与隐私',about:'关于与更新'},settingsTab,'settingsTab','设置分区')
- +(workspaceFailure&&settingsTab==='appearance'?workspaceFailureHTML():({appearance,desktop,data,about})[settingsTab]);
+ +(workspaceFailure&&settingsTab==='appearance'?workspaceFailureHTML():({appearance,desktop,data,about})[settingsTab])+`<section class="card"><h2>重新打开工作区</h2><p>先保存课程笔记和 2048 进度，再重新读取当前工作区；保存失败时保留草稿。不会重启桌面引擎或学校登录窗口。</p><button data-action="reload">保存并重新打开</button></section>`;
 }
 function loadPetScale(){
  const input=$('#pet-scale');if(!input||!globalThis.szuDesktop?.setPetScale)return;
@@ -453,7 +465,7 @@ async function navigate(p,tab,{historyMode='push'}={}){
 async function leaveNotebook(){
  try{await notebookUI.leave()}
  catch(e){
-  if(!e.code||e.code===409)throw e;
+  if(![400,413].includes(e.code))throw e;
   const reason=String(e.message||'笔记没能保存').replace(/[。.]$/,'');
   if(!await confirm('笔记还没能保存，仍要离开书桌？',reason+'。未保存的修改会留在书桌上；关闭应用前，请回到书桌导出笔记备份，或删去部分内容后再保存。'))throw e;
  }
@@ -466,7 +478,7 @@ async function followHashRoute(){
  await navigate(target.page,target.tab,{historyMode:'replace'});
 }
 let notifiedFocus=0,visitAttemptDay='';
-function clocks(){if(!state||exiting)return;
+function clocks(){if(!state||exiting||document.hidden)return;
  refreshDay();
  if(!busy&&(page==='home'||page==='garden'))paintGardenPath(false);
  const focus=state.game.focus,bar=$('#activity-bar');bar.hidden=!focus;
@@ -507,7 +519,7 @@ function refreshDay(){
  const now=Date.now(),day=dayKey(now),rolled=day>state.game.daily.day;
  if(rolled||shownDay&&shownDay!==day){const previousDay=shownDay||state.game.daily.day;if(rolled)state=settle(state,now);paintDay(previousDay)}
  shownDay=day;
- if(workspaceReady&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
+ if(workspaceReady&&state.preferences.onboarded&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
 }
 function stampVersion(v){applyVersion(v,{getVersion:()=>appVersion,setVersion:next=>{appVersion=next},document,cards:[['release-panel',releaseUI],['feedback-panel',feedbackUI]]})}
 let autostartState=null;
@@ -540,7 +552,7 @@ async function handlePetCommand(command){
   }catch(e){result(false,e.message||'这次操作没有保存，请稍后再试');throw e}
  },false);
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-action]:not([data-animated-pet])');if(!b)return;const a=b.dataset.action;if(a==='petPreview'){const region=document.getElementById('pet-animation-frames');if(region)region.innerHTML=frameStrip(activePet(state.game).species,b.dataset.clip);document.querySelectorAll('[data-action=petPreview]').forEach(el=>el.setAttribute('aria-pressed',String(el===b)));petPlayer?.play(b.dataset.clip);return}if(a==='gardenRoute'){void routeGarden(b.dataset);return}if(a==='showGuide'){showGuide();return}if(a==='reload'){location.reload();return}if(a==='viewCampus'){$('#campus-view').showModal();return}if(busy){toast('正在保存或处理上一项操作，请稍后再试');return}if(a==='notebookResume'){run(async()=>{await notebookUI.resumeLatest();await navigate('study','notes')});return}if(a==='navigate'){void navigate(b.dataset.page,b.dataset.page==='study'?(b.dataset.tab||'notes'):b.dataset.tab);return}if(['studyTab','serviceTab','gardenTab','settingsTab'].includes(a)){void navigate(({studyTab:'study',serviceTab:'services',gardenTab:'garden',settingsTab:'settings'})[a],b.dataset.tab);return}if(a==='selectPlot'){if(!busy){selectedPlot=Number(b.dataset.index);renderFarmSelection()}return}if(a==='todoFilter'){if(!busy){const spot=focusKey(document.activeElement);todoFilter=b.dataset.filter;document.querySelectorAll('.todo-state').forEach(el=>el.outerHTML=todoView(state,todoFilter,Date.now(),false));restoreFocus(spot)}return}e.preventDefault();const runner=['booking-rooms','booking-query','booking-rules','notice-read','notice-sources','calendar-refresh','piano-rooms','piano-my','piano-next','piano-prev','release-check'].includes(a)?runRead:run;runner(async()=>{
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action]:not([data-animated-pet])');if(!b)return;const a=b.dataset.action;if(a==='petPreview'){const region=document.getElementById('pet-animation-frames');if(region)region.innerHTML=frameStrip(activePet(state.game).species,b.dataset.clip);document.querySelectorAll('[data-action=petPreview]').forEach(el=>el.setAttribute('aria-pressed',String(el===b)));petPlayer?.play(b.dataset.clip);return}if(a==='gardenRoute'){void routeGarden(b.dataset);return}if(a==='showGuide'){showGuide();return}if(a==='reload'){void reloadWorkspace();return}if(a==='viewCampus'){$('#campus-view').showModal();return}if(busy){toast('正在保存或处理上一项操作，请稍后再试');return}if(a==='notebookLecture'){run(async()=>{await notebookUI.startLecture();if(await navigate('study','notes'))notebookUI.focusBody()});return}if(a==='notebookResume'){run(async()=>{await notebookUI.resumeLatest();if(await navigate('study','notes'))notebookUI.focusBody()});return}if(a==='navigate'){void navigate(b.dataset.page,b.dataset.page==='study'?(b.dataset.tab||'notes'):b.dataset.tab);return}if(['studyTab','serviceTab','gardenTab','settingsTab'].includes(a)){void navigate(({studyTab:'study',serviceTab:'services',gardenTab:'garden',settingsTab:'settings'})[a],b.dataset.tab);return}if(a==='selectPlot'){if(!busy){selectedPlot=Number(b.dataset.index);renderFarmSelection()}return}if(a==='todoFilter'){if(!busy){const spot=focusKey(document.activeElement);todoFilter=b.dataset.filter;document.querySelectorAll('.todo-state').forEach(el=>el.outerHTML=todoView(state,todoFilter,Date.now(),false));restoreFocus(spot)}return}e.preventDefault();const runner=['booking-rooms','booking-query','booking-rules','notice-read','notice-sources','calendar-refresh','piano-rooms','piano-my','piano-next','piano-prev','release-check'].includes(a)?runRead:run;runner(async()=>{
  if(a==='todoEditOpen'){const t=state.todos.find(t=>t.id===b.dataset.id);if(!t)return;const f=document.getElementById('todo-edit-form');f.elements.todoId.value=t.id;f.elements.text.value=t.text;f.elements.date.value=t.date||'';document.getElementById('todo-editor').showModal();return}
  if(a==='closeTodoEdit'){document.getElementById('todo-editor').close();return}
  if(a==='shareGarden'){const card=await exportGardenCard(state),dialog=$('#garden-share'),image=dialog.querySelector('img'),download=dialog.querySelector('a');image.src=card.url;download.href=card.url;download.download=card.filename;dialog.onclose=()=>{URL.revokeObjectURL(card.url);image.removeAttribute('src');download.removeAttribute('href')};dialog.showModal();return}
@@ -585,6 +597,8 @@ window.addEventListener('pagehide',()=>windowStream?.close());
 window.addEventListener('hashchange',followHashRoute);
 window.addEventListener('pageshow',e=>{if(e.persisted){windowID=crypto.randomUUID();connectWindow()}});
 connectWindow();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){clocks();pollNetwork(true,true)}else void flushPuzzle().catch(()=>{})});
-const clockInterval=setInterval(clocks,1000),networkInterval=setInterval(()=>pollNetwork(),30000),calendarInterval=setInterval(()=>{if(!exiting&&state)academicUI.load()},3600000);
+document.addEventListener('visibilitychange',()=>{clearInterval(clockInterval);clockInterval=null;if(!document.hidden&&!exiting){clockInterval=setInterval(clocks,1000);clocks();pollNetwork(true,true)}else void flushPuzzle().catch(()=>{})});
+// Only the visual clock pauses; notebook autosave and explicit save/quit remain independent.
+let clockInterval=document.hidden?null:setInterval(clocks,1000);
+const networkInterval=setInterval(()=>pollNetwork(),30000),calendarInterval=setInterval(()=>{if(!exiting&&state)academicUI.load()},3600000);
 try{let snapshot=null;try{snapshot=await api('/api/workspace');revision=snapshot.revision;state=snapshot.data?normalize(snapshot.data):createState()}catch(e){if(!snapshot&&!e.code)throw e;enterWorkspaceFailure(e,snapshot?.data)}try{saved=(await api('/api/credential')).saved}catch{}if(!workspaceFailure&&!snapshot.data){firstSession=true;const initial=state;await commit(state).catch(e=>{if(state!==initial)return;if(!e.code)throw e;enterWorkspaceFailure(e,null)})}if(workspaceFailure||snapshot.data)render();workspaceReady=!workspaceFailure;void notebookUI.load();api('/api/health').then(v=>stampVersion(v.app_version)).catch(()=>{});pollNetwork(true);if(workspaceReady&&!state.preferences.onboarded)showGuide();campusUI.loadSession();campusUI.loadCas();campusUI.loadSources();schoolUI.load();pianoUI.load();academicUI.load()}catch(e){$('#main').innerHTML=`<section class="card"><h1>暂时没能打开庭院</h1><p class="notice error">${esc(e.message)}</p><p>原有存档不会被覆盖。请重新打开程序后再试。</p><button data-action="reload">重新读取</button></section>`}

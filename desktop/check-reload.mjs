@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createSafeReload} from './assets/garden/reload.mjs';
+let release,reloads=0,saves=0,error;
+const gate=new Promise(resolve=>release=resolve);
+const reload=createSafeReload({save:async()=>{saves++;await gate;},reload:()=>reloads++,report:e=>error=e});
+const first=reload();assert.equal(reload(),first);await Promise.resolve();assert.equal(reloads,0);
+release();await first;assert.equal(saves,1);assert.equal(reloads,1);
+const failure=Error('disk full');
+let fail=true;
+const retry=createSafeReload({save:async()=>{if(fail)throw failure;},reload:()=>reloads++,report:e=>error=e});
+await retry();assert.equal(error,failure);assert.equal(reloads,1);
+fail=false;await retry();assert.equal(reloads,2);
+console.log('Safe reload: waits for saves, deduplicates clicks, preserves failed draft and allows retry');

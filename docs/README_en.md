@@ -19,9 +19,9 @@ Unofficial · Built by a student · Not affiliated with Shenzhen University
 
 Desktop app: Windows and macOS (macOS is a preview) · Linux: campus-network command line szunet (see [Download](#download))
 
-**[Download for Windows · beta0.9.5](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-Setup-0.9.5.exe)**
+**[Download for Windows · beta0.9.6](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-Setup-0.9.6.exe)**
 
-macOS preview: [Apple silicon DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.5/szuDesktop-0.9.5-mac-x64.dmg); you need to allow it by hand the first time you open it, see [Download](#download)
+macOS preview: [Apple silicon DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-x64.dmg); you need to allow it by hand the first time you open it, see [Download](#download)
 
 [Download](#download) · [Features](#features) · [Known limitations](#known-limitations) · [Privacy and security](#privacy-and-security) · [User guide (Chinese)](guide/README.md) · [FAQ](#faq) · [Feedback](https://github.com/SzuDesktopTeam/szudesktop/issues)
 
@@ -89,7 +89,7 @@ The specific gaps behind Partial and Testing are listed under [Known limitations
 
 Windows users can download the installer above, run it and open szuDesktop. The installer includes its window runtime, so you do not need to install a browser or developer tools. The macOS preview has been available since beta0.9.5; Mac users pick the DMG for their chip (see the table below). Every other download is on the [releases page](https://github.com/SzuDesktopTeam/szudesktop/releases) too.
 
-Current version: **beta0.9.5** (released 2026-09-29, pre-release) · installer `szuDesktop-Setup-0.9.5.exe` (about 98 MB) · portable `szudesktop-beta0.9.5-windows-amd64.zip` (about 6.5 MB) · macOS preview `szuDesktop-0.9.5-mac-arm64.dmg` (about 123 MB) and `szuDesktop-0.9.5-mac-x64.dmg` (about 130 MB) · [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.5)
+beta0.9.6 prerelease downloads: `szuDesktop-Setup-0.9.6.exe`, `szudesktop-beta0.9.6-windows-amd64.zip`, and macOS previews `szuDesktop-0.9.6-mac-arm64.dmg` / `szuDesktop-0.9.6-mac-x64.dmg`. See the [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) for actual publication status, asset sizes and checksums.
 
 | Edition | File | How to open | Desktop companion and tray |
 | :-- | :-- | :-- | :-- |
@@ -195,7 +195,7 @@ Issues and pull requests are welcome. The build environment, pre-commit checks, 
 
 ## Changelog
 
-Current version **beta0.9.5** (2026-09-29) is the first release with a macOS desktop preview (one DMG each for Apple silicon and Intel; on-device acceptance has not been done yet). The Windows edition is updated too: off campus it no longer falsely reports “campus authentication pending”, network diagnostics recognise when a proxy has taken over school domains, saves keep backups from the last 3 days of use, the first run is smoother, the installer is about 10 MB smaller, and a Chinese user guide has been added. The full version history is in [CHANGELOG.md](../CHANGELOG.md) (Chinese), and every download is on [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases).
+beta0.9.6 adds one-click classroom notes and save-before-reload, with fixes for welcome-guide and notebook-restore save races. Real Windows Electron smoke verifies note persistence through the Go API. The earlier 45-minute run is browser-only evidence. Real campus login, sleep/resume, production signing and macOS on-device acceptance remain incomplete. See [CHANGELOG](../CHANGELOG.md) and [validation record](STATUS.md#s71) (Chinese).
 
 ## Acknowledgements
 

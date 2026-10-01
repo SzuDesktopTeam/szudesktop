@@ -1,3 +1,4 @@
+import {createSafeReload} from './assets/garden/reload.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import vm from 'node:vm';
@@ -51,6 +52,7 @@ await check('home harvest counter and invitation update together as a crop matur
  assert.equal(counter.textContent,'1');assert.match(harvest.textContent,/1 块田可以收获/);
  assert.equal(context.document.activeElement,draft);assert.equal(draft.value,'还没提交的小事');
  state.game.plots[0]=null;context.clocks();assert.equal(counter.textContent,'0');assert.match(harvest.textContent,/去看看/);
+ context.document.hidden=true;harvest.textContent='hidden unchanged';context.refreshDay=()=>{throw Error('hidden clock must not settle the day')};context.clocks();assert.equal(harvest.textContent,'hidden unchanged');
 });
 
 function sceneFixture(){
@@ -313,7 +315,7 @@ await check('dismissing the guide records it once and keeps other preferences',a
  const committed=[],toasts=[];
  const context={state:local};
  const commit=async next=>{committed.push(next);context.state=next},markOnboarded=()=>recordOnboarded(context.state,{commit,toast:m=>toasts.push(m)});
- assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(state,\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
+ assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(act\(state,\{type:'visit'\}\),\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
  await markOnboarded();
  assert.equal(committed.length,1);
  assert.equal(committed[0].preferences.onboarded,true);
@@ -342,7 +344,7 @@ await check('first run opens the guide, settings save keeps the flag',()=>{
 
 await check('midnight refresh updates daily cards without replacing drafts and writes one visit',async()=>{
  const before=new Date(2026,8,27,23,59).getTime(),now=new Date(2026,8,28,0,1).getTime();
- const current=createState(before);current.game.daily.gift=true;
+ const current=createState(before);current.preferences.onboarded=true;current.game.daily.gift=true;
  current.todos=[{id:'yesterday',text:'昨天计划的小事',done:false,archived:false,date:'2026-09-27',createdAt:before,completedAt:0}];
  current.game.focusHistory=[{endedAt:new Date(2026,8,21,12).getTime(),minutes:5,task:'滚出七日窗口的旧专注'},{endedAt:before,minutes:25,task:'最近完成的专注'}];
  const field={value:'跨日仍未提交的草稿',selectionStart:3,selectionEnd:6},form={id:'todo-form',field};
@@ -373,7 +375,7 @@ await check('midnight refresh updates daily cards without replacing drafts and w
  assert.equal(context.state,current);assert.equal(writes.length,1,'正在写存档时不应与跨日刷新竞争');
  for(const chosen of ['2026-09-30','']){plannedDate.value=chosen;plannedDate.defaultValue='2026-09-27';context.paintDay('2026-09-27');assert.equal(plannedDate.value,chosen,'用户改过或清空的日期不能被跨日更新覆盖');}
  assert.match(source,/function clocks\(\)\{[^]*?refreshDay\(\)/);
- assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden\)\{clocks\(\)/);
+ assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{[^]*?if\(!document\.hidden&&!exiting\)\{[^]*?clocks\(\)/);
 });
 
 await check('a clock corrected back across midnight repaints once instead of every second',()=>{
@@ -733,7 +735,7 @@ await check('leaving the arcade saves pending moves right away',async()=>{
  assert.equal(unbound,1);assert.equal(f.writes.length,1,'离开伙伴小桌时立即存好走子，不等合并延迟');assert.equal(f.writes[0].moves,2);
 });
 // 退出回调就是应用注册给 Electron 的那一段；preload 会把它抛出的消息交给主进程的退出确认框。
-function quitHook(f){let quit=null;f.context.szuDesktop={onBeforeQuit:fn=>{quit=fn}};f.context.notebookUI={flush:async()=>{}};vm.runInContext(section('// 棋局冲突时已同步','async function notebookLearningAction('),f.context);assert.equal(typeof quit,'function');return quit}
+function quitHook(f){f.context.createSafeReload=createSafeReload;let quit=null;f.context.szuDesktop={onBeforeQuit:fn=>{quit=fn}};f.context.notebookUI={flush:async()=>{}};vm.runInContext(section('// 棋局冲突时已同步','async function notebookLearningAction('),f.context);assert.equal(typeof quit,'function');return quit}
 await check('quitting saves pending 2048 moves and blocks the exit only when moves really stay unsaved',async()=>{
  let f=puzzleFixture(),quit=quitHook(f);
  f.move();f.move();await quit();assert.equal(f.writes.length,1,'退出前存好合并中的走子');assert.equal(f.writes[0].moves,2);
@@ -790,7 +792,7 @@ await check('the welcome guide shows current companions and its second choice st
  assert.ok(shown.length>=3&&shown.length<=4,'欢迎图放 3–4 位伙伴');
  for(const id of shown)assert.ok(current.has(id),`欢迎图里的 #${id} 不是现在可选的伙伴（阿青已退到「老朋友」）`);
  assert.match(html,/<div class="guide-choices"><button class="primary" value="garden">去认识我的伙伴 →<\/button><button value="focus">先专注 5 分钟<\/button><\/div>/);
- let onClose,routes=[],events=[];const guide={open:false,returnValue:'',showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
+ let onClose,routes=[],events=[];const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),removeEventListener(){},showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
  const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate')},
   act,state:null,run:async work=>{await work()},commit:async next=>{context.state=next;events.push('commit')},reactPet:action=>events.push(action)});
  vm.runInContext(section('function showGuide(){','function markOnboarded('),context);
