@@ -8,7 +8,7 @@ import {petWindowBounds,petClickThroughSupported} from './pet-policy.mjs';
 import {PETS,AVAILABLE_PETS,DEFAULT_PET} from './pet-catalog.mjs';
 import {PET_CLIPS} from './pet-animation.mjs';
 import {TOKEN_HEADER} from './listen-url.mjs';
-import {withNotebookStorageFailure} from './notebook-storage-fault.mjs';
+import {storageFaultRoot,withNotebookStorageFailure} from './notebook-storage-fault.mjs';
 
 // 冒烟里对页面执行脚本都要有上限：渲染进程崩溃或页面卡死时 executeJavaScript 永远不返回，
 // 以前只会表现为“报告一直没出现”。超时后带上窗口与渲染进程状态报错，写进失败报告。
@@ -179,7 +179,7 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   const main=source=>evalWithin(mainWin,'主',source);
   const pet=source=>evalWithin(petWin,'桌宠',source);
   const menu=label=>getMenu().items.find(item=>item.label===label);
-  const sizeItems=()=>menu('宠物大小').submenu.items;
+  const sizeItems=()=>menu('伙伴大小').submenu.items;
   const workspace=async()=>{const r=await api('/api/workspace');assert.ok(r.ok);return (await r.json()).data;};
   await waitGuideSaved({main,onboarded:async()=>(await workspace()).preferences?.onboarded===true,until});
   await until(()=>pet("Boolean(window.szuPet && document.querySelector('#pet-use')?.getAttribute('href'))"),'pet preload/render not ready');
@@ -378,10 +378,10 @@ export async function checkPetRuntime({mainWin,petWin,tray,getMenu,getPetMenu,ge
   mainWin.close();
   menu('打开主窗口').click();
   assert.ok(mainWin.isVisible(),'tray opens main');
-  menu('隐藏宠物').click();
+  menu('隐藏伙伴').click();
   assert.equal(petWin.isVisible(),false);
   assert.equal(readDesktopSettings(userData).petVisible,false,'tray hide survives restart');
-  menu('显示宠物').click();
+  menu('显示伙伴').click();
   assert.equal(petWin.isVisible(),true);
   assert.equal(readDesktopSettings(userData).petVisible,true,'tray show persists the choice');
   const initialDesktop=await main('window.szuDesktop.desktopSettings()');
@@ -476,7 +476,7 @@ async function checkNotebookSaveFailure({mainWin,main,api,evidenceDir,userData,b
   await main(`(()=>{window.__szuSmokeFailedWrites=[];window.__szuSmokeFetch=window.fetch;window.fetch=async(...args)=>{const r=await window.__szuSmokeFetch(...args);if(String(args[0]).includes('/api/notebook')&&args[1]?.method==='PUT'&&!r.ok)window.__szuSmokeFailedWrites.push(r.status);return r;};})()`);
   try{
     await withNotebookStorageFailure({configDir:process.env.SZUNET_CONFIG_DIR,userData,
-      reportPath:process.env.SZU_SMOKE_REPORT,allowedRoot:process.env.GITHUB_ACTIONS==='true'?process.env.RUNNER_TEMP:evidenceDir},async()=>{
+      reportPath:process.env.SZU_SMOKE_REPORT,allowedRoot:storageFaultRoot()},async()=>{
       await main('(()=>{const a=document.querySelector("#note-body");a.value='+JSON.stringify(draft)+';a.dispatchEvent(new Event("input",{bubbles:true}));})()');
       await main('document.querySelector("[data-action=navigate][data-page=settings]").click()');
       await until(()=>main('window.__szuSmokeFailedWrites.some(status=>status>=500)'),'real notebook storage failure did not reach renderer');

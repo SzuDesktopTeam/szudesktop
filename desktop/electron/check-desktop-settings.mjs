@@ -313,7 +313,7 @@ assert.equal(readFileSync(desktopSettingsPath(profile),'utf8'),'{broken','read m
   await fire(31_000);
   assert.equal(created.length,1);
   const [first]=created;
-  assert.deepEqual(first.options,{title:'这一段专注完成了',body:'你设定的 25 分钟已经结束。点这里回到学习工具领取奖励。',icon:'/app/szudesktop.ico'});
+  assert.deepEqual(first.options,{title:'这一段专注完成了',body:'你设定的 25 分钟已经结束。点这里回到学习书屋领取奖励。',icon:'/app/szudesktop.ico'});
   assert.equal(first.shown,true);
   first.emit('click');assert.deepEqual(clicks,['study'],'clicking opens the study page');
   settings={...settings,doNotDisturb:true};reminders.settingsChanged();
@@ -339,13 +339,13 @@ assert.equal(readFileSync(desktopSettingsPath(profile),'utf8'),'{broken','read m
   const icon=tray.get();
   assert.equal(icon.icon,'/app/szudesktop.ico');assert.equal(icon.tooltip,'szuDesktop 荔枝庭院');assert.equal(tray.exists(),true);
   let menu=tray.menu();assert.equal(icon.menu,menu);
-  assert.deepEqual(menu.items.map(item=>item.label??item.type),['隐藏宠物','宠物置顶','宠物大小','勿扰（暂停专注提醒）','打开主窗口','separator','退出']);
-  assert.equal(menu.find('宠物置顶').checked,true);assert.equal(menu.find('勿扰（暂停专注提醒）').checked,true);
-  assert.equal(menu.find('宠物大小').submenu[0].label,'标准（100%）');
-  menu.find('隐藏宠物').click();menu.find('宠物置顶').click();menu.find('勿扰（暂停专注提醒）').click();
+  assert.deepEqual(menu.items.map(item=>item.label??item.type),['隐藏伙伴','伙伴置顶','伙伴大小','勿扰（暂停专注提醒）','打开主窗口','separator','退出']);
+  assert.equal(menu.find('伙伴置顶').checked,true);assert.equal(menu.find('勿扰（暂停专注提醒）').checked,true);
+  assert.equal(menu.find('伙伴大小').submenu[0].label,'标准（100%）');
+  menu.find('隐藏伙伴').click();menu.find('伙伴置顶').click();menu.find('勿扰（暂停专注提醒）').click();
   assert.deepEqual(patches,[{petVisible:false},{petAlwaysOnTop:false},{doNotDisturb:false}]);
   visible=false;settings={...settings,doNotDisturb:false};tray.refresh();menu=tray.menu();
-  assert.equal(menu.items[0].label,'显示宠物');assert.equal(menu.find('勿扰（暂停专注提醒）').checked,false);
+  assert.equal(menu.items[0].label,'显示伙伴');assert.equal(menu.find('勿扰（暂停专注提醒）').checked,false);
   menu.items[0].click();assert.deepEqual(patches.at(-1),{petVisible:true});
   icon.emit('click');menu.find('打开主窗口').click();assert.equal(shown,2);
   menu.find('退出').click();assert.equal(quits,1);
@@ -407,6 +407,9 @@ assert.match(main,/await mainWin\.loadURL\(launchUrl\(handle\)\);/);
 assert.match(main,/if\(!isQuietStartup\(process\.argv\)\)mainWin\.show\(\);/);
 assert.match(main,/if\(e instanceof Error\)e\.message=redactToken\(e\.message,token\);\s*if\(smoke\.enabled\)await smoke\.writeFailure\(e,/);
 assert.match(main,/if\(!quit\.isQuitting\(\)\)focus\.start\(\);/);
+// 资源基线的启动阶段从 appReady 起算：记录器在 ready 之前建好、由 main.mjs 交给它 app 的 ready，否则 appReady 一直是 null。
+assert.match(main,/const smoke=createSmokeRecorder\(\{\.\.\.smokeMode\(process\.env\),onReady:callback=>app\.once\('ready',callback\)\}\);/);
+assert.ok(main.indexOf('createSmokeRecorder(')<main.indexOf('app.whenReady('),'smoke recorder must exist before app ready');
 // 凭据不进任何日志；sidecar 参数只来自 sidecarArgs；主窗只加载 launch 地址。
 const shellSources=[main,...['app-paths','smoke-report','quit-coordinator','main-window','engine-monitor','desktop-preferences','focus-reminders',
   'pet-controller','tray-menu','official-windows','ipc-routes'].map(name=>readFileSync(new URL(name+'.mjs',import.meta.url),'utf8'))].join('\n');

@@ -4,6 +4,7 @@
 // 本模块不提供任何写操作按钮。卡号密码不保存：只在登录那一次发给本机服务，换回的
 // token 存在服务端内存里，重启即失效，所以页面登录态也随重启重置。
 import { esc } from './html.mjs';
+import { unverifiedBadge } from './labels.mjs';
 
 // 原系统前端地址，「去原系统预约」跳这里。
 export const PIANO_SITE = 'http://192.168.197.131:8080/#/loginPage';
@@ -47,7 +48,7 @@ export function createPianoUI({ api, toast, render }) {
          <div id="piano-my">${reservations===null?'':pianoMyHTML(reservations)}</div>
          <small class="muted">查询结果仅供参考；预约、取消、开门请到原系统页面操作，并以那里为准。</small>`
       : pianoLoginHTML();
-    return `<section class="card span"><div class="card-head"><h2>学院琴房 · 只读查询</h2><span class="badge">接入测试 · 待账号验收</span></div><p class="muted">与社区共享琴房分开，需要该学院系统授予的账号权限。</p>${body}</section>`;
+    return `<section class="card span"><div class="card-head"><h2>学院琴房 · 只读查询</h2>${unverifiedBadge()}</div><p class="muted">与社区共享琴房分开，需要该学院系统授予的账号权限。</p>${body}</section>`;
   }
   function roomContent(){return rooms===null?'':pianoRoomsHTML(rooms)+`<div class="actions"><button data-action="piano-prev" ${page<=1?'disabled':''}>上一页</button><span>第 ${page} 页 · 共 ${count} 间</span><button data-action="piano-next" ${page*20>=count?'disabled':''}>下一页</button></div>`}
   function reset(){generation++;rooms=null;reservations=null;page=1;count=0}

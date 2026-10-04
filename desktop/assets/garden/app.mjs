@@ -1,7 +1,7 @@
 import {createSafeReload} from './reload.mjs';
 import {todoView,focusView,weeklyView,journeyView,exportGardenCard} from './productivity.mjs';
 import {createReleaseUI} from './release-ui.mjs';
-import {createFeedbackUI} from './feedback.mjs';
+import {createFeedbackUI,FEEDBACK_URL} from './feedback.mjs';
 import {createDesktopOptions} from './desktop-options.mjs';
 import {actionReward} from './rewards.mjs';
 import {unverifiedBadge} from './labels.mjs';
@@ -37,6 +37,8 @@ import {createApi} from './api-client.mjs';
 import {createWorkspaceCommit} from './workspace-commit.mjs';
 import {exitHint,countdown,remaining,shouldPollNetwork,autostartView,recordOnboarded,isReturningVisit,stampVersion as applyVersion,createConfirm} from './app-logic.mjs';
 document.getElementById('pet-sprites').innerHTML=PET_SYMBOLS;
+// 页脚「问题与建议」与设置里的「提交反馈」去同一页反馈说明，地址只在 feedback.mjs 写一次。
+document.querySelectorAll('[data-feedback-link]').forEach(link=>{link.href=FEEDBACK_URL});
 const $=s=>document.querySelector(s);
 const pageIcons={home:'i-cottage',network:'i-crystal',services:'i-sign',garden:'i-water',study:'i-book',settings:'i-workbench'};
 const gardenIcons={pet:'i-heart',farm:'i-seed',market:'i-chest',arcade:'i-medal',journal:'i-scroll'};
@@ -497,6 +499,17 @@ function clocks(){if(!state||exiting||document.hidden)return;
   for(const [action,label,last,delay] of [['pat','摸摸头',pet.lastPat,10000],['play','陪它玩',pet.lastPlay,30000]]){const button=document.querySelector('[data-action='+action+']');if(!button)continue;const seconds=Math.max(0,Math.ceil((last+delay-Date.now())/1000)),unavailable=action==='play'&&(pet.sleeping||pet.energy<25);button.disabled=seconds>0||unavailable;button.innerHTML=sprite(actionIcons[action],'item-icon')+esc(seconds>0?label+' · '+seconds+' 秒':unavailable?(pet.sleeping?'休息中':'精力不足'):label)}
  }
 document.querySelectorAll('[data-ready]').forEach(el=>el.textContent=remaining(Number(el.dataset.ready)));tickFarm();if($('#focus-clock')){const f=state.game.focus;$('#focus-clock').textContent=f?countdown(f.end):'25:00';if($('#focus-claim'))$('#focus-claim').disabled=Date.now()<f.end}}
+// 便携版开在浏览器标签页里：页面隐藏时 clocks 整个停下（省电），同学切走后只看得到标签页标题。
+// 有专注时只留这一个定时器：剩余分钟数变了或到点时才醒一次，到点写「专注完成」；回到窗口时 clocks 恢复秒级倒计时并提示领取。
+// 安装版和 macOS 版隐藏时有系统通知，主窗口的标题也看不到，不需要它。
+let titleTimer=0;
+function backgroundTitle(){
+ clearTimeout(titleTimer);titleTimer=0;
+ if(!state||exiting||!document.hidden||globalThis.szuDesktop?.shell==='electron')return;
+ const focus=state.game.focus,left=focus?focus.end-Date.now():0;
+ document.title=!focus?'szuDesktop · 荔枝庭院':left<=0?'专注完成 · szuDesktop':'专注还剩 '+Math.ceil(left/60000)+' 分钟 · szuDesktop';
+ if(focus&&left>0)titleTimer=setTimeout(backgroundTitle,left%60000||60000);
+}
 function paintDay(previousDay){
  const now=Date.now(),g=settle(state,now).game;
  document.querySelectorAll('.todo-state').forEach(el=>el.outerHTML=todoView(state,todoFilter,now,false));
@@ -514,12 +527,18 @@ function paintDay(previousDay){
 // 界面上次按哪一天刷新。只在日期真正变化时刷新一次：时钟往回校正后，存档里的日期
 // 可能暂时领先本机日期，这时不能每秒结算并重绘整页。
 let shownDay='';
+// 回到窗口才算来访。Electron 44.5.1 起，主进程为隐藏主窗口里的伙伴照料临时关掉后台节流时，页面先变成 visible，
+// 指令随后才到，回执后又变回 hidden：这不是同学回到了窗口，不该记当天来访，也不该探测网络。
+// 所以页面可见满 RETURN_SETTLE_MS 才做这两件事；期间收到带 requestId 的指令（只有主窗口隐藏时才带）就记为命令唤醒，
+// 到下一次变为可见、或窗口真的拿到焦点为止。
+const RETURN_SETTLE_MS=1500;
+let visibleSince=0,commandWake=false,returnTimer=0;
 function refreshDay(){
  if(!state||busy)return;
  const now=Date.now(),day=dayKey(now),rolled=day>state.game.daily.day;
  if(rolled||shownDay&&shownDay!==day){const previousDay=shownDay||state.game.daily.day;if(rolled)state=settle(state,now);paintDay(previousDay)}
  shownDay=day;
- if(workspaceReady&&state.preferences.onboarded&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
+ if(workspaceReady&&state.preferences.onboarded&&!commandWake&&now-visibleSince>=RETURN_SETTLE_MS&&visitAttemptDay!==day&&state.game.journey.days.length<7&&!state.game.journey.days.includes(day)){visitAttemptDay=day;void run(()=>commit(act(state,{type:'visit'},now),undefined,paintDay),false);}
 }
 function stampVersion(v){applyVersion(v,{getVersion:()=>appVersion,setVersion:next=>{appVersion=next},document,cards:[['release-panel',releaseUI],['feedback-panel',feedbackUI]]})}
 let autostartState=null;
@@ -543,7 +562,11 @@ async function handlePetCommand(payload){
  const care=['pat','feed','play','sleep','chat'],destinations={garden:'伙伴小屋已打开',farm:'我的农田已打开',study:'学习书屋已打开',home:'已回到今日'};
  const choice=typeof command==='string'&&/^switchPet:(?:0|[1-9]\d*)$/.test(command)?Number(command.slice(10)):null;
  const result=(ok,message,action)=>globalThis.szuDesktop?.petResult?.({ok,message,...(action?{action}:{}),...(requestId?{requestId}:{})});
+ if(requestId)commandWake=true;
  if(choice===null&&!care.includes(command)&&!Object.hasOwn(destinations,command)){result(false,'暂不支持这个伙伴操作');return}
+ // 页面可能正在写存档（藏起时补存 2048 走子、当天的来访、上一项照料）：先等它写完再照料，不让同学白点一次；
+ // 最多等 PET_BUSY_WAIT_MS，远小于主进程等回执的 30 秒，等不到再如实拒绝。
+ if(busy){const deadline=Date.now()+PET_BUSY_WAIT_MS;while(busy&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,40))}
  if(!workspaceReady||!state||exiting){result(false,'庭院还没有准备好，请稍后再试');return}
  if(busy){result(false,'正在保存或处理上一项操作，请稍后再试');return}
  const previousIndex=state.game.active,previousSpecies=activePet(state.game).species;
@@ -591,6 +614,8 @@ document.addEventListener('submit',e=>{if(e.target.method==='dialog'||e.target.c
 document.addEventListener('input',e=>{campusUI.input(e);if(e.target.id==='service-search')$('#service-results').innerHTML=serviceResults(e.target.value)});
 document.addEventListener('change',e=>{if(e.target.id==='release-channel'){releaseUI.change(e);return}if(e.target.dataset.desktopSetting){void desktopUI.change(e);return}if(e.target.id==='student-level'){if(workspaceFailure){state.preferences.studentLevel=e.target.value==='graduate'?'graduate':'undergrad';render();return}run(async()=>{const next=structuredClone(state);next.preferences.studentLevel=e.target.value;await commit(next);toast('已记住培养层次')});return}if(e.target.id==='feed-source'){run(()=>campusUI.change(e));return}if(['booking-room','booking-date'].includes(e.target.id)){runRead(()=>campusUI.change(e));return}if(['grade-level','grade-file','grade-filter-level','grade-filter-term'].includes(e.target.id)){if(!busy)run(()=>campusUI.change(e));return}if(e.target.id==='seed-choice'){if(busy)return;selectedCrop=e.target.value;renderFarmSelection();return}if(e.target.id==='import-file'){const file=e.target.files[0];if(!file)return;run(async()=>{if(file.size>2*1024*1024)throw Error('文件太大，请选择本应用导出的 JSON 存档');let next;try{next=normalize(JSON.parse(await file.text()))}catch(err){throw Error('无法导入：'+err.message)}if(await confirm('恢复这份备份？',workspaceFailure?'打不开的原存档会被这份备份替换，建议先导出原始存档或另存 workspace-v1.json。账号密码和课程笔记不受影响。':'当前庭院、待办和学习记录将被替换。建议先导出当前存档。账号密码不受影响。')){if(workspaceFailure){await replaceFailedWorkspace(next,'存档已恢复');return}await commit(next,undefined,()=>{if(state===next)settingsProfileDraft=null;render()});toast('存档已恢复')}else e.target.value=''})}});
 let exiting=false;
+// 伙伴指令碰上存档锁时最多等多久（见 handlePetCommand）。
+const PET_BUSY_WAIT_MS=3000;
 globalThis.szuDesktop?.onPetCommand?.(handlePetCommand);
 globalThis.szuDesktop?.onPetScale?.(showPetScale);
 let windowID=crypto.randomUUID(),windowStream;
@@ -598,8 +623,11 @@ function connectWindow(){if(exiting)return;windowStream?.close();windowStream=ne
 window.addEventListener('pagehide',()=>windowStream?.close());
 window.addEventListener('hashchange',followHashRoute);
 window.addEventListener('pageshow',e=>{if(e.persisted){windowID=crypto.randomUUID();connectWindow()}});
+// 命令唤醒期间同学真的打开了主窗口（托盘「打开主窗口」会同时聚焦）：从这一刻起照常记来访。
+window.addEventListener('focus',()=>{commandWake=false});
 connectWindow();
-document.addEventListener('visibilitychange',()=>{clearInterval(clockInterval);clockInterval=null;if(!document.hidden&&!exiting){clockInterval=setInterval(clocks,1000);clocks();pollNetwork(true,true)}else void flushPuzzle().catch(()=>{})});
+// 回到可见时不再立刻强制探测网络：等可见满 RETURN_SETTLE_MS、确认不是命令唤醒，再按 25 秒间隔补一次（见 refreshDay 上方）。
+document.addEventListener('visibilitychange',()=>{clearInterval(clockInterval);clockInterval=null;clearTimeout(returnTimer);backgroundTitle();if(!document.hidden&&!exiting){visibleSince=Date.now();commandWake=false;clockInterval=setInterval(clocks,1000);clocks();returnTimer=setTimeout(()=>{if(!document.hidden&&!commandWake)pollNetwork(false,true)},RETURN_SETTLE_MS)}else void flushPuzzle().catch(()=>{})});
 // Only the visual clock pauses; notebook autosave and explicit save/quit remain independent.
 let clockInterval=document.hidden?null:setInterval(clocks,1000);
 const networkInterval=setInterval(()=>pollNetwork(),30000),calendarInterval=setInterval(()=>{if(!exiting&&state)academicUI.load()},3600000);

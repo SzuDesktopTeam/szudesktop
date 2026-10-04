@@ -22,4 +22,5 @@ body:
     id: version
     attributes:
       label: 应用版本和系统版本
-      placeholder: 例如 beta0.9.4 安装版，Windows 11
+      description: 版本在应用的「设置 → 关于与更新」里能看到。
+      placeholder: 例如 beta0.9.6 安装版，Windows 11

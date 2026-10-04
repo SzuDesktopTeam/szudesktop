@@ -68,17 +68,26 @@ function fakeIP(diag){
  return text.includes('198.18.0.0/15')?'是（代理软件接管了学校域名）':'这一版诊断接口没有单独提供';
 }
 
+// 系统代理开关：诊断接口的 system_proxy 只有 manual / pac 两个开关，不带地址。缺这一项是这台电脑读不到或旧版引擎，
+// 不能报成「关」——现场复测要先关代理，报错了会让人以为已经关好。
+function proxySwitches(proxy){
+ if(!proxy||typeof proxy.manual!=='boolean'||typeof proxy.pac!=='boolean')return '读不到（或这一版诊断接口没有提供）';
+ return `手动代理 ${proxy.manual?'开':'关'} · 自动配置脚本（PAC） ${proxy.pac?'开':'关'}`;
+}
+// 确认在线的区域：门户确认在线时 /api/status 带 online_zone（teaching / dorm），判区本身仍是 online（F12）。
+const onlineZone=code=>code==='teaching'||code==='dorm'?zone(code):'没有（门户没有确认在线，或这一版接口没有这一项）';
+
 function statusLines(status){
  if(!status)return ['本次打开后还没有读到网络状态。'];
  const auth={online:'出口已在线',offline:'出口未在线',no_campus_portal:'外网正常，没有检测到校园网认证页面',not_queried:'没有判定在教学区或宿舍区，未查询',unconfirmed:'未查明（查询出错）'}[authState(status)];
  const auto={ok:'成功',failed:'未成功',skipped:'已在线，跳过'}[status.auto_login?.result]||'本次未尝试';
- return [`判区：${zone(status.zone)}`,`外网：${yes(status.internet_ok,'可用','不可用')}`,`校园认证：${auth}`,`启动时自动连接：${auto}`];
+ return [`判区：${zone(status.zone)}`,`外网：${yes(status.internet_ok,'可用','不可用')}`,`校园认证：${auth}`,`确认在线的区域：${onlineZone(status.online_zone)}`,`启动时自动连接：${auto}`];
 }
 function diagLines(diag){
  if(!diag)return ['本次打开后还没有运行网络诊断。可以先到「校园网」页点「运行网络诊断」，再回来复制报告。'];
  const lines=[`判区：${zone(diag.zone)}`,`外网：${yes(diag.internet_ok,'可用','不可用')}`,`门户探测：${yes(diag.probed,'已运行','外网正常时不探测门户')}`,
   `教学区门户：${yes(diag.teaching_portal_ok,'可达','不可达')}`,`宿舍区门户：${yes(diag.dorm_portal_ok,'可达','不可达')}`,
-  `net.szu.edu.cn 解析：${yes(diag.dns_ok,'成功','失败')}`,`学校域名解析到 198.18.0.0/15：${fakeIP(diag)}`,`ac_id 来源：${acIdSource(diag)}`,'系统代理开关：诊断接口暂未提供'];
+  `net.szu.edu.cn 解析：${yes(diag.dns_ok,'成功','失败')}`,`学校域名解析到 198.18.0.0/15：${fakeIP(diag)}`,`ac_id 来源：${acIdSource(diag)}`,`系统代理开关：${proxySwitches(diag.system_proxy)}`];
  if(typeof diag.online==='boolean')lines.push(`账号在线：${diag.online?'是':'否'}`);
  const advices=(Array.isArray(diag.advices)?diag.advices:[]).map(scrubAdvice);
  return [...lines,'结论：',...(advices.length?advices.map(text=>'- '+text):['- （诊断没有给出结论）'])];

@@ -74,7 +74,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     pwc.on('will-redirect',event=>event.preventDefault());
     petWin.on('closed',()=>{petWin=null;});
     // macOS 上 ⌘H、别的应用里的「隐藏其他」会把宠物随整个应用藏起来，设置却没变；菜单栏图标和程序坞菜单的
-    // 「隐藏宠物/显示宠物」按窗口真实显隐重建，点一次「显示宠物」就经 applyPreferences 的 showInactive 只把宠物带回来。
+    // 「隐藏伙伴/显示伙伴」按窗口真实显隐重建，点一次「显示伙伴」就经 applyPreferences 的 showInactive 只把宠物带回来。
     if(mac){petWin.on('hide',()=>refreshTray());petWin.on('show',()=>refreshTray());}
     await petWin.loadFile(html);
     if(isQuitting()||!petWin||petWin.isDestroyed())return;
@@ -144,7 +144,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     const care=(label,command)=>({id:command,label,enabled:Boolean(pet),click:()=>dispatch(command)});
     petMenu=Menu.buildFromTemplate([
       {label:pet?`${pet.name} · Lv.${Math.min(20,1+Math.floor(pet.xp/50))}`:'伙伴状态读取中',enabled:false},
-      ...(pet?[{label:`饱腹 ${Math.round(pet.hunger)} · 心情 ${Math.round(pet.mood)} · 精力 ${Math.round(pet.energy)}`,enabled:false}]:[]),
+      ...(pet?[{label:`饱食 ${Math.round(pet.hunger)} · 心情 ${Math.round(pet.mood)} · 精力 ${Math.round(pet.energy)}`,enabled:false}]:[]),
       {type:'separator'},
       care('聊两句','chat'),care('摸摸头','pat'),care(`喂食${petGame?`（剩余 ${petGame.food} 份）`:''}`,'feed'),care('陪它玩','play'),care(pet?.sleeping?'叫醒伙伴':'让它睡一会','sleep'),
       {label:'切换伙伴',enabled:Boolean(pet),submenu:(petGame?.pets||[]).map((companion,index)=>({
@@ -155,7 +155,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
       {id:'garden',label:'看看庭院',click:()=>dispatch('garden')},
       {id:'farm',label:'照看农田',click:()=>dispatch('farm')},
       {id:'study',label:'学习与专注',click:()=>dispatch('study')},
-      {label:`宠物大小（${Math.round(petScale*100)}%）`,submenu:[
+      {label:`伙伴大小（${Math.round(petScale*100)}%）`,submenu:[
         {label:'缩小一点',enabled:petScale>0.4,click:()=>changePetSize(petScale-0.1)},
         {label:'放大一点',enabled:petScale<2,click:()=>changePetSize(petScale+0.1)},
         {type:'separator'},...petSizeMenu(),
@@ -163,8 +163,8 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
       ]},
       {type:'separator'},
       {id:'home',label:'打开主窗口',click:()=>dispatch('home')},
-      {label:'宠物置顶',type:'checkbox',checked:readPreferences().petAlwaysOnTop,click:()=>changeSettings({petAlwaysOnTop:!readPreferences().petAlwaysOnTop})},
-      {label:'隐藏宠物',click:()=>changeSettings({petVisible:false})},
+      {label:'伙伴置顶',type:'checkbox',checked:readPreferences().petAlwaysOnTop,click:()=>changeSettings({petAlwaysOnTop:!readPreferences().petAlwaysOnTop})},
+      {label:'隐藏伙伴',click:()=>changeSettings({petVisible:false})},
       {label:'退出应用',click:()=>quit()},
     ]);
     // 按压还没结束就要弹菜单（Control 点按、按住时按回车）：先把拖动收尾，菜单跟踪期间可能再也收不到 pointerup。
@@ -184,7 +184,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
       label:`${p.label}（${Math.round(p.scale*100)}%）`,
       type:'checkbox',
       checked:current===p.id,
-      click:()=>{try{applyPetScale(p.scale);}catch{refreshTray();dialog.showErrorBox('未能保存宠物大小','请检查本机配置目录是否可写，然后重试。');}},
+      click:()=>{try{applyPetScale(p.scale);}catch{refreshTray();dialog.showErrorBox('未能保存伙伴大小','请检查本机配置目录是否可写，然后重试。');}},
     }));
   }
   // 桌面设置里宠物的部分：置顶、显示/隐藏。

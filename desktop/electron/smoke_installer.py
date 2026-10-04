@@ -4,7 +4,9 @@ Never installs on a developer's desktop. Uses an isolated Chinese/space path and
 profile, refuses existing installations, and only stops processes it started.
 The published baseline is installed, given synthetic data, upgraded to the
 candidate, opened twice, started once from its launch-at-login command, and
-removed. No real account or school login is used.
+removed. No real account or school login is used. The second candidate launch
+also records resource-baseline.json (startup phases, app.getAppMetrics() and
+engine memory with the main window hidden; record only, no thresholds).
 """
 import ctypes
 from contextlib import contextmanager
@@ -241,6 +243,23 @@ def visible_window_titles(pid):
 MAIN_NOT_YET_OPENED = {"start", "main-hidden", "click-through", "dragged", "clicked", "menu-closed",
                        "sleep-0", "sleep-1", "feed"}
 PET_PROGRESS = EVIDENCE / "pet-progress.json"
+# 资源基线（UX24，R10 的完成标准）：只在 reopen 这一次启动里记，隐藏主窗口 60 秒、摸头后再 60 秒，
+# 等报告的时限按这两分钟外加采样和恢复主窗口的余量放宽。只记录、不设门槛。
+RESOURCE_BASELINE = EVIDENCE / "resource-baseline.json"
+RESOURCE_BASELINE_SECONDS = 150
+
+
+def resource_baseline(label, result, path):
+    """核对基线确实写出、两个时点都采到了，把摘要打进日志；采样里的小问题（如引擎内存没读到）只警告。"""
+    info = result.get("resourceBaseline") or {}
+    check(label + ": resource baseline recorded (record only, no thresholds)", info.get("complete") is True and path.is_file())
+    data = json.loads(path.read_text(encoding="utf-8"))
+    startup = data.get("startup") or {}
+    print("   startup (ms): %s, ui ready %s" % (json.dumps(startup.get("phases")), startup.get("uiReadyMs")), flush=True)
+    for name, summary in data.get("summary", {}).items():
+        print("   resource %s: %s" % (name, json.dumps(summary, ensure_ascii=False)), flush=True)
+    for problem in info.get("errors") or []:
+        print("::warning::resource baseline: " + problem, flush=True)
 
 
 def smoke_stage():
@@ -253,15 +272,23 @@ def smoke_stage():
         return None
 
 
-def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None, command=None, hidden_start=False):
+def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None, command=None, hidden_start=False,
+           baseline=False):
     report = EVIDENCE / (label + ".json")
     shot = EVIDENCE / (label + ".png")
     report.unlink(missing_ok=True)
     shot.unlink(missing_ok=True)
     env = dict(os.environ, SZUNET_CONFIG_DIR=str(cfg), SZU_SMOKE_REPORT=str(report),
                SZU_SMOKE_SCREENSHOT=str(shot), SZU_SMOKE_QUIT_AFTER_REPORT="1")
-    # An inherited developer diagnostic variable must not compete with smoke.
-    env.pop("SZU_SHOT", None)
+    # Inherited diagnostic or smoke variables must not compete with this launch.
+    for name in ("SZU_SHOT", "SZU_SMOKE_RESOURCE_BASELINE", "SZU_SMOKE_QUIT_TRACE"):
+        env.pop(name, None)
+    if baseline:
+        # 记基线的这次也留一份退出轨迹（关窗、停引擎各子步骤的时刻），与基线一起作为证据上传。
+        RESOURCE_BASELINE.unlink(missing_ok=True)
+        trace = EVIDENCE / (label + "-quit-trace.jsonl")
+        trace.unlink(missing_ok=True)
+        env.update(SZU_SMOKE_RESOURCE_BASELINE=str(RESOURCE_BASELINE), SZU_SMOKE_QUIT_TRACE=str(trace))
     # 上一次启动留下的进度停在最后一个阶段；静默启动要从「界面冒烟还没开始」看起。
     if hidden_start:
         PET_PROGRESS.unlink(missing_ok=True)
@@ -273,7 +300,7 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
         try:
             # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；共享 runner 上偶尔要 40 秒以上，
             # 60 秒的旧上限会把慢启动误报成失败（PR #23 的 reuse-portable 就是这样）。真的卡死仍会超时报错。
-            deadline = time.monotonic() + 120
+            deadline = time.monotonic() + 120 + (RESOURCE_BASELINE_SECONDS if baseline else 0)
             while not report.exists() and time.monotonic() < deadline:
                 if proc.poll() is not None:
                     raise RuntimeError("installed application exited before its rendered-page report")
@@ -303,6 +330,8 @@ def launch(exe, cfg, version, label, owned=True, initial_scale=1.7, runtime=None
             check(label + ": engine ownership", result["owned"] is owned)
             pet = result["pet"]
             check(label + ": real pet and tray", pet["rendered"] and pet["tray"])
+            if baseline:
+                resource_baseline(label, result, RESOURCE_BASELINE)
             if hidden_start:
                 (EVIDENCE / (label + "-windows.json")).write_text(json.dumps({
                     "samples_before_main_opened": hidden_samples, "visible_window_titles": sorted(seen_titles),
@@ -579,7 +608,7 @@ def main():
                 check("saved account remains hidden by default", local_request(engine, "/api/credential")["username"] == "")
             first = launch(exe, cfg, version, "after-upgrade")
             assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
-            launch(exe, cfg, version, "reopen")
+            launch(exe, cfg, version, "reopen", baseline=True)
             coexist_with_portable(exe, sidecar, cfg, version)
             assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
             check("no startup entries changed", startup_before == reg_values(winreg.HKEY_CURRENT_USER, RUN_KEY, winreg.KEY_WOW64_64KEY))
@@ -601,6 +630,7 @@ def main():
                 "pet_click_through": first["pet"]["clickThrough"],
                 "locales": EXPECTED_LOCALES,
                 "launch_at_login_command_starts_hidden": True,
+                "resource_baseline": RESOURCE_BASELINE.name,
             }, ensure_ascii=False, indent=2), encoding="utf-8")
         finally:
             if installed:

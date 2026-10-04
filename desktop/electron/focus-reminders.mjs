@@ -15,7 +15,7 @@ export function createFocusReminders({Notification,loadWorkspace,readSettings,sa
       loadWorkspace,readSettings,saveSettings,isSupported,now,
       notify:({duration})=>{
         focusNotification?.close();
-        const notification=new Notification({title:'这一段专注完成了',body:`你设定的 ${duration} 分钟已经结束。点这里回到学习工具领取奖励。`,...(icon===undefined?{}:{icon})});
+        const notification=new Notification({title:'这一段专注完成了',body:`你设定的 ${duration} 分钟已经结束。点这里回到学习书屋领取奖励。`,...(icon===undefined?{}:{icon})});
         focusNotification=notification;
         notification.on('click',()=>onClick());
         notification.on('close',()=>{if(focusNotification===notification)focusNotification=null;});

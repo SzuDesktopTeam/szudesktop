@@ -1,6 +1,9 @@
 import {isMac} from './platform.mjs';
 import {esc} from './html.mjs';
 import {diagnosticReport} from './diagnostic-report.mjs';
+// 「提交反馈」和页脚「问题与建议」都只打开这一页使用指南，具体渠道写在页里：渠道以后换了只改文档，
+// 已经装好的版本不用重新打包，也不会把同学带到失效的地址。页脚的链接由 app.mjs 按这个常量填上，全项目只此一处。
+export const FEEDBACK_URL='https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md';
 const safeVersion=value=>/^(?:beta|v)?\d+\.\d+\.\d+$/.test(String(value))?String(value):'未知构建';
 // macOS 桌面版以 preload 给出的 platform 为准，并且要在 /win/ 之前判断（"darwin" 里也含 win）；没有桥时仍按浏览器报告的系统猜。
 export function environmentSummary({version,mode,navigatorInfo=globalThis.navigator,bridge=globalThis.szuDesktop}={}){
@@ -14,7 +17,7 @@ export function createFeedbackUI({getVersion,getMode,toast,clipboard=globalThis.
  const summary=()=>environmentSummary({version:getVersion(),mode:getMode()});
  const report=()=>diagnosticReport({environment:summary(),...getDiagnostics()});
  let manual=false,reportManual=false,reportOpen=false;
- function card(text=report()){return `<section class="card" id="feedback-panel"><h2>反馈与建议</h2><p>遇到问题时，附上发生步骤和下面三项信息，能帮助我们复现。</p><pre class="feedback-environment">${summary()}</pre><div class="actions"><button data-action="feedback-copy">复制环境信息</button><a class="button quiet" href="https://github.com/SzuDesktopTeam/szudesktop/issues/new/choose" target="_blank" rel="noopener noreferrer">提交反馈 ↗</a></div><small>只复制版本、系统类型和界面模式，不包含学号、成绩、密码、Cookie 或存档。提交 GitHub 反馈需要 GitHub 账号。</small>${manual?'<p role="status" class="notice">剪贴板暂不可用，请选中上方三行文字手动复制。</p>':''}<details class="feedback-report" ${reportOpen?'open':''}><summary>诊断报告 · 先预览，再复制</summary><p class="muted">网络或学校服务出问题时用。只列判区、门户是否可达、最近一次网络诊断的结论，以及各学校服务的状态类别和字段是否出现；不含账号、卡号、密码、IP、Cookie、成绩或课程内容。复制后由你决定发给谁，应用不会自动上传。</p><pre class="feedback-environment feedback-report-text">${esc(text)}</pre><div class="actions"><button data-action="feedback-report">复制诊断报告</button></div>${reportManual?'<p role="status" class="notice">剪贴板暂不可用，请选中上方报告手动复制。</p>':''}</details></section>`}
+ function card(text=report()){return `<section class="card" id="feedback-panel"><h2>反馈与建议</h2><p>遇到问题时，附上发生步骤和下面三项信息，能帮助我们复现。</p><pre class="feedback-environment">${summary()}</pre><div class="actions"><button data-action="feedback-copy">复制环境信息</button><a class="button quiet" href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer">提交反馈 ↗</a></div><small>只复制版本、系统类型和界面模式，不包含学号、成绩、密码、Cookie 或存档。「提交反馈」打开使用指南里的反馈说明，写着现在可以用哪些方式反馈。</small>${manual?'<p role="status" class="notice">剪贴板暂不可用，请选中上方三行文字手动复制。</p>':''}<details class="feedback-report" ${reportOpen?'open':''}><summary>诊断报告 · 先预览，再复制</summary><p class="muted">网络或学校服务出问题时用。只列判区、门户是否可达、最近一次网络诊断的结论，以及各学校服务的状态类别和字段是否出现；不含账号、卡号、密码、IP、Cookie、成绩或课程内容。复制后由你决定发给谁，应用不会自动上传。</p><pre class="feedback-environment feedback-report-text">${esc(text)}</pre><div class="actions"><button data-action="feedback-report">复制诊断报告</button></div>${reportManual?'<p role="status" class="notice">剪贴板暂不可用，请选中上方报告手动复制。</p>':''}</details></section>`}
  async function write(text){if(!clipboard?.writeText)throw Error('clipboard unavailable');await clipboard.writeText(text)}
  async function click(action){
   let text;

@@ -69,7 +69,7 @@ export function petWindowOptions(workArea, scale = 1, position) {
     focusable: false, // 常驻宠物不抢焦点
     hasShadow: false,
     show: false,
-    title: 'szuDesktop 宠物',
+    title: 'szuDesktop 桌面伙伴',
   };
 }
 

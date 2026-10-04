@@ -498,8 +498,16 @@ def test_mac_preview_note():
     assert note > unlock, "预览版说明应跟在放行步骤之后"
     # 维护者要求写明的几项（对应 68.2 的 B1、B6、B5、B7、B3、B8、B9），以及反馈去处和要写的信息。
     for part in ("浏览器下载后的首次放行", "注销与登录时启动", "系统通知", "钥匙串", "多显示器", "macOS 13 和 14",
-                 "「本地网络」授权", "还没有人在真机上逐项验收", "「问题反馈」", "issues/new/choose", "Apple 芯片或 Intel", "macOS 版本"):
+                 "「本地网络」授权", "还没有人在真机上逐项验收", "反馈说明", "Apple 芯片或 Intel", "macOS 版本"):
         assert part in lines[note], "预览版说明缺了「%s」" % part
+    # 反馈去处与应用里的「提交反馈」是同一页（feedback.mjs 的 FEEDBACK_URL），那一页必须在仓库里，不能再直接指向 Issues。
+    feedback = re.findall(r"https://github\.com/SzuDesktopTeam/szudesktop/blob/main/(docs/guide/[\w-]+\.md)\)", lines[note])
+    assert feedback == ["docs/guide/feedback.md"], "预览版说明的反馈去处应是 docs/guide/feedback.md：%r" % feedback
+    assert os.path.isfile(os.path.join(release_notes.ROOT, *feedback[0].split("/"))), "反馈说明页不在仓库里"
+    assert "issues/new" not in lines[note], "预览版说明不再直接指向 GitHub Issues"
+    app_url = re.search(r"FEEDBACK_URL='([^']+)'", read_repo("desktop", "assets", "garden", "feedback.mjs"))
+    assert app_url and app_url.group(1).endswith("/" + feedback[0]), "预览版说明与应用里的「提交反馈」应指向同一页"
+
     anchors = re.findall(r"docs/STATUS\.md#([\w-]+)\)", lines[note])
     assert anchors and all('<a id="%s"></a>' % a in status for a in anchors), "预览版说明链接的 STATUS 锚点不存在：%r" % anchors
     assert "macOS 版目前是预览版" in later, "预览版开关开着时，之后的版本也要带预览版说明"
@@ -622,5 +630,128 @@ def test_baseline_cli_matches_pin():
 
 check("升级基线先按固定 SHA-256 取缓存，未命中才下载，核对后紧接着存回缓存", test_baseline_cache_wiring)
 check("smoke_installer.py --baseline 输出标签、附件名和固定的 SHA-256", test_baseline_cli_matches_pin)
+
+
+# ───── 版本号约定与 release.yml（CHANGELOG.md「格式约定」）─────
+# VERSION、CHANGELOG 标题和标签三者一致：正式版 v1.0.0，测试版 beta0.9.7。CHANGELOG 曾写「不带 v 前缀」，
+# 照字面打出的 1.0.0 标签不会触发 release.yml，却没有任何检查拦着；prerelease 表达式也没人守。
+# 这里按 GitHub 的规则把标签触发、release job 的 if 和 prerelease 算一遍，和 release_notes 认的版本号对照。
+CONVENTION_SAMPLES = ("v1.0.0", "v1.2.10", "beta0.9.7", "beta1.0.0", "1.0.0", "v1.0", "release-1.0.0")
+
+
+def tag_patterns(workflow):
+    """on.push.tags 下的模式（不依赖 PyYAML）。"""
+    block = re.search(r"^  push:\n(?:    .*\n|[ \t]*\n)*?    tags:\n((?:      - .*\n)+)", workflow, re.M)
+    assert block, "release.yml 的 on.push 下没有 tags 列表，这里读不出来"
+    return [line.strip()[1:].strip().strip("'\"") for line in block.group(1).splitlines()]
+
+
+def starts_with_expr(expr, tag):
+    """按 GitHub 的规则算 `startsWith(github.ref 或 github.ref_name, '前缀') || …`（startsWith 不分大小写）。
+    写成别的样子返回 None，交给人重新核对。"""
+    expr = re.sub(r"^\$\{\{\s*|\s*\}\}$", "", expr.strip())
+    refs = {"github.ref": "refs/tags/" + tag, "github.ref_name": tag}
+    result = False
+    for term in expr.split("||"):
+        found = re.fullmatch(r"\s*startsWith\((github\.ref(?:_name)?), '([^']*)'\)\s*", term)
+        if not found:
+            return None
+        result = result or refs[found.group(1)].lower().startswith(found.group(2).lower())
+    return result
+
+
+def tag_convention_problems(workflow):
+    """符合约定的标签是否都会触发发布、prerelease 是否正好对 beta 为真；返回问题清单，空表示一致。"""
+    patterns = tag_patterns(workflow)
+    job = "\n".join(line for line in release_job(workflow).splitlines() if not line.lstrip().startswith("#"))
+    gate, pre = re.search(r"^    if: (.+?)\s*$", job, re.M), re.search(r"^\s+prerelease: (.+?)\s*$", job, re.M)
+    # GitHub 的过滤模式里 * 不跨 /，还有 ? + [] ! 等写法；这里只认字面字符加 *，其余交给人核对。
+    problems = ["标签触发模式 %s 不只是字面字符加 *，这里核对不了" % p for p in patterns if not re.fullmatch(r"[\w.*-]+", p)]
+    for name, found in (("release job 的 if", gate), ("prerelease", pre)):
+        if not found or starts_with_expr(found.group(1), "v1.0.0") is None:
+            problems.append("%s 不是 startsWith(github.ref…, '前缀') 用 || 连起来的写法，这里核对不了：改了请同步这条检查" % name)
+    if problems:
+        return problems
+    for tag in CONVENTION_SAMPLES:
+        try:
+            release_notes.version_parts(tag)
+        except release_notes.NotesError:
+            continue  # 不合约定的标签：发版前置检查第一步就失败，触不触发都发不出去
+        if not (any(fnmatch.fnmatchcase(tag, p) for p in patterns) and starts_with_expr(gate.group(1), tag)):
+            problems.append("符合约定的标签 %s 不会触发发布（tags：%s；if：%s）" % (tag, "、".join(patterns), gate.group(1)))
+        elif starts_with_expr(pre.group(1), tag) != tag.startswith("beta"):
+            problems.append("标签 %s 的 prerelease 应为 %s（%s）" % (tag, tag.startswith("beta"), pre.group(1)))
+    return problems
+
+
+def test_tag_convention_matches_workflow():
+    workflow = read_repo(".github", "workflows", "release.yml")
+    problems = tag_convention_problems(workflow)
+    assert not problems, "release.yml 与版本号约定对不上：" + "；".join(problems)
+    prerelease = "prerelease: ${{ startsWith(github.ref_name, 'beta') }}"
+    for old, new, why in (("      - 'v*'\n", "", "不再由 v 标签触发"),
+                          ("startsWith(github.ref, 'refs/tags/v') || ", "", "release job 跳过 v 标签"),
+                          (prerelease, prerelease.replace("'beta'", "'v'"), "prerelease 前缀反了"),
+                          (prerelease, "prerelease: false", "prerelease 写死")):
+        broken = workflow.replace(old, new)
+        assert broken != workflow, "release.yml 变了，反向核对需要跟着改：" + why
+        assert tag_convention_problems(broken), "没有报出：" + why
+
+
+def test_version_format():
+    for version, parts in (("v1.0.0", ("1", "0", "0")), ("beta0.9.7", ("0", "9", "7")), ("beta0.7", None)):
+        assert release_notes.version_parts(version) == parts, version
+    for version in ("1.0.0", "v1.0", "V1.0.0", "beta0.8", "beta0.9.7-rc1"):
+        expect_error(lambda: release_notes.version_parts(version), version + " 不合约定")
+    # 两段式正式版以前会悄悄漏掉安装包和 DMG；现在打 tag 时核对标签那一步就停下，本地预览也报错。
+    expect_error(lambda: release_notes.check_release_tag("v1.0", "v1.0"), "两段式标签")
+    expect_error(lambda: release_notes.render("## v1.0\n\n- 正式版\n", "v1.0"), "两段式预览")
+    with mac_since((0, 9, 5)):
+        out = release_notes.render("## v1.0.0\n\n- 正式版\n", "v1.0.0", release=True)
+    for name in ("szuDesktop-Setup-1.0.0.exe", "szuDesktop-1.0.0-mac-arm64.dmg", "szuDesktop-1.0.0-mac-x64.dmg",
+                 "szudesktop-v1.0.0-windows-amd64.zip"):
+        assert "`%s`" % name in out, "正式版 v1.0.0 的下载清单缺了 " + name
+    with open(release_notes.VERSION_FILE, encoding="utf-8") as f:
+        version = f.read().strip()
+    assert release_notes.version_parts(version), "internal/version/VERSION（%s）不合约定" % version
+
+
+check("符合约定的 v / beta 标签都会触发发布，prerelease 只对 beta 为真", test_tag_convention_matches_workflow)
+check("版本号必须是 beta 或 v 前缀加三段数字，v1.0.0 列出安装包和两个 DMG", test_version_format)
+
+
+# ───── 下载清单写给同学看 ─────
+def download_lines(out):
+    return out[out.index("### 下载"):].splitlines()[1:]
+
+
+def test_download_guide_first_line():
+    with mac_since((0, 9, 5)):
+        both = release_notes.render("## v1.0.0\n\n- 正式版\n", "v1.0.0", release=True)
+        windows = release_notes.render("## beta0.9.4\n\n- 正文\n", "beta0.9.4", release=True)
+        portable = release_notes.render(SAMPLE, "beta0.7.1")
+    first = lambda out: next(line for line in download_lines(out) if line.strip())
+    assert first(both).startswith("**Windows 下载 Setup 安装包，Mac 按芯片选 DMG。**"), first(both)
+    assert first(windows).startswith("**Windows 下载 Setup 安装包。**") and "Mac" not in first(windows), first(windows)
+    assert first(portable).startswith("- `szudesktop-beta0.7.1-windows-amd64.zip`"), "没有安装版的旧版本不该叫人下 Setup：" + first(portable)
+    for out in (both, windows, portable):
+        assert "Electron" not in "\n".join(download_lines(out)), "下载清单里还有同学看不懂的「Electron」"
+
+
+def test_windows_note():
+    with mac_since((0, 9, 5)):
+        lines = download_lines(release_notes.render("## v1.0.0\n\n- 正式版\n", "v1.0.0", release=True))
+        old = release_notes.render(SAMPLE, "beta0.7.1")
+    note = next(i for i, line in enumerate(lines) if line.startswith("Windows 版需要"))
+    for part in ("Windows 10 或 11", "64 位", "没有数字签名", "「保留」", "SmartScreen", "「更多信息」", "「仍要运行」"):
+        assert part in lines[note], "Windows 放行说明缺了「%s」：%s" % (part, lines[note])
+    last_item = max(i for i, line in enumerate(lines) if line.startswith("- "))
+    mac = next(i for i, line in enumerate(lines) if line.startswith("macOS 版未经 Apple 公证"))
+    assert last_item < note < mac, "Windows 放行说明应在下载清单之后、macOS 放行说明之前"
+    assert "Windows 版需要" not in old, "没有安装版的旧版本不加这段说明"
+
+
+check("下载清单第一行写清 Windows 下载 Setup、Mac 按芯片选 DMG，不出现「Electron」", test_download_guide_first_line)
+check("Windows 说明写明系统要求、浏览器「保留」和 SmartScreen「更多信息 → 仍要运行」", test_windows_note)
 
 print("%d release-notes checks passed" % count)

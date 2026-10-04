@@ -410,7 +410,7 @@ function pageWindow(FakeWindow,{platform='darwin',text,url='http://127.0.0.1:5/'
 }
 {
   const {FakeWindow}=fakeWindowClass(),{nativeImage}=fakeNativeImage();
-  const app=Object.assign(new EventEmitter(),{isPackaged:true,dock:{getMenu:()=>({items:[{label:'隐藏宠物'},{label:'打开主窗口'}]}),isVisible:()=>true}});
+  const app=Object.assign(new EventEmitter(),{isPackaged:true,dock:{getMenu:()=>({items:[{label:'隐藏伙伴'},{label:'打开主窗口'}]}),isVisible:()=>true}});
   const {win:mainWin,location}=pageWindow(FakeWindow,{text:'登录 Mac 时启动\n请先把 szuDesktop 拖到「应用程序」文件夹，再从那里打开后开启。'});
   app.on('activate',()=>mainWin.show());
   const petWin=new FakeWindow({});petWin.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true,skipTransformProcessType:true});

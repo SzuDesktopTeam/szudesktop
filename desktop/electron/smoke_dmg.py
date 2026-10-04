@@ -14,7 +14,8 @@
    Resources 里没有可执行代码、语言包只剩 en 与 zh_CN、菜单栏模板图、许可文件（check_licenses.py 的 .app 模式）。
 4. 真启动：smoke-report.mjs 的报告里界面、宠物、菜单栏图标、点穿、备份恢复都为真，mac 字段（应用菜单、程序坞、
    模板图、跨桌面显示、渲染进程的平台与设置页文案、登录项不可用）全部为真。
-5. 退出后自带的引擎随之退出、没有残留进程；6. 再开一次，宠物缩放保持 1.7。
+5. 退出后自带的引擎随之退出、没有残留进程；6. 再开一次，宠物缩放保持 1.7；这一次另记资源基线 resource-baseline.json
+   （启动各阶段耗时、隐藏主窗口 60 秒后与摸头后再 60 秒的 app.getAppMetrics() 摘要和引擎 RSS，只记录、不设门槛）和退出轨迹。
 7. 真实的 quit Apple Event（与 ⌘Q、程序坞退出、注销时系统发来的是同一种）：退出轨迹依次走过保存握手、
    关窗和停引擎，没有 session-end。runner 上被系统拒绝（-1743）时记为跳过并警告，--local 时必须通过。
 8. 先起 dist 里的引擎，.app 复用它（owned=False），.app 退出后它仍在。
@@ -60,6 +61,9 @@ MACHO_MAGIC = {0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe, 0xcafebabe, 0xbeb
 TRAY_TEMPLATES = ["szudesktop-trayTemplate.png", "szudesktop-trayTemplate@2x.png"]
 # 退出协调（quit-coordinator.mjs）在保存握手成功时依次记下的节点。
 QUIT_TRACE = ["before-quit", "prepare-sent", "prepared", "confirmed", "windows-closed", "engine-stopped"]
+# 资源基线（UX24，R10 的完成标准）那一次启动多出的时间：隐藏 60 秒、摸头后再 60 秒，外加采样与恢复主窗口的余量。
+# 采样窗口固定 60 秒，Rosetta 下也不放大（各平台的数才能比较），所以这份余量不随等待倍数变。
+RESOURCE_BASELINE_SECONDS = 150
 LSREGISTER = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
 # --local 时核对这些 ~/Library 子目录里有没有本次新建的 szuDesktop 条目（偏好走 defaults，不在这里删）。
 LIBRARY_DIRS = ["Application Support", "Caches", "HTTPStorages", "Logs", "Saved Application State", "WebKit"]
@@ -105,6 +109,20 @@ def trace_in_order(names, wanted=QUIT_TRACE):
     """按子序列核对退出轨迹：真实退出在 confirmed 之后还会再记一次 before-quit（关窗触发 window-all-closed），不能要求逐项相等。"""
     remaining = iter(names)
     return all(any(name == step for name in remaining) for step in wanted)
+
+
+def resource_baseline(label, result, path):
+    """只记录、不设门槛：核对基线确实写出、两个时点都采到了，把摘要打进日志；采样里的小问题（如引擎内存没读到）只警告。"""
+    info = result.get("resourceBaseline") or {}
+    check(label + ": resource baseline recorded (record only, no thresholds)", info.get("complete") is True and path.is_file())
+    data = json.loads(path.read_text(encoding="utf-8"))
+    startup = data.get("startup") or {}
+    print("   startup (ms): %s, ui ready %s" % (json.dumps(startup.get("phases")), startup.get("uiReadyMs")), flush=True)
+    for name, summary in data.get("summary", {}).items():
+        print("   resource %s: %s" % (name, json.dumps(summary, ensure_ascii=False)), flush=True)
+    for problem in info.get("errors") or []:
+        print("::warning::resource baseline: " + problem, flush=True)
+    return data
 
 
 def is_macho(path):
@@ -275,7 +293,7 @@ class Smoke:
         # 只放宽这一种情况的等待，原生运行和 Windows 冒烟仍按原来的时限。
         self.wait_scale = "4" if args.arch == "x64" and smoke_macos.native_arch() == "arm64" else None
 
-    def env(self, report, shot, quit_after, trace):
+    def env(self, report, shot, quit_after, trace, baseline=None):
         env = {key: value for key, value in os.environ.items()
                if key not in ("ELECTRON_RUN_AS_NODE", "SZU_SHOT", "SZU_PET_SHOT") and not key.startswith("SZU_SMOKE_")}
         env.update(SZUNET_CONFIG_DIR=str(self.cfg), SZU_SMOKE_REPORT=str(report), SZU_SMOKE_SCREENSHOT=str(shot))
@@ -283,22 +301,24 @@ class Smoke:
             env["SZU_SMOKE_QUIT_AFTER_REPORT"] = "1"
         if trace:
             env["SZU_SMOKE_QUIT_TRACE"] = str(trace)
+        if baseline:
+            env["SZU_SMOKE_RESOURCE_BASELINE"] = str(baseline)
         if self.wait_scale:
             env["SZU_SMOKE_WAIT_SCALE"] = self.wait_scale
         return env
 
-    def start(self, label, quit_after=True, trace=None):
+    def start(self, label, quit_after=True, trace=None, baseline=None):
         report, shot = self.evidence / (label + ".json"), self.evidence / (label + ".png")
         report.unlink(missing_ok=True)
         shot.unlink(missing_ok=True)
         log = (self.evidence / (label + ".log")).open("wb")
-        proc = subprocess.Popen([str(self.app / "Contents" / "MacOS" / PRODUCT)], env=self.env(report, shot, quit_after, trace),
+        proc = subprocess.Popen([str(self.app / "Contents" / "MacOS" / PRODUCT)], env=self.env(report, shot, quit_after, trace, baseline),
                                 stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
         self.running.append(proc)
         log.close()
         # 一次启动要走完宠物、伙伴切换、备份恢复等整套界面冒烟；真卡死仍会超时报错。
         # Rosetta 下整套首开冒烟在 CI 上就要 180 秒上下（原生约 20 秒），总时限随等待倍数一起放宽。
-        deadline = time.monotonic() + (540 if self.wait_scale else 180)
+        deadline = time.monotonic() + (540 if self.wait_scale else 180) + (RESOURCE_BASELINE_SECONDS if baseline else 0)
         while not report.exists() and time.monotonic() < deadline:
             if proc.poll() is not None:
                 raise RuntimeError(label + ": app exited (%s) before its rendered-page report" % proc.returncode)
@@ -346,9 +366,14 @@ class Smoke:
         check(label + ": no app or engine process left", wait_no_process(self.marker))
         redact(self.evidence / (label + ".log"))
 
-    def launch(self, label, owned=True, initial_scale=1.7):
-        proc, result, shot = self.start(label)
+    def launch(self, label, owned=True, initial_scale=1.7, baseline=False):
+        # 记基线的这次也留一份退出轨迹（关窗、停引擎各子步骤的时刻），与基线一起作为证据上传。
+        file = self.evidence / "resource-baseline.json" if baseline else None
+        trace = self.evidence / (label + "-quit-trace.jsonl") if baseline else None
+        proc, result, shot = self.start(label, trace=trace, baseline=file)
         self.check_report(label, proc, result, shot, owned, initial_scale)
+        if baseline:
+            resource_baseline(label, result, file)
         self.finish(label, proc, result)
         return result
 
@@ -640,14 +665,14 @@ def main():
             if baseline is not None:
                 smoke.verify_upgrade(preserved, write=True)
             first = smoke.launch("first-open", initial_scale=1.7 if baseline is not None else 1)
-            smoke.launch("reopen")
+            smoke.launch("reopen", baseline=True)
             summary["quit_apple_event"] = smoke.quit_event(runner)
             smoke.coexist_with_portable()
             if baseline is not None:
                 smoke.verify_upgrade(None)
                 summary.update(cross_version_upgrade_preserved_data=True, candidate_read_write=True, synthetic_credential_decrypts=True)
             smoke.uninstall()
-            summary.update(version=smoke.version, electron=first["electron"], mac=first["mac"],
+            summary.update(version=smoke.version, electron=first["electron"], mac=first["mac"], resource_baseline="resource-baseline.json",
                            click_through=first["pet"]["clickThrough"], companion_species=first["pet"]["companionSpecies"])
         except BaseException as error:
             failure = error

@@ -77,7 +77,7 @@ class MacTray extends FakeTray {setIgnoreDoubleClickEvents(value){this.ignoreDou
     return {tray,state,built};
   };
   const labels=menu=>menu.items.map(item=>item.label??item.type);
-  const trayLabels=['隐藏宠物','宠物置顶','宠物大小','勿扰（暂停专注提醒）','打开主窗口','separator','退出'];
+  const trayLabels=['隐藏伙伴','伙伴置顶','伙伴大小','勿扰（暂停专注提醒）','打开主窗口','separator','退出'];
   {
     const {tray,state}=trayOptions({platform:'darwin'});
     tray.create();
@@ -88,11 +88,11 @@ class MacTray extends FakeTray {setIgnoreDoubleClickEvents(value){this.ignoreDou
     assert.deepEqual(labels(tray.menu()),trayLabels,'the menu bar icon keeps the full menu, including quit');
     assert.equal(state.dock.length,1);
     assert.deepEqual(labels(state.dock[0]),trayLabels.slice(0,5),'the Dock menu has the same items without quit (macOS adds its own)');
-    state.dock[0].find('打开主窗口').click();state.dock[0].find('隐藏宠物').click();
+    state.dock[0].find('打开主窗口').click();state.dock[0].find('隐藏伙伴').click();
     assert.equal(state.shown,1);assert.deepEqual(state.patches,[{petVisible:false}]);
     state.visible=false;state.settings={...state.settings,doNotDisturb:true};tray.refresh();
     assert.equal(state.dock.length,2,'the Dock menu is rebuilt with the tray menu');
-    assert.equal(state.dock[1].items[0].label,'显示宠物');assert.equal(state.dock[1].find('勿扰（暂停专注提醒）').checked,true);
+    assert.equal(state.dock[1].items[0].label,'显示伙伴');assert.equal(state.dock[1].find('勿扰（暂停专注提醒）').checked,true);
     tray.menu().find('退出').click();assert.equal(state.quits,1);
     assert.equal(tray.exists(),true);
   }
@@ -124,7 +124,7 @@ for(const platform of ['win32','linux',undefined])assert.deepEqual(petPlatformOp
 assert.equal(petTopLevel('darwin'),'floating');
 for(const platform of ['win32','linux',undefined])assert.equal(petTopLevel(platform),'screen-saver',String(platform));
 assert.deepEqual(petWindowOptions(wa),{width:260,height:320,x:1636,y:736,frame:false,transparent:true,alwaysOnTop:true,skipTaskbar:true,
-  resizable:false,focusable:false,hasShadow:false,show:false,title:'szuDesktop 宠物'},'petWindowOptions is the same on every platform');
+  resizable:false,focusable:false,hasShadow:false,show:false,title:'szuDesktop 桌面伙伴'},'petWindowOptions is the same on every platform');
 
 // 与 main.mjs 一样不传 activateApp；需要观察它时由用例自己传。
 function petHarness(platform,overrides={}){
@@ -161,7 +161,7 @@ function petHarness(platform,overrides={}){
   pet.applyPreferences({petVisible:true,petAlwaysOnTop:false});assert.equal(petWin.level,'screen-saver');
 }
 // ⌘H 或别的应用里的「隐藏其他」把宠物随应用一起藏起来时设置不变：macOS 按窗口真实显隐重建菜单栏图标与程序坞菜单，
-// 「隐藏宠物/显示宠物」不再与实际相反；Windows 没有应用级隐藏，不加这两个监听。
+// 「隐藏伙伴/显示伙伴」不再与实际相反；Windows 没有应用级隐藏，不加这两个监听。
 for(const platform of ['darwin','win32']){
   let refreshed=0;
   const {pet,windows}=petHarness(platform,{refreshTray:()=>{refreshed++;}});

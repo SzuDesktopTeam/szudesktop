@@ -55,6 +55,32 @@ await check('home harvest counter and invitation update together as a crop matur
  context.document.hidden=true;harvest.textContent='hidden unchanged';context.refreshDay=()=>{throw Error('hidden clock must not settle the day')};context.clocks();assert.equal(harvest.textContent,'hidden unchanged');
 });
 
+// B13：便携版开在浏览器标签页里，切走后页面隐藏、clocks 整个停下；标签页标题仍按分钟倒数，到点改成「专注完成」，
+// 回到窗口再由 clocks 恢复秒级倒计时并提示领取。安装版和 macOS 版隐藏时有系统通知，不留这个定时器。
+await check('portable: a hidden page keeps a per-minute focus title and flips to done at the end',()=>{
+ let now=new Date(2026,8,27,12).getTime();
+ class Clock extends Date{static now(){return now}}
+ const state=createState(now),start=now,timers=[];state.game.focus={startedAt:now,end:now+12*60000+30000,duration:13,todoId:'',task:''};
+ const context=vm.createContext({state,exiting:false,Date:Clock,document:{hidden:true,title:'12:30 · szuDesktop'},
+  setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length},clearTimeout(){}});
+ vm.runInContext(section('let titleTimer=','function paintDay('),context);
+ context.backgroundTitle();assert.equal(context.document.title,'专注还剩 13 分钟 · szuDesktop');assert.deepEqual(timers.map(t=>t.ms),[30000],'分钟数变化时才醒');
+ const titles=[];for(let fired=0;fired<timers.length;fired++){now+=timers[fired].ms;timers[fired].fn();titles.push(context.document.title)}
+ assert.equal(titles[0],'专注还剩 12 分钟 · szuDesktop');assert.equal(titles.at(-1),'专注完成 · szuDesktop');assert.equal(now,state.game.focus.end,'到点那一刻改成专注完成');
+ assert.equal(timers.length,13,'13 分钟的专注隐藏期间只醒 13 次');assert.ok(timers.slice(1).every(t=>t.ms===60000));
+ // 专注在别处结束了：标题回到平常的样子，不再定时。
+ now=start;state.game.focus={...state.game.focus,end:now+90000};context.backgroundTitle();const armed=timers.length;
+ state.game.focus=null;timers.at(-1).fn();assert.equal(context.document.title,'szuDesktop · 荔枝庭院');assert.equal(timers.length,armed);
+ // 安装版、页面可见或正在退出：一律不碰标题、不定时（可见时由 clocks 负责）。
+ state.game.focus={startedAt:now,end:now+60000,duration:1,todoId:'',task:''};
+ for(const changed of [{szuDesktop:{shell:'electron'}},{document:{hidden:false,title:'00:59 · szuDesktop'}},{exiting:true}]){
+  const before={szuDesktop:context.szuDesktop,document:context.document,exiting:context.exiting};
+  Object.assign(context,{document:{hidden:true,title:'原标题'}},changed);const title=context.document.title,count=timers.length;
+  context.backgroundTitle();assert.equal(context.document.title,title);assert.equal(timers.length,count);Object.assign(context,before);
+ }
+ assert.match(source,/addEventListener\('visibilitychange',\(\)=>\{[^\n]*?backgroundTitle\(\);if\(!document\.hidden&&!exiting\)\{/,'可见性变化时先交给 backgroundTitle（隐藏时开始、可见时收起）');
+});
+
 function sceneFixture(){
  let current=null;
  const mounts=[],nodes=new Map(),state=createState();state.preferences.homeSkin='lake';
@@ -830,16 +856,20 @@ await check('each page uses one name in navigation, title and breadcrumb, and th
  assert.deepEqual(titles.sort(),Object.values(pages).filter(name=>name!=='今日').sort(),'页头标题与导航名一一对应');
 });
 // O12：术语表（CONTRIBUTING「界面用词」）里不再用的名字不能回到页面上。扫页面源码和 index.html，整行注释和 HTML 注释不算。
-// 伙伴台词（pet-dialogue.mjs）是角色说的话，「安静陪伴」在那里是普通说法，不是开关名，不扫；
-// Electron 外壳的托盘和伙伴菜单还叫「宠物」，排在 STATUS 1.1「术语统一的剩余部分」，不在这些文件里。
+// 伙伴台词（pet-dialogue.mjs）是角色说的话，「安静陪伴」在那里是普通说法，不是开关名，不扫。
+// Electron 外壳的托盘、伙伴菜单、通知和伙伴窗也扫：用户看到的是同一个伙伴。外壳注释里的「宠物窗」是代码里的叫法，
+// 所以那边连行尾注释和块注释一起去掉；检查、冒烟和构建脚本不是界面文字，不扫。
+// 旧的未验收标记有「接入测试 · 未经真实验收」「接入测试 · 待账号验收」等几种写法，只拦共同的「接入测试」，新页面手写哪种都拦得住。
 await check('retired names from the terminology table do not come back in the page text',()=>{
- const retired=['今日手帐','连接小站','连接站','荔园告示板','公告板','伙伴的后院','小屋与菜畦','庭院书屋','我的小屋','收纳柜','学习工具','宠物','安静陪伴','饱腹','饱食度','课程手帐'];
- const dir=new URL('./assets/garden/',import.meta.url);
+ const retired=['今日手帐','连接小站','连接站','荔园告示板','公告板','伙伴的后院','小屋与菜畦','庭院书屋','我的小屋','收纳柜','学习工具','宠物','安静陪伴','饱腹','饱食度','课程手帐','接入测试'];
+ const dir=new URL('./assets/garden/',import.meta.url),shell=new URL('./electron/',import.meta.url);
  const files=readdirSync(dir).filter(name=>name.endsWith('.mjs')&&name!=='pet-dialogue.mjs').map(name=>[name,readFileSync(new URL(name,dir),'utf8')]);
  files.push(['index.html',readFileSync(new URL('./index.html',import.meta.url),'utf8')]);
- assert.ok(files.length>20,'没有读到页面源码');
- for(const [name,text] of files){
-  const code=text.replace(/<!--[\s\S]*?-->/g,'').split('\n').filter(line=>!/^\s*\/\//.test(line)).join('\n');
+ const shellFiles=readdirSync(shell).filter(name=>name.endsWith('.mjs')&&!/^(check|smoke|build)\b/.test(name)||name==='pet.html').map(name=>['electron/'+name,readFileSync(new URL(name,shell),'utf8')]);
+ assert.ok(files.length>20,'没有读到页面源码');assert.ok(shellFiles.some(([name])=>name==='electron/tray-menu.mjs')&&shellFiles.some(([name])=>name==='electron/pet.html'),'没有读到外壳的托盘和伙伴窗');
+ const strip=text=>text.replace(/<!--[\s\S]*?-->/g,'').split('\n').filter(line=>!/^\s*\/\//.test(line)).join('\n');
+ const stripShell=text=>strip(text.replace(/\/\*[\s\S]*?\*\//g,'')).split('\n').map(line=>line.replace(/(^|[\s;,{}()[\]])\/\/.*$/,'$1')).join('\n');
+ for(const [name,code] of [...files.map(([name,text])=>[name,strip(text)]),...shellFiles.map(([name,text])=>[name,stripShell(text)])]){
   for(const word of retired)assert.ok(!code.includes(word),`${name} 里又出现了术语表不再用的「${word}」`);
  }
  assert.ok(source.includes('桌面伙伴</h2><label for="pet-scale">伙伴大小</label>'),'设置页「桌面伙伴」卡片的滑杆也叫伙伴');

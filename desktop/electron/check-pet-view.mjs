@@ -140,7 +140,10 @@ assert.ok(settings.includes('min="0.4"')&&settings.includes('max="2"'),'滑杆�
   menu.getMenuItemById('chat').click();menu.getMenuItemById('garden').click();
   menu.getMenuItemById('switchPet:1').click();menu.getMenuItemById('switchPet:0').click();
   assert.deepEqual(dispatched,['chat','garden','switchPet:0'],'picking the current companion sends nothing');
-  menu.find('隐藏宠物').click();assert.deepEqual(settingsPatches,[{petVisible:false}]);
+  // 菜单用术语表的名字（CONTRIBUTING「界面用词」）：伙伴、伙伴大小、饱食，与设置页和使用指南一致。
+  assert.match(menu.items[1].label,/^饱食 \d+ · 心情 \d+ · 精力 \d+$/);
+  assert.ok(menu.find(`伙伴大小（${Math.round(pet.scale()*100)}%）`)?.submenu&&menu.find('伙伴置顶'),'菜单里的大小和置顶也叫伙伴');
+  menu.find('隐藏伙伴').click();assert.deepEqual(settingsPatches,[{petVisible:false}]);
   // 主窗执行完指令后：先刷新，再说结果；只有成功且带动作时才播放反应。
   await pet.showResult({ok:true,message:'吃饱啦',action:'eat'});
   assert.equal(pwc.last('pet:say'),'吃饱啦');assert.equal(pwc.last('pet:react'),'eat');

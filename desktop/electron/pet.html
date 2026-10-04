@@ -5,7 +5,7 @@
 <!-- 宠物窗只跑本地文件：禁网络、禁内联脚本，样式允许（本页自带 <style>）。 -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'">
-<title>szuDesktop 宠物</title>
+<title>szuDesktop 桌面伙伴</title>
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
@@ -62,7 +62,7 @@
 <body>
 <div id="stage">
   <div id="bubble" role="status" aria-live="polite"><span id="bubble-text"></span></div>
-  <svg id="pet" viewBox="0 0 52 56" role="button" tabindex="0" aria-label="打开宠物菜单" aria-haspopup="menu"><title>点击打开菜单 · 拖动换位置 · 滚轮调大小</title><use id="pet-use" href="#libao"></use></svg>
+  <svg id="pet" viewBox="0 0 52 56" role="button" tabindex="0" aria-label="打开伙伴菜单" aria-haspopup="menu"><title>点击打开菜单 · 拖动换位置 · 滚轮调大小</title><use id="pet-use" href="#libao"></use></svg>
 </div>
 <!-- pet-render 加载本地共享 pet-art.mjs；宠物窗不依赖 Go 资源请求。 -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="pet-sprites"></defs></svg>
