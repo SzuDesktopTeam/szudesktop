@@ -44,16 +44,16 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.5"
-# Checked against the beta0.9.5 release asset metadata: desktop/electron/package-lock.json
+BASELINE_VERSION = "beta0.9.6"
+# Checked against the beta0.9.6 tag (fd7af78): desktop/electron/package-lock.json
 # pins electron 44.4.5, and the release asset digest reported by GitHub for
-# szuDesktop-Setup-0.9.5.exe equals this SHA-256.
+# szuDesktop-Setup-0.9.6.exe equals this SHA-256.
 BASELINE_ELECTRON = "44.4.5"
-BASELINE_SHA256 = "1a49da74f6ffe6c6fc7170610924ac619dbb981596c61e9bff099fe344aa566f"
+BASELINE_SHA256 = "588cdbef9b7ce639271a72c11d048f8c33f069308b00d066d76170b55d244232"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
-# A fresh beta0.9.5 save carries exactly these companions, in this order (its
-# pet-catalog.mjs AVAILABLE_PETS, same five as beta0.9.3); the turtle is retired
-# to the "old friends" of saves that already had it.
+# A fresh beta0.9.6 save carries exactly these companions, in this order (its
+# pet-catalog.mjs AVAILABLE_PETS at fd7af78, same five as beta0.9.3); the turtle
+# is retired to the "old friends" of saves that already had it.
 BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "pingu", "skipper"]
 # Engines since beta0.9.3 announce a per-run session token ("szuDesktop 会话")
 # and refuse /api/* calls without it; older engines print no such line and

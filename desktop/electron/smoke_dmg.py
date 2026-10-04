@@ -477,11 +477,12 @@ class Smoke:
         digest = mac_upgrade.verify_baseline(baseline, self.arch)
         check_dmg(baseline)
         copy_from_dmg(baseline, self.root / "baseline mount", self.app)
-        check("baseline bundle version", plist_value(self.app / "Contents/Info.plist", "CFBundleShortVersionString") == "0.9.5")
+        check("baseline bundle version", plist_value(self.app / "Contents/Info.plist", "CFBundleShortVersionString")
+              == re.sub(r"^(?:beta|v)", "", mac_upgrade.BASELINE_VERSION))
         check("baseline signature verifies", run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(self.app)]).returncode == 0)
-        # The immutable beta0.9.5 shell has the hidden-command defect fixed in
-        # beta0.9.6. Upgrade setup runs its real engine, not its full pet-menu suite.
-        # Candidate UI checks below remain complete and unchanged.
+        # Upgrade setup runs the published baseline's real engine, not its full
+        # pet-menu suite (first added on beta0.9.5, whose shell had the hidden-command
+        # defect fixed in beta0.9.6). Candidate UI checks below remain complete and unchanged.
         with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, mac_upgrade.BASELINE_VERSION,
                                       self.evidence / "baseline-data.log", smoke_macos, stop_group) as engine:
             self.upgrade_data = mac_upgrade.seed(engine, lambda: mac_upgrade.initial_workspace(engine, self.root / "baseline-js"))
@@ -489,7 +490,7 @@ class Smoke:
         (self.evidence / "baseline-data.json").write_text(json.dumps({
             "version": mac_upgrade.BASELINE_VERSION, "baseline_sha256": digest,
             "real_published_engine_seeded_data": True, "shell_settings_are_synthetic_v1_fixtures": True,
-            "baseline_ui_acceptance": "not exercised; published beta0.9.5 hidden-command defect"
+            "baseline_ui_acceptance": "not exercised; upgrade setup runs only the published baseline engine"
         }, indent=2), encoding="utf-8")
         files = [self.cfg / "workspace-v1.json", self.cfg / "notebook-v1.json",
                  self.cfg / "electron-profile/pet-settings.json", self.cfg / "electron-profile/desktop-settings.json"]
@@ -619,7 +620,7 @@ def main():
     parser.add_argument("--local", action="store_true",
                         help="在开发机上运行：会启动真实窗口，结束时还原 com.szudesktop.app 偏好并从 LaunchServices 注销临时副本")
     parser.add_argument("--dmg", type=Path, help="默认 desktop/electron/release/szuDesktop-<版本>-mac-<arch>.dmg")
-    parser.add_argument("--baseline-dmg", type=Path, help="fixed published beta0.9.5 DMG; runner requires the prepared baseline")
+    parser.add_argument("--baseline-dmg", type=Path, help="fixed published baseline DMG (mac_upgrade.py BASELINE_VERSION); runner requires the prepared baseline")
     args = parser.parse_args()
     runner = os.environ.get("GITHUB_ACTIONS") == "true" and bool(os.environ.get("RUNNER_TEMP"))
     if sys.platform != "darwin":

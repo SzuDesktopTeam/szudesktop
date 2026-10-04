@@ -202,12 +202,12 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
   （[STATUS 68.4](docs/STATUS.md#s68-4)）；B 类仍要逐项做，全部通过之前每一版的发布说明都带预览版说明，
   由 `desktop/release_notes.py` 的 `MAC_PREVIEW` 开关把关（见[发布](#发布)）。
 - CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
-- DMG 升级基线固定为已发布 beta0.9.5 的两个 DMG，版本、Electron 与 SHA-256 的唯一来源是
+- DMG 升级基线固定为已发布 beta0.9.6 的两个 DMG，版本、Electron 与 SHA-256 的唯一来源是
   `desktop/electron/mac_upgrade.py`。CI 按组合摘要恢复缓存，每次仍核对包与校验文件；损坏或缺失时才下载。
   `smoke_dmg.py` 在 runner 上必须有该基线：实际运行固定旧包里的引擎，写合成工作区、课程笔记与隔离钥匙串凭据，
   原路径替换为候选应用，核对配置字节未被安装操作修改，再验证新版读写、重开后保留与合成凭据解密。
   手动本地升级测试需在 `--local` 外传 `--baseline-dmg <已核对的旧 DMG>`；不会写入「应用程序」。
-  下次 VERSION 升级时同步推进 Windows 与 Mac 的公开升级基线，不能让候选版本与基线相同。
+  下次 VERSION 升级时同步推进 Windows 与 Mac 的公开升级基线（`desktop/check_dmg_upgrade.py` 固定了同一组版本与摘要，一起改），不能让候选版本与基线相同。
 - 原生安装版笔记失败验收只在隔离 smoke profile 中执行：临时把笔记锁路径换成目录，真实 Go API 返回 503，
   核对原笔记字节完整、离开被阻止、编辑草稿与导出备份完整；还原锁后通过原界面重试并读取持久化结果。
   文件权限不足、磁盘满、真实设备断电等另需验收，不能把锁故障的通过泛化到所有存储故障。
@@ -472,9 +472,12 @@ node desktop/electron/check-pet-view.mjs
 - 发布后要核对附件：`sha256sum -c *.sha256`（每个附件都有同名校验文件）、ZIP 内 exe 与独立 exe
   是否逐字节一致、程序自报版本和 exe 属性里的版本是否等于 VERSION 文件、
   **Release 正文是否真的是你写的那一节**。核对结果写进 STATUS.md。
-- 发布后把安装升级验收的基线挪到刚发布的版本：改 `desktop/electron/smoke_installer.py` 里的
+- 发布后把安装升级验收的基线挪到刚发布的版本，放在把 VERSION 升到下一版的同一个 PR 里（或在它合入之后；
+  先挪会让候选版与基线相同，所有 PR 和 main 的构建都会失败）。Windows 改 `desktop/electron/smoke_installer.py` 里的
   `BASELINE_VERSION`、`BASELINE_SHA256`（发布页和同名 `.sha256` 附件上都有）、
-  `BASELINE_ELECTRON` 与 `BASELINE_COMPANIONS`。现有用户是从最新公开版升级上来的，
+  `BASELINE_ELECTRON` 与 `BASELINE_COMPANIONS`；Mac 同步改 `desktop/electron/mac_upgrade.py` 的 `BASELINE_VERSION`、
+  `BASELINE_ELECTRON`、`BASELINE_DIGESTS`、`baseline_name` 和 `desktop/check_dmg_upgrade.py` 里的断言，
+  连同 `release.yml` 里写着基线版本号的两个步骤名。现有用户是从最新公开版升级上来的，
   验收也要从它开始；CI 下载哪个附件由这里决定，workflow 里不再另写一份。这一步就是原来的 R09
   （跨版本升级与数据恢复），2026-09-29 起它是发版流程的固定一步，不再单列为开放任务（[STATUS 第 69.2 节](docs/STATUS.md#s69-2)）。
   CI 先按 `BASELINE_SHA256` 从 `actions/cache` 取基线安装包，缓存没有或哈希不对时才从发布页下载一次、核对后存进缓存，
@@ -493,7 +496,7 @@ node desktop/electron/check-pet-view.mjs
 - **v1.0.0 发版清单**。beta0.9.7 是首轮试用构建，也按这份清单彩排一次，只是标签用 `beta` 前缀、Release 自动标为预发布。
   1. 上一条的 1.0 门槛都已达到；这期间合入的 Electron 升级都按上面的要求在合并前跑过真 Intel。
   2. 发版 PR：`internal/version/VERSION` 改成 `v1.0.0`，CHANGELOG 把 `## 未发布` 改成 `## v1.0.0` 并写给同学看。
-     确认 Windows（`smoke_installer.py`）与 Mac（`mac_upgrade.py`，连同 `release.yml` 里写着基线版本号的步骤名）的升级基线已是上一公开版
+     确认 Windows（`smoke_installer.py`）与 Mac（`mac_upgrade.py` 和 `check_dmg_upgrade.py`，连同 `release.yml` 里写着基线版本号的步骤名）的升级基线已是上一公开版
      （届时应是 beta0.9.7），没挪的话在这个 PR 里挪，哈希取发布页上的附件，基线不能与候选版相同。
      本地先跑 `python desktop/release_notes.py v1.0.0 --release` 预检。README 的下载直链这时仍指向上一公开版。
   3. 发版 PR squash 合并后，等 main 上这次提交的运行全部通过，并确认 `smoke-desktop-electron-macos-intel` 真正运行并通过（不是被跳过），
