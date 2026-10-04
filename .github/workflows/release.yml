@@ -484,7 +484,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
           key: ${{ steps.dmg-baseline.outputs.key }}
-      - name: 核对并准备 beta0.9.5 DMG 升级基线
+      - name: 核对并准备 beta0.9.6 DMG 升级基线
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -572,7 +572,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
           key: ${{ steps.dmg-baseline.outputs.key }}
-      - name: 核对并准备 beta0.9.5 x64 DMG 升级基线
+      - name: 核对并准备 beta0.9.6 x64 DMG 升级基线
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

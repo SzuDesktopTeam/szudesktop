@@ -11,6 +11,8 @@
 
 ## 1. 当前状态
 
+- **beta0.9.7 发版准备（2026-10-05）**：beta0.9.7 是首轮试用构建兼 1.0 候选彩排（[73.5](#s73-5)，决定 D5），内容是 Electron 44.5.1（[PR #39](https://github.com/SzuDesktopTeam/szudesktop/pull/39)，已合并为 `4aa6f0e`）加[第 73 节](#s73)那一批（[PR #41](https://github.com/SzuDesktopTeam/szudesktop/pull/41)）。发版分支 `release/beta0.9.7` 写入时基于 `feat/v1-prep@2554c7c`，#41 合并后变基到 main：`internal/version/VERSION` 升为 beta0.9.7，CHANGELOG 的「未发布」改为 beta0.9.7 一节（带候选版行）；Windows 与 Mac 的安装升级基线挪到 beta0.9.6，三个安装包的 SHA-256 与发布页 digest 一致，Electron 44.4.5 和默认五位伙伴已对照 beta0.9.6 标签 `fd7af78` 核实。写入时还没打标签，公开下载仍是下面「公开版本」一行的 beta0.9.6；README 中英两版的下载直链和「当前版本」发布并复核附件后再同步。打标签前后的步骤见 1.1 的 beta0.9.7 一行。
+
 - **1.0 就绪度评估与维护者决定（2026-10-05）**：评估结论是现在还不能发 1.0：R01 教学区还没有现场记录，首轮试用还没开始，R10 的资源基线当时没有实现、把 VERSION 改成 `v1.0.0` 会有两项检查失败，main 仍是 Electron 44.4.5（隐藏主窗口照料伙伴后主窗口在后台持续出帧，修复在 [PR #39](https://github.com/SzuDesktopTeam/szudesktop/pull/39)，写入时 rebase 后等 CI）。维护者授权按评估推荐采纳 7 条决定（可随时推翻）：首轮试用的通过标准与材料、试用不等反馈渠道、R01 拆成 R01a 教学区（1.0 门槛）与 R01b 宿舍区／教工区、macOS 以预览版随 1.0 发布且 1.0 前只要求 B1 和 B9、发 beta0.9.7 作为首轮试用构建兼 1.0 候选彩排、宣传物料只用原创伙伴、SECURITY.md 写明支持范围。国内备用下载渠道和本地 wip 分支的处理尚未决定。资源基线、v1.0.0 发版工具、隐藏页行为修补、外壳术语与反馈入口、F12 和对外文档在同一批改动里完成，见[第 73 节](#s73)。
 
 - **首分钟桌面交付（2026-10-01）**：[PR #34](https://github.com/SzuDesktopTeam/szudesktop/pull/34) 将首分钟学习与安全重载接入桌面源码，版本 beta0.9.6。原生 Electron 已通过隔离合成数据冒烟；安装升级和 macOS DMG 以 PR／tag CI 为准，发布状态以 [Release 页面](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) 为准。详见 [71](#s71)。此前 45 分钟仍仅为浏览器测试版证据，没有真实一周数据，没有关闭 R01、R10 或 macOS B1–B9。
@@ -37,7 +39,7 @@
 |---|---|---|---|---|
 | 发布 | 正式版 1.0 交付（R10） | P1 / M | 按 2026-10-05 的细化，1.0 门槛是 R01a、R10 和首轮试用达到基本标准，R01b 与 R02–R07 带「测试中」标签随 1.0 发布。R10：最终候选包完成安装、启动、退出检查，版本、截图、中英 README、支持范围、更新说明、附件与校验值逐项对应，并附本次候选包的资源基线。资源基线已接进 Windows 安装版与 DMG 冒烟（第 73 节，见 UX24 行），要在最终候选包上跑出并附上。发版步骤按 CONTRIBUTING「发布」里的 v1.0.0 发版清单，beta0.9.7 先彩排一次。R09 已改为发版流程中的一步，不再单列 | [69.2](#s69-2)、[73](#s73)、[50.2](#502-10-剩余任务暂不部署后端) |
 | 发布 | 发布者签名 | P2 / L | Windows 安装包未签名，macOS 包只有 ad-hoc 签名。可评估 SignPath Foundation 的开源免费签名，但要先核实对方条款是否接受含 Pingu、Skipper 粉丝形象的发布件；签不签由作者决定（SECURITY.md 现写不使用代码签名证书）。自动更新已移入延期行 | [69.3](#s69-3)、[50.4](#504-内容刷新与程序更新) |
-| 发布 | 发 beta0.9.7（首轮试用构建兼 1.0 候选彩排） | P1 / S | 内容是 Electron 44.5.1（[PR #39](https://github.com/SzuDesktopTeam/szudesktop/pull/39)）加第 73 节这一批改动。发版 PR：VERSION 改为 `beta0.9.7`，CHANGELOG 的「未发布」改成版本号，Windows 与 Mac 的升级基线挪到 beta0.9.6（NSIS `588cdbef…`，DMG arm64 `2d28f939…`、x64 `07e42896…`，全文见 71.4），核对基线的 Electron 版本与伙伴名单；按 CONTRIBUTING 的 v1.0.0 发版清单彩排，main（含真 Intel）全绿后打标签，发布后逐个复核附件。之后到 1.0 只收试用暴露的修复和文档 | [73](#s73)、[71.4](#s71-4) |
+| 发布 | 发 beta0.9.7（首轮试用构建兼 1.0 候选彩排） | P1 / S | 内容是 Electron 44.5.1（[PR #39](https://github.com/SzuDesktopTeam/szudesktop/pull/39)，已合并）加第 73 节这一批改动（[PR #41](https://github.com/SzuDesktopTeam/szudesktop/pull/41)）。**发版准备已做**（2026-10-05，分支 `release/beta0.9.7`）：VERSION 改为 `beta0.9.7`，CHANGELOG 的「未发布」改成 beta0.9.7 一节（带候选版行）；Windows 与 Mac 的升级基线挪到 beta0.9.6（NSIS `588cdbef…`，DMG arm64 `2d28f939…`、x64 `07e42896…`，全文见 71.4，与发布页 digest 一致），基线的 Electron 44.4.5 与默认五位伙伴已对照 `fd7af78` 核实；另同步了计划里没列到的两处（73.5 的后续更正）。本机 `release_notes.py beta0.9.7 --release`、`check_release_notes.py`、`check_status_doc.py`、同步资源后的 `run-checks.mjs` 通过。**剩下**：#41 合并、本分支变基到 main 后提交发版 PR，PR 的 CI 跑通新基线的 Windows 安装升级与两个 DMG 升级冒烟；合并后 main（含真 Intel）全绿，在同一提交打 `beta0.9.7` 标签；发布后逐个复核附件，同步第 1 节「公开版本」、README 中英两版的下载直链和「当前版本」，删掉 CHANGELOG 的候选版行。之后到 1.0 只收试用暴露的修复和文档 | [73](#s73)、[73.5](#s73-5)、[71.4](#s71-4) |
 | 待负责人决定 | 账号与发布安全的剩余几项 | P1 / S | 2026-10-05 已开 Dependabot 告警、secret scanning 与推送拦截、Actions 强制 SHA 固定，必需检查扩到 7 个 job（第 73 节）。剩下要维护者处理：先确认全部组织所有者都已开启两步验证，再打开组织强制两步验证（顺序反了会把没开的人移出组织）；给 `v*`／`beta*` 标签加规则集；一把可写的部署密钥删掉或改只读；是否开 enforce_admins、不负责发版的人是否降为 write。人工约 15 分钟，建议在 1.0 宣传前完成 | [73](#s73)、[69.6](#s69-6) |
 | 学校业务 | 校园网真实认证闭环 · 教学区（R01a；1.0 门槛） | P0 / M | 维护者本人按 [69.4](#s69-4) 的清单实测约 20 分钟，需要输入密码。beta0.9.5 起的发布版都含注销修复，可以马上用 beta0.9.6 发布页的 `szunet-darwin-arm64` 做；只有第 4 步核对 F12 的 `online_zone` 要用包含 F12 的构建（beta0.9.7 起的发布页，或从 main 编译），先做的话这一步之后补。同一趟顺带做 B9（打开 DMG 版看「本地网络」授权）；F21 的第 2–3 步本来就在清单里。外网在线或教务登录不能代替。原 R01 行已并入 F18 的校园网部分和 Q01，2026-10-05 拆成本行与下一行；F18 的校外 VPN 部分留在实验模块行 | [69.4](#s69-4)、[73](#s73)、[50.2](#502-10-剩余任务暂不部署后端)、[3.1](#31-功能安全与工程) |
 | 学校业务 | 校园网真实认证闭环 · 宿舍区与教工区 Dr.COM（R01b） | P1 / M | 不阻断 1.0，保留「测试中」随 1.0 发布，1.0 后验收。宿舍区交给住宿舍的试用同学（试用自查清单第 2 项），顺带核对 F12 的 `online_zone=dorm`；教工区（F18 并入的部分，同样是 Dr.COM）有条件时另测一次。1.0 前有人报告失败的，小问题就修，修不了就写进 1.0 发布说明 | [69.5](#s69-5)、[73](#s73)、[50.2](#502-10-剩余任务暂不部署后端) |
@@ -3534,6 +3536,13 @@ beta0.9.7 是首轮试用构建兼 1.0 候选彩排，只发这一个：1.0 应�
 7. 试用结论出来、界面定稿后：重拍截图，README 中英按 1.0 改写（工程验证细节移回本页），发布说明模板定稿。
 8. v1.0.0 发版 PR 与标签，按 CONTRIBUTING 的发版清单；维护者按 R10 逐项过目并批准。
 9. 维护者上传社交预览图（只用原创伙伴），用定稿的材料公开宣传。
+
+**后续更正（2026-10-05，beta0.9.7 发版准备）**：上面「发版 PR」一条已在分支 `release/beta0.9.7` 改好（写入时基于 `feat/v1-prep@2554c7c`，#41 合并后变基到 main；还没打标签，公开下载仍为 beta0.9.6）。顺序第 1 步的 #39 已先合并为 `4aa6f0e`。和计划不同或计划没写到的几处：
+
+- **基线核对**：`fd7af78` 的 `package-lock.json` 是 Electron 44.4.5，`pet-catalog.mjs` 的 `AVAILABLE_PETS` 仍是 libao、chestnut、egret、pingu、skipper（阿青 `available:false`），所以 `smoke_installer.py` 的 `BASELINE_ELECTRON`、`BASELINE_COMPANIONS` 不变；三个摘要与发布页 digest 一致。beta0.9.6 的 `engine.mjs` 只有同目录的平级导入，`mac_upgrade.py` 用旧包自己的规则建档照样可行。
+- **计划漏掉的两处**：`desktop/check_dmg_upgrade.py` 断言 `mac_upgrade.py` 固定的版本和两个摘要，不跟着改，`run-checks.mjs` 就会失败，已改为 beta0.9.6，另加一条核对 DMG 文件名；`smoke_dmg.py` 把基线包的 `CFBundleShortVersionString` 写死为 `0.9.5`，不改的话三条 DMG 升级冒烟都会在这一步失败，已改为按 `mac_upgrade.BASELINE_VERSION` 推导，`baseline-data.json` 里旧包界面未验收的理由也改成不带版本号的说法。CONTRIBUTING 的 macOS 一节和 v1.0.0 发版清单补上了 `check_dmg_upgrade.py`。
+- **`release.yml`**：写着基线版本号的只有两个 DMG 基线步骤名，已改为 beta0.9.6；Windows 那几步的名字不带版本号。两边的缓存键都由固定摘要算出，挪了基线自动换键，不用手改。
+- **还没有的证据**：新基线上的 Windows 安装升级和两个 DMG 升级冒烟只能在 CI 上跑，写入时还没有结果，以发版 PR 和合并后 main 的运行为准。
 
 <a id="s73-6"></a>
 ### 73.6 这一批完成的改动
