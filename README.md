@@ -19,9 +19,9 @@
 
 桌面应用支持 Windows 与 macOS（macOS 为预览版）· Linux 可下载校园网命令行 szunet（见[下载](#下载)）
 
-**[下载 Windows 安装版 · beta0.9.6](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-Setup-0.9.6.exe)**
+**[下载 Windows 安装版 · beta0.9.7](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.7/szuDesktop-Setup-0.9.7.exe)**
 
-macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.6/szuDesktop-0.9.6-mac-x64.dmg)，第一次打开要手动放行，见[下载](#下载)
+macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.7/szuDesktop-0.9.7-mac-arm64.dmg) · [Intel DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.7/szuDesktop-0.9.7-mac-x64.dmg)，第一次打开要手动放行，见[下载](#下载)
 
 [下载](#下载) · [功能](#功能) · [已知限制](#已知限制) · [安全与隐私](#安全与隐私) · [使用指南](docs/guide/README.md) · [常见问题](#常见问题) · [反馈与建议](docs/guide/feedback.md)
 
@@ -87,7 +87,7 @@ macOS 预览版：[Apple 芯片 DMG](https://github.com/SzuDesktopTeam/szudeskto
 
 Windows 用户直接下载上方的安装版（需要 Windows 10 或 11，64 位），运行安装程序后打开 szuDesktop。安装版自带窗口运行时，不需要另装浏览器或开发环境。macOS 预览版自 beta0.9.5 起提供，Mac 用户按芯片选择对应的 DMG（见下表）。其他形式也都在[发布页](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
-beta0.9.6 预发布下载：安装包 `szuDesktop-Setup-0.9.6.exe`、便携包 `szudesktop-beta0.9.6-windows-amd64.zip`、macOS 预览版 `szuDesktop-0.9.6-mac-arm64.dmg` 与 `szuDesktop-0.9.6-mac-x64.dmg`。附件大小、校验文件与发布状态以 [Release 页面](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.6) 为准。
+当前版本：**beta0.9.7**（2026-10-05 发布，预发布）· 安装版 `szuDesktop-Setup-0.9.7.exe`（约 98 MB）· 便携版 `szudesktop-beta0.9.7-windows-amd64.zip`（约 6.5 MB）· macOS 预览版 `szuDesktop-0.9.7-mac-arm64.dmg`（约 123 MB）与 `szuDesktop-0.9.7-mac-x64.dmg`（约 130 MB）· [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.7)
 
 | 形式 | 文件 | 怎么打开 | 桌面伙伴与托盘 |
 | :-- | :-- | :-- | :-- |
@@ -98,7 +98,7 @@ beta0.9.6 预发布下载：安装包 `szuDesktop-Setup-0.9.6.exe`、便携包 `
 | macOS 命令行 | `szunet-darwin-amd64`（Intel）、`szunet-darwin-arm64`（Apple 芯片） | 在终端中运行，只做校园网认证与诊断 | 没有 |
 | Linux 命令行 | `szunet-linux-amd64`、`szunet-linux-arm64` | 在终端中运行，只做校园网认证与诊断 | 没有桌面应用 |
 
-安装版和 DMG 的文件名只写数字版本号，便携版 ZIP 写完整的发布标签，以上面的预发布下载一行和发布页上的实际文件名为准。命令行 szunet 每个平台一个单文件，约 6.4–7.2 MB；装好后占用多少磁盘还没有实测。
+安装版和 DMG 的文件名只写数字版本号，便携版 ZIP 写完整的发布标签，以上面「当前版本」一行和发布页上的实际文件名为准。命令行 szunet 每个平台一个单文件，约 6.4–7.2 MB；装好后占用多少磁盘还没有实测。
 
 **macOS 版是预览版**，需要 macOS 13 或更高版本。Apple 芯片（M1 及更新）选 `mac-arm64.dmg`，Intel 处理器选 `mac-x64.dmg`，在「苹果菜单 → 关于本机」里看「芯片」或「处理器」一栏。应用未经 Apple 公证，第一次打开会被系统拦下：macOS 15 及以后，到「系统设置 → 隐私与安全性」底部点「仍要打开」；macOS 13 和 14，在「应用程序」里按住 Control 点按 szuDesktop，选「打开」。每次更新到新版本都要再放行一次。一部分行为还没在真机上验收，见[已知限制](#已知限制)；完整步骤见[下载、安装与更新](docs/guide/install.md)。
 
@@ -123,22 +123,22 @@ Linux 目前只有命令行 szunet，没有桌面版。Windows 也可以单独�
 
 ## 当前交付与验证
 
-beta0.9.6 是已公开的预发布版，不代表正式版完整验收。[发布提交与标签 CI](docs/STATUS.md#s71-4)对应公开安装包；此后的测试与文档改进已合并，但没有移动标签或重新发布同名二进制。
+beta0.9.7 是已公开的预发布版，给首轮试用同学用，不代表正式版完整验收。标签打在发版提交 `191484e` 上，发布记录见 [STATUS](docs/STATUS.md#s73-5)。
 
-- 公开版本的 Windows 安装／升级、ARM64、Rosetta 和真实 Intel DMG 安装冒烟已通过；全部 20 个公开附件的哈希已核对。
-- 后续 [main CI（c264b6c）](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36936330191) 的八个适用检查通过，包括真实 Intel。固定 beta0.9.5 基线升级保留数据、合成凭据读取，以及安装版真实文件锁失败返回 503 时的草稿保留、备份导出和恢复后重试均通过；三个 Mac 退出事件均实际成功。详见[自动化验收记录](docs/STATUS.md#s72)。这些新增测试结果对应 main，不是重新发布后的安装包。
-- Mac 旧版数据由已发布旧引擎建立，窗口设置是明确标注的合成夹具，不算旧版 UI 人工验收。此前 45 分钟浏览器测试也不算安装版长期验收。存储故障测试覆盖锁打开失败，不覆盖磁盘满或断电。
+- 这次提交的 [main CI](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/37234118215) 八个适用检查全部通过，包括真实 Intel；随后在同一提交上打标签，[标签构建](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/37235863600)的 9 个 job 全部通过并上传 20 个附件；发布后已逐个下载，哈希全部核对一致。
+- Windows 安装版，以及 Apple 芯片、Rosetta 和真实 Intel 上的两个 DMG，都从固定的 beta0.9.6 基线升级：旧数据保留、合成账号可解密、新版能正常读写。窗口运行时是 Electron 44.5.1。
+- 这些都是隔离配置、合成数据的自动化检查。Mac 旧版数据由已发布旧引擎建立，窗口设置是明确标注的合成夹具，不算旧版 UI 人工验收；macOS 仍是预览版，真机上的人工验收还没做完（见[已知限制](#已知限制)）。真实校园登录与校园网认证、睡眠恢复、多屏和长时间使用也都还没验收。存储故障测试覆盖锁打开失败，不覆盖磁盘满或断电。
 
 ## 已知限制
 
 - **学校个人业务还在测试**：本科课表、有排课的研究生课表、在线成绩、安装版学校登录接回和过期后重新登录、应用内预约完整流程和学院琴房，都还没通过真实账号验收，可能读取失败或结果不完整。场地空位查询需要本机能直连学校校内服务（一般要在校园网内）。验收细节见 [STATUS](docs/STATUS.md#s50-2)。
 - **校园网认证待现场验收**：教学区和宿舍区完整的登录、失败提示、注销与重连还没逐项现场验收；接路由器、未认证时的接入点编号自动发现也没实测，识别失败时可以在登录表单的「高级设置」里手动填写。启动时自动连接和命令行 szunet 用的是同一套认证，验收状态相同。
-- **macOS 版是预览版**：真机上的日常验收还没做完。浏览器下载后的首次放行、菜单栏图标与程序坞、关窗与全屏、各种退出方式先保存、学校和飞书窗口的「页面」菜单与复制粘贴、桌面伙伴的 Control 点按与多显示器、系统通知的授权与弹出、注销与登录时启动、钥匙串里账号的保存与读取、macOS 13 和 14，以及在校园网里是否弹出「本地网络」授权，都还要在真机上逐项确认，进度见 [STATUS](docs/STATUS.md#s68-2)。每次更新都要重新放行；按 ⌘H 隐藏应用时桌面伙伴也会一起隐藏，在菜单栏图标里点「显示伙伴」可以只把它带回来；主窗口和伙伴都隐藏时，专注提醒可能稍有延迟；固定 beta0.9.5 基线升级到当前构建的隔离自动化测试已通过（合成数据），真机升级未验收。遇到问题请按[反馈说明](docs/guide/feedback.md)告诉我们，写上 macOS 版本、芯片（Apple 芯片或 Intel）和卡在哪一步。
+- **macOS 版是预览版**：真机上的日常验收还没做完。浏览器下载后的首次放行、菜单栏图标与程序坞、关窗与全屏、各种退出方式先保存、学校和飞书窗口的「页面」菜单与复制粘贴、桌面伙伴的 Control 点按与多显示器、系统通知的授权与弹出、注销与登录时启动、钥匙串里账号的保存与读取、macOS 13 和 14，以及在校园网里是否弹出「本地网络」授权，都还要在真机上逐项确认，进度见 [STATUS](docs/STATUS.md#s68-2)。每次更新都要重新放行；按 ⌘H 隐藏应用时桌面伙伴也会一起隐藏，在菜单栏图标里点「显示伙伴」可以只把它带回来；主窗口和伙伴都隐藏时，专注提醒可能稍有延迟；从固定的 beta0.9.6 基线升级到 beta0.9.7 的隔离自动化测试已通过（合成数据），真机升级未验收。遇到问题请按[反馈说明](docs/guide/feedback.md)告诉我们，写上 macOS 版本、芯片（Apple 芯片或 Intel）和卡在哪一步。
 - **Linux 没有桌面版**：只有命令行 szunet，需要 Secret Service（`secret-tool`）才能保存账号，没有时拒绝保存。macOS 命令行把凭据存进钥匙串，真机上完整的保存再读取还没验证。
 - **未签名、未公证、无自动更新、无云同步**：Windows 版首次运行可能出现安全提示，macOS 版要手动放行；新版需要手动下载；数据只在本机，项目没有部署后端，也没有云同步。
 - **笔记与飞书**：课程笔记只支持文本，没有图片附件、课件解析、公式或 AI 整理。飞书本机副本不会回写，不是双向同步；真实授权、文档导入和多人协作还没验收。
 - **桌面行为待实测**：Windows 上专注完成的系统通知是否真的弹出、开启「登录 Windows 时启动」后重新登录是否真的启动，以及多显示器、长时间运行的资源占用和睡眠唤醒后的表现（macOS 版的待验收项见上）。
-- **beta0.9.6 的后台耗电**：安装版和 macOS 版在主窗口隐藏时照料过伙伴之后，主窗口会在后台继续绘制动画、多耗一点电，打开一次主窗口再关掉就会停。下一版随窗口运行时升级修复，见 [CHANGELOG](CHANGELOG.md)。
+- **还在用 beta0.9.6 的请升级**：beta0.9.6 的安装版和 macOS 版在主窗口隐藏时照料过伙伴之后，主窗口会在后台继续绘制动画、多耗一点电，打开一次主窗口再关掉才会停。beta0.9.7 随窗口运行时升级修复了这个问题，见 [CHANGELOG](CHANGELOG.md)。
 - **尚未接入**：校园网余额、流量、时长和套餐；11 个学院的公告只提供官网入口；校历遇到新图片时依赖系统自带的文字识别，Windows 英文系统语言下的识别还待复核。
 - **还没开展真实同学试用**：庭院的成长节奏和长期内容会根据试用反馈调整。
 
@@ -204,7 +204,7 @@ szunet logout        # 注销下线
 
 ## 更新日志
 
-beta0.9.6 增加首分钟课堂笔记入口与保存后重新打开工作区，修复引导与笔记恢复中的保存并发。Windows 安装包与 macOS 预览版继续使用原生构建和隔离冒烟检查；真实校园登录、睡眠恢复、生产签名及 macOS 真机验收仍待完成。详见 [CHANGELOG.md](CHANGELOG.md) 与 [交付验证记录](docs/STATUS.md#s71)。
+当前版本 **beta0.9.7**（2026-10-05）是给首轮试用同学用的版本，按计划也是 1.0 正式版之前的最后一个测试版，此后到正式版只修试用中发现的问题。相对 beta0.9.6：窗口运行时升级到 44.5.1，隐藏主窗口后照料伙伴不再让主窗口在后台一直耗电；托盘、伙伴菜单和通知的叫法与设置页、使用指南统一；「提交反馈」改为打开一页[反馈说明](docs/guide/feedback.md)；已在线时能看出是教学区还是宿舍区，诊断报告写明系统代理开没开；便携版专注时切到别的标签页，标题里的倒计时不再停住。真实校园登录、睡眠恢复、生产签名及 macOS 真机验收仍待完成。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)，历次下载见 [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
 ## 致谢
 
