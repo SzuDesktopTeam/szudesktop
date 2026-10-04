@@ -3425,3 +3425,11 @@ ARM64、Rosetta 及合并后真实 Intel job 都接入同一流程：在隔离�
 [PR #37](https://github.com/SzuDesktopTeam/szudesktop/pull/37) 在最终 [PR run 36929491061](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36929491061) 的全部适用检查通过后普通合并为 53ea4b4。Windows NSIS、ARM64 和 Rosetta 升级及真实 HTTP 503 草稿恢复均通过，两个 Mac 架构的 Apple quit event 均实际 passed。合并后的 [main run 36931584667](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36931584667) 在 Rosetta quit-event 未于 15 秒内退出而失败，Intel 未运行；不能把 PR 的绿色结果写成 main 已通过。
 
 该次轨迹中，保存回执与确认约 75ms 内完成，窗口关闭和引擎停止都已记录（引擎停止在退出请求约 12.4 秒后）；现有轨迹还不能证明后续 Electron 退出为何超时。测试看门狗在 UI 报告后仍存活，补齐其生命周期：成功报告的原子发布之前先终止看门狗线程并清除心跳计时器，失败报告也释放线程；只有测试模式接入，正常运行行为和 VERSION 不变。退出轨迹新增 will-quit / quit，原有 15 秒、保存回执、退出顺序、无残留和各安装版断言保持，仍须修复后的 PR 与完整 main（包括真实 Intel）实际成功。不重复二进制发布，不以重跑旧提交代替这项修复。
+
+### 修复后的完整验证
+
+[PR #38](https://github.com/SzuDesktopTeam/szudesktop/pull/38) 的精确提交 51978d64 在 [PR CI 36934454165](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36934454165) 七个适用检查成功后普通合并为 [c264b6c7](https://github.com/SzuDesktopTeam/szudesktop/commit/c264b6c7f365a6b46d36175fc905ed3a3ad7d299)。该提交的 [main CI 36936330191](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/36936330191) 八个适用 job 全部成功，包含独立的真实 Intel runner；release 按 main 分支规则跳过。
+
+已下载核对 Windows NSIS、ARM64、Rosetta、Intel 四组升级报告及实际 UI 报告：固定旧包摘要一致，旧数据保留、候选读写和合成凭据读取通过；真实文件锁故障返回 503，离开被阻止、草稿保留、备份含草稿、原文件字节保留、恢复后重试落盘均通过。三个 Mac Apple quit-event 均实际 passed，没有权限跳过；保存确认后记录 will-quit、quit 和退出码 0，ARM64 203ms、Rosetta 1300ms、原生 Intel 219ms，未放宽 15 秒界限。完整审查记录见 [PR 评论](https://github.com/SzuDesktopTeam/szudesktop/pull/38#issuecomment-5942332550)。此前失败继续保留，不能据此断言原始孤立超时的确切原因已经证明。
+
+以上为合并后源码的新增测试证据。公开 beta0.9.6 仍对应 71.4 的 fd7af781 标签与原有 20 个附件，没有重复发布或更换用户本机运行版；B1–B9、真实校园账号、睡眠恢复、多屏长期使用、macOS 13/14、生产签名与公证仍待完成。2026-10-04 README 收尾核对时，工作树无未提交工程改动；[Dependabot PR #39](https://github.com/SzuDesktopTeam/szudesktop/pull/39) 提议将 Electron 44.4.5 升至 44.5.1，仅修改依赖清单与锁文件，其 [PR CI 37200238292](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/37200238292) 适用检查通过但真实 Intel job 被跳过。本次保留该 PR，升级后的真实 Intel 安装与退出行为尚无通过证据，当前 README 不将其描述为已交付版本。
