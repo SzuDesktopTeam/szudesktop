@@ -1,8 +1,10 @@
 package portal
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -62,5 +64,85 @@ func TestQueryOnlineOutsideAsksNothing(t *testing.T) {
 				t.Errorf("%s 不该发起查询，实际 st=%+v err=%v", zone, st, err)
 			}
 		})
+	}
+}
+
+// TestQueryOnlineReportsConfirmingZone 是 F12：联网时判区只有 online，界面固定写「已联网」。
+// QueryOnline 两套门户都问，谁确认在线就该带回谁的区域；两套都不在线时不能挂在哪一套名下。
+func TestQueryOnlineReportsConfirmingZone(t *testing.T) {
+	portalAt := func(srun, drcom string) string {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/cgi-bin/rad_user_info":
+				_, _ = w.Write([]byte(srun))
+			case "/eportal/portal/rad_user_info":
+				_, _ = w.Write([]byte(drcom))
+			default:
+				http.NotFound(w, r)
+			}
+		}))
+		t.Cleanup(srv.Close)
+		return srv.URL
+	}
+	for _, tc := range []struct {
+		name, srun, drcom string
+		zone              Zone // 查询时的判区
+		online            bool
+		confirmed, shown  Zone
+	}{
+		{"联网时深澜确认在线", `_({"error":"ok"})`, `dr1003({"result":0})`, ZoneOnline, true, ZoneTeaching, ZoneTeaching},
+		{"联网时宿舍区确认在线", `_({"error":"not_online_error"})`, `dr1003({"result":1})`, ZoneOnline, true, ZoneDorm, ZoneDorm},
+		{"联网时两套都不在线", `_({"error":"not_online_error"})`, `dr1003({"result":0})`, ZoneOnline, false, "", ZoneOnline},
+		{"教学区不在线", `_({"error":"not_online_error"})`, "", ZoneTeaching, false, "", ZoneTeaching},
+		{"宿舍区在线", "", `dr1003({"result":1})`, ZoneDorm, true, ZoneDorm, ZoneDorm},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			host := portalAt(tc.srun, tc.drcom)
+			st, err := QueryOnline(tc.zone, host, host, "", "")
+			if err != nil || st == nil || st.Online != tc.online {
+				t.Fatalf("查询结果不对：st=%+v err=%v", st, err)
+			}
+			if got := st.ConfirmedZone(); got != tc.confirmed {
+				t.Fatalf("确认在线的区域是 %q，期望 %q（%+v）", got, tc.confirmed, st)
+			}
+			if got := DisplayZone(tc.zone, st); got != tc.shown {
+				t.Fatalf("显示的区域是 %q，期望 %q", got, tc.shown)
+			}
+		})
+	}
+	if got := DisplayZone(ZoneOnline, nil); got != ZoneOnline {
+		t.Fatalf("没查到时照旧显示判区，实际 %q", got)
+	}
+}
+
+// TestNoCampusPortalNeedsWorkingInternetAndQueryError 锁住「校外属正常」的判据：
+// 只有外网正常、判区是 online、门户又查不到才算；判定在教学区或宿舍区时查不到是真问题。
+func TestNoCampusPortalNeedsWorkingInternetAndQueryError(t *testing.T) {
+	queryErr := errors.New("portal unreachable")
+	online := &DetectResult{Zone: ZoneOnline, InternetOK: true}
+	if !NoCampusPortal(ZoneOnline, online, queryErr) {
+		t.Fatal("外网正常、门户查不到应算作不在校园网")
+	}
+	for _, tc := range []struct {
+		name string
+		zone Zone
+		det  *DetectResult
+		err  error
+	}{
+		{"门户查到了", ZoneOnline, online, nil},
+		{"判定在教学区", ZoneTeaching, online, queryErr},
+		{"外网不通", ZoneOnline, &DetectResult{Zone: ZoneOnline}, queryErr},
+		{"没有探测结果", ZoneOnline, nil, queryErr},
+	} {
+		if NoCampusPortal(tc.zone, tc.det, tc.err) {
+			t.Errorf("%s 不该算作不在校园网", tc.name)
+		}
+	}
+	plain := NoCampusPortalNote(online)
+	if plain != "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）" || strings.Contains(NoCampusPortalNote(nil), ProxyTakeoverHint) {
+		t.Fatalf("中性说明不对：%q", plain)
+	}
+	if got := NoCampusPortalNote(&DetectResult{InternetOK: true, SrunDNSFakeIP: true}); got != plain+"。人在校内的话："+ProxyTakeoverHint {
+		t.Fatalf("学校域名被 Fake-IP 接管时要带上代理提示：%q", got)
 	}
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import {createFeedbackUI,environmentSummary} from './assets/garden/feedback.mjs';
+import {existsSync,readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {createFeedbackUI,environmentSummary,FEEDBACK_URL} from './assets/garden/feedback.mjs';
 import {createServiceLog,diagnosticReport,scrubAdvice,SCHOOL_SERVICES} from './assets/garden/diagnostic-report.mjs';
 const version=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 globalThis.document={getElementById:()=>null};
@@ -33,7 +34,17 @@ console.log('PASS environment allowlist, explicit copy and clipboard fallback');
   '在线成绩（本科）：2xx · level:string label:string items:array fetched:number total:number full:boolean · items 2 条，字段 name 2/2 term 1/2 credit 2/2 score 2/2 gpa 1/2 category 0/2 identity 2/2',
   '学校公告：2xx · source:string items:array fetched_at:string stale:boolean · items 1 条，字段 title 1/1 url 1/1 date 1/1','本科课表：4xx','我的琴房预约：无响应','官方校历：本次打开后未请求'])assert.ok(report.includes(line),'诊断报告缺少：'+line+'\n'+report);
  assert.ok(report.startsWith('szuDesktop 诊断报告')&&report.includes(summary),'报告带上环境信息');
- assert.match(report,/学校域名解析到 198\.18\.0\.0\/15：这一版诊断接口没有单独提供/);assert.match(report,/系统代理开关：诊断接口暂未提供/);
+ assert.match(report,/学校域名解析到 198\.18\.0\.0\/15：这一版诊断接口没有单独提供/);
+ // 系统代理开关来自 /api/diag 的 system_proxy：只报两个开关；缺这一项或类型不对时报「读不到」，不能报成「关」。
+ assert.match(report,/系统代理开关：读不到（或这一版诊断接口没有提供）/);
+ const proxied=diagnosticReport({diag:{...diag,system_proxy:{manual:true,pac:false,server:'10.1.2.3:7890'}}});
+ assert.match(proxied,/系统代理开关：手动代理 开 · 自动配置脚本（PAC） 关/);assert.ok(!proxied.includes('7890')&&!proxied.includes('10.1.2.3'),'代理地址不能进报告');
+ assert.match(diagnosticReport({diag:{...diag,system_proxy:{manual:false,pac:true}}}),/系统代理开关：手动代理 关 · 自动配置脚本（PAC） 开/);
+ assert.match(diagnosticReport({diag:{...diag,system_proxy:{manual:'1'}}}),/系统代理开关：读不到/);
+ // F12：门户确认在线时 /api/status 带 online_zone，判区仍是 online；报告单列一行，没有这一项时不猜。
+ assert.match(report,/确认在线的区域：没有（门户没有确认在线，或这一版接口没有这一项）/);
+ for(const [code,label] of [['teaching','教学区（teaching）'],['dorm','宿舍区（dorm）']])assert.ok(diagnosticReport({status:{...status,online_known:true,online:true,online_state:'online',online_zone:code}}).includes('确认在线的区域：'+label));
+ assert.match(diagnosticReport({status:{...status,online_zone:'online'}}),/确认在线的区域：没有/);
  assert.match(diagnosticReport({diag:{...diag,dns_fake_ip:true}}),/学校域名解析到 198\.18\.0\.0\/15：是/);assert.match(diagnosticReport({diag:{...diag,dns_fake_ip:false}}),/学校域名解析到 198\.18\.0\.0\/15：否/);
  assert.match(diagnosticReport({status:{...status,zone:'teaching',internet_ok:false,online_state:'unconfirmed'}}),/校园认证：未查明（查询出错）/);
  assert.match(diagnosticReport({environment:summary}),/本次打开后还没有运行网络诊断/);
@@ -60,4 +71,23 @@ console.log('PASS environment allowlist, explicit copy and clipboard fallback');
  await offline.click('feedback-report');assert.match(nodes.panel.outerHTML,/请选中上方报告手动复制/);assert.match(nodes.panel.outerHTML,/<details class="feedback-report" open>/);
  globalThis.document={getElementById:()=>null};
  console.log('PASS diagnostic report is structure-only, previewed before copying and never uploaded');
+}
+
+// B10：反馈入口只打开使用指南里的反馈说明页，渠道换了只改文档、不用重新发版。地址只在 feedback.mjs 写一次，
+// 页脚的「问题与建议」由 app.mjs 按同一个常量填上；页面里不再写死 GitHub Issues 的地址。
+{
+ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
+ const html=read('./index.html'),app=read('./assets/garden/app.mjs'),own=read('./assets/garden/feedback.mjs');
+ assert.equal(FEEDBACK_URL,'https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md');
+ assert.ok(existsSync(new URL('../docs/guide/feedback.md',import.meta.url)),'反馈说明页 docs/guide/feedback.md 不在仓库里，按钮会打开 404');
+ const card=createFeedbackUI({getVersion:()=>version,getMode:()=>'electron',toast(){},clipboard:null}).card();
+ assert.ok(card.includes(`<a class="button quiet" href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer">提交反馈 ↗</a>`),'「提交反馈」打开反馈说明页');
+ assert.doesNotMatch(card,/GitHub 账号/,'反馈渠道写在说明页里，卡片不再预设只有 GitHub');
+ assert.match(html,/<a data-feedback-link target="_blank" rel="noopener noreferrer">问题与建议 ↗<\/a>/,'页脚链接不自带地址');
+ const wiring=/^document\.querySelectorAll\('\[data-feedback-link\]'\)[^\n]*$/m.exec(app)?.[0];assert.ok(wiring,'app.mjs 没有给页脚填反馈地址');
+ const links=[{href:''}];vm.runInNewContext(wiring,{FEEDBACK_URL,document:{querySelectorAll:selector=>selector==='[data-feedback-link]'?links:[]}});
+ assert.equal(links[0].href,FEEDBACK_URL);
+ for(const [name,text] of [['index.html',html],['app.mjs',app],['feedback.mjs',own]])assert.doesNotMatch(text,/szudesktop\/issues/,name+' 又写死了 GitHub Issues 地址，换渠道就得重新发版');
+ assert.equal(own.split(FEEDBACK_URL).length,2,'反馈地址只写一次');
+ console.log('PASS feedback entry points open one guide page defined once');
 }

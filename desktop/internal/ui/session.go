@@ -161,7 +161,7 @@ func (s *Server) makeEhallClient(cookie string) *ehallClient {
 }
 func writeSessionLoadError(w http.ResponseWriter, err error) {
 	if errors.Is(err, credential.ErrSessionNotFound) {
-		writeAPIError(w, 409, errors.New("还没有学校系统登录状态，请在学习工具中保存"))
+		writeAPIError(w, 409, errors.New("还没有学校系统登录状态，请在学习书屋中保存"))
 		return
 	}
 	writeAPIError(w, 503, err)

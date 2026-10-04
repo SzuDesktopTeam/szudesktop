@@ -8,6 +8,7 @@ add_resource.py 手写资源目录和 VS_VERSIONINFO。以前根目录里类型�
 VerQueryValueW 读一遍，那就是资源管理器用的同一个解析器。整机上的最终结果由
 smoke_windows.py 用 GetFileVersionInfoW / ExtractIconExW 核对。
 """
+import re
 import struct
 import sys
 from pathlib import Path
@@ -73,8 +74,15 @@ def test_fixed_versions():
 
 
 def test_version_numbers():
-    major, minor, patch = VERSION.removeprefix("beta").split(".")
-    assert add_resource.version_numbers(VERSION) == (int(major), int(minor), int(patch), 0)
+    # 测试版 beta0.9.7、正式版 v1.0.0（CHANGELOG.md「格式约定」）。以前这里只去掉 beta 前缀，
+    # VERSION 一改成 v1.0.0，int("v1") 就让发版 PR 的检查变红。
+    parsed = re.fullmatch(r"(?:beta|v)(\d+)\.(\d+)\.(\d+)", VERSION)
+    assert parsed, "VERSION（%s）应是 beta 或 v 前缀加三段数字" % VERSION
+    assert add_resource.version_numbers(VERSION) == tuple(map(int, parsed.groups())) + (0,)
+    fixed, strings = add_resource.parse_version_info(add_resource.version_info("v1.0.0", "szudesktop"))
+    assert fixed["file_version"] == fixed["product_version"] == (1, 0, 0, 0), fixed
+    assert strings["FileVersion"] == strings["ProductVersion"] == "v1.0.0", strings
+    assert add_resource.version_numbers("beta0.9.7") == (0, 9, 7, 0)
     assert add_resource.version_numbers("beta0.1") == (0, 1, 0, 0)
     assert add_resource.version_numbers("0.1.0-beta.1") == (0, 1, 0, 1)
     assert add_resource.version_numbers("v1.2.3.4.5") == (1, 2, 3, 4)
@@ -181,7 +189,7 @@ def test_windows_api_reads_fields():
 
 check("根节点 wValueLength=52，VS_FIXEDFILEINFO 带签名且 4 字节对齐", test_root_header)
 check("固定版本号与文件类型", test_fixed_versions)
-check("版本标签换算成四段数字", test_version_numbers)
+check("测试版（beta）与正式版（v）标签都换算成四段数字", test_version_numbers)
 check("字符串表能按规范读回全部字段", test_strings_round_trip)
 check("文本值长度按 WCHAR 计并含结尾 0", test_string_value_length_counts_wchars)
 check("资源目录各层 ID 唯一升序，叶子经数据项指向对应数据", test_resource_tree_is_searchable)

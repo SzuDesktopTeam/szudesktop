@@ -71,11 +71,11 @@ macOS 的开发模式与打包见[macOS 桌面版](#macos-桌面版)。
 | 伙伴的三项数值 | 饱食、精力、心情 | 饱腹、饱食度 |
 | 页脚的两个入口 | 欢迎引导（应用内的引导框）、使用指南 ↗（`docs/guide/`） | 用「使用指南」指引导框 |
 | 首页的笔记卡片 | 我的课程笔记 | 我的课程手帐、课程手帐 |
-| 学校个人业务的未验收标记 | 暂时保持「接入测试 · 未经真实验收」；以后改措辞，必须保留「没用真实账号验收过」的意思 | — |
+| 学校个人业务的未验收标记 | 还没用真实账号验收过（`labels.mjs` 的 `unverifiedBadge()`，各页共用）；以后改措辞，必须保留「没用真实账号验收过」的意思 | 接入测试 · 未经真实验收、接入测试 · 待账号验收 |
 
 - 首页风景里的「去书屋写笔记」「看看告示板」「去后院转转」是场景文案，不当页名用。
 - `check-workspace-ui.mjs` 扫描 `desktop/assets/garden/` 的页面源码和 `index.html`（整行注释、HTML 注释和伙伴台词 `pet-dialogue.mjs` 除外），表里「不再用」的名字一出现就失败；往表里加旧名时，同步加进那项检查的名单。
-- Electron 外壳（`desktop/electron/` 的托盘、伙伴菜单和通知）还写着「宠物」「饱腹」「学习工具」，改名排在 [STATUS 1.1 节](docs/STATUS.md#s1-1)「术语统一的剩余部分」；改完之前，文档里描述这些菜单时照界面实际显示的字写。
+- Electron 外壳（`desktop/electron/` 的托盘、伙伴菜单、通知和伙伴窗标题）已统一成「伙伴」「伙伴大小」「饱食」「学习书屋」。`check-workspace-ui.mjs` 同样扫描 `desktop/electron/*.mjs` 和 `pet.html` 的界面字符串（`check-*`、`smoke-*`、`build*` 脚本和代码注释除外），代码里的变量名、注释仍可沿用「宠物窗」这类内部叫法。
 - 界面文字不小于 12px，`check-ui.mjs` 静态扫描 CSS 守着；唯一的例外是 2048 棋盘上五位以上的数字，靠 `clamp` 缩放才放得进格子。
 
 ## 提交前请跑
@@ -383,6 +383,11 @@ node desktop/electron/check-pet-view.mjs
 
 - 版本号只有一个来源：`internal/version/VERSION`。发版时改这个文件，
   构建脚本、打包脚本、页面顶栏与关于页都会跟着走。
+- **版本号、CHANGELOG 标题和标签三者完全一致**：正式版写 `v1.0.0`（`v` 前缀加三段数字），测试版写 `beta0.9.7`。
+  Release 是否标为预发布不用手动选，`release.yml` 按标签前缀决定（`beta` 是预发布，`v` 是正式版）；设置页「检查更新」
+  也按前缀选默认渠道，正式版默认「仅正式版」。两段式的 `v1.0` 和不带前缀的 `1.0.0` 都不支持：后者打成标签根本不会触发发布，
+  前者在发布前置检查第一步就失败。`check_release_notes.py` 按 GitHub 的规则核对 `release.yml` 的标签触发、`release` 的 `if`
+  和 `prerelease` 与这条约定一致，`check_version_resource.py` 与 `check-release-ui.mjs` 对 `beta` 和 `v` 两种前缀都能通过。
 - **发布说明只有一个来源：根目录的 `CHANGELOG.md`。** 升版本号的同时，
   把 `## 未发布` 那一节的标题改成新版本号并补齐内容。说明写给用户看：
   说清「相对上一版有什么变化」和「哪些还没验证」，不要只写内部编号。
@@ -397,6 +402,9 @@ node desktop/electron/check-pet-view.mjs
   - 这道关卡是有来历的：beta0.7 发出去时正文只有一行自动生成的 compare 链接。
     早期直接提交到 main、没有 PR，GitHub 的 `generate_release_notes`
     拿不到任何可分类的内容，所以说明必须自己写。
+  - 正文后面的下载清单由 `release_notes.py` 按版本号生成，写给同学看：第一行说清「Windows 下载 Setup 安装包，Mac 按芯片选 DMG」，
+    清单后依次是 Windows 的系统要求与放行说明（浏览器里选「保留」、SmartScreen 点「更多信息 → 仍要运行」）、macOS 的放行说明和
+    预览版说明。CHANGELOG 正文不用重复这些，也不要写「Electron」这类同学看不懂的词。
 - `.github/workflows/release.yml` 在 PR、推到 main、打 `beta*` / `v*` 标签时都会运行，
   同一分支连推时自动取消旧的运行（标签发布不取消）。它不是一条直链：
   - `test`（ubuntu）与 `test-macos`（macOS 真机：同步资源 + `run-checks.mjs` + `go vet` + `go test ./...` 与 campusvpn
@@ -440,6 +448,9 @@ node desktop/electron/check-pet-view.mjs
   先确认有一次 main 推送运行或手动触发运行全部通过、而且这个 job 真正运行并通过（不是被跳过），再在这次运行的同一提交上打标签。
   否则标签构建就是它在这份代码上的第一次运行，它一失败，整次发布连同 Windows 版都发不出去：偶发失败可以重跑失败的 job，
   要改代码就只能删掉标签、在修好的提交上重打。任何 job 失败都先修好或查明是偶发，不要为了发布去掉 `needs` 或加 `continue-on-error`。
+- **升级 Electron 的 PR 合并前**（包括 Dependabot 提的），先在 PR 的分支上手动触发一次完整 CI：
+  `gh workflow run release.yml --ref <PR 的分支名>`（workflow_dispatch），确认 `smoke-desktop-electron-macos-intel` 真正运行并通过。
+  这个 job 在 PR 上会被跳过，Electron 只在真 Intel 上出的问题要等合入 main 才第一次暴露，那时它已经挡在下一次发布前面了。
 - **`test-macos` 会阻断发布**——它在 `release.needs` 里。它曾经带 `continue-on-error`，
   把真实的失败显示成 success，于是 beta0.7.1 / beta0.7.2 带着「macOS 上存不了凭据」
   发了出去（F26）；修好之后那个开关就被摘掉了，原委见 `docs/STATUS.md` 第 39.4 节。
@@ -468,13 +479,30 @@ node desktop/electron/check-pet-view.mjs
   （跨版本升级与数据恢复），2026-09-29 起它是发版流程的固定一步，不再单列为开放任务（[STATUS 第 69.2 节](docs/STATUS.md#s69-2)）。
   CI 先按 `BASELINE_SHA256` 从 `actions/cache` 取基线安装包，缓存没有或哈希不对时才从发布页下载一次、核对后存进缓存，
   免得每次运行都把发布页的下载数抬高；挪了基线，缓存键跟着变，不用手动清缓存。`check_release_notes.py` 核对这几步的先后顺序。
-- **分支保护**：`main` 的必需检查要从只有 `test` 扩展到每个 PR 都会跑的 job：`test`、`test-macos`、`build-cli`、
+- **分支保护**：`main` 的必需检查是每个 PR 都会跑的 7 个 job：`test`、`test-macos`、`build-cli`、
   `build-desktop-windows`、`build-desktop-electron-windows`、`build-desktop-macos`、`build-desktop-electron-macos`
-  （2026-09-29 定下，由维护者在仓库设置里改，进度见 [STATUS 1.1 节](docs/STATUS.md#s1-1)）。以后新增在 PR 上运行的 job，
+  （2026-09-29 定下，2026-10-05 已在仓库设置里改好，见 [STATUS 第 73.7 节](docs/STATUS.md#s73-7)）。以后新增在 PR 上运行的 job，
   也同步加进必需检查。`smoke-desktop-electron-macos-intel` 和 `release` 不在 PR 上运行，不设为必需。
-  协作者都是管理员，没开 enforce_admins 时管理员仍能绕过，要不要开由负责人决定。
-- **1.0 门槛**（维护者 2026-09-29 决定）：R01、R10 和首轮试用达到基本标准；R02–R07 带「测试中」随 1.0 发布，
-  R10 的完成标准含「附本次候选包的资源基线」。细节见 [STATUS 第 69.2 节](docs/STATUS.md#s69-2)。
+  协作者都是管理员，没开 enforce_admins 时管理员仍能绕过；要不要开、不负责发版的人是否降为 write，
+  并入 [STATUS 1.1 节](docs/STATUS.md#s1-1)「账号与发布安全的剩余几项」，由负责人决定。
+- **1.0 门槛**（维护者 2026-09-29 决定，2026-10-05 细化）：R01a（教学区校园网）、R10 和首轮试用达到基本标准；
+  R01b（宿舍区、教工区 Dr.COM）与 R02–R07 带「测试中」随 1.0 发布，1.0 后验收。R10 的完成标准含「附本次候选包的资源基线」。
+  首轮试用以 5 位同学里至少 4 位不靠指导走完「装好 → 选伙伴 → 写小事或开专注 → 关主窗口 → 找回」为准，没走完的卡点修好后由维护者复测。
+  macOS 以预览版随 1.0 发布，1.0 前只要求 B1（真人在新建的 macOS 用户里用浏览器下载并放行）和 B9（随 R01a 现场顺带），
+  其余 B 项转到 1.0 后。细节见 [STATUS 第 69.2 节](docs/STATUS.md#s69-2)。
+- **v1.0.0 发版清单**。beta0.9.7 是首轮试用构建，也按这份清单彩排一次，只是标签用 `beta` 前缀、Release 自动标为预发布。
+  1. 上一条的 1.0 门槛都已达到；这期间合入的 Electron 升级都按上面的要求在合并前跑过真 Intel。
+  2. 发版 PR：`internal/version/VERSION` 改成 `v1.0.0`，CHANGELOG 把 `## 未发布` 改成 `## v1.0.0` 并写给同学看。
+     确认 Windows（`smoke_installer.py`）与 Mac（`mac_upgrade.py`，连同 `release.yml` 里写着基线版本号的步骤名）的升级基线已是上一公开版
+     （届时应是 beta0.9.7），没挪的话在这个 PR 里挪，哈希取发布页上的附件，基线不能与候选版相同。
+     本地先跑 `python desktop/release_notes.py v1.0.0 --release` 预检。README 的下载直链这时仍指向上一公开版。
+  3. 发版 PR squash 合并后，等 main 上这次提交的运行全部通过，并确认 `smoke-desktop-electron-macos-intel` 真正运行并通过（不是被跳过），
+     再在这个提交上打标签：`git tag v1.0.0 <这次提交>`、`git push origin v1.0.0`。不用手动选预发布：`release.yml` 按 `v` 前缀
+     发成正式版，GitHub 会把它标为 Latest，设置页「仅正式版」渠道从这时起才有结果。
+  4. 发布后按上面「发布后要核对附件」逐项复核：10 个程序及各自的 `.sha256`（共 20 个附件）、Release 没有标成 Pre-release、
+     正文是 `## v1.0.0` 那一节；结果写进 STATUS。
+  5. 复核通过后，再开一个文档 PR 把 README（含英文版）的下载直链切到 `v1.0.0`，同时改掉指南里「目前的版本都是测试版」这类说法。
+     附件没复核完就切直链，同学可能点到还没核对过的包。
 
 ## 验收与设计记录
 
@@ -492,6 +520,7 @@ node desktop/electron/check-pet-view.mjs
 | [67](docs/STATUS.md#s67) | 第二轮发布审查：性质测试、修复与发布附件 |
 | [68](docs/STATUS.md#s68)、[68.2](docs/STATUS.md#s68-2) | macOS 桌面版：实现取舍、自动验收覆盖与 B1–B9 真机验收清单 |
 | [69](docs/STATUS.md#s69)、[69.4](docs/STATUS.md#s69-4)、[69.5](docs/STATUS.md#s69-5) | 优化评估落地、1.0 门槛、1.1 整理依据、R01 教学区验收清单与试用自查清单 |
+| [73](docs/STATUS.md#s73)、[73.2](docs/STATUS.md#s73-2)、[73.5](docs/STATUS.md#s73-5) | 1.0 就绪度评估：维护者采纳的决定、R01a／R01b 拆分、beta0.9.7 计划与到 1.0 的顺序 |
 
 Electron 外壳加 Go sidecar 的由来见[迁移设计](docs/superpowers/specs/2026-09-24-electron-migration-design.md)和
 [阶段 0–1 实施计划](docs/superpowers/plans/2026-09-24-electron-phase-0-1-shell.md)。它们是历史设计记录：

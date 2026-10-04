@@ -68,6 +68,18 @@ func TestSessionStatusNeverEchoesTheCookie(t *testing.T) {
 	}
 }
 
+func TestSessionMissingMessageUsesCurrentPageName(t *testing.T) {
+	// 页面会原样显示这句报错，名字要跟导航一致：「学习工具」已按术语表改叫「学习书屋」。
+	rec := httptest.NewRecorder()
+	writeSessionLoadError(rec, credential.ErrSessionNotFound)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	if body := rec.Body.String(); !strings.Contains(body, "请在学习书屋中保存") || strings.Contains(body, "学习工具") {
+		t.Fatalf("没有会话时的提示没用现名：%s", body)
+	}
+}
+
 func TestSessionSaveAcceptsBrowserCopyPasteForms(t *testing.T) {
 	// 用户从浏览器复制时形态各异，这些都是真实会遇到的样子，都得认。
 	cases := []struct {

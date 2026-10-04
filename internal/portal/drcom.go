@@ -147,6 +147,7 @@ func (c *DrcomClient) Status() (*OnlineStatus, error) {
 		Online:   result == "1",
 		Username: resp.UserName,
 		IP:       resp.OnlineIP,
+		Zone:     ZoneDorm,
 		Raw:      truncate(string(body), 300),
 	}, nil
 }

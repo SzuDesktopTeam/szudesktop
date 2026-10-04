@@ -1,4 +1,4 @@
-# 新建 issue 时的选择页（应用里的「提交反馈」也打开这一页）：安全问题走私有报告，使用问题先看指南。
+# 新建 issue 时的选择页（应用里的「提交反馈」打开 docs/guide/feedback.md，那一页再链到这里）：安全问题走私有报告，使用问题先看指南。
 # 空白 issue 保持原来的可用状态。
 blank_issues_enabled: true
 contact_links:

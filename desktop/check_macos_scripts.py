@@ -11,7 +11,10 @@ build-macos.py、smoke_macos.py、electron/smoke_dmg.py 只在 macOS 上真跑�
 
 新增检查按 desktop/check_*.py 命名，desktop/run-checks.mjs 会自动发现并运行。
 """
+import contextlib
 import importlib.util
+import io
+import json
 import os
 from pathlib import Path
 import re
@@ -140,6 +143,26 @@ def test_dmg_pure_rules():
     assert token not in text and "<redacted>" in text and other in text and "e" * 65 in text, text
 
 
+def test_dmg_resource_baseline():
+    """资源基线只记录、不设门槛：写出了、两个时点都采到了就过，数值多大都不拦；没写出或不完整才失败。"""
+    dmg = load("smoke_dmg_baseline_under_check", SMOKE_DMG)
+    with tempfile.TemporaryDirectory(prefix="szu-check-macos-") as tmp:
+        path = Path(tmp) / "resource-baseline.json"
+        heavy = {"cpuPercent": 250.0, "workingSetMB": 9000.0, "engineRssMB": None}
+        path.write_text(json.dumps({"complete": True, "summary": {"hidden60s": heavy, "afterPat60s": heavy}}), encoding="utf-8")
+        report = {"resourceBaseline": {"file": path.name, "complete": True, "errors": ["引擎内存：ps exited 1"]}}
+        # 截住输出：这里的 ::warning:: 是测试数据，不能在 CI 上变成真的警告注解。
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            assert dmg.resource_baseline("reopen", report, path)["summary"]["afterPat60s"] == heavy
+            for broken, target in (({"resourceBaseline": {"complete": False}}, path), ({}, path), (report, Path(tmp) / "missing.json")):
+                try:
+                    dmg.resource_baseline("reopen", broken, target)
+                except AssertionError:
+                    continue
+                raise AssertionError("不完整或没写出的资源基线也通过了：%r" % (broken,))
+        assert '"cpuPercent": 250.0' in out.getvalue() and "::warning::resource baseline: 引擎内存：ps exited 1" in out.getvalue(), out.getvalue()
+
+
 def test_upgrade_copy_target():
     dmg = load("smoke_dmg_copy_under_check", SMOKE_DMG)
     with tempfile.TemporaryDirectory(prefix="szu-check-macos-") as tmp:
@@ -176,6 +199,7 @@ if POSIX:
     check("smoke_dmg.py: upgrade reuses parent but refuses an existing app", test_upgrade_copy_target)
     check("smoke scripts: keychain suffix equals the Go known answer (no symlink resolution)", test_keychain_suffix_matches_go)
     check("smoke_dmg.py: quit trace as a subsequence, volume whitelist, token redaction", test_dmg_pure_rules)
+    check("smoke_dmg.py: resource baseline must be written and complete, values are never gated", test_dmg_resource_baseline)
     check("smoke scripts: refuse to run on a non-runner host without --local", test_smoke_scripts_refuse_without_local)
 else:
     print("SKIP 冒烟脚本的钥匙串规则、轨迹与白名单按 POSIX 路径写，只在 macOS 与 Linux 上核对")

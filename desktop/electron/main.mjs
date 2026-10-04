@@ -25,7 +25,8 @@ const paths=appPaths({isPackaged:app.isPackaged,resourcesPath:process.resourcesP
 // 菜单与主界面共用同一份庭院规则，包含离线成长；打包时直接复制源模块。
 const gardenEngine=import(pathToFileURL(paths.gardenEngine).href);
 // Installation smoke runs use their own profile and Go state, never the user's account.
-const smoke=createSmokeRecorder(smokeMode(process.env));
+// app 的 ready 只能在它发生之前挂监听，smoke-report.mjs 又不能 import electron，所以由这里交给它记启动时刻。
+const smoke=createSmokeRecorder({...smokeMode(process.env),onReady:callback=>app.once('ready',callback)});
 if(smoke.enabled) app.setPath('userData',smoke.profile);
 const userData=()=>app.getPath('userData');
 // 平台相关的行为一律由这里显式传 process.platform，各模块缺省时与 Windows 的行为一致。
@@ -54,7 +55,7 @@ const loadWorkspace=workspaceLoader(()=>handle);
 // macOS 上通知没授权或发不出去时，换成宠物气泡加程序坞弹跳；Windows 不接，toast 失败时与原来一样什么也不多做。
 const focus=createFocusReminders({Notification,loadWorkspace,readSettings:preferences.current,saveSettings:preferences.save,
   isSupported:()=>!smoke.enabled&&Notification.isSupported(),icon:paths.notificationIcon,onClick:()=>mainWindow.command('study'),
-  onFailed:process.platform==='darwin'?()=>{pet.say('这一段专注完成了，回到学习工具领取奖励吧');app.dock?.bounce('informational');}:undefined});
+  onFailed:process.platform==='darwin'?()=>{pet.say('这一段专注完成了，回到学习书屋领取奖励吧');app.dock?.bounce('informational');}:undefined});
 const pet=createPetController({BrowserWindow,Menu,screen,dialog,platform:process.platform,html:paths.petHtml,preload:paths.petPreload,
   smoke,petShot:process.env.SZU_PET_SHOT,gardenEngine,loadWorkspace,readPreferences:preferences.current,changeSettings:preferences.change,
   saveSettings:(scale,position)=>writePetSettings(userData(),scale,position),isQuitting:quit.isQuitting,

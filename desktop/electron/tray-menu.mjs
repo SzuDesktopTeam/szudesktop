@@ -1,4 +1,4 @@
-// 系统托盘与它的菜单：显示/隐藏宠物、置顶、大小、勿扰、打开主窗口和退出。
+// 系统托盘与它的菜单：显示/隐藏伙伴、置顶、大小、勿扰、打开主窗口和退出。
 // 勾选状态每次都按当前设置重建；Tray、Menu 由 main.mjs 注入。
 import {existsSync} from 'node:fs';
 
@@ -11,9 +11,9 @@ export function createTrayMenu({Tray,Menu,icon,readPreferences,petVisible,petSiz
     if(!tray)return;
     const visible=petVisible();
     const items=[
-      {label:visible?'隐藏宠物':'显示宠物',click:()=>changeSettings({petVisible:!visible})},
-      {label:'宠物置顶',type:'checkbox',checked:readPreferences().petAlwaysOnTop,click:()=>changeSettings({petAlwaysOnTop:!readPreferences().petAlwaysOnTop})},
-      {label:'宠物大小',submenu:petSizeMenu()},
+      {label:visible?'隐藏伙伴':'显示伙伴',click:()=>changeSettings({petVisible:!visible})},
+      {label:'伙伴置顶',type:'checkbox',checked:readPreferences().petAlwaysOnTop,click:()=>changeSettings({petAlwaysOnTop:!readPreferences().petAlwaysOnTop})},
+      {label:'伙伴大小',submenu:petSizeMenu()},
       {label:'勿扰（暂停专注提醒）',type:'checkbox',checked:readPreferences().doNotDisturb,click:()=>changeSettings({doNotDisturb:!readPreferences().doNotDisturb})},
       {label:'打开主窗口',click:()=>showMainWindow()},
     ];

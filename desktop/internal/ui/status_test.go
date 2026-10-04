@@ -75,8 +75,15 @@ func TestStatusSeparatesSavedCredentialsFromPortalState(t *testing.T) {
 			if errors.Is(tc.storeErr, credential.ErrNotFound) && got.LastError != "" {
 				t.Errorf("not saving credentials is not an error: %s", got.LastError)
 			}
-			if got.Username != "" || got.OnlineIP != "" {
-				t.Error("status revealed account or IP")
+			// online_ip、username 从未赋值，已从接口删掉；账号和设备 IP 一律不回传给页面。
+			var raw map[string]any
+			if err := json.Unmarshal(rec.Body.Bytes(), &raw); err != nil {
+				t.Fatal(err)
+			}
+			for _, key := range []string{"online_ip", "username"} {
+				if _, ok := raw[key]; ok {
+					t.Errorf("status still carries %s: %s", key, rec.Body.String())
+				}
 			}
 			for _, private := range []string{"private-test-account", "test-password", "10.20.30.41", "private-store-detail", srv.URL} {
 				if strings.Contains(rec.Body.String(), private) {

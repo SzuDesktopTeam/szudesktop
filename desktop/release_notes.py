@@ -1,11 +1,11 @@
 """从 CHANGELOG.md 抽取某个版本的发布说明。
 
 用法:
-    python desktop/release_notes.py beta0.8                        # 打印到标准输出（本地预览）
-    python desktop/release_notes.py beta0.8 --release -o notes.md  # 发布模式（CI 按 tag 调用）
+    python desktop/release_notes.py beta0.9.7                        # 打印到标准输出（本地预览）
+    python desktop/release_notes.py v1.0.0 --release -o notes.md     # 发布模式（CI 按 tag 调用）
 
-CHANGELOG.md 是 GitHub Release 正文的唯一来源。抽不到、正文是空的、
-或者正文里还留着占位符，都以非零退出码失败——CI 的 release job 会在上传
+CHANGELOG.md 是 GitHub Release 正文的唯一来源。抽不到、正文是空的、正文里还留着占位符，
+或者版本号不是 beta / v 前缀加三段数字，都以非零退出码失败——CI 的 release job 会在上传
 附件之前停下来。beta0.7 那次发布说明只有一行 compare 链接，就是因为
 当时没有任何关卡拦着。
 
@@ -29,16 +29,35 @@ CANDIDATE_PREFIX = "> 候选版"
 # 发布模式下正文里不许再出现的候选版字样。
 CANDIDATE_MARKERS = ("尚未公开发布", "本地候选版")
 
+# 版本号约定（CHANGELOG.md「格式约定」）：VERSION、CHANGELOG 标题和标签三者一致，正式版 v1.0.0、测试版 beta0.9.7。
+# release.yml 只认 v* / beta* 标签，prerelease 按 beta 前缀决定；check_release_notes.py 核对 release.yml 与这里一致。
+# 以前前缀可有可无、两段式匹配不上也不报错：写成 v1.0 时下载清单会悄悄漏掉安装包和 DMG。
+VERSION_PATTERN = r"(beta|v)(\d+)\.(\d+)\.(\d+)"
+# beta0.8.0 之前有过两段式标签（beta0.7 等），那时还没有安装版；回看这些旧版本时照旧只列便携版和命令行版。
+LEGACY_PATTERN = r"beta0\.[0-7]"
+# 安装版从 beta0.8.0 开始分发。
+INSTALLER_SINCE = (0, 8, 0)
+
 # 附件名与 CI 实际上传的一致（release.yml 的 build-cli + make_release.py）。
-# 按 beta0.7.1 的真实附件列表核对过，别凭印象写。
+# 按 beta0.7.1 的真实附件列表核对过，别凭印象写。说明写给同学看：说清是什么、该不该选，不写内部用的技术名词。
 DOWNLOADS = """### 下载
 
-- `szudesktop-__VERSION__-windows-amd64.zip` — 解压即用，旁边是同名 `.sha256` 校验文件
-- `szudesktop-windows-amd64.exe` — 单文件版，与 ZIP 里的程序逐字节一致__EXE_SUM__
-- 命令行版：`szunet-windows-amd64.exe`、`szunet-darwin-amd64`、`szunet-darwin-arm64`、`szunet-linux-amd64`、`szunet-linux-arm64`__CLI_SUM__
+- `szudesktop-__VERSION__-windows-amd64.zip` — Windows 便携版：不用安装，解压后双击里面的 `szudesktop.exe`；旁边是同名 `.sha256` 校验文件
+- `szudesktop-windows-amd64.exe` — 便携版里的同一个程序，单文件下载__EXE_SUM__
+- 命令行版 `szunet`（只连校园网，在终端里用）：`szunet-windows-amd64.exe`、`szunet-darwin-amd64`、`szunet-darwin-arm64`、`szunet-linux-amd64`、`szunet-linux-arm64`__CLI_SUM__
 """
 
-ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版（Electron 窗口），旁边是同名 `.sha256` 校验文件\n"
+# 下载清单第一行：发布页上平铺着二十个附件，同学只想知道该点哪一个。有 DMG 的版本才提 Mac。
+CHOOSE = "**Windows 下载 Setup 安装包。** 大多数同学只需要这一个文件，其余是便携版、命令行版和校验文件。\n\n"
+CHOOSE_MAC = "**Windows 下载 Setup 安装包，Mac 按芯片选 DMG。** 大多数同学只需要其中一个文件，其余是便携版、命令行版和校验文件。\n\n"
+ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版：自带窗口，不用另装浏览器，大多数同学选这个；旁边是同名 `.sha256` 校验文件\n"
+# 没有签名，浏览器和 SmartScreen 都会拦一下；不写清怎么放行，同学只会以为下错了或中了毒。
+# 系统要求按 Electron 上游的支持范围（Windows 10 及以上）和本项目只出 x64 包核对；Go 引擎同样要求 Windows 10 起。
+WINDOWS_NOTE = (
+    "\nWindows 版需要 Windows 10 或 11（64 位）。安装包和程序没有数字签名，第一次会被拦一下，只放行从本页下载的文件："
+    "浏览器说这个文件不常被下载时，在下载列表里选「保留」（Edge 要先点文件旁的「…」）；"
+    "运行时弹出「Windows 已保护你的电脑」（SmartScreen），点「更多信息」，再点「仍要运行」。\n"
+)
 
 # macOS 版按芯片各一个 DMG（electron-builder.yml 的 dmg.artifactName），各带同名 .sha256。
 # MAC_SINCE 既是 DMG 发布的开关，也是第一个带 DMG 的版本号：这一版及以后的下载清单列出两个 DMG，
@@ -51,20 +70,20 @@ MAC_SINCE = (0, 9, 5)
 # check_release_notes.py 两个方向都核对：有待验收的项却没开、全部通过了还开着，都会失败。
 MAC_PREVIEW = "s68-4"
 MAC_DOWNLOADS = (
-    "- `szuDesktop-__SEMVER__-mac-arm64.dmg` — macOS 版，Apple 芯片（M1 及更新）选这个，旁边是同名 `.sha256` 校验文件\n"
-    "- `szuDesktop-__SEMVER__-mac-x64.dmg` — macOS 版，Intel 处理器选这个，旁边是同名 `.sha256` 校验文件\n"
+    "- `szuDesktop-__SEMVER__-mac-arm64.dmg` — macOS 版，Apple 芯片（M1 及更新，「关于本机」里写着「芯片」）选这个，旁边是同名 `.sha256` 校验文件\n"
+    "- `szuDesktop-__SEMVER__-mac-x64.dmg` — macOS 版，Intel 处理器（「关于本机」里写着「处理器」）选这个，旁边是同名 `.sha256` 校验文件\n"
 )
 # 没有公证，第一次打开会被系统拦下；不写清怎么放行，用户只会以为包坏了。
 MAC_NOTE = "\nmacOS 版未经 Apple 公证，需要 macOS 13 或更高版本；首次打开时到「系统设置 → 隐私与安全性」点「仍要打开」。\n"
 # 预览版说明紧跟在放行步骤之后：哪些还没有人在真机上验过（对应 68.2 的 B1–B9）、遇到问题去哪里说。
 # 这一版的 CHANGELOG 正文会写得更细；这里是下载清单旁的简短提示，之后的版本正文不再重复时也不会漏掉。
-# 反馈目前只有 GitHub Issues；不需要 GitHub 账号的渠道还没定（STATUS 1.1），定了再改这里。
+# 反馈去处指向使用指南里的反馈说明页（与应用里的「提交反馈」同一页）：渠道换了只改那一页，已发布的说明不用跟着改。
 MAC_PREVIEW_NOTE = (
     "\nmacOS 版目前是预览版：已通过自动化的打包、安装和启动检查，但浏览器下载后的首次放行、注销与登录时启动、"
     "系统通知、钥匙串、多显示器、macOS 13 和 14、校园网里的「本地网络」授权等，还没有人在真机上逐项验收"
     "（[进度](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/STATUS.md#s68-2)）。"
-    "遇到问题请在 [GitHub Issues](https://github.com/SzuDesktopTeam/szudesktop/issues/new/choose) 选「问题反馈」"
-    "（需要 GitHub 账号），写明芯片（Apple 芯片或 Intel）和 macOS 版本。\n"
+    "遇到问题请按[反馈说明](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md)告诉我们，"
+    "写明芯片（Apple 芯片或 Intel）和 macOS 版本。\n"
 )
 
 # beta0.9.3 起，单文件 EXE 与每个命令行版也各带同名 .sha256；更早的版本没有，不能虚构。
@@ -73,6 +92,20 @@ ALL_CHECKSUMS_SINCE = (0, 9, 3)
 
 class NotesError(Exception):
     """发布说明不可用。错误信息直接给发版的人看，要写清该改什么。"""
+
+
+def version_parts(version):
+    """按版本号约定拆出三段数字（字符串，安装包和 DMG 的文件名直接用）；beta0.8.0 之前的两段式旧标签返回 None。
+
+    其余写法一律报错：不带前缀的 1.0.0 打成标签不会触发发布，两段式的 v1.0 会让下载清单漏掉安装包和 DMG。"""
+    match = re.fullmatch(VERSION_PATTERN, version)
+    if match:
+        return match.groups()[1:]
+    if re.fullmatch(LEGACY_PATTERN, version):
+        return None
+    raise NotesError(
+        "版本号 %s 不符合约定：正式版写 v1.0.0、测试版写 beta0.9.7（beta 或 v 前缀加三段数字），"
+        "internal/version/VERSION、CHANGELOG.md 的标题和标签三者一致（见 CHANGELOG.md「格式约定」）" % version)
 
 
 def check_release_tag(tag, version=None):
@@ -88,6 +121,8 @@ def check_release_tag(tag, version=None):
         raise NotesError(
             "标签 %s 与 internal/version/VERSION（%s）不一致：先改 VERSION 和 CHANGELOG.md，"
             "再打标签（已推送的错误标签需要删掉重打）" % (tag, version))
+    # 版本号写成 v1.0 这类不合约定的样子时，先说格式，而不是「CHANGELOG 里没有这一节」。
+    version_parts(tag)
 
 
 def extract(text, version, release=False):
@@ -136,26 +171,28 @@ def extract(text, version, release=False):
 
 def render(text, version, release=False):
     """正文 + 下载清单。清单由版本号生成，所以 CHANGELOG 里不要自己写。"""
+    # 先抽正文：「未发布」、缺这一节这类错误比版本号格式更该先说。
+    body = extract(text, version, release)
+    parts = version_parts(version)
+    numbers = tuple(map(int, parts)) if parts else ()
     downloads = DOWNLOADS.replace("__VERSION__", version)
-    match = re.fullmatch(r"(?:beta|v)?(\d+)\.(\d+)\.(\d+)", version)
-    numbers = tuple(map(int, match.groups())) if match else ()
     # 回看旧版本时不能虚构不存在的附件：安装版从 beta0.8.0 开始分发，
     # 单文件 EXE 与命令行版的 .sha256 从 beta0.9.3 开始提供。
     all_sums = numbers >= ALL_CHECKSUMS_SINCE
     downloads = downloads.replace("__EXE_SUM__", "，旁边是同名 `.sha256` 校验文件" if all_sums else "")
     downloads = downloads.replace("__CLI_SUM__", "，各带同名 `.sha256` 校验文件" if all_sums else "")
     mac = MAC_SINCE is not None and numbers >= MAC_SINCE
-    if numbers >= (0, 8, 0):
-        installer = ELECTRON_DOWNLOAD.replace("__SEMVER__", ".".join(match.groups()))
+    if numbers >= INSTALLER_SINCE:
+        semver = ".".join(parts)
+        installer = (CHOOSE_MAC if mac else CHOOSE) + ELECTRON_DOWNLOAD.replace("__SEMVER__", semver)
         # 两个 DMG 紧跟在 Windows 安装包之后：都是带窗口的安装版，按系统挑一个。
         if mac:
-            installer += MAC_DOWNLOADS.replace("__SEMVER__", ".".join(match.groups()))
-        downloads = downloads.replace("### 下载\n\n", "### 下载\n\n" + installer)
+            installer += MAC_DOWNLOADS.replace("__SEMVER__", semver)
+        downloads = downloads.replace("### 下载\n\n", "### 下载\n\n" + installer) + WINDOWS_NOTE
     if mac:
         downloads += MAC_NOTE
         if MAC_PREVIEW:
             downloads += MAC_PREVIEW_NOTE
-    body = extract(text, version, release)
     # 这一版不发 DMG，正文却在介绍 DMG：发布页上会写着不存在的附件，等于把没发布的包说成能下载。
     # 只在打 tag 时拦（test job 第一步就会失败），「未发布」一节平时照常可以先写好 macOS 的条目。
     if release and not mac and ".dmg" in body:

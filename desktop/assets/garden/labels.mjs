@@ -4,6 +4,7 @@
 // 各页各写一句话，措辞就会漂——同一件事有的写「实验功能」、有的写「接入测试」、
 // 有的干脆不写，用户看不出哪些结果能信。项目红线是「不把模拟测试当成真实验收」，
 // 所以措辞固定在这里，改一次全项目一致。
-export const UNVERIFIED_TEXT='接入测试 · 未经真实验收';
+// 原来写「接入测试 · 未经真实验收」，同学看不懂「接入测试」；改成直说，意思不变：没有用真实账号验收过。
+export const UNVERIFIED_TEXT='还没用真实账号验收过';
 
 export const unverifiedBadge=()=>`<span class="badge" data-tone="warning" title="代码已完成，但没有用真实学校账号验收过；结果以学校系统为准">${UNVERIFIED_TEXT}</span>`;

@@ -162,6 +162,7 @@ func (c *SrunClient) Status() (*OnlineStatus, error) {
 		Online:      resp.Error == "ok",
 		Username:    resp.UserName,
 		IP:          resp.OnlineIP,
+		Zone:        ZoneTeaching,
 		DeviceTotal: parseOnlineDeviceCount(resp.OnlineDeviceTotal),
 		Devices:     parseOnlineDevices(resp.OnlineDeviceDetail),
 		Raw:         truncate(string(body), 300),

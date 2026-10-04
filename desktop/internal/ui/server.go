@@ -70,6 +70,7 @@ type Server struct {
 	probe         func() *portal.DetectResult
 	detect        func() *portal.DetectResult
 	diagnose      func(user, pass, srunHost, drcomHost string) *diagnose.Report // 测试注入；nil 时用 diagnose.Run
+	systemProxy   func() *diagnose.SystemProxy                                  // 测试注入；nil 时用 diagnose.ReadSystemProxy
 	workspace     *workspaceStore
 	notebook      *notebookStore
 	feishu        *feishuService
@@ -472,12 +473,11 @@ type statusResp struct {
 	Online      bool     `json:"online"`
 	OnlineKnown bool     `json:"online_known"`
 	OnlineError string   `json:"online_error"`
-	OnlineState string   `json:"online_state"` // 校园认证这一栏属于哪种情况，取值见 onlineState* 常量
-	OnlineNote  string   `json:"online_note"`  // 中性状态下给人看的说明，其余状态为空
-	OnlineIP    string   `json:"online_ip"`
-	Username    string   `json:"username"`
-	Saved       bool     `json:"saved"`      // 有没有存过凭据
-	StoreDesc   string   `json:"store_desc"` // 凭据存在哪
+	OnlineState string   `json:"online_state"`          // 校园认证这一栏属于哪种情况，取值见 onlineState* 常量
+	OnlineNote  string   `json:"online_note"`           // 中性状态下给人看的说明，其余状态为空
+	OnlineZone  string   `json:"online_zone,omitempty"` // 确认在线的那套门户的区域（teaching / dorm），没确认在线时省略
+	Saved       bool     `json:"saved"`                 // 有没有存过凭据
+	StoreDesc   string   `json:"store_desc"`            // 凭据存在哪
 	LastError   string   `json:"last_error"`
 	Advices     []string `json:"advices"`
 	// AutoLogin 是这次启动时自动连接校园网的结果；没有尝试时省略。
@@ -492,7 +492,10 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	out := statusResp{
 		AppVersion: version.Current,
 		Zone:       string(zone),
-		ZoneLabel:  zone.Label(),
+		// 已联网时 zone 只是 online，zone_label 以前固定写「已联网」（F12）。门户确认在线时
+		// 换成那套门户的区域；zone 本身仍是判区结果，页面按它走的逻辑不受影响。
+		ZoneLabel:  portal.DisplayZone(zone, netState.online).Label(),
+		OnlineZone: string(netState.online.ConfirmedZone()),
 		InternetOK: det.InternetOK,
 		StoreDesc:  s.store.Describe(),
 	}
@@ -503,18 +506,13 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	// 门户按请求出口查询认证状态，与本机有没有保存账号无关。
 	// 账号和设备 IP 默认不向页面回传；查询失败也不等于明确离线。
 	switch {
-	case netState.onlineErr != nil && zone == portal.ZoneOnline && det.InternetOK:
+	case portal.NoCampusPortal(zone, det, netState.onlineErr):
 		// 外网正常、没判到教学区或宿舍区，门户又查不到：人在校外（或家里、手机热点）时
 		// 本来就是这样。以前这里也写成「暂时无法确认」，页面常驻一条琥珀色的「请运行诊断」，
-		// 在家安装的新生会去排查一个根本不存在的问题（O7）。
+		// 在家安装的新生会去排查一个根本不存在的问题（O7）。判据和说明（学校域名被 Fake-IP
+		// 接管时带上代理提示）与命令行 status 共用 portal 里的那一份。
 		out.OnlineState = onlineStateNoPortal
-		out.OnlineNote = noCampusPortalNote
-		// 同一次探测已经看到学校域名解析进了 198.18.0.0/15：人在校内开着 Clash 这类代理时，
-		// 门户正是因此查不到。仍用灰色（在家开着代理的同学更多，不能又把他们引去排查），
-		// 但要带上代理提示，不能只说一句「属正常」。
-		if det.SrunDNSFakeIP {
-			out.OnlineNote += noCampusPortalFakeIPLead + portal.ProxyTakeoverHint
-		}
+		out.OnlineNote = portal.NoCampusPortalNote(det)
 	case netState.onlineErr != nil:
 		// 判定在教学区或宿舍区时查不到才是真问题，保留警告和诊断引导。
 		out.OnlineState = onlineStateUnconfirmed
@@ -554,11 +552,10 @@ const (
 	onlineStateNotQueried  = "not_queried"      // 校外不通或判不出区，没有查询门户
 )
 
-// noCampusPortalNote 是中性状态下的说明，页面原样显示。
+// noCampusPortalNote 是中性说明的字面量。接口实际返回的是 portal.NoCampusPortalNote（命令行同一句），
+// 这里留一份字面量，是因为页面在旧版接口没有 online_note 时兜底用同一句，check-network-ui.mjs
+// 按这一行核对；与 portal 的一致由 TestStatusNoCampusPortalNoteMatchesPortal 锁住。
 const noCampusPortalNote = "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）"
-
-// noCampusPortalFakeIPLead 接在中性说明后面，引出学校域名被代理接管时的提示。
-const noCampusPortalFakeIPLead = "。人在校内的话："
 
 type loginResp struct {
 	OK      bool   `json:"ok"`
@@ -783,6 +780,9 @@ type diagResp struct {
 	// Trusted 为 false 表示只是从门户页面猜的，未必是你真正所在的接入点。
 	AcID        string `json:"ac_id,omitempty"`
 	AcIDTrusted bool   `json:"ac_id_trusted"`
+
+	// SystemProxy 是系统代理的开关（manual / pac），只读、不带地址；这个平台读不到时省略。
+	SystemProxy *diagnose.SystemProxy `json:"system_proxy,omitempty"`
 }
 
 func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
@@ -809,6 +809,13 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 		on := rep.Online.Online
 		out.Online = &on
 	}
+	// 系统代理开着时浏览器和学校页面都先过代理，现场复测要求先关代理，诊断报告里要看得出关没关。
+	// 门户探测本身一律绕开代理（见 portal.noProxyClient），所以只报开关、不进建议。
+	readProxy := s.systemProxy
+	if readProxy == nil {
+		readProxy = diagnose.ReadSystemProxy
+	}
+	out.SystemProxy = readProxy()
 
 	// 顺带把接入点编号算出来，写进页面会显示的建议里。
 	//

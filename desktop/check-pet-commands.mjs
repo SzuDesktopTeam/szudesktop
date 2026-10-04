@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {petReaction} from './assets/garden/pet-player.mjs';
-import {act,activePet,createState,normalize} from './assets/garden/engine.mjs';
+import {act,activePet,createState,dayKey,normalize,settle} from './assets/garden/engine.mjs';
 import {PET_SPRITES,petSprite} from './assets/garden/pet-catalog.mjs';
 import {focusKey,restoreFocus} from './assets/garden/shell-repaint.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
@@ -23,6 +23,8 @@ function fixture(){
  const context=vm.createContext({
   state:createState(),revision:1,workspaceReady:true,busy:false,exiting:false,page:'home',gardenTab:'pet',studyTab:'focus',
   act,activePet,normalize,petReaction,petSprite,PET_SPRITES,reactPet(){},render(){},clocks(){},schoolUI:{sync(){}},focusKey,restoreFocus,
+  // 碰上存档锁时的等待用真计时器；上限缩短到 200 毫秒，免得每个用例都等满 3 秒（真实值由下面的检查核对）。
+  setTimeout,PET_BUSY_WAIT_MS:200,
   $:selector=>selector==='.companion-dialog'?dialog:selector==='#companion-tip'?footer.tip:null,
   document:{querySelectorAll:selector=>selector==='#main form[id]'?[]:controls,activeElement:null,getElementById:()=>null},toast:message=>toasts.push(message),networkResult(){},
   navigate:async(page,tab)=>{context.page=page;if(page==='study'&&tab)context.studyTab=tab;if(page==='garden'&&tab)context.gardenTab=tab;return true},
@@ -45,12 +47,65 @@ async function check(name,work){await work();checks++;console.log('PASS',name)}
 await check('hidden care acknowledgements keep their own request IDs across a busy overlap',async()=>{
  const f=fixture(),gate=deferred(),save=f.context.api;
  f.context.api=async(...args)=>{await gate.promise;return save(...args)};
- const first=f.command({command:'pat',requestId:41});
- await f.command({command:'feed',requestId:42});
- assert.equal(f.results.length,1);assert.equal(f.results[0].requestId,42);assert.equal(f.results[0].ok,false);
- gate.resolve();await first;
- assert.equal(f.results.length,2);assert.equal(f.results[1].requestId,41);assert.equal(f.results[1].ok,true);
- assert.equal(f.writes.length,1,'the busy overlap cannot replay or duplicate a save');
+ const first=f.command({command:'pat',requestId:41}),second=f.command({command:'feed',requestId:42});
+ await new Promise(resolve=>setTimeout(resolve,60));
+ assert.equal(f.results.length,0,'the overlapping care waits for the save lock instead of being refused');
+ gate.resolve();await first;await second;
+ assert.deepEqual(f.results.map(r=>[r.requestId,r.ok]),[[41,true],[42,true]]);
+ assert.equal(f.writes.length,2,'each care saves exactly once, the second on top of the first');assert.equal(f.writes[1].revision,2);
+});
+await check('a care that cannot get the save lock in time is refused after a bounded wait',async()=>{
+ assert.match(source,/\nconst PET_BUSY_WAIT_MS=3000;\n/,'照料最多等 3 秒存档锁');
+ assert.match(readFileSync(new URL('./electron/main-window.mjs',import.meta.url),'utf8'),/finish\(id\);onTimeout\(id\);\},30000\)/,'主进程等回执的时间要远长于页面等锁的时间');
+ const f=fixture(),started=Date.now();f.context.busy=true;
+ await f.command({command:'pat',requestId:5});
+ assert.ok(Date.now()-started>=f.context.PET_BUSY_WAIT_MS,'先等，不立刻拒绝');
+ assert.deepEqual(f.results,[{ok:false,message:'正在保存或处理上一项操作，请稍后再试',requestId:5}]);assert.equal(f.writes.length,0);
+});
+// B2：Electron 44.5.1 为隐藏主窗口里的照料关掉后台节流时，页面先收到 visible，指令随后才到，回执后又变回 hidden。
+// 把 app.mjs 的跨日刷新、可见性和焦点接线放进同一个 vm：clocks 只替身成刷新日期（clocks 调用 refreshDay 由 check-workspace-ui 核对），
+// 时间与一秒以上的定时器手动推进，等存档锁的短轮询用真计时器。存档停在「昨天」、来访不足 7 天，正是跨日后第一次照料的情形。
+function wakeFixture(){
+ const f=fixture(),c=f.context,events={},later=[],polls=[];let offset=0;
+ class Clock extends Date{constructor(...args){super(...(args.length?args:[Date.now()+offset]))}static now(){return Date.now()+offset}}
+ const today=dayKey(Clock.now()),yesterday=dayKey(Clock.now()-86400000);
+ c.state.preferences.onboarded=true;c.state.game.daily.day=yesterday;c.state.game.journey.days=[yesterday];
+ Object.assign(c,{Date:Clock,dayKey,settle,paintDay(){},visitAttemptDay:'',clockInterval:null,clocks:()=>c.refreshDay(),pollNetwork:(...args)=>polls.push(args),
+  flushPuzzle:async()=>{},backgroundTitle(){},setInterval:()=>0,clearInterval(){},clearTimeout(){},
+  setTimeout:(fn,ms)=>ms>=1000?later.push(fn):setTimeout(fn,ms),window:{addEventListener:(type,fn)=>{events['window:'+type]=fn}}});
+ c.document.hidden=true;c.document.addEventListener=(type,fn)=>{events[type]=fn};
+ vm.runInContext(section("let shownDay='';",'function stampVersion('),c);
+ for(const pattern of [/^document\.addEventListener\('visibilitychange'[^\n]*$/m,/^window\.addEventListener\('focus'[^\n]*$/m]){const line=pattern.exec(source)?.[0];assert.ok(line,'app.mjs 里找不到 '+pattern);vm.runInContext(line,c)}
+ const flush=()=>new Promise(resolve=>setTimeout(resolve,20));
+ return {...f,today,polls,
+  show(){c.document.hidden=false;events.visibilitychange()},hide(){c.document.hidden=true;events.visibilitychange()},focus(){events['window:focus']()},
+  // 过了 ms 毫秒：到期的「回到窗口」检查和秒级时钟各走一次，再等后台写入落盘。
+  async pass(ms){offset+=ms;for(const fn of later.splice(0))fn();c.clocks();await flush()},
+  visited:()=>c.state.game.journey.days.includes(today)};
+}
+await check('a command wake neither records the day\'s visit nor forces a network probe',async()=>{
+ const w=wakeFixture();w.show();
+ assert.equal(w.writes.length,0,'被唤醒成 visible 的那一刻不记来访');
+ await w.command({command:'feed',requestId:7});
+ assert.deepEqual(w.results.map(r=>[r.requestId,r.ok]),[[7,true]],'跨日后第一次隐藏照料不被「正在保存」拒绝');
+ await w.pass(5000);
+ assert.equal(w.writes.length,1,'只有照料这一笔');assert.equal(w.visited(),false);assert.deepEqual(w.polls,[],'命令唤醒不探测网络');
+ // 回执后变回 hidden；同学之后真的打开主窗口：可见一会儿后记下当天来访，按 25 秒间隔补一次网络状态。
+ w.hide();w.show();await w.pass(500);assert.equal(w.visited(),false,'刚变为可见还不算');
+ await w.pass(1500);assert.equal(w.writes.length,2);assert.equal(w.visited(),true);assert.deepEqual(w.polls,[[false,true]]);
+ // 命令唤醒期间同学用托盘打开了主窗口（页面已经可见，只多一次焦点）：从这一刻起照常记来访。
+ const v=wakeFixture();v.show();await v.command({command:'pat',requestId:8});await v.pass(5000);assert.equal(v.visited(),false);
+ v.focus();await v.pass(1000);assert.equal(v.visited(),true);
+});
+await check('a hidden care waits out a visit that is already being saved, then saves on top of it',async()=>{
+ const w=wakeFixture(),gate=deferred(),save=w.context.api;
+ w.context.api=async(...args)=>{await gate.promise;return save(...args)};
+ w.show();await w.pass(2000);assert.equal(w.context.busy,true,'同学回到窗口，当天来访正在写');
+ const care=w.command({command:'feed',requestId:9});
+ await new Promise(resolve=>setTimeout(resolve,60));assert.equal(w.results.length,0);
+ gate.resolve();await care;
+ assert.deepEqual(w.results.map(r=>[r.requestId,r.ok]),[[9,true]]);
+ assert.equal(w.writes.length,2);assert.ok(w.writes[1].data.game.journey.days.includes(w.today),'照料存在来访之后，不覆盖它');
 });
 await check('care commands save through the shared engine before reporting success',async()=>{
  const f=fixture(),initial=f.context.state,gate=deferred();

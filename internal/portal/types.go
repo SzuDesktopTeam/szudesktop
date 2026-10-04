@@ -53,6 +53,13 @@ type OnlineStatus struct {
 	Username string
 	IP       string
 
+	// Zone 是回答这次查询的门户所属区域：深澜是 ZoneTeaching，Dr.COM 是 ZoneDorm。
+	//
+	// 已联网时 Detect() 提前返回，判区只有 ZoneOnline，界面和命令行以前只能固定写
+	// 「已联网」（F12）；可 QueryOnline 那时两套门户都问了，谁确认在线就知道是哪个区。
+	// 两套都说不在线时留空：这个结论不属于哪一套。给人看的区域用 DisplayZone 取。
+	Zone Zone
+
 	// DeviceTotal 是这个出口上登记在线的设备数，Devices 是每台设备的一句话描述。
 	//
 	// 深澜新版（学生区城市热点）改成按设备登记会话，一个账号可以同时挂多台，
@@ -63,4 +70,23 @@ type OnlineStatus struct {
 	Devices     []string
 
 	Raw string
+}
+
+// ConfirmedZone 是确认在线的那套门户的区域；没确认在线、或不知道是哪套门户时为空。
+func (s *OnlineStatus) ConfirmedZone() Zone {
+	if s == nil || !s.Online || (s.Zone != ZoneTeaching && s.Zone != ZoneDorm) {
+		return ""
+	}
+	return s.Zone
+}
+
+// DisplayZone 是给人看的区域：门户确认在线时换成确认在线的那套门户的区域，其余照旧。
+//
+// 桌面端 /api/status 的 zone_label 和命令行 status 共用这一条，免得两边说法又走偏。
+// 只换显示，不换判区：登录、注销选协议仍按 zone 原来的规则。
+func DisplayZone(zone Zone, st *OnlineStatus) Zone {
+	if z := st.ConfirmedZone(); z != "" {
+		return z
+	}
+	return zone
 }

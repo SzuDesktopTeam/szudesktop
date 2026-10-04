@@ -3,12 +3,35 @@ description: 报告无法使用、显示错误或异常退出
 body:
   - type: markdown
     attributes:
-      value: 请不要上传账号、密码、Cookie、令牌或未遮挡的个人成绩。
+      value: 请不要上传账号、密码、Cookie、令牌或未遮挡的个人成绩。写什么最有用，见[反馈说明](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md)。
   - type: input
     id: version
     attributes:
-      label: 应用版本和系统版本
-      placeholder: 例如 beta0.9.0 安装版，Windows 11
+      label: 应用版本
+      description: 在应用的「设置 → 关于与更新」里能看到；命令行用 `szunet version` 查看。
+      placeholder: 例如 beta0.9.6
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: 用的是哪种形态
+      description: Mac 在「苹果菜单 → 关于本机」里写着「芯片」的是 Apple 芯片，写着「处理器」的是 Intel。
+      options:
+        - Windows 安装版
+        - Windows 便携版
+        - macOS 版（Apple 芯片）
+        - macOS 版（Intel）
+        - 命令行 szunet
+        - 不确定
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: 系统版本
+      description: Mac 的版本号也在「关于本机」里。
+      placeholder: 例如 Windows 11，或 macOS 15.6
     validations:
       required: true
   - type: textarea
@@ -23,3 +46,15 @@ body:
     attributes:
       label: 错误提示或截图
       description: 截图前请遮挡个人信息；没有截图也可以直接描述提示文字。
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息（可选）
+      description: 在应用的「设置 → 关于与更新 → 反馈与建议」点「复制环境信息」，粘贴到这里；只有版本、系统类型和界面模式三行。
+      render: text
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 诊断报告（可选）
+      description: 网络或学校服务出问题时，在同一张卡片里展开「诊断报告 · 先预览，再复制」，看过全文再复制粘贴到这里。报告只含结构，不含账号、卡号、密码、IP、Cookie、成绩或课表。
+      render: text

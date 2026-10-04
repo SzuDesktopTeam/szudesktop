@@ -145,7 +145,8 @@ with tempfile.TemporaryDirectory(prefix='szudesktop-smoke-') as cfg:
         check('academic login rejects cross origin',request('/api/academic/login',{},headers={'Origin':'https://example.com'})[0]==403)
         check('academic login requires complete fields',request('/api/academic/login',{})[0]==400)
         check('default VPN unavailable',get('/api/vpn/status')['state']=='unavailable')
-        check('no account exposed in status',get('/api/status')['username']=='')
+        status=get('/api/status')
+        check('no account exposed in status','username' not in status and 'online_ip' not in status)
         check('status reports the same version as the exe',get('/api/status')['app_version']==VERSION)
         check('page carries no hardcoded version string',b'beta0' not in request('/')[1] and b'beta0' not in request('/assets/garden/app.mjs')[1])
         # 只读状态和拒绝路径：冒烟测试绝不 POST 打开/关掉开关，那会真的改掉这台机器的启动项。

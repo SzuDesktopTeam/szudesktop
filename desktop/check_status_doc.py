@@ -156,8 +156,8 @@ def check_docs(docs):
     return problems
 
 
-# 新建 issue 的选择页。应用里的「提交反馈」也打开这一页：安全问题那一项必须指向 SECURITY.md 写的私有报告入口，
-# 另一项指向使用指南；两处各写一份，改了一处忘了另一处，同学就会被带到错的地方。
+# 新建 issue 的选择页。应用里的「提交反馈」打开 docs/guide/feedback.md，那一页再链到这里：安全问题那一项必须指向
+# SECURITY.md 写的私有报告入口，另一项指向使用指南；两处各写一份，改了一处忘了另一处，同学就会被带到错的地方。
 ISSUE_CONFIG = ".github/ISSUE_TEMPLATE/config.yml"
 PRIVATE_REPORT = re.compile(r"https://github\.com/SzuDesktopTeam/szudesktop/security/advisories/new")
 GUIDE_HOME = GUIDE + "/README.md"

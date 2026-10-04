@@ -380,6 +380,49 @@ func statusReport(zone portal.Zone, det *portal.DetectResult) map[string]any {
 	return out
 }
 
+// addOnlineReport 把在线查询的结论写进 `szunet status --json`。
+//
+// 门户确认在线时，online_zone 给出是哪套门户确认的（teaching / dorm），zone_label 也换成
+// 那个区域的说法（F12），和桌面端 /api/status 同一口径；zone 本身仍是判区结果，不变。
+func addOnlineReport(out map[string]any, st *portal.OnlineStatus) {
+	out["online_known"] = st != nil
+	if st == nil {
+		return
+	}
+	out["online"] = st.Online
+	out["online_ip"] = st.IP
+	out["online_devices"] = st.DeviceTotal
+	if z := st.ConfirmedZone(); z != "" {
+		out["online_zone"] = z
+		out["zone_label"] = z.Label()
+	}
+}
+
+// accountLines 是 `szunet status` 里「账号状态」那几行。
+//
+// 人在校外时与桌面端同一条判据、同一句说明（portal.NoCampusPortal）：以前这里一律写
+// 「没查到（…）」，在家跑一下 status 像是出了故障，桌面端在 O7 修过同一个毛病。
+// 判定在教学区或宿舍区却查不到才是真问题，照旧把出错原因带出来。
+func accountLines(zone portal.Zone, det *portal.DetectResult, st *portal.OnlineStatus, err error) []string {
+	switch {
+	case st != nil:
+		lines := []string{"账号状态: " + onlineText(st.Online)}
+		if st.IP != "" {
+			lines = append(lines, "在线 IP : "+st.IP)
+		}
+		if len(st.Devices) > 0 {
+			lines = append(lines, "在线设备: "+strings.Join(st.Devices, "、"))
+		}
+		return lines
+	case portal.NoCampusPortal(zone, det, err):
+		return []string{"账号状态: " + portal.NoCampusPortalNote(det)}
+	case err != nil:
+		return []string{fmt.Sprintf("账号状态: 没查到（%v）", err)}
+	default:
+		return []string{"账号状态: 没有判定在教学区或宿舍区，没有查询认证状态"}
+	}
+}
+
 func cmdStatus(args []string) {
 	fs := flag.NewFlagSet("status", flag.ExitOnError)
 	var o options
@@ -397,33 +440,17 @@ func cmdStatus(args []string) {
 	// 会以为自己掉线——F20 在桌面端修过同一个毛病，CLI 这条漏了
 	// （2026-09-21 在校园网里实测发现：桌面端报「已在线」，CLI 报「没查到」）。
 	status, statusErr := statusOnline(zone, &o, user, pass)
-	out["online_known"] = status != nil
-	if status != nil {
-		out["online"] = status.Online
-		out["online_ip"] = status.IP
-		out["online_devices"] = status.DeviceTotal
-	}
+	addOnlineReport(out, status)
 
 	if o.asJSON {
 		printJSON(out)
 		return
 	}
 
-	fmt.Printf("网络区域: %s\n", zone.Label())
+	fmt.Printf("网络区域: %s\n", portal.DisplayZone(zone, status).Label())
 	fmt.Printf("外网连通: %s\n", yesNo(det.InternetOK))
-	switch {
-	case status != nil:
-		fmt.Printf("账号状态: %s\n", onlineText(status.Online))
-		if status.IP != "" {
-			fmt.Printf("在线 IP : %s\n", status.IP)
-		}
-		if len(status.Devices) > 0 {
-			fmt.Printf("在线设备: %s\n", strings.Join(status.Devices, "、"))
-		}
-	case statusErr != nil:
-		fmt.Printf("账号状态: 没查到（%v）\n", statusErr)
-	default:
-		fmt.Printf("账号状态: 没查到\n")
+	for _, line := range accountLines(zone, det, status, statusErr) {
+		fmt.Println(line)
 	}
 	// 没存账号时补一句怎么登录；但状态本身照报，不能把「没查到」当结论。
 	if credErr != nil && status != nil && !status.Online {
