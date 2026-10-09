@@ -1,0 +1,55 @@
+{
+  "key": "ui_arcade_won",
+  "kind": "still",
+  "file": "ui_arcade_won.png",
+  "extra": [
+    "ui_arcade_won.viewport.png",
+    "ui_arcade_won.grid.png"
+  ],
+  "description": "伙伴小桌：已合出「荔宝丰收礼 2048」的棋盘卡片（只含棋盘、「这局合到了」与提示「荔宝丰收礼合成啦！已经达到 2048，还可以继续挑战自己的纪录。」，不含本局得分与最高纪录）。.grid.png 只有 4×4 棋盘；.viewport.png 是整屏，右上角得分栏位置见 viewportRects.scores，使用整屏时请裁掉。",
+  "clipCss": {
+    "x": 218,
+    "y": 91.578125,
+    "width": 512,
+    "height": 682.96875
+  },
+  "viewportRects": {
+    "board": {
+      "x": 218,
+      "y": 91.578125,
+      "width": 512,
+      "height": 682.96875
+    },
+    "heading": {
+      "x": 209,
+      "y": 0,
+      "width": 1182,
+      "height": 95.1875
+    },
+    "scores": {
+      "x": 1180,
+      "y": 0,
+      "width": 211,
+      "height": 76
+    },
+    "side": {
+      "x": 929.78125,
+      "y": 82.578125,
+      "width": 461.21875,
+      "height": 599.453125
+    },
+    "claim": {
+      "x": 949.78125,
+      "y": 494.640625,
+      "width": 421.21875,
+      "height": 40
+    },
+    "supply": {
+      "x": 949.78125,
+      "y": 359.46875,
+      "width": 421.21875,
+      "height": 72.78125
+    }
+  },
+  "scrollY": 463
+}

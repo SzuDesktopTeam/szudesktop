@@ -1,0 +1,64 @@
+{
+  "key": "ui_home_lake",
+  "kind": "still",
+  "file": "ui_home_lake.png",
+  "extra": [
+    "ui_home_lake.landscape.png"
+  ],
+  "description": "「今日」首页整屏（Windows 安装版界面，3200×1800）：荔湖晴昼风景（真实三渲二 WebGL 渲染）、「欢迎回来，庭院在等你。」、右下角荔宝「点点我 · 摸摸头」。顶栏版本号为引擎真实值 beta0.9.7。套通用窗口框用于 S04/S07/S26；S07 穿屏推入「学习书屋」导航块的位置见 viewportRects.learnNav。",
+  "viewport": {
+    "width": 1600,
+    "height": 900,
+    "deviceScaleFactor": 2,
+    "scrollY": 0
+  },
+  "viewportRects": {
+    "landscape": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    },
+    "scene": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    },
+    "letter": {
+      "x": 210,
+      "y": 351.78125,
+      "width": 381.5,
+      "height": 433.421875
+    },
+    "nav": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 57
+    },
+    "mast": {
+      "x": 180,
+      "y": 0,
+      "width": 1240,
+      "height": 90.390625
+    },
+    "shell": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 1769.421875
+    },
+    "learnNav": {
+      "x": 1007.328125,
+      "y": 97.390625,
+      "width": 198.328125,
+      "height": 44
+    }
+  },
+  "fontsSample": {
+    "Noto Sans SC Thin": 477,
+    "Fusion Pixel 12px Prop zh_hans": 215,
+    "Noto Sans Symbols": 2
+  }
+}

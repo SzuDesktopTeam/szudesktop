@@ -1,0 +1,202 @@
+{
+  "key": "ui_pet_window_bubbles",
+  "kind": "still",
+  "file": "ui_pet_window_bubbles/",
+  "description": "真实的桌面伙伴透明窗 pet.html（260×320 × 伙伴大小 150% = 390×480 CSS 像素，2x 截图，透明背景）。注入 window.szuPet 替身推送伙伴、缩放与台词；气泡是 pet.html 自己的样式（#FFFDF6 底、#6E1F35 2px 边、12px 圆角、尾巴、0.28 s 弹出）。每句两张：.window.png（伙伴 + 气泡，伙伴为当时的逐帧动作帧），.bubble.png（只有气泡，含阴影与尾巴，便于贴在任意位置）。字体为 Noto Sans SC。",
+  "lines": [
+    {
+      "id": "01_libao_greet",
+      "species": "libao",
+      "text": "你来啦！我给你腾出一个位置。",
+      "source": "pet-dialogue.mjs libao.greet[0]",
+      "shot": "S04",
+      "window": "ui_pet_window_bubbles/01_libao_greet.window.png",
+      "bubble": "ui_pet_window_bubbles/01_libao_greet.bubble.png",
+      "bubbleCss": {
+        "x": 41.5,
+        "y": 151.703125,
+        "width": 307,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 27.5,
+        "y": 137.703125,
+        "width": 335,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "02_libao_pat",
+      "species": "libao",
+      "text": "嘿嘿，叶子都被你摸歪啦。",
+      "source": "libao.pat[0]",
+      "shot": "S06",
+      "window": "ui_pet_window_bubbles/02_libao_pat.window.png",
+      "bubble": "ui_pet_window_bubbles/02_libao_pat.bubble.png",
+      "bubbleCss": {
+        "x": 61,
+        "y": 151.703125,
+        "width": 268,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 47,
+        "y": 137.703125,
+        "width": 296,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "03_chestnut_signature",
+      "species": "chestnut",
+      "text": "纸箱验收。请注意我的进入姿势。",
+      "source": "chestnut.signature[0]",
+      "shot": "S07",
+      "window": "ui_pet_window_bubbles/03_chestnut_signature.window.png",
+      "bubble": "ui_pet_window_bubbles/03_chestnut_signature.bubble.png",
+      "bubbleCss": {
+        "x": 31.75,
+        "y": 151.703125,
+        "width": 326.5,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 17.75,
+        "y": 137.703125,
+        "width": 354.5,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "04_egret_greeting",
+      "species": "egret",
+      "text": "湖边的风很舒服，陪你坐一会儿。",
+      "source": "pet-catalog.mjs egret.greeting",
+      "shot": "S07",
+      "window": "ui_pet_window_bubbles/04_egret_greeting.window.png",
+      "bubble": "ui_pet_window_bubbles/04_egret_greeting.bubble.png",
+      "bubbleCss": {
+        "x": 31.75,
+        "y": 151.703125,
+        "width": 326.5,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 17.75,
+        "y": 137.703125,
+        "width": 354.5,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "05_libao_focus",
+      "species": "libao",
+      "text": "小板凳摆好了，我坐这儿陪着。",
+      "source": "libao.focusStart[1]",
+      "shot": "S09",
+      "window": "ui_pet_window_bubbles/05_libao_focus.window.png",
+      "bubble": "ui_pet_window_bubbles/05_libao_focus.bubble.png",
+      "bubbleCss": {
+        "x": 41.5,
+        "y": 151.703125,
+        "width": 307,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 27.5,
+        "y": 137.703125,
+        "width": 335,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "06_libao_harvest",
+      "species": "libao",
+      "text": "满满一小篮！我负责扶稳，你来放。",
+      "source": "libao.harvest[0]",
+      "shot": "S12",
+      "window": "ui_pet_window_bubbles/06_libao_harvest.window.png",
+      "bubble": "ui_pet_window_bubbles/06_libao_harvest.bubble.png",
+      "bubbleCss": {
+        "x": 22,
+        "y": 151.703125,
+        "width": 346,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 8,
+        "y": 137.703125,
+        "width": 374,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    },
+    {
+      "id": "07_libao_greet2",
+      "species": "libao",
+      "text": "嗨，我是荔宝。今天先做哪件小事？",
+      "source": "libao.greet[1]",
+      "shot": "S30",
+      "window": "ui_pet_window_bubbles/07_libao_greet2.window.png",
+      "bubble": "ui_pet_window_bubbles/07_libao_greet2.bubble.png",
+      "bubbleCss": {
+        "x": 22,
+        "y": 151.703125,
+        "width": 346,
+        "height": 55.296875
+      },
+      "bubbleClipCss": {
+        "x": 8,
+        "y": 137.703125,
+        "width": 374,
+        "height": 87.296875
+      },
+      "petCss": {
+        "x": 82.5,
+        "y": 213,
+        "width": 225,
+        "height": 243
+      }
+    }
+  ],
+  "windowCss": {
+    "width": 390,
+    "height": 480
+  },
+  "deviceScaleFactor": 2
+}

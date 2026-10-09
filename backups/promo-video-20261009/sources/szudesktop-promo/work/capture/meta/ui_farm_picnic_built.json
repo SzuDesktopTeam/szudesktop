@@ -1,0 +1,22 @@
+{
+  "key": "ui_farm_picnic_built",
+  "kind": "still",
+  "file": "ui_farm_picnic_built.png",
+  "extra": [
+    "ui_farm_picnic_built.viewport.png"
+  ],
+  "description": "建好湖畔野餐角后的农田场景（.farm-landscape 区域，2x）：野餐毯与点心篮出现在湖畔菜园里。",
+  "clipCss": {
+    "x": 209,
+    "y": 190.78125,
+    "width": 876,
+    "height": 695.96875
+  },
+  "builtSceneRect": {
+    "x": 224,
+    "y": 811.75,
+    "width": 846,
+    "height": 60,
+    "html": "<div class=\"garden-built-scene garden-built-scene--farm\" role=\"img\" aria-label=\"庭院布置：湖畔野餐角\"><span class=\"garden-built-piece garden-built-piece--picnic\" title=\"湖畔野餐角\"><svg class=\"project-pixel-art\" vie"
+  }
+}

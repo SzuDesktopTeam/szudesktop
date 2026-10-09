@@ -1,0 +1,15 @@
+{
+  "key": "ui_settings_data",
+  "kind": "still",
+  "file": "ui_settings_data.png",
+  "extra": [
+    "ui_settings_data.viewport.png"
+  ],
+  "description": "设置 → 存档与隐私（Windows 界面）：「存档与备份」（导出庭院与待办 / 备份课程笔记 / 存档默认位于用户目录下的 .szunet / workspace-v1.json）与「账号隐私」（删除已保存凭据；本机没有保存凭据时按钮为禁用态）。注意：采集时隐藏了中间「从备份恢复」的文件选择行——headless Chrome 只能把这个系统控件画成英文「Choose File」，与中文系统上的实际样子不符。",
+  "clipCss": {
+    "x": 201,
+    "y": 242.390625,
+    "width": 1198,
+    "height": 287.03125
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "key": "ui_home_pixel",
+  "kind": "still",
+  "file": "ui_home_pixel.png",
+  "extra": [
+    "ui_home_pixel.landscape.png"
+  ],
+  "description": "「今日」首页整屏，风景选「像素庭院」（campus.png 像素画背景）。用于 S15 四宫格。",
+  "viewport": {
+    "width": 1600,
+    "height": 900,
+    "deviceScaleFactor": 2,
+    "scrollY": 0
+  },
+  "viewportRects": {
+    "landscape": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    },
+    "scene": null,
+    "letter": {
+      "x": 210,
+      "y": 351.78125,
+      "width": 381.5,
+      "height": 433.421875
+    },
+    "nav": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 57
+    },
+    "mast": {
+      "x": 180,
+      "y": 0,
+      "width": 1240,
+      "height": 90.390625
+    },
+    "shell": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 1769.421875
+    },
+    "learnNav": {
+      "x": 1007.328125,
+      "y": 97.390625,
+      "width": 198.328125,
+      "height": 44
+    }
+  },
+  "fontsSample": {
+    "Noto Sans SC Thin": 483,
+    "Fusion Pixel 12px Prop zh_hans": 207,
+    "Noto Sans Symbols": 2
+  }
+}

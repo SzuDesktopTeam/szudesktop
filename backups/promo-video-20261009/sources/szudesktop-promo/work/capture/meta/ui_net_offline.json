@@ -1,0 +1,43 @@
+{
+  "key": "ui_net_offline",
+  "kind": "still",
+  "file": "ui_net_offline.png",
+  "extra": [
+    "ui_net_offline.viewport.png"
+  ],
+  "description": "校园网 →「当前连接」卡片（合成状态，演示数据）：外网不可用 · 教学区（深澜 SRun），校园认证「门户未检测到在线会话。」。.viewport.png 为整屏（下方是展开的「连接 / 更换账号」表单）。",
+  "clipCss": {
+    "x": 203,
+    "y": 90.390625,
+    "width": 1194,
+    "height": 225.875
+  },
+  "viewportRects": {
+    "overview": {
+      "x": 203,
+      "y": 90.390625,
+      "width": 1194,
+      "height": 225.875
+    },
+    "summary": {
+      "x": 232,
+      "y": 176.78125,
+      "width": 1136,
+      "height": 74.390625
+    },
+    "login": {
+      "x": 209,
+      "y": 346.265625,
+      "width": 581,
+      "height": 626.234375
+    },
+    "diagButton": {
+      "x": 1240,
+      "y": 124.578125,
+      "width": 128,
+      "height": 32
+    }
+  },
+  "scrollY": 204,
+  "synthetic": "/api/status → online_known:true, online:false, internet_ok:false, zone teaching"
+}

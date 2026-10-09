@@ -1,0 +1,64 @@
+{
+  "key": "ui_home_lake_mac",
+  "kind": "still",
+  "file": "ui_home_lake_mac.png",
+  "extra": [
+    "ui_home_lake_mac.landscape.png"
+  ],
+  "description": "同 ui_home_lake，桥接替身 platform=darwin（macOS 预览版文案）。用于 S26 右侧 Mac 风窗口。",
+  "viewport": {
+    "width": 1600,
+    "height": 900,
+    "deviceScaleFactor": 2,
+    "scrollY": 0
+  },
+  "viewportRects": {
+    "landscape": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    },
+    "scene": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    },
+    "letter": {
+      "x": 210,
+      "y": 351.78125,
+      "width": 381.5,
+      "height": 433.421875
+    },
+    "nav": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 57
+    },
+    "mast": {
+      "x": 180,
+      "y": 0,
+      "width": 1240,
+      "height": 90.390625
+    },
+    "shell": {
+      "x": 180,
+      "y": 90.390625,
+      "width": 1240,
+      "height": 1769.421875
+    },
+    "learnNav": {
+      "x": 1007.328125,
+      "y": 97.390625,
+      "width": 198.328125,
+      "height": 44
+    }
+  },
+  "fontsSample": {
+    "Noto Sans SC Thin": 477,
+    "Fusion Pixel 12px Prop zh_hans": 215,
+    "Noto Sans Symbols": 2
+  }
+}

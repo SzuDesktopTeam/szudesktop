@@ -1,0 +1,13 @@
+{
+  "name": "szudesktop-promo-sprite-export",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Exports app-native pixel art (read-only source) to transparent PNG/SVG for the promo video",
+  "scripts": {
+    "export": "node export-sprites.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.12.0"
+  }
+}

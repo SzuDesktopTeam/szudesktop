@@ -1,0 +1,16 @@
+{
+  "key": "ui_net_online",
+  "kind": "still",
+  "file": "ui_net_online.png",
+  "extra": [
+    "ui_net_online.viewport.png"
+  ],
+  "description": "登录后的「当前连接」卡片（合成状态，演示数据）：外网可用 · 教学区（深澜 SRun），校园认证「当前网络出口已在线。」。",
+  "clipCss": {
+    "x": 203,
+    "y": 194.390625,
+    "width": 1194,
+    "height": 225.875
+  },
+  "synthetic": "/api/status → online:true, internet_ok:true, online_zone teaching"
+}

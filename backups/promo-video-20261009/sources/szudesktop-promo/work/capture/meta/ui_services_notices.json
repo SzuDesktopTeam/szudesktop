@@ -1,0 +1,197 @@
+{
+  "key": "ui_services_notices",
+  "kind": "still",
+  "file": "ui_services_notices.png",
+  "extra": [
+    "ui_services_notices.list.png"
+  ],
+  "description": "校园服务 → 学校公告：未选学院时的「先选你的学院」卡片（不出现任何公告标题，/api/campus/notices 全部拦截）。.list.png 把同一个「学院／部门」下拉临时以列表框展开，露出真实的公告来源名单（全校通知 / 学院与学部）。完整名单见 sources。",
+  "clipCss": {
+    "x": 203,
+    "y": 338.390625,
+    "width": 1194,
+    "height": 344.421875
+  },
+  "sources": [
+    {
+      "id": "undergrad",
+      "name": "教务部",
+      "group": "university",
+      "readable": true
+    },
+    {
+      "id": "graduate",
+      "name": "研究生院",
+      "group": "university",
+      "readable": true
+    },
+    {
+      "id": "college-fe",
+      "name": "教育学部",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-art",
+      "name": "艺术学部",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-med",
+      "name": "医学部",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-my",
+      "name": "马克思主义学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-eco",
+      "name": "经济学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-law",
+      "name": "法学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-psy",
+      "name": "心理学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-pes",
+      "name": "体育学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-wxy",
+      "name": "人文学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-sfl",
+      "name": "外国语学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-cmc",
+      "name": "传播学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-math",
+      "name": "数学科学学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-cpoe",
+      "name": "物理与光电工程学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-chem",
+      "name": "化学与环境工程学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-bio",
+      "name": "生命与海洋科学学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-cmce",
+      "name": "机电与控制工程学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-cmse",
+      "name": "材料学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-ceie",
+      "name": "电子与信息工程学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-csse",
+      "name": "计算机与软件学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-ai",
+      "name": "人工智能学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-saup",
+      "name": "建筑与城市规划学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-ce",
+      "name": "土木与交通工程学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-ma",
+      "name": "管理学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-sg",
+      "name": "政府管理学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-ias",
+      "name": "高等研究院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-lxs",
+      "name": "国际交流学院",
+      "group": "college",
+      "readable": true
+    },
+    {
+      "id": "college-swift",
+      "name": "深大微众金融科技学院",
+      "group": "college",
+      "readable": false
+    },
+    {
+      "id": "college-safti",
+      "name": "深圳南特金融科技学院",
+      "group": "college",
+      "readable": false
+    }
+  ]
+}

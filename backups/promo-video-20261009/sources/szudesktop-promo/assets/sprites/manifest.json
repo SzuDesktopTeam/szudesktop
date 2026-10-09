@@ -1,0 +1,6881 @@
+{
+ "title": "szuDesktop · 荔枝庭院 宣传片像素素材",
+ "generated_at": "2026-10-05T05:55:02+00:00",
+ "root": "/Users/alakazan/workplace/szudesktop-promo/assets/sprites",
+ "paths_relative_to": "manifest.json 所在目录（assets/sprites/）",
+ "source": {
+  "worktree": "/Users/alakazan/workplace/szudesktop-promo-src",
+  "commit": "4b25817（origin/main，beta0.9.7 内容）",
+  "modules": [
+   "desktop/assets/garden/pet-animation-art.mjs",
+   "pet-animation.mjs",
+   "pet-catalog.mjs",
+   "pet-art.mjs",
+   "arcade-art.mjs",
+   "garden-items.mjs",
+   "garden-loop-ui.mjs",
+   "garden-loop.mjs",
+   "desktop/index.html <symbol>",
+   "desktop/assets/garden/flora/*.png",
+   "campus.png",
+   "courtyard.png",
+   "desktop/assets/szudesktop.icns",
+   "szudesktop-trayTemplate*.png"
+  ],
+  "tooling": "work/sprite-export/（export-sprites.mjs → render-extras.mjs cards → post.py → render-extras.mjs overview）"
+ },
+ "conventions": {
+  "1x": "原生像素网格（viewBox 原尺寸），headless Chrome 软件光栅（--disable-gpu）按源码的 shape-rendering=crispEdges 渲染，透明底；已逐张校验 alpha 只有 0/255、颜色全部来自源 SVG 的 fill（无抗锯齿杂色）。",
+  "hd": "1x 的最近邻整数倍放大，倍数 = floor(1024 / 最长边)：荔宝 ×18（936×1008）、栗栗 ×46（920×1012）、小白 ×32（1024×1024）、16px 图标 ×64、32px 棋子 ×32、48×28 建设 ×21。",
+  "svg": "独立 SVG（含所需 <defs>），仅作源稿留档。不要把 SVG 放大渲染：伙伴的斜向多边形边缘会变成矢量斜线，与像素画不一致（实测最多 2.3% 像素不同）。",
+  "remotion": "用 <Img src={staticFile(...)} style={{imageRendering:\"pixelated\"}}>。整数倍放大优先用 1x × 整数倍（与 hd 逐像素一致）；需要非整数倍或 3D 变换时用 hd 再缩小。public/ 下可建软链接 sprites → ../../assets/sprites。",
+  "animation_timing": "duration_ms 来自 pet-animation.mjs TIMINGS × 伙伴节奏（荔宝 1.0 / 栗栗 1.16 / 小白 1.3）；start_frame_60fps / frames_60fps 为 60fps 下累计取整后的帧位置。上屏按拍重定时时保持帧序 0→5。loop=false 的手势动作播完停在第 5 帧，再回 idle。",
+  "anchor": "同一伙伴所有帧画布一致（不裁边），直接叠放即对齐；脚底在画布底部附近。"
+ },
+ "excluded": {
+  "companions": "Pingu、Skipper、阿青（turtle）未导出：不调用其绘制函数、不解析其 symbol，输出文件名与 SVG 内容已扫描确认不含 pingu/skipper/turtle/企鹅/小龟/阿青/Noot。",
+  "symbols": {
+   "f-star": "在 index.html 中定义但当前界面未引用，未导出（避免被当作现有作物或装饰）",
+   "f-pump": "在 index.html 中定义但当前界面未引用，未导出（避免被当作现有作物或装饰）",
+   "f-cherry": "在 index.html 中定义但当前界面未引用，未导出（避免被当作现有作物或装饰）",
+   "i-oak": "在 index.html 中定义但当前界面未引用，未导出（避免被当作现有作物或装饰）"
+  }
+ },
+ "verification": {
+  "vector_sprites_checked": 384,
+  "failed": 0,
+  "nn_vs_vector_max_diff": "2.3%（小白 signature 斜向翅膀）；其余 ≤1.1%"
+ },
+ "stats": {
+  "files": 1381,
+  "bytes": 21146121
+ },
+ "companions": [
+  {
+   "sprite_id": "libao",
+   "species": "libao",
+   "name": "荔宝",
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "signature_label": "给你加个油",
+   "pace": 1.0,
+   "overview_scale": 2
+  },
+  {
+   "sprite_id": "cat",
+   "species": "chestnut",
+   "name": "栗栗",
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "signature_label": "检查一下纸箱",
+   "pace": 1.16,
+   "overview_scale": 5
+  },
+  {
+   "sprite_id": "egret",
+   "species": "egret",
+   "name": "小白",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "signature_label": "理一理羽毛",
+   "pace": 1.3,
+   "overview_scale": 3
+  }
+ ],
+ "pet_actions": [
+  "idle",
+  "look",
+  "walk",
+  "pat",
+  "eat",
+  "play",
+  "sleep",
+  "wake",
+  "celebrate",
+  "focus",
+  "sad",
+  "greet",
+  "water",
+  "harvest",
+  "gift",
+  "build",
+  "ponder",
+  "signature"
+ ],
+ "storyboard_key_aliases": {
+  "pet_{sprite}_{action}_0-5": "sprites[\"pet_{sprite}_{action}\"].frames[0..5]",
+  "tile_2…tile_2048": "sprites[\"tile_2\"] … sprites[\"tile_2048\"]",
+  "crop_*": "crop_radish / crop_strawberry / crop_blueberry / crop_lychee",
+  "flora_*": "flora_tallgrass / flora_berrybush"
+ },
+ "overview": "overview.png",
+ "sprites": {
+  "app_icon_1024": {
+   "type": "still",
+   "group": "app",
+   "key": "app_icon_1024",
+   "png": "app/app_icon_1024.png",
+   "png_512": "app/app_icon_512.png",
+   "png_256": "app/app_icon_256.png",
+   "native_size": [
+    1024,
+    1024
+   ],
+   "source": "desktop/assets/szudesktop.icns 最大尺寸（512@2x）",
+   "note": "圆角暖纸底 + 像素荔枝，边缘本身带抗锯齿，缩放用平滑插值即可",
+   "used_in": [
+    "S04",
+    "S29",
+    "S30"
+   ]
+  },
+  "bg_campus": {
+   "type": "background",
+   "group": "bg",
+   "key": "bg_campus",
+   "png": "bg/bg_campus.png",
+   "native_size": [
+    1672,
+    941
+   ],
+   "source": "desktop/assets/garden/campus.png（原图逐字节拷贝，索引色 PNG）",
+   "cover": {
+    "1920x1080": "bg/bg_campus_1920x1080.png",
+    "3840x2160": "bg/bg_campus_3840x2160.png",
+    "1080x1920": "bg/bg_campus_1080x1920.png"
+   },
+   "cover_info": {
+    "1920x1080": {
+     "scale": 1.14833,
+     "crop_xy": [
+      0,
+      0
+     ],
+     "center": [
+      0.5,
+      0.5
+     ]
+    },
+    "3840x2160": {
+     "scale": 2.29665,
+     "crop_xy": [
+      0,
+      0
+     ],
+     "center": [
+      0.5,
+      0.5
+     ]
+    },
+    "1080x1920": {
+     "scale": 2.04038,
+     "crop_xy": [
+      995,
+      0
+     ],
+     "center": [
+      0.45,
+      0.5
+     ]
+    }
+   },
+   "used_in": [
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S26",
+    "S29",
+    "S30"
+   ],
+   "mosaic": {
+    "1920x1080": [
+     {
+      "block": 96,
+      "png": "bg/mosaic/bg_campus_1920x1080_m096.png"
+     },
+     {
+      "block": 64,
+      "png": "bg/mosaic/bg_campus_1920x1080_m064.png"
+     },
+     {
+      "block": 48,
+      "png": "bg/mosaic/bg_campus_1920x1080_m048.png"
+     },
+     {
+      "block": 32,
+      "png": "bg/mosaic/bg_campus_1920x1080_m032.png"
+     },
+     {
+      "block": 24,
+      "png": "bg/mosaic/bg_campus_1920x1080_m024.png"
+     },
+     {
+      "block": 16,
+      "png": "bg/mosaic/bg_campus_1920x1080_m016.png"
+     },
+     {
+      "block": 12,
+      "png": "bg/mosaic/bg_campus_1920x1080_m012.png"
+     },
+     {
+      "block": 8,
+      "png": "bg/mosaic/bg_campus_1920x1080_m008.png"
+     }
+    ],
+    "1080x1920": [
+     {
+      "block": 96,
+      "png": "bg/mosaic/bg_campus_1080x1920_m096.png"
+     },
+     {
+      "block": 64,
+      "png": "bg/mosaic/bg_campus_1080x1920_m064.png"
+     },
+     {
+      "block": 48,
+      "png": "bg/mosaic/bg_campus_1080x1920_m048.png"
+     },
+     {
+      "block": 32,
+      "png": "bg/mosaic/bg_campus_1080x1920_m032.png"
+     },
+     {
+      "block": 24,
+      "png": "bg/mosaic/bg_campus_1080x1920_m024.png"
+     },
+     {
+      "block": 16,
+      "png": "bg/mosaic/bg_campus_1080x1920_m016.png"
+     },
+     {
+      "block": 12,
+      "png": "bg/mosaic/bg_campus_1080x1920_m012.png"
+     },
+     {
+      "block": 8,
+      "png": "bg/mosaic/bg_campus_1080x1920_m008.png"
+     }
+    ]
+   },
+   "mosaic_note": "开场马赛克：以对应 cover 图为底、按输出像素 b×b 取块均值，网格以画面中心对齐（边缘块对称）。S01：96 → 拍 1 32 → 拍 2 8 → 原图；像素块溶解可按 8→16→32→64 反向使用。",
+   "cover_note": "cover 图 = 原图最近邻放大到整数倍后按面积缩到目标尺寸再居中裁切（非整数倍缩放下像素边仍锐利、宽度均匀）；竖版 campus 裁切中心 x=0.45（湖面 + 台阶上的两位同学）。"
+  },
+  "bg_courtyard": {
+   "type": "background",
+   "group": "bg",
+   "key": "bg_courtyard",
+   "png": "bg/bg_courtyard.png",
+   "native_size": [
+    1536,
+    1024
+   ],
+   "source": "desktop/assets/garden/courtyard.png（原图逐字节拷贝，索引色 PNG）",
+   "cover": {
+    "1920x1080": "bg/bg_courtyard_1920x1080.png",
+    "3840x2160": "bg/bg_courtyard_3840x2160.png",
+    "1080x1920": "bg/bg_courtyard_1080x1920.png"
+   },
+   "cover_info": {
+    "1920x1080": {
+     "scale": 1.25,
+     "crop_xy": [
+      0,
+      100
+     ],
+     "center": [
+      0.5,
+      0.5
+     ]
+    },
+    "3840x2160": {
+     "scale": 2.5,
+     "crop_xy": [
+      0,
+      200
+     ],
+     "center": [
+      0.5,
+      0.5
+     ]
+    },
+    "1080x1920": {
+     "scale": 1.875,
+     "crop_xy": [
+      900,
+      0
+     ],
+     "center": [
+      0.5,
+      0.5
+     ]
+    }
+   },
+   "used_in": [
+    "S11"
+   ],
+   "cover_note": "cover 图 = 原图最近邻放大到整数倍后按面积缩到目标尺寸再居中裁切（非整数倍缩放下像素边仍锐利、宽度均匀）；竖版 campus 裁切中心 x=0.45（湖面 + 台阶上的两位同学）。"
+  },
+  "brand_lychee": {
+   "type": "still",
+   "group": "items",
+   "key": "brand_lychee",
+   "png_1x": "items/1x/crop_lychee.png",
+   "png_hd": "items/hd/crop_lychee.png",
+   "svg": "items/svg/crop_lychee.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"f-lychee\">（顶栏品牌荔枝，与作物荔枝同一张图）",
+   "used_in": [
+    "S01"
+   ],
+   "label": "荔枝",
+   "alias_of": "crop_lychee"
+  },
+  "crop_blueberry": {
+   "type": "still",
+   "group": "items",
+   "key": "crop_blueberry",
+   "png_1x": "items/1x/crop_blueberry.png",
+   "png_hd": "items/hd/crop_blueberry.png",
+   "svg": "items/svg/crop_blueberry.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "desktop/index.html <symbol id=\"f-blue\"> (cropIcon('blueberry'))",
+   "used_in": [
+    "S02",
+    "S11",
+    "S17",
+    "S29"
+   ],
+   "label": "蓝莓"
+  },
+  "crop_lychee": {
+   "type": "still",
+   "group": "items",
+   "key": "crop_lychee",
+   "png_1x": "items/1x/crop_lychee.png",
+   "png_hd": "items/hd/crop_lychee.png",
+   "svg": "items/svg/crop_lychee.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"f-lychee\"> (cropIcon('lychee'))",
+   "used_in": [
+    "S02",
+    "S10",
+    "S17",
+    "S29"
+   ],
+   "label": "荔枝"
+  },
+  "crop_radish": {
+   "type": "still",
+   "group": "items",
+   "key": "crop_radish",
+   "png_1x": "items/1x/crop_radish.png",
+   "png_hd": "items/hd/crop_radish.png",
+   "svg": "items/svg/crop_radish.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 3,
+   "source": "garden-items.mjs cropIcon('radish')",
+   "used_in": [
+    "S02",
+    "S11",
+    "S12",
+    "S16",
+    "S17",
+    "S29"
+   ],
+   "label": "小萝卜"
+  },
+  "crop_strawberry": {
+   "type": "still",
+   "group": "items",
+   "key": "crop_strawberry",
+   "png_1x": "items/1x/crop_strawberry.png",
+   "png_hd": "items/hd/crop_strawberry.png",
+   "svg": "items/svg/crop_strawberry.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"f-straw\"> (cropIcon('strawberry'))",
+   "used_in": [
+    "S02",
+    "S11",
+    "S16",
+    "S17",
+    "S29"
+   ],
+   "label": "草莓"
+  },
+  "cursor_pixel": {
+   "type": "still",
+   "group": "cursor",
+   "key": "cursor_pixel",
+   "png_1x": {
+    "normal": "cursor/1x/cursor_pixel_normal.png",
+    "pressed": "cursor/1x/cursor_pixel_pressed.png"
+   },
+   "png_hd": {
+    "normal": "cursor/hd/cursor_pixel_normal.png",
+    "pressed": "cursor/hd/cursor_pixel_pressed.png"
+   },
+   "native_size": [
+    12,
+    19
+   ],
+   "hd_scale": 53,
+   "hotspot": [
+    0,
+    0
+   ],
+   "source": "自绘 12×19 像素箭头（唯一非应用素材，只作操作指示）；墨 #3F3829 描边，常态暖纸 #FFF9E9 填充，按下金 #FFD36F 填充",
+   "used_in": [
+    "S05",
+    "S06"
+   ]
+  },
+  "flora_berrybush": {
+   "type": "still",
+   "group": "flora",
+   "key": "flora_berrybush",
+   "png_1x": "flora/1x/flora_berrybush.png",
+   "png_hd": "flora/hd/flora_berrybush.png",
+   "native_size": [
+    8,
+    6
+   ],
+   "hd_scale": 128,
+   "hd_size": [
+    1024,
+    768
+   ],
+   "alpha_values": [
+    0,
+    255
+   ],
+   "colors": 5,
+   "source": "desktop/assets/garden/flora/berrybush.png（原图拷贝）",
+   "used_in": [
+    "S02",
+    "S13",
+    "S14",
+    "S29"
+   ]
+  },
+  "flora_tallgrass": {
+   "type": "still",
+   "group": "flora",
+   "key": "flora_tallgrass",
+   "png_1x": "flora/1x/flora_tallgrass.png",
+   "png_hd": "flora/hd/flora_tallgrass.png",
+   "native_size": [
+    8,
+    8
+   ],
+   "hd_scale": 128,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "alpha_values": [
+    0,
+    255
+   ],
+   "colors": 3,
+   "source": "desktop/assets/garden/flora/tallgrass.png（原图拷贝）",
+   "used_in": [
+    "S02",
+    "S13",
+    "S29"
+   ]
+  },
+  "icon_bell": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_bell",
+   "png_1x": "items/1x/icon_bell.png",
+   "png_hd": "items/hd/icon_bell.png",
+   "svg": "items/svg/icon_bell.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-bell\">",
+   "used_in": [
+    "S25"
+   ]
+  },
+  "icon_book": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_book",
+   "png_1x": "items/1x/icon_book.png",
+   "png_hd": "items/hd/icon_book.png",
+   "svg": "items/svg/icon_book.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-book\">",
+   "used_in": [
+    "S14",
+    "S19",
+    "S27"
+   ]
+  },
+  "icon_bread": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_bread",
+   "png_1x": "items/1x/icon_bread.png",
+   "png_hd": "items/hd/icon_bread.png",
+   "svg": "items/svg/icon_bread.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-bread\">",
+   "used_in": []
+  },
+  "icon_calendar": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_calendar",
+   "png_1x": "items/1x/icon_calendar.png",
+   "png_hd": "items/hd/icon_calendar.png",
+   "svg": "items/svg/icon_calendar.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "desktop/index.html <symbol id=\"i-calendar\">",
+   "used_in": [
+    "S25"
+   ]
+  },
+  "icon_chest": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_chest",
+   "png_1x": "items/1x/icon_chest.png",
+   "png_hd": "items/hd/icon_chest.png",
+   "svg": "items/svg/icon_chest.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "desktop/index.html <symbol id=\"i-chest\">",
+   "used_in": [
+    "S10",
+    "S27"
+   ]
+  },
+  "icon_clock": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_clock",
+   "png_1x": "items/1x/icon_clock.png",
+   "png_hd": "items/hd/icon_clock.png",
+   "svg": "items/svg/icon_clock.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-clock\">",
+   "used_in": [
+    "S09"
+   ]
+  },
+  "icon_cloud": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_cloud",
+   "png_1x": "items/1x/icon_cloud.png",
+   "png_hd": "items/hd/icon_cloud.png",
+   "svg": "items/svg/icon_cloud.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-cloud\">",
+   "used_in": []
+  },
+  "icon_coin": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_coin",
+   "png_1x": "items/1x/icon_coin.png",
+   "png_hd": "items/hd/icon_coin.png",
+   "svg": "items/svg/icon_coin.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-coin\">",
+   "used_in": [
+    "S02",
+    "S10",
+    "S16",
+    "S17",
+    "S18",
+    "S30"
+   ]
+  },
+  "icon_compass": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_compass",
+   "png_1x": "items/1x/icon_compass.png",
+   "png_hd": "items/hd/icon_compass.png",
+   "svg": "items/svg/icon_compass.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "desktop/index.html <symbol id=\"i-compass\">",
+   "used_in": [
+    "S23",
+    "S24"
+   ]
+  },
+  "icon_cottage": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_cottage",
+   "png_1x": "items/1x/icon_cottage.png",
+   "png_hd": "items/hd/icon_cottage.png",
+   "svg": "items/svg/icon_cottage.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 7,
+   "source": "desktop/index.html <symbol id=\"i-cottage\">",
+   "used_in": []
+  },
+  "icon_crystal": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_crystal",
+   "png_1x": "items/1x/icon_crystal.png",
+   "png_hd": "items/hd/icon_crystal.png",
+   "svg": "items/svg/icon_crystal.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-crystal\">",
+   "used_in": []
+  },
+  "icon_disconnect": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_disconnect",
+   "png_1x": "items/1x/icon_disconnect.png",
+   "png_hd": "items/hd/icon_disconnect.png",
+   "svg": "items/svg/icon_disconnect.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 3,
+   "source": "desktop/index.html <symbol id=\"i-disconnect\">",
+   "used_in": [
+    "S22",
+    "S23"
+   ]
+  },
+  "icon_flower": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_flower",
+   "png_1x": "items/1x/icon_flower.png",
+   "png_hd": "items/hd/icon_flower.png",
+   "svg": "items/svg/icon_flower.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-flower\">",
+   "used_in": [
+    "S15"
+   ]
+  },
+  "icon_heart": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_heart",
+   "png_1x": "items/1x/icon_heart.png",
+   "png_hd": "items/hd/icon_heart.png",
+   "svg": "items/svg/icon_heart.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-heart\">",
+   "used_in": [
+    "S06",
+    "S17"
+   ]
+  },
+  "icon_key": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_key",
+   "png_1x": "items/1x/icon_key.png",
+   "png_hd": "items/hd/icon_key.png",
+   "svg": "items/svg/icon_key.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 3,
+   "source": "desktop/index.html <symbol id=\"i-key\">",
+   "used_in": [
+    "S24"
+   ]
+  },
+  "icon_lantern": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_lantern",
+   "png_1x": "items/1x/icon_lantern.png",
+   "png_hd": "items/hd/icon_lantern.png",
+   "svg": "items/svg/icon_lantern.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-lantern\">",
+   "used_in": [
+    "S15"
+   ]
+  },
+  "icon_mail": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_mail",
+   "png_1x": "items/1x/icon_mail.png",
+   "png_hd": "items/hd/icon_mail.png",
+   "svg": "items/svg/icon_mail.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-mail\">",
+   "used_in": []
+  },
+  "icon_medal": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_medal",
+   "png_1x": "items/1x/icon_medal.png",
+   "png_hd": "items/hd/icon_medal.png",
+   "svg": "items/svg/icon_medal.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-medal\">",
+   "used_in": []
+  },
+  "icon_mug": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_mug",
+   "png_1x": "items/1x/icon_mug.png",
+   "png_hd": "items/hd/icon_mug.png",
+   "svg": "items/svg/icon_mug.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "desktop/index.html <symbol id=\"i-mug\">",
+   "used_in": []
+  },
+  "icon_pickaxe": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_pickaxe",
+   "png_1x": "items/1x/icon_pickaxe.png",
+   "png_hd": "items/hd/icon_pickaxe.png",
+   "svg": "items/svg/icon_pickaxe.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-pickaxe\">",
+   "used_in": []
+  },
+  "icon_quill": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_quill",
+   "png_1x": "items/1x/icon_quill.png",
+   "png_hd": "items/hd/icon_quill.png",
+   "svg": "items/svg/icon_quill.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-quill\">",
+   "used_in": [
+    "S08",
+    "S19",
+    "S21"
+   ]
+  },
+  "icon_satchel": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_satchel",
+   "png_1x": "items/1x/icon_satchel.png",
+   "png_hd": "items/hd/icon_satchel.png",
+   "svg": "items/svg/icon_satchel.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-satchel\">",
+   "used_in": []
+  },
+  "icon_scroll": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_scroll",
+   "png_1x": "items/1x/icon_scroll.png",
+   "png_hd": "items/hd/icon_scroll.png",
+   "svg": "items/svg/icon_scroll.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-scroll\">",
+   "used_in": [
+    "S21"
+   ]
+  },
+  "icon_seed": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_seed",
+   "png_1x": "items/1x/icon_seed.png",
+   "png_hd": "items/hd/icon_seed.png",
+   "svg": "items/svg/icon_seed.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-seed\">",
+   "used_in": [
+    "S17",
+    "S18"
+   ]
+  },
+  "icon_shield": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_shield",
+   "png_1x": "items/1x/icon_shield.png",
+   "png_hd": "items/hd/icon_shield.png",
+   "svg": "items/svg/icon_shield.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-shield\">",
+   "used_in": [
+    "S23",
+    "S27"
+   ]
+  },
+  "icon_sign": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_sign",
+   "png_1x": "items/1x/icon_sign.png",
+   "png_hd": "items/hd/icon_sign.png",
+   "svg": "items/svg/icon_sign.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "desktop/index.html <symbol id=\"i-sign\">",
+   "used_in": []
+  },
+  "icon_signal": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_signal",
+   "png_1x": "items/1x/icon_signal.png",
+   "png_hd": "items/hd/icon_signal.png",
+   "svg": "items/svg/icon_signal.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 3,
+   "source": "desktop/index.html <symbol id=\"i-signal\">",
+   "used_in": [
+    "S22",
+    "S23",
+    "S25"
+   ]
+  },
+  "icon_water": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_water",
+   "png_1x": "items/1x/icon_water.png",
+   "png_hd": "items/hd/icon_water.png",
+   "svg": "items/svg/icon_water.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-water\">",
+   "used_in": [
+    "S11",
+    "S14"
+   ]
+  },
+  "icon_workbench": {
+   "type": "still",
+   "group": "items",
+   "key": "icon_workbench",
+   "png_1x": "items/1x/icon_workbench.png",
+   "png_hd": "items/hd/icon_workbench.png",
+   "svg": "items/svg/icon_workbench.svg",
+   "native_size": [
+    16,
+    16
+   ],
+   "hd_scale": 64,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "desktop/index.html <symbol id=\"i-workbench\">",
+   "used_in": []
+  },
+  "pet_cat_build": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_build",
+   "storyboard_key": "pet_cat_build_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "build",
+   "action_label": "一起布置",
+   "loop": false,
+   "total_ms": 2238,
+   "total_frames_60fps": 134,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_build_0.png",
+     "png_hd": "pets/hd/pet_cat_build_0.png",
+     "svg": "pets/svg/pet_cat_build_0.svg",
+     "duration_ms": 394,
+     "start_frame_60fps": 0,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-cat-build-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_build_1.png",
+     "png_hd": "pets/hd/pet_cat_build_1.png",
+     "svg": "pets/svg/pet_cat_build_1.svg",
+     "duration_ms": 290,
+     "start_frame_60fps": 24,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-build-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_build_2.png",
+     "png_hd": "pets/hd/pet_cat_build_2.png",
+     "svg": "pets/svg/pet_cat_build_2.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 41,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-cat-build-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_build_3.png",
+     "png_hd": "pets/hd/pet_cat_build_3.png",
+     "svg": "pets/svg/pet_cat_build_3.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 56,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-cat-build-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_build_4.png",
+     "png_hd": "pets/hd/pet_cat_build_4.png",
+     "svg": "pets/svg/pet_cat_build_4.svg",
+     "duration_ms": 394,
+     "start_frame_60fps": 76,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-cat-build-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_build_5.png",
+     "png_hd": "pets/hd/pet_cat_build_5.png",
+     "svg": "pets/svg/pet_cat_build_5.svg",
+     "duration_ms": 580,
+     "start_frame_60fps": 99,
+     "frames_60fps": 35,
+     "symbol_id": "petanim-cat-build-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_celebrate": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_celebrate",
+   "storyboard_key": "pet_cat_celebrate_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "celebrate",
+   "action_label": "庆祝",
+   "loop": false,
+   "total_ms": 1531,
+   "total_frames_60fps": 92,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_celebrate_0.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_0.png",
+     "svg": "pets/svg/pet_cat_celebrate_0.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 0,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-cat-celebrate-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_celebrate_1.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_1.png",
+     "svg": "pets/svg/pet_cat_celebrate_1.svg",
+     "duration_ms": 197,
+     "start_frame_60fps": 13,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-cat-celebrate-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_celebrate_2.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_2.png",
+     "svg": "pets/svg/pet_cat_celebrate_2.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 24,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-cat-celebrate-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_celebrate_3.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_3.png",
+     "svg": "pets/svg/pet_cat_celebrate_3.svg",
+     "duration_ms": 197,
+     "start_frame_60fps": 37,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-celebrate-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_celebrate_4.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_4.png",
+     "svg": "pets/svg/pet_cat_celebrate_4.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 49,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-cat-celebrate-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_celebrate_5.png",
+     "png_hd": "pets/hd/pet_cat_celebrate_5.png",
+     "svg": "pets/svg/pet_cat_celebrate_5.svg",
+     "duration_ms": 464,
+     "start_frame_60fps": 64,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-cat-celebrate-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S21"
+   ]
+  },
+  "pet_cat_eat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_eat",
+   "storyboard_key": "pet_cat_eat_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "eat",
+   "action_label": "吃点心",
+   "loop": false,
+   "total_ms": 1763,
+   "total_frames_60fps": 106,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_eat_0.png",
+     "png_hd": "pets/hd/pet_cat_eat_0.png",
+     "svg": "pets/svg/pet_cat_eat_0.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 0,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-eat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_eat_1.png",
+     "png_hd": "pets/hd/pet_cat_eat_1.png",
+     "svg": "pets/svg/pet_cat_eat_1.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 17,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-cat-eat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_eat_2.png",
+     "png_hd": "pets/hd/pet_cat_eat_2.png",
+     "svg": "pets/svg/pet_cat_eat_2.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 32,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-cat-eat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_eat_3.png",
+     "png_hd": "pets/hd/pet_cat_eat_3.png",
+     "svg": "pets/svg/pet_cat_eat_3.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 45,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-eat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_eat_4.png",
+     "png_hd": "pets/hd/pet_cat_eat_4.png",
+     "svg": "pets/svg/pet_cat_eat_4.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 61,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-eat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_eat_5.png",
+     "png_hd": "pets/hd/pet_cat_eat_5.png",
+     "svg": "pets/svg/pet_cat_eat_5.svg",
+     "duration_ms": 545,
+     "start_frame_60fps": 73,
+     "frames_60fps": 33,
+     "symbol_id": "petanim-cat-eat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_focus": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_focus",
+   "storyboard_key": "pet_cat_focus_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "focus",
+   "action_label": "陪伴专注",
+   "loop": true,
+   "total_ms": 6113,
+   "total_frames_60fps": 367,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_focus_0.png",
+     "png_hd": "pets/hd/pet_cat_focus_0.png",
+     "svg": "pets/svg/pet_cat_focus_0.svg",
+     "duration_ms": 2088,
+     "start_frame_60fps": 0,
+     "frames_60fps": 125,
+     "symbol_id": "petanim-cat-focus-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_focus_1.png",
+     "png_hd": "pets/hd/pet_cat_focus_1.png",
+     "svg": "pets/svg/pet_cat_focus_1.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 125,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-cat-focus-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_focus_2.png",
+     "png_hd": "pets/hd/pet_cat_focus_2.png",
+     "svg": "pets/svg/pet_cat_focus_2.svg",
+     "duration_ms": 1044,
+     "start_frame_60fps": 145,
+     "frames_60fps": 62,
+     "symbol_id": "petanim-cat-focus-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_focus_3.png",
+     "png_hd": "pets/hd/pet_cat_focus_3.png",
+     "svg": "pets/svg/pet_cat_focus_3.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 207,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-cat-focus-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_focus_4.png",
+     "png_hd": "pets/hd/pet_cat_focus_4.png",
+     "svg": "pets/svg/pet_cat_focus_4.svg",
+     "duration_ms": 928,
+     "start_frame_60fps": 221,
+     "frames_60fps": 55,
+     "symbol_id": "petanim-cat-focus-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_focus_5.png",
+     "png_hd": "pets/hd/pet_cat_focus_5.png",
+     "svg": "pets/svg/pet_cat_focus_5.svg",
+     "duration_ms": 1508,
+     "start_frame_60fps": 276,
+     "frames_60fps": 91,
+     "symbol_id": "petanim-cat-focus-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S19"
+   ]
+  },
+  "pet_cat_gift": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_gift",
+   "storyboard_key": "pet_cat_gift_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "gift",
+   "action_label": "递个小礼物",
+   "loop": false,
+   "total_ms": 2389,
+   "total_frames_60fps": 143,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_gift_0.png",
+     "png_hd": "pets/hd/pet_cat_gift_0.png",
+     "svg": "pets/svg/pet_cat_gift_0.svg",
+     "duration_ms": 371,
+     "start_frame_60fps": 0,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-cat-gift-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_gift_1.png",
+     "png_hd": "pets/hd/pet_cat_gift_1.png",
+     "svg": "pets/svg/pet_cat_gift_1.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 22,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-gift-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_gift_2.png",
+     "png_hd": "pets/hd/pet_cat_gift_2.png",
+     "svg": "pets/svg/pet_cat_gift_2.svg",
+     "duration_ms": 348,
+     "start_frame_60fps": 39,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-cat-gift-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_gift_3.png",
+     "png_hd": "pets/hd/pet_cat_gift_3.png",
+     "svg": "pets/svg/pet_cat_gift_3.svg",
+     "duration_ms": 510,
+     "start_frame_60fps": 60,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-cat-gift-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_gift_4.png",
+     "png_hd": "pets/hd/pet_cat_gift_4.png",
+     "svg": "pets/svg/pet_cat_gift_4.svg",
+     "duration_ms": 348,
+     "start_frame_60fps": 90,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-cat-gift-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_gift_5.png",
+     "png_hd": "pets/hd/pet_cat_gift_5.png",
+     "svg": "pets/svg/pet_cat_gift_5.svg",
+     "duration_ms": 534,
+     "start_frame_60fps": 111,
+     "frames_60fps": 32,
+     "symbol_id": "petanim-cat-gift-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_greet": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_greet",
+   "storyboard_key": "pet_cat_greet_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "greet",
+   "action_label": "打招呼",
+   "loop": false,
+   "total_ms": 1752,
+   "total_frames_60fps": 105,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_greet_0.png",
+     "png_hd": "pets/hd/pet_cat_greet_0.png",
+     "svg": "pets/svg/pet_cat_greet_0.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 0,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-greet-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_greet_1.png",
+     "png_hd": "pets/hd/pet_cat_greet_1.png",
+     "svg": "pets/svg/pet_cat_greet_1.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 17,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-greet-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_greet_2.png",
+     "png_hd": "pets/hd/pet_cat_greet_2.png",
+     "svg": "pets/svg/pet_cat_greet_2.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 33,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-greet-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_greet_3.png",
+     "png_hd": "pets/hd/pet_cat_greet_3.png",
+     "svg": "pets/svg/pet_cat_greet_3.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 45,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-greet-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_greet_4.png",
+     "png_hd": "pets/hd/pet_cat_greet_4.png",
+     "svg": "pets/svg/pet_cat_greet_4.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 61,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-cat-greet-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_greet_5.png",
+     "png_hd": "pets/hd/pet_cat_greet_5.png",
+     "svg": "pets/svg/pet_cat_greet_5.svg",
+     "duration_ms": 522,
+     "start_frame_60fps": 74,
+     "frames_60fps": 31,
+     "symbol_id": "petanim-cat-greet-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_harvest": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_harvest",
+   "storyboard_key": "pet_cat_harvest_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "harvest",
+   "action_label": "抱回收成",
+   "loop": false,
+   "total_ms": 2332,
+   "total_frames_60fps": 140,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_harvest_0.png",
+     "png_hd": "pets/hd/pet_cat_harvest_0.png",
+     "svg": "pets/svg/pet_cat_harvest_0.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 0,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-cat-harvest-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_harvest_1.png",
+     "png_hd": "pets/hd/pet_cat_harvest_1.png",
+     "svg": "pets/svg/pet_cat_harvest_1.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 20,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-harvest-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_harvest_2.png",
+     "png_hd": "pets/hd/pet_cat_harvest_2.png",
+     "svg": "pets/svg/pet_cat_harvest_2.svg",
+     "duration_ms": 360,
+     "start_frame_60fps": 36,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-cat-harvest-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_harvest_3.png",
+     "png_hd": "pets/hd/pet_cat_harvest_3.png",
+     "svg": "pets/svg/pet_cat_harvest_3.svg",
+     "duration_ms": 302,
+     "start_frame_60fps": 58,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-cat-harvest-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_harvest_4.png",
+     "png_hd": "pets/hd/pet_cat_harvest_4.png",
+     "svg": "pets/svg/pet_cat_harvest_4.svg",
+     "duration_ms": 441,
+     "start_frame_60fps": 76,
+     "frames_60fps": 26,
+     "symbol_id": "petanim-cat-harvest-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_harvest_5.png",
+     "png_hd": "pets/hd/pet_cat_harvest_5.png",
+     "svg": "pets/svg/pet_cat_harvest_5.svg",
+     "duration_ms": 626,
+     "start_frame_60fps": 102,
+     "frames_60fps": 38,
+     "symbol_id": "petanim-cat-harvest-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_idle": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_idle",
+   "storyboard_key": "pet_cat_idle_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "idle",
+   "action_label": "发呆",
+   "loop": true,
+   "total_ms": 4408,
+   "total_frames_60fps": 264,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_idle_0.png",
+     "png_hd": "pets/hd/pet_cat_idle_0.png",
+     "svg": "pets/svg/pet_cat_idle_0.svg",
+     "duration_ms": 1740,
+     "start_frame_60fps": 0,
+     "frames_60fps": 104,
+     "symbol_id": "petanim-cat-idle-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_idle_1.png",
+     "png_hd": "pets/hd/pet_cat_idle_1.png",
+     "svg": "pets/svg/pet_cat_idle_1.svg",
+     "duration_ms": 371,
+     "start_frame_60fps": 104,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-cat-idle-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_idle_2.png",
+     "png_hd": "pets/hd/pet_cat_idle_2.png",
+     "svg": "pets/svg/pet_cat_idle_2.svg",
+     "duration_ms": 209,
+     "start_frame_60fps": 127,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-idle-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_idle_3.png",
+     "png_hd": "pets/hd/pet_cat_idle_3.png",
+     "svg": "pets/svg/pet_cat_idle_3.svg",
+     "duration_ms": 151,
+     "start_frame_60fps": 139,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-cat-idle-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_idle_4.png",
+     "png_hd": "pets/hd/pet_cat_idle_4.png",
+     "svg": "pets/svg/pet_cat_idle_4.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 148,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-idle-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_idle_5.png",
+     "png_hd": "pets/hd/pet_cat_idle_5.png",
+     "svg": "pets/svg/pet_cat_idle_5.svg",
+     "duration_ms": 1682,
+     "start_frame_60fps": 164,
+     "frames_60fps": 100,
+     "symbol_id": "petanim-cat-idle-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_look": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_look",
+   "storyboard_key": "pet_cat_look_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "look",
+   "action_label": "张望",
+   "loop": true,
+   "total_ms": 3423,
+   "total_frames_60fps": 205,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_look_0.png",
+     "png_hd": "pets/hd/pet_cat_look_0.png",
+     "svg": "pets/svg/pet_cat_look_0.svg",
+     "duration_ms": 882,
+     "start_frame_60fps": 0,
+     "frames_60fps": 53,
+     "symbol_id": "petanim-cat-look-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_look_1.png",
+     "png_hd": "pets/hd/pet_cat_look_1.png",
+     "svg": "pets/svg/pet_cat_look_1.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 53,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-look-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_look_2.png",
+     "png_hd": "pets/hd/pet_cat_look_2.png",
+     "svg": "pets/svg/pet_cat_look_2.svg",
+     "duration_ms": 812,
+     "start_frame_60fps": 69,
+     "frames_60fps": 49,
+     "symbol_id": "petanim-cat-look-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_look_3.png",
+     "png_hd": "pets/hd/pet_cat_look_3.png",
+     "svg": "pets/svg/pet_cat_look_3.svg",
+     "duration_ms": 244,
+     "start_frame_60fps": 118,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-cat-look-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_look_4.png",
+     "png_hd": "pets/hd/pet_cat_look_4.png",
+     "svg": "pets/svg/pet_cat_look_4.svg",
+     "duration_ms": 812,
+     "start_frame_60fps": 132,
+     "frames_60fps": 49,
+     "symbol_id": "petanim-cat-look-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_look_5.png",
+     "png_hd": "pets/hd/pet_cat_look_5.png",
+     "svg": "pets/svg/pet_cat_look_5.svg",
+     "duration_ms": 406,
+     "start_frame_60fps": 181,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-cat-look-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_pat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_pat",
+   "storyboard_key": "pet_cat_pat_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "pat",
+   "action_label": "摸摸头",
+   "loop": false,
+   "total_ms": 1578,
+   "total_frames_60fps": 95,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_pat_0.png",
+     "png_hd": "pets/hd/pet_cat_pat_0.png",
+     "svg": "pets/svg/pet_cat_pat_0.svg",
+     "duration_ms": 232,
+     "start_frame_60fps": 0,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-cat-pat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_pat_1.png",
+     "png_hd": "pets/hd/pet_cat_pat_1.png",
+     "svg": "pets/svg/pet_cat_pat_1.svg",
+     "duration_ms": 197,
+     "start_frame_60fps": 14,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-pat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_pat_2.png",
+     "png_hd": "pets/hd/pet_cat_pat_2.png",
+     "svg": "pets/svg/pet_cat_pat_2.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 26,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-pat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_pat_3.png",
+     "png_hd": "pets/hd/pet_cat_pat_3.png",
+     "svg": "pets/svg/pet_cat_pat_3.svg",
+     "duration_ms": 232,
+     "start_frame_60fps": 42,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-cat-pat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_pat_4.png",
+     "png_hd": "pets/hd/pet_cat_pat_4.png",
+     "svg": "pets/svg/pet_cat_pat_4.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 56,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-pat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_pat_5.png",
+     "png_hd": "pets/hd/pet_cat_pat_5.png",
+     "svg": "pets/svg/pet_cat_pat_5.svg",
+     "duration_ms": 383,
+     "start_frame_60fps": 72,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-cat-pat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_play": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_play",
+   "storyboard_key": "pet_cat_play_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "play",
+   "action_label": "玩耍",
+   "loop": false,
+   "total_ms": 1391,
+   "total_frames_60fps": 83,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_play_0.png",
+     "png_hd": "pets/hd/pet_cat_play_0.png",
+     "svg": "pets/svg/pet_cat_play_0.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 0,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-cat-play-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_play_1.png",
+     "png_hd": "pets/hd/pet_cat_play_1.png",
+     "svg": "pets/svg/pet_cat_play_1.svg",
+     "duration_ms": 197,
+     "start_frame_60fps": 13,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-cat-play-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_play_2.png",
+     "png_hd": "pets/hd/pet_cat_play_2.png",
+     "svg": "pets/svg/pet_cat_play_2.svg",
+     "duration_ms": 162,
+     "start_frame_60fps": 25,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-cat-play-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_play_3.png",
+     "png_hd": "pets/hd/pet_cat_play_3.png",
+     "svg": "pets/svg/pet_cat_play_3.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 35,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-cat-play-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_play_4.png",
+     "png_hd": "pets/hd/pet_cat_play_4.png",
+     "svg": "pets/svg/pet_cat_play_4.svg",
+     "duration_ms": 186,
+     "start_frame_60fps": 50,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-cat-play-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_play_5.png",
+     "png_hd": "pets/hd/pet_cat_play_5.png",
+     "svg": "pets/svg/pet_cat_play_5.svg",
+     "duration_ms": 371,
+     "start_frame_60fps": 61,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-cat-play-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_ponder": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_ponder",
+   "storyboard_key": "pet_cat_ponder_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "ponder",
+   "action_label": "想点事情",
+   "loop": true,
+   "total_ms": 6113,
+   "total_frames_60fps": 367,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_ponder_0.png",
+     "png_hd": "pets/hd/pet_cat_ponder_0.png",
+     "svg": "pets/svg/pet_cat_ponder_0.svg",
+     "duration_ms": 1740,
+     "start_frame_60fps": 0,
+     "frames_60fps": 104,
+     "symbol_id": "petanim-cat-ponder-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_ponder_1.png",
+     "png_hd": "pets/hd/pet_cat_ponder_1.png",
+     "svg": "pets/svg/pet_cat_ponder_1.svg",
+     "duration_ms": 464,
+     "start_frame_60fps": 104,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-cat-ponder-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_ponder_2.png",
+     "png_hd": "pets/hd/pet_cat_ponder_2.png",
+     "svg": "pets/svg/pet_cat_ponder_2.svg",
+     "duration_ms": 986,
+     "start_frame_60fps": 132,
+     "frames_60fps": 59,
+     "symbol_id": "petanim-cat-ponder-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_ponder_3.png",
+     "png_hd": "pets/hd/pet_cat_ponder_3.png",
+     "svg": "pets/svg/pet_cat_ponder_3.svg",
+     "duration_ms": 371,
+     "start_frame_60fps": 191,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-cat-ponder-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_ponder_4.png",
+     "png_hd": "pets/hd/pet_cat_ponder_4.png",
+     "svg": "pets/svg/pet_cat_ponder_4.svg",
+     "duration_ms": 1044,
+     "start_frame_60fps": 214,
+     "frames_60fps": 62,
+     "symbol_id": "petanim-cat-ponder-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_ponder_5.png",
+     "png_hd": "pets/hd/pet_cat_ponder_5.png",
+     "svg": "pets/svg/pet_cat_ponder_5.svg",
+     "duration_ms": 1508,
+     "start_frame_60fps": 276,
+     "frames_60fps": 91,
+     "symbol_id": "petanim-cat-ponder-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_sad": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_sad",
+   "storyboard_key": "pet_cat_sad_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "sad",
+   "action_label": "有点低落",
+   "loop": true,
+   "total_ms": 4037,
+   "total_frames_60fps": 242,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_sad_0.png",
+     "png_hd": "pets/hd/pet_cat_sad_0.png",
+     "svg": "pets/svg/pet_cat_sad_0.svg",
+     "duration_ms": 1276,
+     "start_frame_60fps": 0,
+     "frames_60fps": 77,
+     "symbol_id": "petanim-cat-sad-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_sad_1.png",
+     "png_hd": "pets/hd/pet_cat_sad_1.png",
+     "svg": "pets/svg/pet_cat_sad_1.svg",
+     "duration_ms": 580,
+     "start_frame_60fps": 77,
+     "frames_60fps": 34,
+     "symbol_id": "petanim-cat-sad-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_sad_2.png",
+     "png_hd": "pets/hd/pet_cat_sad_2.png",
+     "svg": "pets/svg/pet_cat_sad_2.svg",
+     "duration_ms": 255,
+     "start_frame_60fps": 111,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-sad-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_sad_3.png",
+     "png_hd": "pets/hd/pet_cat_sad_3.png",
+     "svg": "pets/svg/pet_cat_sad_3.svg",
+     "duration_ms": 302,
+     "start_frame_60fps": 127,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-cat-sad-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_sad_4.png",
+     "png_hd": "pets/hd/pet_cat_sad_4.png",
+     "svg": "pets/svg/pet_cat_sad_4.svg",
+     "duration_ms": 580,
+     "start_frame_60fps": 145,
+     "frames_60fps": 35,
+     "symbol_id": "petanim-cat-sad-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_sad_5.png",
+     "png_hd": "pets/hd/pet_cat_sad_5.png",
+     "svg": "pets/svg/pet_cat_sad_5.svg",
+     "duration_ms": 1044,
+     "start_frame_60fps": 180,
+     "frames_60fps": 62,
+     "symbol_id": "petanim-cat-sad-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_signature": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_signature",
+   "storyboard_key": "pet_cat_signature_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "signature",
+   "action_label": "拿手动作（检查一下纸箱）",
+   "loop": false,
+   "total_ms": 2611,
+   "total_frames_60fps": 157,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_signature_0.png",
+     "png_hd": "pets/hd/pet_cat_signature_0.png",
+     "svg": "pets/svg/pet_cat_signature_0.svg",
+     "duration_ms": 499,
+     "start_frame_60fps": 0,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-cat-signature-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_signature_1.png",
+     "png_hd": "pets/hd/pet_cat_signature_1.png",
+     "svg": "pets/svg/pet_cat_signature_1.svg",
+     "duration_ms": 302,
+     "start_frame_60fps": 30,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-cat-signature-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_signature_2.png",
+     "png_hd": "pets/hd/pet_cat_signature_2.png",
+     "svg": "pets/svg/pet_cat_signature_2.svg",
+     "duration_ms": 348,
+     "start_frame_60fps": 48,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-cat-signature-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_signature_3.png",
+     "png_hd": "pets/hd/pet_cat_signature_3.png",
+     "svg": "pets/svg/pet_cat_signature_3.svg",
+     "duration_ms": 418,
+     "start_frame_60fps": 69,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-cat-signature-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_signature_4.png",
+     "png_hd": "pets/hd/pet_cat_signature_4.png",
+     "svg": "pets/svg/pet_cat_signature_4.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 94,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-cat-signature-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_signature_5.png",
+     "png_hd": "pets/hd/pet_cat_signature_5.png",
+     "svg": "pets/svg/pet_cat_signature_5.svg",
+     "duration_ms": 719,
+     "start_frame_60fps": 114,
+     "frames_60fps": 43,
+     "symbol_id": "petanim-cat-signature-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S07",
+    "S29"
+   ]
+  },
+  "pet_cat_sleep": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_sleep",
+   "storyboard_key": "pet_cat_sleep_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "sleep",
+   "action_label": "睡觉",
+   "loop": true,
+   "total_ms": 5800,
+   "total_frames_60fps": 348,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_sleep_0.png",
+     "png_hd": "pets/hd/pet_cat_sleep_0.png",
+     "svg": "pets/svg/pet_cat_sleep_0.svg",
+     "duration_ms": 1044,
+     "start_frame_60fps": 0,
+     "frames_60fps": 63,
+     "symbol_id": "petanim-cat-sleep-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_sleep_1.png",
+     "png_hd": "pets/hd/pet_cat_sleep_1.png",
+     "svg": "pets/svg/pet_cat_sleep_1.svg",
+     "duration_ms": 986,
+     "start_frame_60fps": 63,
+     "frames_60fps": 59,
+     "symbol_id": "petanim-cat-sleep-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_sleep_2.png",
+     "png_hd": "pets/hd/pet_cat_sleep_2.png",
+     "svg": "pets/svg/pet_cat_sleep_2.svg",
+     "duration_ms": 870,
+     "start_frame_60fps": 122,
+     "frames_60fps": 52,
+     "symbol_id": "petanim-cat-sleep-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_sleep_3.png",
+     "png_hd": "pets/hd/pet_cat_sleep_3.png",
+     "svg": "pets/svg/pet_cat_sleep_3.svg",
+     "duration_ms": 1044,
+     "start_frame_60fps": 174,
+     "frames_60fps": 63,
+     "symbol_id": "petanim-cat-sleep-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_sleep_4.png",
+     "png_hd": "pets/hd/pet_cat_sleep_4.png",
+     "svg": "pets/svg/pet_cat_sleep_4.svg",
+     "duration_ms": 986,
+     "start_frame_60fps": 237,
+     "frames_60fps": 59,
+     "symbol_id": "petanim-cat-sleep-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_sleep_5.png",
+     "png_hd": "pets/hd/pet_cat_sleep_5.png",
+     "svg": "pets/svg/pet_cat_sleep_5.svg",
+     "duration_ms": 870,
+     "start_frame_60fps": 296,
+     "frames_60fps": 52,
+     "symbol_id": "petanim-cat-sleep-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_static_happy": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_cat_static_happy",
+   "png_1x": "pets_static/1x/pet_cat_static_happy.png",
+   "png_hd": "pets_static/hd/pet_cat_static_happy.png",
+   "svg": "pets_static/svg/pet_cat_static_happy.svg",
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "colors": 8,
+   "source": "pet-art.mjs PET_SYMBOLS #cat-happy",
+   "used_in": [],
+   "overview_scale": 5
+  },
+  "pet_cat_static_normal": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_cat_static_normal",
+   "png_1x": "pets_static/1x/pet_cat_static_normal.png",
+   "png_hd": "pets_static/hd/pet_cat_static_normal.png",
+   "svg": "pets_static/svg/pet_cat_static_normal.svg",
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "colors": 8,
+   "source": "pet-art.mjs PET_SYMBOLS #cat-normal",
+   "used_in": [],
+   "overview_scale": 5
+  },
+  "pet_cat_static_sad": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_cat_static_sad",
+   "png_1x": "pets_static/1x/pet_cat_static_sad.png",
+   "png_hd": "pets_static/hd/pet_cat_static_sad.png",
+   "svg": "pets_static/svg/pet_cat_static_sad.svg",
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "colors": 9,
+   "source": "pet-art.mjs PET_SYMBOLS #cat-sad",
+   "used_in": [],
+   "overview_scale": 5
+  },
+  "pet_cat_static_sleep": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_cat_static_sleep",
+   "png_1x": "pets_static/1x/pet_cat_static_sleep.png",
+   "png_hd": "pets_static/hd/pet_cat_static_sleep.png",
+   "svg": "pets_static/svg/pet_cat_static_sleep.svg",
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "colors": 6,
+   "source": "pet-art.mjs PET_SYMBOLS #cat-sleep",
+   "used_in": [],
+   "overview_scale": 5
+  },
+  "pet_cat_wake": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_wake",
+   "storyboard_key": "pet_cat_wake_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "wake",
+   "action_label": "伸懒腰",
+   "loop": false,
+   "total_ms": 2065,
+   "total_frames_60fps": 124,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_wake_0.png",
+     "png_hd": "pets/hd/pet_cat_wake_0.png",
+     "svg": "pets/svg/pet_cat_wake_0.svg",
+     "duration_ms": 302,
+     "start_frame_60fps": 0,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-cat-wake-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_wake_1.png",
+     "png_hd": "pets/hd/pet_cat_wake_1.png",
+     "svg": "pets/svg/pet_cat_wake_1.svg",
+     "duration_ms": 267,
+     "start_frame_60fps": 18,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-cat-wake-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_wake_2.png",
+     "png_hd": "pets/hd/pet_cat_wake_2.png",
+     "svg": "pets/svg/pet_cat_wake_2.svg",
+     "duration_ms": 394,
+     "start_frame_60fps": 34,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-cat-wake-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_wake_3.png",
+     "png_hd": "pets/hd/pet_cat_wake_3.png",
+     "svg": "pets/svg/pet_cat_wake_3.svg",
+     "duration_ms": 418,
+     "start_frame_60fps": 58,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-cat-wake-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_wake_4.png",
+     "png_hd": "pets/hd/pet_cat_wake_4.png",
+     "svg": "pets/svg/pet_cat_wake_4.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 83,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-wake-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_wake_5.png",
+     "png_hd": "pets/hd/pet_cat_wake_5.png",
+     "svg": "pets/svg/pet_cat_wake_5.svg",
+     "duration_ms": 406,
+     "start_frame_60fps": 100,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-cat-wake-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_cat_walk": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_walk",
+   "storyboard_key": "pet_cat_walk_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "walk",
+   "action_label": "散步",
+   "loop": true,
+   "total_ms": 998,
+   "total_frames_60fps": 60,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_walk_0.png",
+     "png_hd": "pets/hd/pet_cat_walk_0.png",
+     "svg": "pets/svg/pet_cat_walk_0.svg",
+     "duration_ms": 174,
+     "start_frame_60fps": 0,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-cat-walk-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_walk_1.png",
+     "png_hd": "pets/hd/pet_cat_walk_1.png",
+     "svg": "pets/svg/pet_cat_walk_1.svg",
+     "duration_ms": 151,
+     "start_frame_60fps": 10,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-cat-walk-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_walk_2.png",
+     "png_hd": "pets/hd/pet_cat_walk_2.png",
+     "svg": "pets/svg/pet_cat_walk_2.svg",
+     "duration_ms": 174,
+     "start_frame_60fps": 20,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-cat-walk-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_walk_3.png",
+     "png_hd": "pets/hd/pet_cat_walk_3.png",
+     "svg": "pets/svg/pet_cat_walk_3.svg",
+     "duration_ms": 174,
+     "start_frame_60fps": 30,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-cat-walk-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_walk_4.png",
+     "png_hd": "pets/hd/pet_cat_walk_4.png",
+     "svg": "pets/svg/pet_cat_walk_4.svg",
+     "duration_ms": 151,
+     "start_frame_60fps": 40,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-cat-walk-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_walk_5.png",
+     "png_hd": "pets/hd/pet_cat_walk_5.png",
+     "svg": "pets/svg/pet_cat_walk_5.svg",
+     "duration_ms": 174,
+     "start_frame_60fps": 49,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-cat-walk-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S03"
+   ]
+  },
+  "pet_cat_water": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_cat_water",
+   "storyboard_key": "pet_cat_water_0-5",
+   "companion": "栗栗",
+   "species": "chestnut",
+   "sprite_id": "cat",
+   "action": "water",
+   "action_label": "浇浇水",
+   "loop": false,
+   "total_ms": 2297,
+   "total_frames_60fps": 138,
+   "native_size": [
+    20,
+    22
+   ],
+   "hd_scale": 46,
+   "hd_size": [
+    920,
+    1012
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_cat_water_0.png",
+     "png_hd": "pets/hd/pet_cat_water_0.png",
+     "svg": "pets/svg/pet_cat_water_0.svg",
+     "duration_ms": 406,
+     "start_frame_60fps": 0,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-cat-water-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_cat_water_1.png",
+     "png_hd": "pets/hd/pet_cat_water_1.png",
+     "svg": "pets/svg/pet_cat_water_1.svg",
+     "duration_ms": 278,
+     "start_frame_60fps": 24,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-cat-water-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_cat_water_2.png",
+     "png_hd": "pets/hd/pet_cat_water_2.png",
+     "svg": "pets/svg/pet_cat_water_2.svg",
+     "duration_ms": 371,
+     "start_frame_60fps": 41,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-cat-water-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_cat_water_3.png",
+     "png_hd": "pets/hd/pet_cat_water_3.png",
+     "svg": "pets/svg/pet_cat_water_3.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 63,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-cat-water-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_cat_water_4.png",
+     "png_hd": "pets/hd/pet_cat_water_4.png",
+     "svg": "pets/svg/pet_cat_water_4.svg",
+     "duration_ms": 360,
+     "start_frame_60fps": 83,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-cat-water-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_cat_water_5.png",
+     "png_hd": "pets/hd/pet_cat_water_5.png",
+     "svg": "pets/svg/pet_cat_water_5.svg",
+     "duration_ms": 557,
+     "start_frame_60fps": 104,
+     "frames_60fps": 34,
+     "symbol_id": "petanim-cat-water-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('chestnut'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_build": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_build",
+   "storyboard_key": "pet_egret_build_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "build",
+   "action_label": "一起布置",
+   "loop": false,
+   "total_ms": 2509,
+   "total_frames_60fps": 151,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_build_0.png",
+     "png_hd": "pets/hd/pet_egret_build_0.png",
+     "svg": "pets/svg/pet_egret_build_0.svg",
+     "duration_ms": 442,
+     "start_frame_60fps": 0,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-build-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_build_1.png",
+     "png_hd": "pets/hd/pet_egret_build_1.png",
+     "svg": "pets/svg/pet_egret_build_1.svg",
+     "duration_ms": 325,
+     "start_frame_60fps": 27,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-build-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_build_2.png",
+     "png_hd": "pets/hd/pet_egret_build_2.png",
+     "svg": "pets/svg/pet_egret_build_2.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 46,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-build-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_build_3.png",
+     "png_hd": "pets/hd/pet_egret_build_3.png",
+     "svg": "pets/svg/pet_egret_build_3.svg",
+     "duration_ms": 364,
+     "start_frame_60fps": 63,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-egret-build-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_build_4.png",
+     "png_hd": "pets/hd/pet_egret_build_4.png",
+     "svg": "pets/svg/pet_egret_build_4.svg",
+     "duration_ms": 442,
+     "start_frame_60fps": 85,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-build-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_build_5.png",
+     "png_hd": "pets/hd/pet_egret_build_5.png",
+     "svg": "pets/svg/pet_egret_build_5.svg",
+     "duration_ms": 650,
+     "start_frame_60fps": 112,
+     "frames_60fps": 39,
+     "symbol_id": "petanim-egret-build-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_celebrate": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_celebrate",
+   "storyboard_key": "pet_egret_celebrate_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "celebrate",
+   "action_label": "庆祝",
+   "loop": false,
+   "total_ms": 1716,
+   "total_frames_60fps": 103,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_celebrate_0.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_0.png",
+     "svg": "pets/svg/pet_egret_celebrate_0.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 0,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-celebrate-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_celebrate_1.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_1.png",
+     "svg": "pets/svg/pet_egret_celebrate_1.svg",
+     "duration_ms": 221,
+     "start_frame_60fps": 14,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-egret-celebrate-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_celebrate_2.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_2.png",
+     "svg": "pets/svg/pet_egret_celebrate_2.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 27,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-celebrate-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_celebrate_3.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_3.png",
+     "svg": "pets/svg/pet_egret_celebrate_3.svg",
+     "duration_ms": 221,
+     "start_frame_60fps": 41,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-celebrate-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_celebrate_4.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_4.png",
+     "svg": "pets/svg/pet_egret_celebrate_4.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 55,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-celebrate-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_celebrate_5.png",
+     "png_hd": "pets/hd/pet_egret_celebrate_5.png",
+     "svg": "pets/svg/pet_egret_celebrate_5.svg",
+     "duration_ms": 520,
+     "start_frame_60fps": 72,
+     "frames_60fps": 31,
+     "symbol_id": "petanim-egret-celebrate-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_eat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_eat",
+   "storyboard_key": "pet_egret_eat_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "eat",
+   "action_label": "吃点心",
+   "loop": false,
+   "total_ms": 1976,
+   "total_frames_60fps": 119,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_eat_0.png",
+     "png_hd": "pets/hd/pet_egret_eat_0.png",
+     "svg": "pets/svg/pet_egret_eat_0.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 0,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-eat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_eat_1.png",
+     "png_hd": "pets/hd/pet_egret_eat_1.png",
+     "svg": "pets/svg/pet_egret_eat_1.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 19,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-eat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_eat_2.png",
+     "png_hd": "pets/hd/pet_egret_eat_2.png",
+     "svg": "pets/svg/pet_egret_eat_2.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 36,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-eat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_eat_3.png",
+     "png_hd": "pets/hd/pet_egret_eat_3.png",
+     "svg": "pets/svg/pet_egret_eat_3.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 50,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-eat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_eat_4.png",
+     "png_hd": "pets/hd/pet_egret_eat_4.png",
+     "svg": "pets/svg/pet_egret_eat_4.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 68,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-eat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_eat_5.png",
+     "png_hd": "pets/hd/pet_egret_eat_5.png",
+     "svg": "pets/svg/pet_egret_eat_5.svg",
+     "duration_ms": 611,
+     "start_frame_60fps": 82,
+     "frames_60fps": 37,
+     "symbol_id": "petanim-egret-eat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_focus": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_focus",
+   "storyboard_key": "pet_egret_focus_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "focus",
+   "action_label": "陪伴专注",
+   "loop": true,
+   "total_ms": 6851,
+   "total_frames_60fps": 411,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_focus_0.png",
+     "png_hd": "pets/hd/pet_egret_focus_0.png",
+     "svg": "pets/svg/pet_egret_focus_0.svg",
+     "duration_ms": 2340,
+     "start_frame_60fps": 0,
+     "frames_60fps": 140,
+     "symbol_id": "petanim-egret-focus-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_focus_1.png",
+     "png_hd": "pets/hd/pet_egret_focus_1.png",
+     "svg": "pets/svg/pet_egret_focus_1.svg",
+     "duration_ms": 364,
+     "start_frame_60fps": 140,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-egret-focus-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_focus_2.png",
+     "png_hd": "pets/hd/pet_egret_focus_2.png",
+     "svg": "pets/svg/pet_egret_focus_2.svg",
+     "duration_ms": 1170,
+     "start_frame_60fps": 162,
+     "frames_60fps": 70,
+     "symbol_id": "petanim-egret-focus-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_focus_3.png",
+     "png_hd": "pets/hd/pet_egret_focus_3.png",
+     "svg": "pets/svg/pet_egret_focus_3.svg",
+     "duration_ms": 247,
+     "start_frame_60fps": 232,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-egret-focus-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_focus_4.png",
+     "png_hd": "pets/hd/pet_egret_focus_4.png",
+     "svg": "pets/svg/pet_egret_focus_4.svg",
+     "duration_ms": 1040,
+     "start_frame_60fps": 247,
+     "frames_60fps": 63,
+     "symbol_id": "petanim-egret-focus-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_focus_5.png",
+     "png_hd": "pets/hd/pet_egret_focus_5.png",
+     "svg": "pets/svg/pet_egret_focus_5.svg",
+     "duration_ms": 1690,
+     "start_frame_60fps": 310,
+     "frames_60fps": 101,
+     "symbol_id": "petanim-egret-focus-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_gift": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_gift",
+   "storyboard_key": "pet_egret_gift_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "gift",
+   "action_label": "递个小礼物",
+   "loop": false,
+   "total_ms": 2678,
+   "total_frames_60fps": 161,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_gift_0.png",
+     "png_hd": "pets/hd/pet_egret_gift_0.png",
+     "svg": "pets/svg/pet_egret_gift_0.svg",
+     "duration_ms": 416,
+     "start_frame_60fps": 0,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-egret-gift-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_gift_1.png",
+     "png_hd": "pets/hd/pet_egret_gift_1.png",
+     "svg": "pets/svg/pet_egret_gift_1.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 25,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-gift-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_gift_2.png",
+     "png_hd": "pets/hd/pet_egret_gift_2.png",
+     "svg": "pets/svg/pet_egret_gift_2.svg",
+     "duration_ms": 390,
+     "start_frame_60fps": 44,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-egret-gift-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_gift_3.png",
+     "png_hd": "pets/hd/pet_egret_gift_3.png",
+     "svg": "pets/svg/pet_egret_gift_3.svg",
+     "duration_ms": 572,
+     "start_frame_60fps": 67,
+     "frames_60fps": 34,
+     "symbol_id": "petanim-egret-gift-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_gift_4.png",
+     "png_hd": "pets/hd/pet_egret_gift_4.png",
+     "svg": "pets/svg/pet_egret_gift_4.svg",
+     "duration_ms": 390,
+     "start_frame_60fps": 101,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-egret-gift-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_gift_5.png",
+     "png_hd": "pets/hd/pet_egret_gift_5.png",
+     "svg": "pets/svg/pet_egret_gift_5.svg",
+     "duration_ms": 598,
+     "start_frame_60fps": 125,
+     "frames_60fps": 36,
+     "symbol_id": "petanim-egret-gift-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_greet": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_greet",
+   "storyboard_key": "pet_egret_greet_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "greet",
+   "action_label": "打招呼",
+   "loop": false,
+   "total_ms": 1963,
+   "total_frames_60fps": 118,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_greet_0.png",
+     "png_hd": "pets/hd/pet_egret_greet_0.png",
+     "svg": "pets/svg/pet_egret_greet_0.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 0,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-greet-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_greet_1.png",
+     "png_hd": "pets/hd/pet_egret_greet_1.png",
+     "svg": "pets/svg/pet_egret_greet_1.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 19,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-greet-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_greet_2.png",
+     "png_hd": "pets/hd/pet_egret_greet_2.png",
+     "svg": "pets/svg/pet_egret_greet_2.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 37,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-greet-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_greet_3.png",
+     "png_hd": "pets/hd/pet_egret_greet_3.png",
+     "svg": "pets/svg/pet_egret_greet_3.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 51,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-greet-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_greet_4.png",
+     "png_hd": "pets/hd/pet_egret_greet_4.png",
+     "svg": "pets/svg/pet_egret_greet_4.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 69,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-greet-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_greet_5.png",
+     "png_hd": "pets/hd/pet_egret_greet_5.png",
+     "svg": "pets/svg/pet_egret_greet_5.svg",
+     "duration_ms": 585,
+     "start_frame_60fps": 83,
+     "frames_60fps": 35,
+     "symbol_id": "petanim-egret-greet-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_harvest": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_harvest",
+   "storyboard_key": "pet_egret_harvest_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "harvest",
+   "action_label": "抱回收成",
+   "loop": false,
+   "total_ms": 2613,
+   "total_frames_60fps": 157,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_harvest_0.png",
+     "png_hd": "pets/hd/pet_egret_harvest_0.png",
+     "svg": "pets/svg/pet_egret_harvest_0.svg",
+     "duration_ms": 364,
+     "start_frame_60fps": 0,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-egret-harvest-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_harvest_1.png",
+     "png_hd": "pets/hd/pet_egret_harvest_1.png",
+     "svg": "pets/svg/pet_egret_harvest_1.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 22,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-harvest-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_harvest_2.png",
+     "png_hd": "pets/hd/pet_egret_harvest_2.png",
+     "svg": "pets/svg/pet_egret_harvest_2.svg",
+     "duration_ms": 403,
+     "start_frame_60fps": 41,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-egret-harvest-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_harvest_3.png",
+     "png_hd": "pets/hd/pet_egret_harvest_3.png",
+     "svg": "pets/svg/pet_egret_harvest_3.svg",
+     "duration_ms": 338,
+     "start_frame_60fps": 65,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-egret-harvest-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_harvest_4.png",
+     "png_hd": "pets/hd/pet_egret_harvest_4.png",
+     "svg": "pets/svg/pet_egret_harvest_4.svg",
+     "duration_ms": 494,
+     "start_frame_60fps": 85,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-egret-harvest-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_harvest_5.png",
+     "png_hd": "pets/hd/pet_egret_harvest_5.png",
+     "svg": "pets/svg/pet_egret_harvest_5.svg",
+     "duration_ms": 702,
+     "start_frame_60fps": 115,
+     "frames_60fps": 42,
+     "symbol_id": "petanim-egret-harvest-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_idle": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_idle",
+   "storyboard_key": "pet_egret_idle_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "idle",
+   "action_label": "发呆",
+   "loop": true,
+   "total_ms": 4940,
+   "total_frames_60fps": 296,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_idle_0.png",
+     "png_hd": "pets/hd/pet_egret_idle_0.png",
+     "svg": "pets/svg/pet_egret_idle_0.svg",
+     "duration_ms": 1950,
+     "start_frame_60fps": 0,
+     "frames_60fps": 117,
+     "symbol_id": "petanim-egret-idle-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_idle_1.png",
+     "png_hd": "pets/hd/pet_egret_idle_1.png",
+     "svg": "pets/svg/pet_egret_idle_1.svg",
+     "duration_ms": 416,
+     "start_frame_60fps": 117,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-egret-idle-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_idle_2.png",
+     "png_hd": "pets/hd/pet_egret_idle_2.png",
+     "svg": "pets/svg/pet_egret_idle_2.svg",
+     "duration_ms": 234,
+     "start_frame_60fps": 142,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-egret-idle-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_idle_3.png",
+     "png_hd": "pets/hd/pet_egret_idle_3.png",
+     "svg": "pets/svg/pet_egret_idle_3.svg",
+     "duration_ms": 169,
+     "start_frame_60fps": 156,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-egret-idle-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_idle_4.png",
+     "png_hd": "pets/hd/pet_egret_idle_4.png",
+     "svg": "pets/svg/pet_egret_idle_4.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 166,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-idle-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_idle_5.png",
+     "png_hd": "pets/hd/pet_egret_idle_5.png",
+     "svg": "pets/svg/pet_egret_idle_5.svg",
+     "duration_ms": 1885,
+     "start_frame_60fps": 183,
+     "frames_60fps": 113,
+     "symbol_id": "petanim-egret-idle-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S26"
+   ]
+  },
+  "pet_egret_look": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_look",
+   "storyboard_key": "pet_egret_look_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "look",
+   "action_label": "张望",
+   "loop": true,
+   "total_ms": 3835,
+   "total_frames_60fps": 230,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_look_0.png",
+     "png_hd": "pets/hd/pet_egret_look_0.png",
+     "svg": "pets/svg/pet_egret_look_0.svg",
+     "duration_ms": 988,
+     "start_frame_60fps": 0,
+     "frames_60fps": 59,
+     "symbol_id": "petanim-egret-look-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_look_1.png",
+     "png_hd": "pets/hd/pet_egret_look_1.png",
+     "svg": "pets/svg/pet_egret_look_1.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 59,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-look-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_look_2.png",
+     "png_hd": "pets/hd/pet_egret_look_2.png",
+     "svg": "pets/svg/pet_egret_look_2.svg",
+     "duration_ms": 910,
+     "start_frame_60fps": 77,
+     "frames_60fps": 55,
+     "symbol_id": "petanim-egret-look-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_look_3.png",
+     "png_hd": "pets/hd/pet_egret_look_3.png",
+     "svg": "pets/svg/pet_egret_look_3.svg",
+     "duration_ms": 273,
+     "start_frame_60fps": 132,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-egret-look-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_look_4.png",
+     "png_hd": "pets/hd/pet_egret_look_4.png",
+     "svg": "pets/svg/pet_egret_look_4.svg",
+     "duration_ms": 910,
+     "start_frame_60fps": 148,
+     "frames_60fps": 55,
+     "symbol_id": "petanim-egret-look-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_look_5.png",
+     "png_hd": "pets/hd/pet_egret_look_5.png",
+     "svg": "pets/svg/pet_egret_look_5.svg",
+     "duration_ms": 455,
+     "start_frame_60fps": 203,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-look-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_pat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_pat",
+   "storyboard_key": "pet_egret_pat_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "pat",
+   "action_label": "摸摸头",
+   "loop": false,
+   "total_ms": 1768,
+   "total_frames_60fps": 106,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_pat_0.png",
+     "png_hd": "pets/hd/pet_egret_pat_0.png",
+     "svg": "pets/svg/pet_egret_pat_0.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 0,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-egret-pat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_pat_1.png",
+     "png_hd": "pets/hd/pet_egret_pat_1.png",
+     "svg": "pets/svg/pet_egret_pat_1.svg",
+     "duration_ms": 221,
+     "start_frame_60fps": 16,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-egret-pat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_pat_2.png",
+     "png_hd": "pets/hd/pet_egret_pat_2.png",
+     "svg": "pets/svg/pet_egret_pat_2.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 29,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-pat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_pat_3.png",
+     "png_hd": "pets/hd/pet_egret_pat_3.png",
+     "svg": "pets/svg/pet_egret_pat_3.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 47,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-egret-pat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_pat_4.png",
+     "png_hd": "pets/hd/pet_egret_pat_4.png",
+     "svg": "pets/svg/pet_egret_pat_4.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 62,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-pat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_pat_5.png",
+     "png_hd": "pets/hd/pet_egret_pat_5.png",
+     "svg": "pets/svg/pet_egret_pat_5.svg",
+     "duration_ms": 429,
+     "start_frame_60fps": 80,
+     "frames_60fps": 26,
+     "symbol_id": "petanim-egret-pat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_play": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_play",
+   "storyboard_key": "pet_egret_play_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "play",
+   "action_label": "玩耍",
+   "loop": false,
+   "total_ms": 1560,
+   "total_frames_60fps": 94,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_play_0.png",
+     "png_hd": "pets/hd/pet_egret_play_0.png",
+     "svg": "pets/svg/pet_egret_play_0.svg",
+     "duration_ms": 247,
+     "start_frame_60fps": 0,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-egret-play-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_play_1.png",
+     "png_hd": "pets/hd/pet_egret_play_1.png",
+     "svg": "pets/svg/pet_egret_play_1.svg",
+     "duration_ms": 221,
+     "start_frame_60fps": 15,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-egret-play-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_play_2.png",
+     "png_hd": "pets/hd/pet_egret_play_2.png",
+     "svg": "pets/svg/pet_egret_play_2.svg",
+     "duration_ms": 182,
+     "start_frame_60fps": 28,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-egret-play-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_play_3.png",
+     "png_hd": "pets/hd/pet_egret_play_3.png",
+     "svg": "pets/svg/pet_egret_play_3.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 39,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-play-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_play_4.png",
+     "png_hd": "pets/hd/pet_egret_play_4.png",
+     "svg": "pets/svg/pet_egret_play_4.svg",
+     "duration_ms": 208,
+     "start_frame_60fps": 56,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-egret-play-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_play_5.png",
+     "png_hd": "pets/hd/pet_egret_play_5.png",
+     "svg": "pets/svg/pet_egret_play_5.svg",
+     "duration_ms": 416,
+     "start_frame_60fps": 69,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-egret-play-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_ponder": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_ponder",
+   "storyboard_key": "pet_egret_ponder_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "ponder",
+   "action_label": "想点事情",
+   "loop": true,
+   "total_ms": 6851,
+   "total_frames_60fps": 411,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_ponder_0.png",
+     "png_hd": "pets/hd/pet_egret_ponder_0.png",
+     "svg": "pets/svg/pet_egret_ponder_0.svg",
+     "duration_ms": 1950,
+     "start_frame_60fps": 0,
+     "frames_60fps": 117,
+     "symbol_id": "petanim-egret-ponder-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_ponder_1.png",
+     "png_hd": "pets/hd/pet_egret_ponder_1.png",
+     "svg": "pets/svg/pet_egret_ponder_1.svg",
+     "duration_ms": 520,
+     "start_frame_60fps": 117,
+     "frames_60fps": 31,
+     "symbol_id": "petanim-egret-ponder-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_ponder_2.png",
+     "png_hd": "pets/hd/pet_egret_ponder_2.png",
+     "svg": "pets/svg/pet_egret_ponder_2.svg",
+     "duration_ms": 1105,
+     "start_frame_60fps": 148,
+     "frames_60fps": 66,
+     "symbol_id": "petanim-egret-ponder-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_ponder_3.png",
+     "png_hd": "pets/hd/pet_egret_ponder_3.png",
+     "svg": "pets/svg/pet_egret_ponder_3.svg",
+     "duration_ms": 416,
+     "start_frame_60fps": 214,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-egret-ponder-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_ponder_4.png",
+     "png_hd": "pets/hd/pet_egret_ponder_4.png",
+     "svg": "pets/svg/pet_egret_ponder_4.svg",
+     "duration_ms": 1170,
+     "start_frame_60fps": 239,
+     "frames_60fps": 71,
+     "symbol_id": "petanim-egret-ponder-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_ponder_5.png",
+     "png_hd": "pets/hd/pet_egret_ponder_5.png",
+     "svg": "pets/svg/pet_egret_ponder_5.svg",
+     "duration_ms": 1690,
+     "start_frame_60fps": 310,
+     "frames_60fps": 101,
+     "symbol_id": "petanim-egret-ponder-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_sad": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_sad",
+   "storyboard_key": "pet_egret_sad_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "sad",
+   "action_label": "有点低落",
+   "loop": true,
+   "total_ms": 4524,
+   "total_frames_60fps": 271,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_sad_0.png",
+     "png_hd": "pets/hd/pet_egret_sad_0.png",
+     "svg": "pets/svg/pet_egret_sad_0.svg",
+     "duration_ms": 1430,
+     "start_frame_60fps": 0,
+     "frames_60fps": 86,
+     "symbol_id": "petanim-egret-sad-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_sad_1.png",
+     "png_hd": "pets/hd/pet_egret_sad_1.png",
+     "svg": "pets/svg/pet_egret_sad_1.svg",
+     "duration_ms": 650,
+     "start_frame_60fps": 86,
+     "frames_60fps": 39,
+     "symbol_id": "petanim-egret-sad-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_sad_2.png",
+     "png_hd": "pets/hd/pet_egret_sad_2.png",
+     "svg": "pets/svg/pet_egret_sad_2.svg",
+     "duration_ms": 286,
+     "start_frame_60fps": 125,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-egret-sad-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_sad_3.png",
+     "png_hd": "pets/hd/pet_egret_sad_3.png",
+     "svg": "pets/svg/pet_egret_sad_3.svg",
+     "duration_ms": 338,
+     "start_frame_60fps": 142,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-egret-sad-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_sad_4.png",
+     "png_hd": "pets/hd/pet_egret_sad_4.png",
+     "svg": "pets/svg/pet_egret_sad_4.svg",
+     "duration_ms": 650,
+     "start_frame_60fps": 162,
+     "frames_60fps": 39,
+     "symbol_id": "petanim-egret-sad-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_sad_5.png",
+     "png_hd": "pets/hd/pet_egret_sad_5.png",
+     "svg": "pets/svg/pet_egret_sad_5.svg",
+     "duration_ms": 1170,
+     "start_frame_60fps": 201,
+     "frames_60fps": 70,
+     "symbol_id": "petanim-egret-sad-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_signature": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_signature",
+   "storyboard_key": "pet_egret_signature_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "signature",
+   "action_label": "拿手动作（理一理羽毛）",
+   "loop": false,
+   "total_ms": 2925,
+   "total_frames_60fps": 176,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_signature_0.png",
+     "png_hd": "pets/hd/pet_egret_signature_0.png",
+     "svg": "pets/svg/pet_egret_signature_0.svg",
+     "duration_ms": 559,
+     "start_frame_60fps": 0,
+     "frames_60fps": 34,
+     "symbol_id": "petanim-egret-signature-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_signature_1.png",
+     "png_hd": "pets/hd/pet_egret_signature_1.png",
+     "svg": "pets/svg/pet_egret_signature_1.svg",
+     "duration_ms": 338,
+     "start_frame_60fps": 34,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-egret-signature-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_signature_2.png",
+     "png_hd": "pets/hd/pet_egret_signature_2.png",
+     "svg": "pets/svg/pet_egret_signature_2.svg",
+     "duration_ms": 390,
+     "start_frame_60fps": 54,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-egret-signature-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_signature_3.png",
+     "png_hd": "pets/hd/pet_egret_signature_3.png",
+     "svg": "pets/svg/pet_egret_signature_3.svg",
+     "duration_ms": 468,
+     "start_frame_60fps": 77,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-egret-signature-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_signature_4.png",
+     "png_hd": "pets/hd/pet_egret_signature_4.png",
+     "svg": "pets/svg/pet_egret_signature_4.svg",
+     "duration_ms": 364,
+     "start_frame_60fps": 105,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-egret-signature-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_signature_5.png",
+     "png_hd": "pets/hd/pet_egret_signature_5.png",
+     "svg": "pets/svg/pet_egret_signature_5.svg",
+     "duration_ms": 806,
+     "start_frame_60fps": 127,
+     "frames_60fps": 49,
+     "symbol_id": "petanim-egret-signature-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S07",
+    "S29"
+   ]
+  },
+  "pet_egret_sleep": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_sleep",
+   "storyboard_key": "pet_egret_sleep_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "sleep",
+   "action_label": "睡觉",
+   "loop": true,
+   "total_ms": 6500,
+   "total_frames_60fps": 390,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_sleep_0.png",
+     "png_hd": "pets/hd/pet_egret_sleep_0.png",
+     "svg": "pets/svg/pet_egret_sleep_0.svg",
+     "duration_ms": 1170,
+     "start_frame_60fps": 0,
+     "frames_60fps": 70,
+     "symbol_id": "petanim-egret-sleep-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_sleep_1.png",
+     "png_hd": "pets/hd/pet_egret_sleep_1.png",
+     "svg": "pets/svg/pet_egret_sleep_1.svg",
+     "duration_ms": 1105,
+     "start_frame_60fps": 70,
+     "frames_60fps": 66,
+     "symbol_id": "petanim-egret-sleep-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_sleep_2.png",
+     "png_hd": "pets/hd/pet_egret_sleep_2.png",
+     "svg": "pets/svg/pet_egret_sleep_2.svg",
+     "duration_ms": 975,
+     "start_frame_60fps": 136,
+     "frames_60fps": 59,
+     "symbol_id": "petanim-egret-sleep-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_sleep_3.png",
+     "png_hd": "pets/hd/pet_egret_sleep_3.png",
+     "svg": "pets/svg/pet_egret_sleep_3.svg",
+     "duration_ms": 1170,
+     "start_frame_60fps": 195,
+     "frames_60fps": 70,
+     "symbol_id": "petanim-egret-sleep-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_sleep_4.png",
+     "png_hd": "pets/hd/pet_egret_sleep_4.png",
+     "svg": "pets/svg/pet_egret_sleep_4.svg",
+     "duration_ms": 1105,
+     "start_frame_60fps": 265,
+     "frames_60fps": 67,
+     "symbol_id": "petanim-egret-sleep-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_sleep_5.png",
+     "png_hd": "pets/hd/pet_egret_sleep_5.png",
+     "svg": "pets/svg/pet_egret_sleep_5.svg",
+     "duration_ms": 975,
+     "start_frame_60fps": 332,
+     "frames_60fps": 58,
+     "symbol_id": "petanim-egret-sleep-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_static_happy": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_egret_static_happy",
+   "png_1x": "pets_static/1x/pet_egret_static_happy.png",
+   "png_hd": "pets_static/hd/pet_egret_static_happy.png",
+   "svg": "pets_static/svg/pet_egret_static_happy.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 10,
+   "source": "pet-art.mjs PET_SYMBOLS #egret-happy",
+   "used_in": [],
+   "overview_scale": 3
+  },
+  "pet_egret_static_normal": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_egret_static_normal",
+   "png_1x": "pets_static/1x/pet_egret_static_normal.png",
+   "png_hd": "pets_static/hd/pet_egret_static_normal.png",
+   "svg": "pets_static/svg/pet_egret_static_normal.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 10,
+   "source": "pet-art.mjs PET_SYMBOLS #egret-normal",
+   "used_in": [],
+   "overview_scale": 3
+  },
+  "pet_egret_static_sad": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_egret_static_sad",
+   "png_1x": "pets_static/1x/pet_egret_static_sad.png",
+   "png_hd": "pets_static/hd/pet_egret_static_sad.png",
+   "svg": "pets_static/svg/pet_egret_static_sad.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 10,
+   "source": "pet-art.mjs PET_SYMBOLS #egret-sad",
+   "used_in": [],
+   "overview_scale": 3
+  },
+  "pet_egret_static_sleep": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_egret_static_sleep",
+   "png_1x": "pets_static/1x/pet_egret_static_sleep.png",
+   "png_hd": "pets_static/hd/pet_egret_static_sleep.png",
+   "svg": "pets_static/svg/pet_egret_static_sleep.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 10,
+   "source": "pet-art.mjs PET_SYMBOLS #egret-sleep",
+   "used_in": [],
+   "overview_scale": 3
+  },
+  "pet_egret_wake": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_wake",
+   "storyboard_key": "pet_egret_wake_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "wake",
+   "action_label": "伸懒腰",
+   "loop": false,
+   "total_ms": 2314,
+   "total_frames_60fps": 139,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_wake_0.png",
+     "png_hd": "pets/hd/pet_egret_wake_0.png",
+     "svg": "pets/svg/pet_egret_wake_0.svg",
+     "duration_ms": 338,
+     "start_frame_60fps": 0,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-egret-wake-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_wake_1.png",
+     "png_hd": "pets/hd/pet_egret_wake_1.png",
+     "svg": "pets/svg/pet_egret_wake_1.svg",
+     "duration_ms": 299,
+     "start_frame_60fps": 20,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-egret-wake-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_wake_2.png",
+     "png_hd": "pets/hd/pet_egret_wake_2.png",
+     "svg": "pets/svg/pet_egret_wake_2.svg",
+     "duration_ms": 442,
+     "start_frame_60fps": 38,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-wake-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_wake_3.png",
+     "png_hd": "pets/hd/pet_egret_wake_3.png",
+     "svg": "pets/svg/pet_egret_wake_3.svg",
+     "duration_ms": 468,
+     "start_frame_60fps": 65,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-egret-wake-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_wake_4.png",
+     "png_hd": "pets/hd/pet_egret_wake_4.png",
+     "svg": "pets/svg/pet_egret_wake_4.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 93,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-wake-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_wake_5.png",
+     "png_hd": "pets/hd/pet_egret_wake_5.png",
+     "svg": "pets/svg/pet_egret_wake_5.svg",
+     "duration_ms": 455,
+     "start_frame_60fps": 112,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-wake-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_egret_walk": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_walk",
+   "storyboard_key": "pet_egret_walk_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "walk",
+   "action_label": "散步",
+   "loop": true,
+   "total_ms": 1118,
+   "total_frames_60fps": 67,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_walk_0.png",
+     "png_hd": "pets/hd/pet_egret_walk_0.png",
+     "svg": "pets/svg/pet_egret_walk_0.svg",
+     "duration_ms": 195,
+     "start_frame_60fps": 0,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-egret-walk-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_walk_1.png",
+     "png_hd": "pets/hd/pet_egret_walk_1.png",
+     "svg": "pets/svg/pet_egret_walk_1.svg",
+     "duration_ms": 169,
+     "start_frame_60fps": 12,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-egret-walk-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_walk_2.png",
+     "png_hd": "pets/hd/pet_egret_walk_2.png",
+     "svg": "pets/svg/pet_egret_walk_2.svg",
+     "duration_ms": 195,
+     "start_frame_60fps": 22,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-egret-walk-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_walk_3.png",
+     "png_hd": "pets/hd/pet_egret_walk_3.png",
+     "svg": "pets/svg/pet_egret_walk_3.svg",
+     "duration_ms": 195,
+     "start_frame_60fps": 34,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-egret-walk-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_walk_4.png",
+     "png_hd": "pets/hd/pet_egret_walk_4.png",
+     "svg": "pets/svg/pet_egret_walk_4.svg",
+     "duration_ms": 169,
+     "start_frame_60fps": 45,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-egret-walk-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_walk_5.png",
+     "png_hd": "pets/hd/pet_egret_walk_5.png",
+     "svg": "pets/svg/pet_egret_walk_5.svg",
+     "duration_ms": 195,
+     "start_frame_60fps": 55,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-egret-walk-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S03"
+   ]
+  },
+  "pet_egret_water": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_egret_water",
+   "storyboard_key": "pet_egret_water_0-5",
+   "companion": "小白",
+   "species": "egret",
+   "sprite_id": "egret",
+   "action": "water",
+   "action_label": "浇浇水",
+   "loop": false,
+   "total_ms": 2574,
+   "total_frames_60fps": 154,
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_egret_water_0.png",
+     "png_hd": "pets/hd/pet_egret_water_0.png",
+     "svg": "pets/svg/pet_egret_water_0.svg",
+     "duration_ms": 455,
+     "start_frame_60fps": 0,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-egret-water-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_egret_water_1.png",
+     "png_hd": "pets/hd/pet_egret_water_1.png",
+     "svg": "pets/svg/pet_egret_water_1.svg",
+     "duration_ms": 312,
+     "start_frame_60fps": 27,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-egret-water-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_egret_water_2.png",
+     "png_hd": "pets/hd/pet_egret_water_2.png",
+     "svg": "pets/svg/pet_egret_water_2.svg",
+     "duration_ms": 416,
+     "start_frame_60fps": 46,
+     "frames_60fps": 25,
+     "symbol_id": "petanim-egret-water-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_egret_water_3.png",
+     "png_hd": "pets/hd/pet_egret_water_3.png",
+     "svg": "pets/svg/pet_egret_water_3.svg",
+     "duration_ms": 364,
+     "start_frame_60fps": 71,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-egret-water-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_egret_water_4.png",
+     "png_hd": "pets/hd/pet_egret_water_4.png",
+     "svg": "pets/svg/pet_egret_water_4.svg",
+     "duration_ms": 403,
+     "start_frame_60fps": 93,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-egret-water-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_egret_water_5.png",
+     "png_hd": "pets/hd/pet_egret_water_5.png",
+     "svg": "pets/svg/pet_egret_water_5.svg",
+     "duration_ms": 624,
+     "start_frame_60fps": 117,
+     "frames_60fps": 37,
+     "symbol_id": "petanim-egret-water-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('egret'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_build": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_build",
+   "storyboard_key": "pet_libao_build_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "build",
+   "action_label": "一起布置",
+   "loop": false,
+   "total_ms": 1930,
+   "total_frames_60fps": 116,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_build_0.png",
+     "png_hd": "pets/hd/pet_libao_build_0.png",
+     "svg": "pets/svg/pet_libao_build_0.svg",
+     "duration_ms": 340,
+     "start_frame_60fps": 0,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-libao-build-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_build_1.png",
+     "png_hd": "pets/hd/pet_libao_build_1.png",
+     "svg": "pets/svg/pet_libao_build_1.svg",
+     "duration_ms": 250,
+     "start_frame_60fps": 20,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-libao-build-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_build_2.png",
+     "png_hd": "pets/hd/pet_libao_build_2.png",
+     "svg": "pets/svg/pet_libao_build_2.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 35,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-build-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_build_3.png",
+     "png_hd": "pets/hd/pet_libao_build_3.png",
+     "svg": "pets/svg/pet_libao_build_3.svg",
+     "duration_ms": 280,
+     "start_frame_60fps": 49,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-libao-build-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_build_4.png",
+     "png_hd": "pets/hd/pet_libao_build_4.png",
+     "svg": "pets/svg/pet_libao_build_4.svg",
+     "duration_ms": 340,
+     "start_frame_60fps": 65,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-build-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_build_5.png",
+     "png_hd": "pets/hd/pet_libao_build_5.png",
+     "svg": "pets/svg/pet_libao_build_5.svg",
+     "duration_ms": 500,
+     "start_frame_60fps": 86,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-libao-build-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S16"
+   ]
+  },
+  "pet_libao_celebrate": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_celebrate",
+   "storyboard_key": "pet_libao_celebrate_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "celebrate",
+   "action_label": "庆祝",
+   "loop": false,
+   "total_ms": 1320,
+   "total_frames_60fps": 79,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_celebrate_0.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_0.png",
+     "svg": "pets/svg/pet_libao_celebrate_0.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 0,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-celebrate-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_celebrate_1.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_1.png",
+     "svg": "pets/svg/pet_libao_celebrate_1.svg",
+     "duration_ms": 170,
+     "start_frame_60fps": 11,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-libao-celebrate-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_celebrate_2.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_2.png",
+     "svg": "pets/svg/pet_libao_celebrate_2.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 21,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-celebrate-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_celebrate_3.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_3.png",
+     "svg": "pets/svg/pet_libao_celebrate_3.svg",
+     "duration_ms": 170,
+     "start_frame_60fps": 32,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-libao-celebrate-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_celebrate_4.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_4.png",
+     "svg": "pets/svg/pet_libao_celebrate_4.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 42,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-celebrate-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_celebrate_5.png",
+     "png_hd": "pets/hd/pet_libao_celebrate_5.png",
+     "svg": "pets/svg/pet_libao_celebrate_5.svg",
+     "duration_ms": 400,
+     "start_frame_60fps": 55,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-libao-celebrate-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S02",
+    "S10",
+    "S25"
+   ]
+  },
+  "pet_libao_eat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_eat",
+   "storyboard_key": "pet_libao_eat_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "eat",
+   "action_label": "吃点心",
+   "loop": false,
+   "total_ms": 1520,
+   "total_frames_60fps": 91,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_eat_0.png",
+     "png_hd": "pets/hd/pet_libao_eat_0.png",
+     "svg": "pets/svg/pet_libao_eat_0.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 0,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-eat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_eat_1.png",
+     "png_hd": "pets/hd/pet_libao_eat_1.png",
+     "svg": "pets/svg/pet_libao_eat_1.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 14,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-eat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_eat_2.png",
+     "png_hd": "pets/hd/pet_libao_eat_2.png",
+     "svg": "pets/svg/pet_libao_eat_2.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 28,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-libao-eat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_eat_3.png",
+     "png_hd": "pets/hd/pet_libao_eat_3.png",
+     "svg": "pets/svg/pet_libao_eat_3.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 38,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-eat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_eat_4.png",
+     "png_hd": "pets/hd/pet_libao_eat_4.png",
+     "svg": "pets/svg/pet_libao_eat_4.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 52,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-eat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_eat_5.png",
+     "png_hd": "pets/hd/pet_libao_eat_5.png",
+     "svg": "pets/svg/pet_libao_eat_5.svg",
+     "duration_ms": 470,
+     "start_frame_60fps": 63,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-libao-eat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_focus": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_focus",
+   "storyboard_key": "pet_libao_focus_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "focus",
+   "action_label": "陪伴专注",
+   "loop": true,
+   "total_ms": 5270,
+   "total_frames_60fps": 316,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_focus_0.png",
+     "png_hd": "pets/hd/pet_libao_focus_0.png",
+     "svg": "pets/svg/pet_libao_focus_0.svg",
+     "duration_ms": 1800,
+     "start_frame_60fps": 0,
+     "frames_60fps": 108,
+     "symbol_id": "petanim-libao-focus-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_focus_1.png",
+     "png_hd": "pets/hd/pet_libao_focus_1.png",
+     "svg": "pets/svg/pet_libao_focus_1.svg",
+     "duration_ms": 280,
+     "start_frame_60fps": 108,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-libao-focus-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_focus_2.png",
+     "png_hd": "pets/hd/pet_libao_focus_2.png",
+     "svg": "pets/svg/pet_libao_focus_2.svg",
+     "duration_ms": 900,
+     "start_frame_60fps": 125,
+     "frames_60fps": 54,
+     "symbol_id": "petanim-libao-focus-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_focus_3.png",
+     "png_hd": "pets/hd/pet_libao_focus_3.png",
+     "svg": "pets/svg/pet_libao_focus_3.svg",
+     "duration_ms": 190,
+     "start_frame_60fps": 179,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-focus-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_focus_4.png",
+     "png_hd": "pets/hd/pet_libao_focus_4.png",
+     "svg": "pets/svg/pet_libao_focus_4.svg",
+     "duration_ms": 800,
+     "start_frame_60fps": 190,
+     "frames_60fps": 48,
+     "symbol_id": "petanim-libao-focus-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_focus_5.png",
+     "png_hd": "pets/hd/pet_libao_focus_5.png",
+     "svg": "pets/svg/pet_libao_focus_5.svg",
+     "duration_ms": 1300,
+     "start_frame_60fps": 238,
+     "frames_60fps": 78,
+     "symbol_id": "petanim-libao-focus-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S09"
+   ]
+  },
+  "pet_libao_gift": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_gift",
+   "storyboard_key": "pet_libao_gift_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "gift",
+   "action_label": "递个小礼物",
+   "loop": false,
+   "total_ms": 2060,
+   "total_frames_60fps": 124,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_gift_0.png",
+     "png_hd": "pets/hd/pet_libao_gift_0.png",
+     "svg": "pets/svg/pet_libao_gift_0.svg",
+     "duration_ms": 320,
+     "start_frame_60fps": 0,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-gift-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_gift_1.png",
+     "png_hd": "pets/hd/pet_libao_gift_1.png",
+     "svg": "pets/svg/pet_libao_gift_1.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 19,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-libao-gift-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_gift_2.png",
+     "png_hd": "pets/hd/pet_libao_gift_2.png",
+     "svg": "pets/svg/pet_libao_gift_2.svg",
+     "duration_ms": 300,
+     "start_frame_60fps": 34,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-libao-gift-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_gift_3.png",
+     "png_hd": "pets/hd/pet_libao_gift_3.png",
+     "svg": "pets/svg/pet_libao_gift_3.svg",
+     "duration_ms": 440,
+     "start_frame_60fps": 52,
+     "frames_60fps": 26,
+     "symbol_id": "petanim-libao-gift-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_gift_4.png",
+     "png_hd": "pets/hd/pet_libao_gift_4.png",
+     "svg": "pets/svg/pet_libao_gift_4.svg",
+     "duration_ms": 300,
+     "start_frame_60fps": 78,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-libao-gift-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_gift_5.png",
+     "png_hd": "pets/hd/pet_libao_gift_5.png",
+     "svg": "pets/svg/pet_libao_gift_5.svg",
+     "duration_ms": 460,
+     "start_frame_60fps": 96,
+     "frames_60fps": 28,
+     "symbol_id": "petanim-libao-gift-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_greet": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_greet",
+   "storyboard_key": "pet_libao_greet_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "greet",
+   "action_label": "打招呼",
+   "loop": false,
+   "total_ms": 1510,
+   "total_frames_60fps": 91,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_greet_0.png",
+     "png_hd": "pets/hd/pet_libao_greet_0.png",
+     "svg": "pets/svg/pet_libao_greet_0.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 0,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-greet-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_greet_1.png",
+     "png_hd": "pets/hd/pet_libao_greet_1.png",
+     "svg": "pets/svg/pet_libao_greet_1.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 14,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-greet-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_greet_2.png",
+     "png_hd": "pets/hd/pet_libao_greet_2.png",
+     "svg": "pets/svg/pet_libao_greet_2.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 28,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-greet-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_greet_3.png",
+     "png_hd": "pets/hd/pet_libao_greet_3.png",
+     "svg": "pets/svg/pet_libao_greet_3.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 39,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-greet-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_greet_4.png",
+     "png_hd": "pets/hd/pet_libao_greet_4.png",
+     "svg": "pets/svg/pet_libao_greet_4.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 53,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-greet-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_greet_5.png",
+     "png_hd": "pets/hd/pet_libao_greet_5.png",
+     "svg": "pets/svg/pet_libao_greet_5.svg",
+     "duration_ms": 450,
+     "start_frame_60fps": 64,
+     "frames_60fps": 27,
+     "symbol_id": "petanim-libao-greet-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S03",
+    "S04",
+    "S30"
+   ]
+  },
+  "pet_libao_harvest": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_harvest",
+   "storyboard_key": "pet_libao_harvest_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "harvest",
+   "action_label": "抱回收成",
+   "loop": false,
+   "total_ms": 2010,
+   "total_frames_60fps": 121,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_harvest_0.png",
+     "png_hd": "pets/hd/pet_libao_harvest_0.png",
+     "svg": "pets/svg/pet_libao_harvest_0.svg",
+     "duration_ms": 280,
+     "start_frame_60fps": 0,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-libao-harvest-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_harvest_1.png",
+     "png_hd": "pets/hd/pet_libao_harvest_1.png",
+     "svg": "pets/svg/pet_libao_harvest_1.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 17,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-harvest-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_harvest_2.png",
+     "png_hd": "pets/hd/pet_libao_harvest_2.png",
+     "svg": "pets/svg/pet_libao_harvest_2.svg",
+     "duration_ms": 310,
+     "start_frame_60fps": 31,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-harvest-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_harvest_3.png",
+     "png_hd": "pets/hd/pet_libao_harvest_3.png",
+     "svg": "pets/svg/pet_libao_harvest_3.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 50,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-libao-harvest-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_harvest_4.png",
+     "png_hd": "pets/hd/pet_libao_harvest_4.png",
+     "svg": "pets/svg/pet_libao_harvest_4.svg",
+     "duration_ms": 380,
+     "start_frame_60fps": 65,
+     "frames_60fps": 23,
+     "symbol_id": "petanim-libao-harvest-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_harvest_5.png",
+     "png_hd": "pets/hd/pet_libao_harvest_5.png",
+     "svg": "pets/svg/pet_libao_harvest_5.svg",
+     "duration_ms": 540,
+     "start_frame_60fps": 88,
+     "frames_60fps": 33,
+     "symbol_id": "petanim-libao-harvest-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S12"
+   ]
+  },
+  "pet_libao_idle": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_idle",
+   "storyboard_key": "pet_libao_idle_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "idle",
+   "action_label": "发呆",
+   "loop": true,
+   "total_ms": 3800,
+   "total_frames_60fps": 228,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_idle_0.png",
+     "png_hd": "pets/hd/pet_libao_idle_0.png",
+     "svg": "pets/svg/pet_libao_idle_0.svg",
+     "duration_ms": 1500,
+     "start_frame_60fps": 0,
+     "frames_60fps": 90,
+     "symbol_id": "petanim-libao-idle-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_idle_1.png",
+     "png_hd": "pets/hd/pet_libao_idle_1.png",
+     "svg": "pets/svg/pet_libao_idle_1.svg",
+     "duration_ms": 320,
+     "start_frame_60fps": 90,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-idle-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_idle_2.png",
+     "png_hd": "pets/hd/pet_libao_idle_2.png",
+     "svg": "pets/svg/pet_libao_idle_2.svg",
+     "duration_ms": 180,
+     "start_frame_60fps": 109,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-idle-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_idle_3.png",
+     "png_hd": "pets/hd/pet_libao_idle_3.png",
+     "svg": "pets/svg/pet_libao_idle_3.svg",
+     "duration_ms": 130,
+     "start_frame_60fps": 120,
+     "frames_60fps": 8,
+     "symbol_id": "petanim-libao-idle-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_idle_4.png",
+     "png_hd": "pets/hd/pet_libao_idle_4.png",
+     "svg": "pets/svg/pet_libao_idle_4.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 128,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-idle-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_idle_5.png",
+     "png_hd": "pets/hd/pet_libao_idle_5.png",
+     "svg": "pets/svg/pet_libao_idle_5.svg",
+     "duration_ms": 1450,
+     "start_frame_60fps": 141,
+     "frames_60fps": 87,
+     "symbol_id": "petanim-libao-idle-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S04",
+    "S07",
+    "S13",
+    "S26"
+   ]
+  },
+  "pet_libao_look": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_look",
+   "storyboard_key": "pet_libao_look_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "look",
+   "action_label": "张望",
+   "loop": true,
+   "total_ms": 2950,
+   "total_frames_60fps": 177,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_look_0.png",
+     "png_hd": "pets/hd/pet_libao_look_0.png",
+     "svg": "pets/svg/pet_libao_look_0.svg",
+     "duration_ms": 760,
+     "start_frame_60fps": 0,
+     "frames_60fps": 46,
+     "symbol_id": "petanim-libao-look-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_look_1.png",
+     "png_hd": "pets/hd/pet_libao_look_1.png",
+     "svg": "pets/svg/pet_libao_look_1.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 46,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-look-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_look_2.png",
+     "png_hd": "pets/hd/pet_libao_look_2.png",
+     "svg": "pets/svg/pet_libao_look_2.svg",
+     "duration_ms": 700,
+     "start_frame_60fps": 59,
+     "frames_60fps": 42,
+     "symbol_id": "petanim-libao-look-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_look_3.png",
+     "png_hd": "pets/hd/pet_libao_look_3.png",
+     "svg": "pets/svg/pet_libao_look_3.svg",
+     "duration_ms": 210,
+     "start_frame_60fps": 101,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-look-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_look_4.png",
+     "png_hd": "pets/hd/pet_libao_look_4.png",
+     "svg": "pets/svg/pet_libao_look_4.svg",
+     "duration_ms": 700,
+     "start_frame_60fps": 114,
+     "frames_60fps": 42,
+     "symbol_id": "petanim-libao-look-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_look_5.png",
+     "png_hd": "pets/hd/pet_libao_look_5.png",
+     "svg": "pets/svg/pet_libao_look_5.svg",
+     "duration_ms": 350,
+     "start_frame_60fps": 156,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-look-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S05"
+   ]
+  },
+  "pet_libao_pat": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_pat",
+   "storyboard_key": "pet_libao_pat_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "pat",
+   "action_label": "摸摸头",
+   "loop": false,
+   "total_ms": 1360,
+   "total_frames_60fps": 82,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_pat_0.png",
+     "png_hd": "pets/hd/pet_libao_pat_0.png",
+     "svg": "pets/svg/pet_libao_pat_0.svg",
+     "duration_ms": 200,
+     "start_frame_60fps": 0,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-libao-pat-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_pat_1.png",
+     "png_hd": "pets/hd/pet_libao_pat_1.png",
+     "svg": "pets/svg/pet_libao_pat_1.svg",
+     "duration_ms": 170,
+     "start_frame_60fps": 12,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-libao-pat-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_pat_2.png",
+     "png_hd": "pets/hd/pet_libao_pat_2.png",
+     "svg": "pets/svg/pet_libao_pat_2.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 22,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-pat-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_pat_3.png",
+     "png_hd": "pets/hd/pet_libao_pat_3.png",
+     "svg": "pets/svg/pet_libao_pat_3.svg",
+     "duration_ms": 200,
+     "start_frame_60fps": 36,
+     "frames_60fps": 12,
+     "symbol_id": "petanim-libao-pat-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_pat_4.png",
+     "png_hd": "pets/hd/pet_libao_pat_4.png",
+     "svg": "pets/svg/pet_libao_pat_4.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 48,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-pat-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_pat_5.png",
+     "png_hd": "pets/hd/pet_libao_pat_5.png",
+     "svg": "pets/svg/pet_libao_pat_5.svg",
+     "duration_ms": 330,
+     "start_frame_60fps": 62,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-libao-pat-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S05",
+    "S06"
+   ]
+  },
+  "pet_libao_play": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_play",
+   "storyboard_key": "pet_libao_play_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "play",
+   "action_label": "玩耍",
+   "loop": false,
+   "total_ms": 1200,
+   "total_frames_60fps": 72,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_play_0.png",
+     "png_hd": "pets/hd/pet_libao_play_0.png",
+     "svg": "pets/svg/pet_libao_play_0.svg",
+     "duration_ms": 190,
+     "start_frame_60fps": 0,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-play-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_play_1.png",
+     "png_hd": "pets/hd/pet_libao_play_1.png",
+     "svg": "pets/svg/pet_libao_play_1.svg",
+     "duration_ms": 170,
+     "start_frame_60fps": 11,
+     "frames_60fps": 11,
+     "symbol_id": "petanim-libao-play-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_play_2.png",
+     "png_hd": "pets/hd/pet_libao_play_2.png",
+     "svg": "pets/svg/pet_libao_play_2.svg",
+     "duration_ms": 140,
+     "start_frame_60fps": 22,
+     "frames_60fps": 8,
+     "symbol_id": "petanim-libao-play-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_play_3.png",
+     "png_hd": "pets/hd/pet_libao_play_3.png",
+     "svg": "pets/svg/pet_libao_play_3.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 30,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-play-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_play_4.png",
+     "png_hd": "pets/hd/pet_libao_play_4.png",
+     "svg": "pets/svg/pet_libao_play_4.svg",
+     "duration_ms": 160,
+     "start_frame_60fps": 43,
+     "frames_60fps": 10,
+     "symbol_id": "petanim-libao-play-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_play_5.png",
+     "png_hd": "pets/hd/pet_libao_play_5.png",
+     "svg": "pets/svg/pet_libao_play_5.svg",
+     "duration_ms": 320,
+     "start_frame_60fps": 53,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-play-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_ponder": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_ponder",
+   "storyboard_key": "pet_libao_ponder_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "ponder",
+   "action_label": "想点事情",
+   "loop": true,
+   "total_ms": 5270,
+   "total_frames_60fps": 316,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_ponder_0.png",
+     "png_hd": "pets/hd/pet_libao_ponder_0.png",
+     "svg": "pets/svg/pet_libao_ponder_0.svg",
+     "duration_ms": 1500,
+     "start_frame_60fps": 0,
+     "frames_60fps": 90,
+     "symbol_id": "petanim-libao-ponder-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_ponder_1.png",
+     "png_hd": "pets/hd/pet_libao_ponder_1.png",
+     "svg": "pets/svg/pet_libao_ponder_1.svg",
+     "duration_ms": 400,
+     "start_frame_60fps": 90,
+     "frames_60fps": 24,
+     "symbol_id": "petanim-libao-ponder-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_ponder_2.png",
+     "png_hd": "pets/hd/pet_libao_ponder_2.png",
+     "svg": "pets/svg/pet_libao_ponder_2.svg",
+     "duration_ms": 850,
+     "start_frame_60fps": 114,
+     "frames_60fps": 51,
+     "symbol_id": "petanim-libao-ponder-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_ponder_3.png",
+     "png_hd": "pets/hd/pet_libao_ponder_3.png",
+     "svg": "pets/svg/pet_libao_ponder_3.svg",
+     "duration_ms": 320,
+     "start_frame_60fps": 165,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-ponder-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_ponder_4.png",
+     "png_hd": "pets/hd/pet_libao_ponder_4.png",
+     "svg": "pets/svg/pet_libao_ponder_4.svg",
+     "duration_ms": 900,
+     "start_frame_60fps": 184,
+     "frames_60fps": 54,
+     "symbol_id": "petanim-libao-ponder-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_ponder_5.png",
+     "png_hd": "pets/hd/pet_libao_ponder_5.png",
+     "svg": "pets/svg/pet_libao_ponder_5.svg",
+     "duration_ms": 1300,
+     "start_frame_60fps": 238,
+     "frames_60fps": 78,
+     "symbol_id": "petanim-libao-ponder-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_sad": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_sad",
+   "storyboard_key": "pet_libao_sad_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "sad",
+   "action_label": "有点低落",
+   "loop": true,
+   "total_ms": 3480,
+   "total_frames_60fps": 209,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_sad_0.png",
+     "png_hd": "pets/hd/pet_libao_sad_0.png",
+     "svg": "pets/svg/pet_libao_sad_0.svg",
+     "duration_ms": 1100,
+     "start_frame_60fps": 0,
+     "frames_60fps": 66,
+     "symbol_id": "petanim-libao-sad-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_sad_1.png",
+     "png_hd": "pets/hd/pet_libao_sad_1.png",
+     "svg": "pets/svg/pet_libao_sad_1.svg",
+     "duration_ms": 500,
+     "start_frame_60fps": 66,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-libao-sad-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_sad_2.png",
+     "png_hd": "pets/hd/pet_libao_sad_2.png",
+     "svg": "pets/svg/pet_libao_sad_2.svg",
+     "duration_ms": 220,
+     "start_frame_60fps": 96,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-sad-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_sad_3.png",
+     "png_hd": "pets/hd/pet_libao_sad_3.png",
+     "svg": "pets/svg/pet_libao_sad_3.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 109,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-libao-sad-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_sad_4.png",
+     "png_hd": "pets/hd/pet_libao_sad_4.png",
+     "svg": "pets/svg/pet_libao_sad_4.svg",
+     "duration_ms": 500,
+     "start_frame_60fps": 125,
+     "frames_60fps": 30,
+     "symbol_id": "petanim-libao-sad-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_sad_5.png",
+     "png_hd": "pets/hd/pet_libao_sad_5.png",
+     "svg": "pets/svg/pet_libao_sad_5.svg",
+     "duration_ms": 900,
+     "start_frame_60fps": 155,
+     "frames_60fps": 54,
+     "symbol_id": "petanim-libao-sad-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_signature": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_signature",
+   "storyboard_key": "pet_libao_signature_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "signature",
+   "action_label": "拿手动作（给你加个油）",
+   "loop": false,
+   "total_ms": 2250,
+   "total_frames_60fps": 135,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_signature_0.png",
+     "png_hd": "pets/hd/pet_libao_signature_0.png",
+     "svg": "pets/svg/pet_libao_signature_0.svg",
+     "duration_ms": 430,
+     "start_frame_60fps": 0,
+     "frames_60fps": 26,
+     "symbol_id": "petanim-libao-signature-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_signature_1.png",
+     "png_hd": "pets/hd/pet_libao_signature_1.png",
+     "svg": "pets/svg/pet_libao_signature_1.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 26,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-libao-signature-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_signature_2.png",
+     "png_hd": "pets/hd/pet_libao_signature_2.png",
+     "svg": "pets/svg/pet_libao_signature_2.svg",
+     "duration_ms": 300,
+     "start_frame_60fps": 41,
+     "frames_60fps": 18,
+     "symbol_id": "petanim-libao-signature-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_signature_3.png",
+     "png_hd": "pets/hd/pet_libao_signature_3.png",
+     "svg": "pets/svg/pet_libao_signature_3.svg",
+     "duration_ms": 360,
+     "start_frame_60fps": 59,
+     "frames_60fps": 22,
+     "symbol_id": "petanim-libao-signature-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_signature_4.png",
+     "png_hd": "pets/hd/pet_libao_signature_4.png",
+     "svg": "pets/svg/pet_libao_signature_4.svg",
+     "duration_ms": 280,
+     "start_frame_60fps": 81,
+     "frames_60fps": 17,
+     "symbol_id": "petanim-libao-signature-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_signature_5.png",
+     "png_hd": "pets/hd/pet_libao_signature_5.png",
+     "svg": "pets/svg/pet_libao_signature_5.svg",
+     "duration_ms": 620,
+     "start_frame_60fps": 98,
+     "frames_60fps": 37,
+     "symbol_id": "petanim-libao-signature-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S02",
+    "S28",
+    "S29"
+   ]
+  },
+  "pet_libao_sleep": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_sleep",
+   "storyboard_key": "pet_libao_sleep_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "sleep",
+   "action_label": "睡觉",
+   "loop": true,
+   "total_ms": 5000,
+   "total_frames_60fps": 300,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_sleep_0.png",
+     "png_hd": "pets/hd/pet_libao_sleep_0.png",
+     "svg": "pets/svg/pet_libao_sleep_0.svg",
+     "duration_ms": 900,
+     "start_frame_60fps": 0,
+     "frames_60fps": 54,
+     "symbol_id": "petanim-libao-sleep-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_sleep_1.png",
+     "png_hd": "pets/hd/pet_libao_sleep_1.png",
+     "svg": "pets/svg/pet_libao_sleep_1.svg",
+     "duration_ms": 850,
+     "start_frame_60fps": 54,
+     "frames_60fps": 51,
+     "symbol_id": "petanim-libao-sleep-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_sleep_2.png",
+     "png_hd": "pets/hd/pet_libao_sleep_2.png",
+     "svg": "pets/svg/pet_libao_sleep_2.svg",
+     "duration_ms": 750,
+     "start_frame_60fps": 105,
+     "frames_60fps": 45,
+     "symbol_id": "petanim-libao-sleep-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_sleep_3.png",
+     "png_hd": "pets/hd/pet_libao_sleep_3.png",
+     "svg": "pets/svg/pet_libao_sleep_3.svg",
+     "duration_ms": 900,
+     "start_frame_60fps": 150,
+     "frames_60fps": 54,
+     "symbol_id": "petanim-libao-sleep-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_sleep_4.png",
+     "png_hd": "pets/hd/pet_libao_sleep_4.png",
+     "svg": "pets/svg/pet_libao_sleep_4.svg",
+     "duration_ms": 850,
+     "start_frame_60fps": 204,
+     "frames_60fps": 51,
+     "symbol_id": "petanim-libao-sleep-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_sleep_5.png",
+     "png_hd": "pets/hd/pet_libao_sleep_5.png",
+     "svg": "pets/svg/pet_libao_sleep_5.svg",
+     "duration_ms": 750,
+     "start_frame_60fps": 255,
+     "frames_60fps": 45,
+     "symbol_id": "petanim-libao-sleep-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_static_happy": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_libao_static_happy",
+   "png_1x": "pets_static/1x/pet_libao_static_happy.png",
+   "png_hd": "pets_static/hd/pet_libao_static_happy.png",
+   "svg": "pets_static/svg/pet_libao_static_happy.svg",
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "colors": 9,
+   "source": "pet-art.mjs PET_SYMBOLS #libao-happy",
+   "used_in": [
+    "S17"
+   ],
+   "overview_scale": 2
+  },
+  "pet_libao_static_normal": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_libao_static_normal",
+   "png_1x": "pets_static/1x/pet_libao_static_normal.png",
+   "png_hd": "pets_static/hd/pet_libao_static_normal.png",
+   "svg": "pets_static/svg/pet_libao_static_normal.svg",
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "colors": 8,
+   "source": "pet-art.mjs PET_SYMBOLS #libao-normal",
+   "used_in": [],
+   "overview_scale": 2
+  },
+  "pet_libao_static_sad": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_libao_static_sad",
+   "png_1x": "pets_static/1x/pet_libao_static_sad.png",
+   "png_hd": "pets_static/hd/pet_libao_static_sad.png",
+   "svg": "pets_static/svg/pet_libao_static_sad.svg",
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "colors": 8,
+   "source": "pet-art.mjs PET_SYMBOLS #libao-sad",
+   "used_in": [],
+   "overview_scale": 2
+  },
+  "pet_libao_static_sleep": {
+   "type": "still",
+   "group": "pets_static",
+   "key": "pet_libao_static_sleep",
+   "png_1x": "pets_static/1x/pet_libao_static_sleep.png",
+   "png_hd": "pets_static/hd/pet_libao_static_sleep.png",
+   "svg": "pets_static/svg/pet_libao_static_sleep.svg",
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "colors": 9,
+   "source": "pet-art.mjs PET_SYMBOLS #libao-sleep",
+   "used_in": [],
+   "overview_scale": 2
+  },
+  "pet_libao_wake": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_wake",
+   "storyboard_key": "pet_libao_wake_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "wake",
+   "action_label": "伸懒腰",
+   "loop": false,
+   "total_ms": 1780,
+   "total_frames_60fps": 107,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_wake_0.png",
+     "png_hd": "pets/hd/pet_libao_wake_0.png",
+     "svg": "pets/svg/pet_libao_wake_0.svg",
+     "duration_ms": 260,
+     "start_frame_60fps": 0,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-libao-wake-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_wake_1.png",
+     "png_hd": "pets/hd/pet_libao_wake_1.png",
+     "svg": "pets/svg/pet_libao_wake_1.svg",
+     "duration_ms": 230,
+     "start_frame_60fps": 16,
+     "frames_60fps": 13,
+     "symbol_id": "petanim-libao-wake-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_wake_2.png",
+     "png_hd": "pets/hd/pet_libao_wake_2.png",
+     "svg": "pets/svg/pet_libao_wake_2.svg",
+     "duration_ms": 340,
+     "start_frame_60fps": 29,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-wake-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_wake_3.png",
+     "png_hd": "pets/hd/pet_libao_wake_3.png",
+     "svg": "pets/svg/pet_libao_wake_3.svg",
+     "duration_ms": 360,
+     "start_frame_60fps": 50,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-wake-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_wake_4.png",
+     "png_hd": "pets/hd/pet_libao_wake_4.png",
+     "svg": "pets/svg/pet_libao_wake_4.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 71,
+     "frames_60fps": 15,
+     "symbol_id": "petanim-libao-wake-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_wake_5.png",
+     "png_hd": "pets/hd/pet_libao_wake_5.png",
+     "svg": "pets/svg/pet_libao_wake_5.svg",
+     "duration_ms": 350,
+     "start_frame_60fps": 86,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-wake-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_walk": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_walk",
+   "storyboard_key": "pet_libao_walk_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "walk",
+   "action_label": "散步",
+   "loop": true,
+   "total_ms": 860,
+   "total_frames_60fps": 52,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_walk_0.png",
+     "png_hd": "pets/hd/pet_libao_walk_0.png",
+     "svg": "pets/svg/pet_libao_walk_0.svg",
+     "duration_ms": 150,
+     "start_frame_60fps": 0,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-libao-walk-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_walk_1.png",
+     "png_hd": "pets/hd/pet_libao_walk_1.png",
+     "svg": "pets/svg/pet_libao_walk_1.svg",
+     "duration_ms": 130,
+     "start_frame_60fps": 9,
+     "frames_60fps": 8,
+     "symbol_id": "petanim-libao-walk-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_walk_2.png",
+     "png_hd": "pets/hd/pet_libao_walk_2.png",
+     "svg": "pets/svg/pet_libao_walk_2.svg",
+     "duration_ms": 150,
+     "start_frame_60fps": 17,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-libao-walk-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_walk_3.png",
+     "png_hd": "pets/hd/pet_libao_walk_3.png",
+     "svg": "pets/svg/pet_libao_walk_3.svg",
+     "duration_ms": 150,
+     "start_frame_60fps": 26,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-libao-walk-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_walk_4.png",
+     "png_hd": "pets/hd/pet_libao_walk_4.png",
+     "svg": "pets/svg/pet_libao_walk_4.svg",
+     "duration_ms": 130,
+     "start_frame_60fps": 35,
+     "frames_60fps": 8,
+     "symbol_id": "petanim-libao-walk-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_walk_5.png",
+     "png_hd": "pets/hd/pet_libao_walk_5.png",
+     "svg": "pets/svg/pet_libao_walk_5.svg",
+     "duration_ms": 150,
+     "start_frame_60fps": 43,
+     "frames_60fps": 9,
+     "symbol_id": "petanim-libao-walk-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": []
+  },
+  "pet_libao_water": {
+   "type": "animation",
+   "group": "pets",
+   "key": "pet_libao_water",
+   "storyboard_key": "pet_libao_water_0-5",
+   "companion": "荔宝",
+   "species": "libao",
+   "sprite_id": "libao",
+   "action": "water",
+   "action_label": "浇浇水",
+   "loop": false,
+   "total_ms": 1980,
+   "total_frames_60fps": 119,
+   "native_size": [
+    52,
+    56
+   ],
+   "hd_scale": 18,
+   "hd_size": [
+    936,
+    1008
+   ],
+   "frames": [
+    {
+     "index": 0,
+     "png_1x": "pets/1x/pet_libao_water_0.png",
+     "png_hd": "pets/hd/pet_libao_water_0.png",
+     "svg": "pets/svg/pet_libao_water_0.svg",
+     "duration_ms": 350,
+     "start_frame_60fps": 0,
+     "frames_60fps": 21,
+     "symbol_id": "petanim-libao-water-0"
+    },
+    {
+     "index": 1,
+     "png_1x": "pets/1x/pet_libao_water_1.png",
+     "png_hd": "pets/hd/pet_libao_water_1.png",
+     "svg": "pets/svg/pet_libao_water_1.svg",
+     "duration_ms": 240,
+     "start_frame_60fps": 21,
+     "frames_60fps": 14,
+     "symbol_id": "petanim-libao-water-1"
+    },
+    {
+     "index": 2,
+     "png_1x": "pets/1x/pet_libao_water_2.png",
+     "png_hd": "pets/hd/pet_libao_water_2.png",
+     "svg": "pets/svg/pet_libao_water_2.svg",
+     "duration_ms": 320,
+     "start_frame_60fps": 35,
+     "frames_60fps": 20,
+     "symbol_id": "petanim-libao-water-2"
+    },
+    {
+     "index": 3,
+     "png_1x": "pets/1x/pet_libao_water_3.png",
+     "png_hd": "pets/hd/pet_libao_water_3.png",
+     "svg": "pets/svg/pet_libao_water_3.svg",
+     "duration_ms": 280,
+     "start_frame_60fps": 55,
+     "frames_60fps": 16,
+     "symbol_id": "petanim-libao-water-3"
+    },
+    {
+     "index": 4,
+     "png_1x": "pets/1x/pet_libao_water_4.png",
+     "png_hd": "pets/hd/pet_libao_water_4.png",
+     "svg": "pets/svg/pet_libao_water_4.svg",
+     "duration_ms": 310,
+     "start_frame_60fps": 71,
+     "frames_60fps": 19,
+     "symbol_id": "petanim-libao-water-4"
+    },
+    {
+     "index": 5,
+     "png_1x": "pets/1x/pet_libao_water_5.png",
+     "png_hd": "pets/hd/pet_libao_water_5.png",
+     "svg": "pets/svg/pet_libao_water_5.svg",
+     "duration_ms": 480,
+     "start_frame_60fps": 90,
+     "frames_60fps": 29,
+     "symbol_id": "petanim-libao-water-5"
+    }
+   ],
+   "source": "pet-animation-art.mjs animationFrames('libao'); timings pet-animation.mjs TIMINGS × pace",
+   "used_in": [
+    "S11"
+   ]
+  },
+  "pet_wall_324": {
+   "type": "atlas",
+   "group": "wall",
+   "key": "pet_wall_324",
+   "phases": [
+    "wall/pet_wall_324_phase0.png",
+    "wall/pet_wall_324_phase1.png",
+    "wall/pet_wall_324_phase2.png",
+    "wall/pet_wall_324_phase3.png",
+    "wall/pet_wall_324_phase4.png",
+    "wall/pet_wall_324_phase5.png"
+   ],
+   "cells_json": "wall/pet_wall_324_cells.json",
+   "size": [
+    2160,
+    2160
+   ],
+   "cell": 120,
+   "grid": [
+    18,
+    18
+   ],
+   "row_actions": [
+    "idle",
+    "look",
+    "walk",
+    "pat",
+    "eat",
+    "play",
+    "sleep",
+    "wake",
+    "celebrate",
+    "signature",
+    "focus",
+    "sad",
+    "greet",
+    "water",
+    "harvest",
+    "gift",
+    "build",
+    "ponder"
+   ],
+   "layout": "行 = 18 个动作（PET_ACTIONS 顺序，signature 移到第 9 行居中：idle look walk pat eat play sleep wake celebrate signature focus sad greet water harvest gift build ponder）；列 c 的伙伴 = [荔宝, 栗栗, 小白][c % 3]，起始帧 = c // 3。phase k 中每格显示 (起始帧 + k) % 6，所以 phase0–5 依次切换 = 每格循环播放自己的动作；phase0 恰好包含全部 324 帧各一次。",
+   "scales": {
+    "libao": 2,
+    "cat": 5,
+    "egret": 3
+   },
+   "background": "#F3E7CD / #EADCC1 棋盘格，无文字",
+   "pullback_anchor": {
+    "description": "S28 后拉起点：靠近墙面中心的荔宝 signature 格（墙中心 1080,1080；该格中心 1140,1140）。frame_by_phase[k] = phase k 时这格显示的 signature 帧号，全屏特写用 pets/hd 同一帧即可无缝衔接",
+    "row": 9,
+    "col": 9,
+    "cell_rect": [
+     1080,
+     1080,
+     120,
+     120
+    ],
+    "sprite_rect": [
+     1088,
+     1082,
+     104,
+     112
+    ],
+    "sprite_scale": 2,
+    "frame_by_phase": [
+     3,
+     4,
+     5,
+     0,
+     1,
+     2
+    ]
+   },
+   "source": "由 pets/1x 的 324 帧最近邻放大拼成",
+   "used_in": [
+    "S28"
+   ]
+  },
+  "project_lakeLights": {
+   "type": "still",
+   "group": "projects",
+   "key": "project_lakeLights",
+   "png_1x": "projects/1x/project_lakeLights.png",
+   "png_hd": "projects/hd/project_lakeLights.png",
+   "svg": "projects/svg/project_lakeLights.svg",
+   "native_size": [
+    48,
+    28
+   ],
+   "hd_scale": 21,
+   "hd_size": [
+    1008,
+    588
+   ],
+   "colors": 7,
+   "source": "garden-loop-ui.mjs projectArt('lakeLights')",
+   "used_in": [
+    "S16"
+   ],
+   "label": "湖畔灯径",
+   "build_steps_1x": [
+    "projects/build/1x/project_lakeLights_build_01.png",
+    "projects/build/1x/project_lakeLights_build_02.png",
+    "projects/build/1x/project_lakeLights_build_03.png",
+    "projects/build/1x/project_lakeLights_build_04.png",
+    "projects/build/1x/project_lakeLights_build_05.png",
+    "projects/build/1x/project_lakeLights_build_06.png",
+    "projects/build/1x/project_lakeLights_build_07.png",
+    "projects/build/1x/project_lakeLights_build_08.png",
+    "projects/build/1x/project_lakeLights_build_09.png",
+    "projects/build/1x/project_lakeLights_build_10.png",
+    "projects/build/1x/project_lakeLights_build_11.png",
+    "projects/build/1x/project_lakeLights_build_12.png",
+    "projects/build/1x/project_lakeLights_build_13.png",
+    "projects/build/1x/project_lakeLights_build_14.png"
+   ],
+   "build_steps_hd": [
+    "projects/build/hd/project_lakeLights_build_01.png",
+    "projects/build/hd/project_lakeLights_build_02.png",
+    "projects/build/hd/project_lakeLights_build_03.png",
+    "projects/build/hd/project_lakeLights_build_04.png",
+    "projects/build/hd/project_lakeLights_build_05.png",
+    "projects/build/hd/project_lakeLights_build_06.png",
+    "projects/build/hd/project_lakeLights_build_07.png",
+    "projects/build/hd/project_lakeLights_build_08.png",
+    "projects/build/hd/project_lakeLights_build_09.png",
+    "projects/build/hd/project_lakeLights_build_10.png",
+    "projects/build/hd/project_lakeLights_build_11.png",
+    "projects/build/hd/project_lakeLights_build_12.png",
+    "projects/build/hd/project_lakeLights_build_13.png",
+    "projects/build/hd/project_lakeLights_build_14.png"
+   ],
+   "build_note": "自下而上逐步搭建：第 i 张显示底部 2i 行（共 14 张，最后一张 = 完整原画）；画布不变，可直接叠放替换。原画非空行 4–26，空行对应的步骤画面不变。",
+   "row_strips_1x": [
+    "projects/strips/1x/project_lakeLights_rows_00-01.png",
+    "projects/strips/1x/project_lakeLights_rows_02-03.png",
+    "projects/strips/1x/project_lakeLights_rows_04-05.png",
+    "projects/strips/1x/project_lakeLights_rows_06-07.png",
+    "projects/strips/1x/project_lakeLights_rows_08-09.png",
+    "projects/strips/1x/project_lakeLights_rows_10-11.png",
+    "projects/strips/1x/project_lakeLights_rows_12-13.png",
+    "projects/strips/1x/project_lakeLights_rows_14-15.png",
+    "projects/strips/1x/project_lakeLights_rows_16-17.png",
+    "projects/strips/1x/project_lakeLights_rows_18-19.png",
+    "projects/strips/1x/project_lakeLights_rows_20-21.png",
+    "projects/strips/1x/project_lakeLights_rows_22-23.png",
+    "projects/strips/1x/project_lakeLights_rows_24-25.png",
+    "projects/strips/1x/project_lakeLights_rows_26-27.png"
+   ],
+   "row_strips_hd": [
+    "projects/strips/hd/project_lakeLights_rows_00-01.png",
+    "projects/strips/hd/project_lakeLights_rows_02-03.png",
+    "projects/strips/hd/project_lakeLights_rows_04-05.png",
+    "projects/strips/hd/project_lakeLights_rows_06-07.png",
+    "projects/strips/hd/project_lakeLights_rows_08-09.png",
+    "projects/strips/hd/project_lakeLights_rows_10-11.png",
+    "projects/strips/hd/project_lakeLights_rows_12-13.png",
+    "projects/strips/hd/project_lakeLights_rows_14-15.png",
+    "projects/strips/hd/project_lakeLights_rows_16-17.png",
+    "projects/strips/hd/project_lakeLights_rows_18-19.png",
+    "projects/strips/hd/project_lakeLights_rows_20-21.png",
+    "projects/strips/hd/project_lakeLights_rows_22-23.png",
+    "projects/strips/hd/project_lakeLights_rows_24-25.png",
+    "projects/strips/hd/project_lakeLights_rows_26-27.png"
+   ],
+   "row_strips_note": "每片只含 2 行像素、画布与原画一致（位置已对齐），可逐片飞入拼合。"
+  },
+  "project_picnic": {
+   "type": "still",
+   "group": "projects",
+   "key": "project_picnic",
+   "png_1x": "projects/1x/project_picnic.png",
+   "png_hd": "projects/hd/project_picnic.png",
+   "svg": "projects/svg/project_picnic.svg",
+   "native_size": [
+    48,
+    28
+   ],
+   "hd_scale": 21,
+   "hd_size": [
+    1008,
+    588
+   ],
+   "colors": 10,
+   "source": "garden-loop-ui.mjs projectArt('picnic')",
+   "used_in": [
+    "S16"
+   ],
+   "label": "湖畔野餐角",
+   "build_steps_1x": [
+    "projects/build/1x/project_picnic_build_01.png",
+    "projects/build/1x/project_picnic_build_02.png",
+    "projects/build/1x/project_picnic_build_03.png",
+    "projects/build/1x/project_picnic_build_04.png",
+    "projects/build/1x/project_picnic_build_05.png",
+    "projects/build/1x/project_picnic_build_06.png",
+    "projects/build/1x/project_picnic_build_07.png",
+    "projects/build/1x/project_picnic_build_08.png",
+    "projects/build/1x/project_picnic_build_09.png",
+    "projects/build/1x/project_picnic_build_10.png",
+    "projects/build/1x/project_picnic_build_11.png",
+    "projects/build/1x/project_picnic_build_12.png",
+    "projects/build/1x/project_picnic_build_13.png",
+    "projects/build/1x/project_picnic_build_14.png"
+   ],
+   "build_steps_hd": [
+    "projects/build/hd/project_picnic_build_01.png",
+    "projects/build/hd/project_picnic_build_02.png",
+    "projects/build/hd/project_picnic_build_03.png",
+    "projects/build/hd/project_picnic_build_04.png",
+    "projects/build/hd/project_picnic_build_05.png",
+    "projects/build/hd/project_picnic_build_06.png",
+    "projects/build/hd/project_picnic_build_07.png",
+    "projects/build/hd/project_picnic_build_08.png",
+    "projects/build/hd/project_picnic_build_09.png",
+    "projects/build/hd/project_picnic_build_10.png",
+    "projects/build/hd/project_picnic_build_11.png",
+    "projects/build/hd/project_picnic_build_12.png",
+    "projects/build/hd/project_picnic_build_13.png",
+    "projects/build/hd/project_picnic_build_14.png"
+   ],
+   "build_note": "自下而上逐步搭建：第 i 张显示底部 2i 行（共 14 张，最后一张 = 完整原画）；画布不变，可直接叠放替换。原画非空行 3–24，空行对应的步骤画面不变。",
+   "row_strips_1x": [
+    "projects/strips/1x/project_picnic_rows_00-01.png",
+    "projects/strips/1x/project_picnic_rows_02-03.png",
+    "projects/strips/1x/project_picnic_rows_04-05.png",
+    "projects/strips/1x/project_picnic_rows_06-07.png",
+    "projects/strips/1x/project_picnic_rows_08-09.png",
+    "projects/strips/1x/project_picnic_rows_10-11.png",
+    "projects/strips/1x/project_picnic_rows_12-13.png",
+    "projects/strips/1x/project_picnic_rows_14-15.png",
+    "projects/strips/1x/project_picnic_rows_16-17.png",
+    "projects/strips/1x/project_picnic_rows_18-19.png",
+    "projects/strips/1x/project_picnic_rows_20-21.png",
+    "projects/strips/1x/project_picnic_rows_22-23.png",
+    "projects/strips/1x/project_picnic_rows_24-25.png",
+    "projects/strips/1x/project_picnic_rows_26-27.png"
+   ],
+   "row_strips_hd": [
+    "projects/strips/hd/project_picnic_rows_00-01.png",
+    "projects/strips/hd/project_picnic_rows_02-03.png",
+    "projects/strips/hd/project_picnic_rows_04-05.png",
+    "projects/strips/hd/project_picnic_rows_06-07.png",
+    "projects/strips/hd/project_picnic_rows_08-09.png",
+    "projects/strips/hd/project_picnic_rows_10-11.png",
+    "projects/strips/hd/project_picnic_rows_12-13.png",
+    "projects/strips/hd/project_picnic_rows_14-15.png",
+    "projects/strips/hd/project_picnic_rows_16-17.png",
+    "projects/strips/hd/project_picnic_rows_18-19.png",
+    "projects/strips/hd/project_picnic_rows_20-21.png",
+    "projects/strips/hd/project_picnic_rows_22-23.png",
+    "projects/strips/hd/project_picnic_rows_24-25.png",
+    "projects/strips/hd/project_picnic_rows_26-27.png"
+   ],
+   "row_strips_note": "每片只含 2 行像素、画布与原画一致（位置已对齐），可逐片飞入拼合。"
+  },
+  "project_seedrack": {
+   "type": "still",
+   "group": "projects",
+   "key": "project_seedrack",
+   "png_1x": "projects/1x/project_seedrack.png",
+   "png_hd": "projects/hd/project_seedrack.png",
+   "svg": "projects/svg/project_seedrack.svg",
+   "native_size": [
+    48,
+    28
+   ],
+   "hd_scale": 21,
+   "hd_size": [
+    1008,
+    588
+   ],
+   "colors": 8,
+   "source": "garden-loop-ui.mjs projectArt('seedrack')",
+   "used_in": [
+    "S16"
+   ],
+   "label": "窗边育苗架",
+   "build_steps_1x": [
+    "projects/build/1x/project_seedrack_build_01.png",
+    "projects/build/1x/project_seedrack_build_02.png",
+    "projects/build/1x/project_seedrack_build_03.png",
+    "projects/build/1x/project_seedrack_build_04.png",
+    "projects/build/1x/project_seedrack_build_05.png",
+    "projects/build/1x/project_seedrack_build_06.png",
+    "projects/build/1x/project_seedrack_build_07.png",
+    "projects/build/1x/project_seedrack_build_08.png",
+    "projects/build/1x/project_seedrack_build_09.png",
+    "projects/build/1x/project_seedrack_build_10.png",
+    "projects/build/1x/project_seedrack_build_11.png",
+    "projects/build/1x/project_seedrack_build_12.png",
+    "projects/build/1x/project_seedrack_build_13.png",
+    "projects/build/1x/project_seedrack_build_14.png"
+   ],
+   "build_steps_hd": [
+    "projects/build/hd/project_seedrack_build_01.png",
+    "projects/build/hd/project_seedrack_build_02.png",
+    "projects/build/hd/project_seedrack_build_03.png",
+    "projects/build/hd/project_seedrack_build_04.png",
+    "projects/build/hd/project_seedrack_build_05.png",
+    "projects/build/hd/project_seedrack_build_06.png",
+    "projects/build/hd/project_seedrack_build_07.png",
+    "projects/build/hd/project_seedrack_build_08.png",
+    "projects/build/hd/project_seedrack_build_09.png",
+    "projects/build/hd/project_seedrack_build_10.png",
+    "projects/build/hd/project_seedrack_build_11.png",
+    "projects/build/hd/project_seedrack_build_12.png",
+    "projects/build/hd/project_seedrack_build_13.png",
+    "projects/build/hd/project_seedrack_build_14.png"
+   ],
+   "build_note": "自下而上逐步搭建：第 i 张显示底部 2i 行（共 14 张，最后一张 = 完整原画）；画布不变，可直接叠放替换。原画非空行 3–26，空行对应的步骤画面不变。",
+   "row_strips_1x": [
+    "projects/strips/1x/project_seedrack_rows_00-01.png",
+    "projects/strips/1x/project_seedrack_rows_02-03.png",
+    "projects/strips/1x/project_seedrack_rows_04-05.png",
+    "projects/strips/1x/project_seedrack_rows_06-07.png",
+    "projects/strips/1x/project_seedrack_rows_08-09.png",
+    "projects/strips/1x/project_seedrack_rows_10-11.png",
+    "projects/strips/1x/project_seedrack_rows_12-13.png",
+    "projects/strips/1x/project_seedrack_rows_14-15.png",
+    "projects/strips/1x/project_seedrack_rows_16-17.png",
+    "projects/strips/1x/project_seedrack_rows_18-19.png",
+    "projects/strips/1x/project_seedrack_rows_20-21.png",
+    "projects/strips/1x/project_seedrack_rows_22-23.png",
+    "projects/strips/1x/project_seedrack_rows_24-25.png",
+    "projects/strips/1x/project_seedrack_rows_26-27.png"
+   ],
+   "row_strips_hd": [
+    "projects/strips/hd/project_seedrack_rows_00-01.png",
+    "projects/strips/hd/project_seedrack_rows_02-03.png",
+    "projects/strips/hd/project_seedrack_rows_04-05.png",
+    "projects/strips/hd/project_seedrack_rows_06-07.png",
+    "projects/strips/hd/project_seedrack_rows_08-09.png",
+    "projects/strips/hd/project_seedrack_rows_10-11.png",
+    "projects/strips/hd/project_seedrack_rows_12-13.png",
+    "projects/strips/hd/project_seedrack_rows_14-15.png",
+    "projects/strips/hd/project_seedrack_rows_16-17.png",
+    "projects/strips/hd/project_seedrack_rows_18-19.png",
+    "projects/strips/hd/project_seedrack_rows_20-21.png",
+    "projects/strips/hd/project_seedrack_rows_22-23.png",
+    "projects/strips/hd/project_seedrack_rows_24-25.png",
+    "projects/strips/hd/project_seedrack_rows_26-27.png"
+   ],
+   "row_strips_note": "每片只含 2 行像素、画布与原画一致（位置已对齐），可逐片飞入拼合。"
+  },
+  "tile_1024": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_1024",
+   "png_1x": "tiles/1x/tile_1024.png",
+   "png_hd": "tiles/hd/tile_1024.png",
+   "svg": "tiles/svg/tile_1024.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 11,
+   "source": "arcade-art.mjs tileArtwork(1024)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "荔枝篮",
+   "value": 1024,
+   "kind": "basket",
+   "card": "tiles/card/tile_card_1024.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_128": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_128",
+   "png_1x": "tiles/1x/tile_128.png",
+   "png_hd": "tiles/hd/tile_128.png",
+   "svg": "tiles/svg/tile_128.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 9,
+   "source": "arcade-art.mjs tileArtwork(128)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "萝卜篮",
+   "value": 128,
+   "kind": "basket",
+   "card": "tiles/card/tile_card_128.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_16": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_16",
+   "png_1x": "tiles/1x/tile_16.png",
+   "png_hd": "tiles/hd/tile_16.png",
+   "svg": "tiles/svg/tile_16.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "arcade-art.mjs tileArtwork(16)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "草莓",
+   "value": 16,
+   "kind": "crop",
+   "card": "tiles/card/tile_card_16.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_2": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_2",
+   "png_1x": "tiles/1x/tile_2.png",
+   "png_hd": "tiles/hd/tile_2.png",
+   "svg": "tiles/svg/tile_2.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 7,
+   "source": "arcade-art.mjs tileArtwork(2)",
+   "used_in": [
+    "S17",
+    "S18"
+   ],
+   "label": "种子袋",
+   "value": 2,
+   "kind": "seed",
+   "card": "tiles/card/tile_card_2.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_2048": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_2048",
+   "png_1x": "tiles/1x/tile_2048.png",
+   "png_hd": "tiles/hd/tile_2048.png",
+   "svg": "tiles/svg/tile_2048.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 12,
+   "source": "arcade-art.mjs tileArtwork(2048)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "荔宝丰收礼",
+   "value": 2048,
+   "kind": "celebration",
+   "card": "tiles/card/tile_card_2048.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_256": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_256",
+   "png_1x": "tiles/1x/tile_256.png",
+   "png_hd": "tiles/hd/tile_256.png",
+   "svg": "tiles/svg/tile_256.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 10,
+   "source": "arcade-art.mjs tileArtwork(256)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "草莓篮",
+   "value": 256,
+   "kind": "basket",
+   "card": "tiles/card/tile_card_256.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_32": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_32",
+   "png_1x": "tiles/1x/tile_32.png",
+   "png_hd": "tiles/hd/tile_32.png",
+   "svg": "tiles/svg/tile_32.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 6,
+   "source": "arcade-art.mjs tileArtwork(32)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "蓝莓",
+   "value": 32,
+   "kind": "crop",
+   "card": "tiles/card/tile_card_32.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_4": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_4",
+   "png_1x": "tiles/1x/tile_4.png",
+   "png_hd": "tiles/hd/tile_4.png",
+   "svg": "tiles/svg/tile_4.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 4,
+   "source": "arcade-art.mjs tileArtwork(4)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "嫩芽",
+   "value": 4,
+   "kind": "sprout",
+   "card": "tiles/card/tile_card_4.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_4096": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_4096",
+   "png_1x": "tiles/1x/tile_4096.png",
+   "png_hd": "tiles/hd/tile_4096.png",
+   "svg": "tiles/svg/tile_4096.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 14,
+   "source": "arcade-art.mjs tileArtwork(4096)",
+   "used_in": [],
+   "label": "丰收庆典",
+   "value": 4096,
+   "kind": "celebration",
+   "card": "tiles/card/tile_card_4096.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）",
+   "note": "丰收庆典（≥4096），本片分镜不用"
+  },
+  "tile_512": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_512",
+   "png_1x": "tiles/1x/tile_512.png",
+   "png_hd": "tiles/hd/tile_512.png",
+   "svg": "tiles/svg/tile_512.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 12,
+   "source": "arcade-art.mjs tileArtwork(512)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "蓝莓篮",
+   "value": 512,
+   "kind": "basket",
+   "card": "tiles/card/tile_card_512.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_64": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_64",
+   "png_1x": "tiles/1x/tile_64.png",
+   "png_hd": "tiles/hd/tile_64.png",
+   "svg": "tiles/svg/tile_64.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 5,
+   "source": "arcade-art.mjs tileArtwork(64)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "荔枝",
+   "value": 64,
+   "kind": "crop",
+   "card": "tiles/card/tile_card_64.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tile_8": {
+   "type": "still",
+   "group": "tiles",
+   "key": "tile_8",
+   "png_1x": "tiles/1x/tile_8.png",
+   "png_hd": "tiles/hd/tile_8.png",
+   "svg": "tiles/svg/tile_8.svg",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "hd_size": [
+    1024,
+    1024
+   ],
+   "colors": 3,
+   "source": "arcade-art.mjs tileArtwork(8)",
+   "used_in": [
+    "S17"
+   ],
+   "label": "小萝卜",
+   "value": 8,
+   "kind": "crop",
+   "card": "tiles/card/tile_card_8.png",
+   "card_note": "arcade.css 棋子样式 ×3（336×336 + 6px 下阴影 = 336×342，透明外沿）；原画 ×7 = 224px；数字 Fusion Pixel 72px（4 位数 60px）"
+  },
+  "tray_icon": {
+   "type": "still",
+   "group": "app",
+   "key": "tray_icon",
+   "png_template_1x": "app/1x/tray_icon_template_32.png",
+   "png_template_16": "app/1x/tray_icon_template_16.png",
+   "png_paper_1x": "app/1x/tray_icon_paper_32.png",
+   "png_template_hd": "app/hd/tray_icon_template_32.png",
+   "png_paper_hd": "app/hd/tray_icon_paper_32.png",
+   "native_size": [
+    32,
+    32
+   ],
+   "hd_scale": 32,
+   "alpha_values": [
+    0,
+    255
+   ],
+   "source": "desktop/assets/szudesktop-trayTemplate@2x.png（黑色模板图）；paper 版 = 同一 alpha、RGB 改为暖纸 #FFF9E9",
+   "used_in": [
+    "S04"
+   ]
+  }
+ }
+}

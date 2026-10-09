@@ -1,0 +1,56 @@
+{
+  "key": "clip_scene_terrace_s15",
+  "kind": "clip",
+  "file": "clip_scene_terrace_s15.mp4",
+  "first": "clip_scene_terrace_s15.first.png",
+  "last": "clip_scene_terrace_s15.last.png",
+  "heroes": [
+    "clip_scene_terrace_s15.f0000.png",
+    "clip_scene_terrace_s15.f0060.png",
+    "clip_scene_terrace_s15.f0119.png"
+  ],
+  "frameCount": 120,
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1920,
+        "height": 1080,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "nb_read_frames": "120"
+      }
+    ],
+    "format": {
+      "duration": "2.000000",
+      "size": "2681828"
+    }
+  },
+  "description": "v2 逐镜重渲：应用自带三渲二场景（home-scene-world.mjs skin='terrace'），1920×1080，120 帧 60fps，上屏 1× 播放（无抽帧）。相机距离 1.10→0.84（前 90 帧走完），目标点上移 0→1.3，绕 Y 轴 -3°→+2°；world.update(2 + f/60) 真实时间。内部 2 倍超采样（3840,2160），其余管线同 cap-scenes.mjs。不含任何界面文字。",
+  "render": {
+    "skin": "terrace",
+    "width": 1920,
+    "height": 1080,
+    "retreat": 1,
+    "fov": 42,
+    "target": [
+      0.15,
+      2,
+      -0.9
+    ],
+    "position": [
+      12.3,
+      9.06,
+      17.5
+    ],
+    "frames": 120,
+    "fps": 60,
+    "internalScale": 2,
+    "internal": [
+      3840,
+      2160
+    ]
+  }
+}

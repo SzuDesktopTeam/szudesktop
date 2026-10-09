@@ -1,0 +1,17 @@
+{
+  "key": "ui_home_bookshop",
+  "kind": "still",
+  "file": "ui_home_bookshop.png",
+  "extra": [
+    "ui_home_bookshop.landscape.png"
+  ],
+  "description": "「今日」首页整屏，风景选「雨后书屋」（真实 WebGL 渲染）。可与 ui_home_lake、ui_home_pixel 组成 S15 的四宫格「三套风景 + 像素庭院，整个应用一起换」。",
+  "viewportRects": {
+    "landscape": {
+      "x": 591.5,
+      "y": 351.78125,
+      "width": 798.5,
+      "height": 433.421875
+    }
+  }
+}

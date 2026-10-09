@@ -1,0 +1,15 @@
+{
+  "key": "ui_settings_desktop",
+  "kind": "still",
+  "file": "ui_settings_desktop.png",
+  "extra": [
+    "ui_settings_desktop.card.png"
+  ],
+  "description": "设置 → 桌面陪伴 →「桌面伙伴」卡片的「伙伴大小」滑杆，桥接替身返回 1.5，显示 150%（S05 的 HUD 背板，可选）。.card.png 为整张卡片（含「拖动伙伴可以移动位置，悬停时滚轮每次调整 10%；也可以用滑杆在 40–200% 之间细调」原文）。",
+  "clipCss": {
+    "x": 209,
+    "y": 220.546875,
+    "width": 1182,
+    "height": 180.59375
+  }
+}

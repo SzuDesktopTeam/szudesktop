@@ -1,0 +1,36 @@
+{
+  "key": "clip_home_lake_live",
+  "kind": "clip",
+  "file": "clip_home_lake_live.mp4",
+  "first": "clip_home_lake_live.first.png",
+  "last": "clip_home_lake_live.last.png",
+  "heroes": [
+    "clip_home_lake_live.f0120.png"
+  ],
+  "frameCount": 240,
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 3200,
+        "height": 1800,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "nb_read_frames": "240"
+      }
+    ],
+    "format": {
+      "duration": "4.000000",
+      "size": "1719153"
+    }
+  },
+  "description": "「今日」首页实况 4 s（无操作）：荔湖晴昼风景照常动画（湖面波纹、棕榈摆动，应用本身以 30fps 重绘），右下角荔宝按自己的节奏播放待机动作。可替代 ui_home_lake 作为桌面窗口里「活的」画面。",
+  "viewport": {
+    "width": 1600,
+    "height": 900,
+    "deviceScaleFactor": 2,
+    "scrollY": 0
+  }
+}

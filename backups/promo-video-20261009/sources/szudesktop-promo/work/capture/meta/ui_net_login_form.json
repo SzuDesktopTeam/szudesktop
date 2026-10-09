@@ -1,0 +1,39 @@
+{
+  "key": "ui_net_login_form",
+  "kind": "still",
+  "file": "ui_net_login_form.png",
+  "description": "「连接 / 更换账号」表单（未填写）：校园卡号、统一身份认证密码、所在区域「自动识别」（原生下拉，选项原文：自动识别 / 教学区 · 深澜 / 宿舍区 · Dr.COM）、「认证成功后记住账号密码」（不勾选）、「登录校园网」。",
+  "viewportRects": {
+    "login": {
+      "x": 209,
+      "y": 96.359375,
+      "width": 581,
+      "height": 626.234375
+    },
+    "account": {
+      "x": 232,
+      "y": 303.203125,
+      "width": 535,
+      "height": 44
+    },
+    "password": {
+      "x": 232,
+      "y": 389.203125,
+      "width": 535,
+      "height": 44
+    },
+    "zone": {
+      "x": 232,
+      "y": 475.203125,
+      "width": 535,
+      "height": 46
+    },
+    "submit": {
+      "x": 232,
+      "y": 657.203125,
+      "width": 142,
+      "height": 42.390625
+    }
+  },
+  "scrollY": 541
+}

@@ -1,0 +1,55 @@
+{
+  "key": "clip_scene_bookshop_dolly_v",
+  "kind": "clip",
+  "file": "clip_scene_bookshop_dolly_v.mp4",
+  "first": "clip_scene_bookshop_dolly_v.first.png",
+  "last": "clip_scene_bookshop_dolly_v.last.png",
+  "heroes": [
+    "clip_scene_bookshop_dolly_v.f0000.png",
+    "clip_scene_bookshop_dolly_v.f0105.png",
+    "clip_scene_bookshop_dolly_v.f0209.png"
+  ],
+  "frameCount": 210,
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "nb_read_frames": "210"
+      }
+    ],
+    "format": {
+      "duration": "3.500000",
+      "size": "4634353"
+    }
+  },
+  "description": "应用自带三渲二场景「雨后书屋」（home-scene-world.mjs skin='bookshop'）的真 3D 推镜，竖版 1080×1920，逐帧确定性渲染：相机距离系数 1.10→0.88，俯仰 +2°→-1°，湖面波纹、棕榈、灯串照常动画（world.update(2 + f/60)）。灯光、天空、雾、描线、调色与 FXAA 照 home-scene-renderer.mjs 复刻，内部 1.5 倍超采样（与首页小卡片同精度）。不含任何界面文字。",
+  "render": {
+    "skin": "bookshop",
+    "width": 1080,
+    "height": 1920,
+    "retreat": 1.55,
+    "fov": 40,
+    "target": [
+      -0.5,
+      2,
+      -1.5
+    ],
+    "position": [
+      11.47,
+      8.12,
+      16.95
+    ],
+    "gl": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "frames": 210,
+    "fps": 60,
+    "easing": "easeInOut",
+    "internalScale": 1.5
+  },
+  "sceneName": "雨后书屋"
+}

@@ -1,0 +1,7137 @@
+{
+ "cell": 120,
+ "size": [
+  2160,
+  2160
+ ],
+ "cells": [
+  {
+   "row": 0,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "idle",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    2,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 0,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "idle",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    4,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 0,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "idle",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    0,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    18,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "look",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    122,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 1,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "look",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    124,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 1,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "look",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    120,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    138,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "walk",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    242,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 2,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "walk",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    244,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 2,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "walk",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    240,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    258,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "pat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    362,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 3,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "pat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    364,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 3,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "pat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    360,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    378,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "eat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    482,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 4,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "eat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    484,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 4,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "eat",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    480,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    498,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "play",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    602,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 5,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "play",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    604,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 5,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "play",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    600,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    618,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sleep",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    722,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 6,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sleep",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    724,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 6,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sleep",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    720,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    738,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "wake",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    842,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 7,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "wake",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    844,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 7,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "wake",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    840,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    858,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "celebrate",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    962,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 8,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "celebrate",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    964,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 8,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "celebrate",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    960,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    978,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "signature",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1082,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 9,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "signature",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1084,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 9,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "signature",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1080,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1098,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "focus",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1202,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 10,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "focus",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1204,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 10,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "focus",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1200,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1218,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "sad",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1322,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 11,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "sad",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1324,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 11,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "sad",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1320,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1338,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "greet",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1442,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 12,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "greet",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1444,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 12,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "greet",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1440,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1458,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "water",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1562,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 13,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "water",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1564,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 13,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "water",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1560,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1578,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "harvest",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1682,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 14,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "harvest",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1684,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 14,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "harvest",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1680,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1698,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "gift",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1802,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 15,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "gift",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1804,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 15,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "gift",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1800,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1818,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "build",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    1922,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 16,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "build",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    1924,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 16,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "build",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    1920,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    1938,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 0,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    0,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    8,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 1,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    120,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    130,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 2,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 0,
+   "cell_rect": [
+    240,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    252,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 3,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    360,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    368,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 4,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    480,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    490,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 5,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 1,
+   "cell_rect": [
+    600,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    612,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 6,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    720,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    728,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 7,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    840,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    850,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 8,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 2,
+   "cell_rect": [
+    960,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    972,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 9,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1080,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1088,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 10,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1200,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1210,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 11,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 3,
+   "cell_rect": [
+    1320,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1332,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 12,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1440,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1448,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 13,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1560,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1570,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 14,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 4,
+   "cell_rect": [
+    1680,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1692,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 15,
+   "sprite_id": "libao",
+   "companion": "荔宝",
+   "action": "ponder",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1800,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1808,
+    2042,
+    104,
+    112
+   ],
+   "sprite_scale": 2,
+   "bg": "#F3E7CD"
+  },
+  {
+   "row": 17,
+   "col": 16,
+   "sprite_id": "cat",
+   "companion": "栗栗",
+   "action": "ponder",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    1920,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    1930,
+    2044,
+    100,
+    110
+   ],
+   "sprite_scale": 5,
+   "bg": "#EADCC1"
+  },
+  {
+   "row": 17,
+   "col": 17,
+   "sprite_id": "egret",
+   "companion": "小白",
+   "action": "ponder",
+   "frame_at_phase0": 5,
+   "cell_rect": [
+    2040,
+    2040,
+    120,
+    120
+   ],
+   "sprite_rect": [
+    2052,
+    2058,
+    96,
+    96
+   ],
+   "sprite_scale": 3,
+   "bg": "#F3E7CD"
+  }
+ ]
+}

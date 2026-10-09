@@ -1,0 +1,11 @@
+{
+  "archive": "/tmp/kx-szu-upload-20261009/szudesktop-promo-video-20261009.tar.gz",
+  "archive_bytes": 1035869489,
+  "sha256": "b54b87e9d87409676bcace40a1a8287e9e60c35a5df7c0f9de7a2a22abf3d85a",
+  "source_entries_verified": 3261,
+  "archive_entries_verified": 3261,
+  "manifest_sha256": "c413a223006044af02129c6ae15dd5bcf63cb08ae418308a6baae3fdafb27385",
+  "source_main_commit": "e2e3bd0ede120d0106aa74ae52bae8ed92abf8eb",
+  "created_at": "2026-10-09T03:29:43Z",
+  "restore_test": "Passed full extraction, every selected content hash, exact file mode and nanosecond timestamp, independent duplicate copies"
+}

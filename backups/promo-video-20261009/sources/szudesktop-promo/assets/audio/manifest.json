@@ -1,0 +1,7918 @@
+{
+ "title": "szuDesktop · 荔枝庭院 宣传片 原创配乐与音效",
+ "generator": "work/audio/make_audio.py（+ dsp.py、sfx.py），/opt/miniconda3/bin/python3 + numpy 逐样本合成",
+ "originality": "全部声音由程序合成：振荡器（polyBLEP 方波/脉冲/锯齿、4/5-bit 阶梯三角波、FM）、白噪声与 15 位 LFSR 噪声、合成混响脉冲；不使用任何外部音乐、采样、音色库或 SoundFont。",
+ "format": {
+  "sample_rate": 48000,
+  "bit_depth": 16,
+  "channels": 2,
+  "container": "WAV PCM",
+  "dither": "TPDF ±1 LSB"
+ },
+ "loudness_target": {
+  "integrated_lufs": -14.0,
+  "true_peak_ceiling_dbtp": -1.5,
+  "method": "ITU-R BS.1770-4 K 加权 + 门限（自算），4 倍过采样真峰值（自算）；ffmpeg ebur128 交叉核对"
+ },
+ "tempo": {
+  "bpm": 128,
+  "time_signature": "4/4",
+  "key": "D 大调",
+  "beat_s": 0.46875,
+  "bar_s": 1.875,
+  "sixteenth_s": 0.1171875,
+  "frames_per_beat_60fps": 28.125,
+  "frames_per_bar_60fps": 112.5,
+  "frame_rounding": "frame = round(t × 60)，.5 进位（与 JS Math.round 一致）"
+ },
+ "harmony": {
+  "motif": "「荔-枝-庭-院」D5–F#5–A5–B5",
+  "verse": "Bm–G–D–A",
+  "chorus": "D–A–Bm–G",
+  "interlude": "G–A–F#m–Bm"
+ },
+ "files": {
+  "full_16x9": {
+   "lufs_integrated": -14.03,
+   "lufs_short_term_max": -10.16,
+   "lufs_momentary_max": -6.68,
+   "lra_lu": 5.64,
+   "true_peak_dbtp": -1.5,
+   "sample_peak_dbfs": -1.5,
+   "rms_dbfs": -15.79,
+   "dc_offset": 1.0082244873046874e-05,
+   "master": {
+    "glue_max_gr_db": -5.92,
+    "limiter_max_gr_db": -6.18,
+    "net_gain_db": -8.07
+   },
+   "path": "promo_16x9_full.wav",
+   "abs_path": "/Users/alakazan/workplace/szudesktop-promo/assets/audio/promo_16x9_full.wav",
+   "version": "16x9",
+   "kind": "full",
+   "duration_s": 60.0,
+   "samples": 2880000,
+   "sample_rate": 48000,
+   "channels": 2,
+   "bit_depth": 16,
+   "ffmpeg_ebur128": {
+    "I_lufs": -14.0,
+    "LRA_lu": 5.5,
+    "true_peak_dbfs": -1.5
+   }
+  },
+  "music_16x9": {
+   "lufs_integrated": -14.04,
+   "lufs_short_term_max": -9.99,
+   "lufs_momentary_max": -6.21,
+   "lra_lu": 5.86,
+   "true_peak_dbtp": -1.5,
+   "sample_peak_dbfs": -1.51,
+   "rms_dbfs": -15.67,
+   "dc_offset": 6.858550177680122e-06,
+   "master": {
+    "glue_max_gr_db": -6.54,
+    "limiter_max_gr_db": -5.69,
+    "net_gain_db": -9.08
+   },
+   "path": "music_16x9.wav",
+   "abs_path": "/Users/alakazan/workplace/szudesktop-promo/assets/audio/music_16x9.wav",
+   "version": "16x9",
+   "kind": "music",
+   "duration_s": 60.0,
+   "samples": 2880000,
+   "sample_rate": 48000,
+   "channels": 2,
+   "bit_depth": 16,
+   "ffmpeg_ebur128": {
+    "I_lufs": -14.0,
+    "LRA_lu": 5.8,
+    "true_peak_dbfs": -1.5
+   }
+  },
+  "full_9x16": {
+   "lufs_integrated": -14.05,
+   "lufs_short_term_max": -10.67,
+   "lufs_momentary_max": -6.85,
+   "lra_lu": 5.82,
+   "true_peak_dbtp": -1.5,
+   "sample_peak_dbfs": -1.5,
+   "rms_dbfs": -15.77,
+   "dc_offset": 1.65668699476454e-05,
+   "master": {
+    "glue_max_gr_db": -5.56,
+    "limiter_max_gr_db": -4.97,
+    "net_gain_db": -9.61
+   },
+   "path": "promo_9x16_full.wav",
+   "abs_path": "/Users/alakazan/workplace/szudesktop-promo/assets/audio/promo_9x16_full.wav",
+   "version": "9x16",
+   "kind": "full",
+   "duration_s": 30.0,
+   "samples": 1440000,
+   "sample_rate": 48000,
+   "channels": 2,
+   "bit_depth": 16,
+   "ffmpeg_ebur128": {
+    "I_lufs": -14.1,
+    "LRA_lu": 5.8,
+    "true_peak_dbfs": -1.5
+   }
+  },
+  "music_9x16": {
+   "lufs_integrated": -14.01,
+   "lufs_short_term_max": -10.42,
+   "lufs_momentary_max": -6.36,
+   "lra_lu": 6.35,
+   "true_peak_dbtp": -1.5,
+   "sample_peak_dbfs": -1.5,
+   "rms_dbfs": -15.6,
+   "dc_offset": 8.977656894259983e-06,
+   "master": {
+    "glue_max_gr_db": -5.91,
+    "limiter_max_gr_db": -4.66,
+    "net_gain_db": -10.92
+   },
+   "path": "music_9x16.wav",
+   "abs_path": "/Users/alakazan/workplace/szudesktop-promo/assets/audio/music_9x16.wav",
+   "version": "9x16",
+   "kind": "music",
+   "duration_s": 30.0,
+   "samples": 1440000,
+   "sample_rate": 48000,
+   "channels": 2,
+   "bit_depth": 16,
+   "ffmpeg_ebur128": {
+    "I_lufs": -14.0,
+    "LRA_lu": 6.3,
+    "true_peak_dbfs": -1.5
+   }
+  }
+ },
+ "recommended": {
+  "16x9": "promo_16x9_full.wav",
+  "9x16": "promo_9x16_full.wav",
+  "how": "成片直接用 promo_*_full.wav（配乐 + 全部音效，已做母带，-14 LUFS / ≤ -1 dBTP），从第 0 帧开始放，不要再叠加 sfx/。music_*.wav 是同一编曲去掉界面音效后单独母带的版本（同样 -14 LUFS），只在画面时间点改动、需要自己重排音效时使用；这时在 Remotion 里把 sfx/*.wav 按 sfx_cues 的 start_t（= hit_t − hit_offset_s）放置，音量用 remotion_volume_over_music_only，叠加后自行复核总峰值（可能超过 -1 dBTP，必要时整体降 1–2 dB）。"
+ },
+ "versions": {
+  "16x9": {
+   "duration_s": 60.0,
+   "bars": 32,
+   "full_mix": "promo_16x9_full.wav",
+   "music_only": "music_16x9.wav",
+   "sections": [
+    {
+     "bars": [
+      1,
+      2
+     ],
+     "start_s": 0.0,
+     "end_s": 3.75,
+     "name": "Hook 开场钩子"
+    },
+    {
+     "bars": [
+      3,
+      6
+     ],
+     "start_s": 3.75,
+     "end_s": 11.25,
+     "name": "主歌 A"
+    },
+    {
+     "bars": [
+      7,
+      10
+     ],
+     "start_s": 11.25,
+     "end_s": 18.75,
+     "name": "主歌 B / 积累"
+    },
+    {
+     "bars": [
+      11,
+      11
+     ],
+     "start_s": 18.75,
+     "end_s": 20.625,
+     "name": "预冲"
+    },
+    {
+     "bars": [
+      12,
+      15
+     ],
+     "start_s": 20.625,
+     "end_s": 28.125,
+     "name": "副歌 1（DROP）"
+    },
+    {
+     "bars": [
+      16,
+      17
+     ],
+     "start_s": 28.125,
+     "end_s": 31.875,
+     "name": "2048 攀升 → 高潮"
+    },
+    {
+     "bars": [
+      18,
+      18
+     ],
+     "start_s": 31.875,
+     "end_s": 33.75,
+     "name": "余波"
+    },
+    {
+     "bars": [
+      19,
+      21
+     ],
+     "start_s": 33.75,
+     "end_s": 39.375,
+     "name": "间奏"
+    },
+    {
+     "bars": [
+      22,
+      22
+     ],
+     "start_s": 39.375,
+     "end_s": 41.25,
+     "name": "故障"
+    },
+    {
+     "bars": [
+      23,
+      25
+     ],
+     "start_s": 41.25,
+     "end_s": 46.875,
+     "name": "积累 2"
+    },
+    {
+     "bars": [
+      26,
+      28
+     ],
+     "start_s": 46.875,
+     "end_s": 52.5,
+     "name": "副歌 2"
+    },
+    {
+     "bars": [
+      29,
+      30
+     ],
+     "start_s": 52.5,
+     "end_s": 56.25,
+     "name": "尾声"
+    },
+    {
+     "bars": [
+      31,
+      32
+     ],
+     "start_s": 56.25,
+     "end_s": 60.0,
+     "name": "收尾"
+    }
+   ],
+   "grid": [
+    {
+     "bar": 1,
+     "start_s": 0.0,
+     "end_s": 1.875,
+     "start_frame": 0,
+     "section": "Hook 开场钩子",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S01",
+      "S02"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 1,
+       "t": 0.0,
+       "frame": 0
+      },
+      {
+       "beat": 2,
+       "global_beat": 2,
+       "t": 0.46875,
+       "frame": 28
+      },
+      {
+       "beat": 3,
+       "global_beat": 3,
+       "t": 0.9375,
+       "frame": 56
+      },
+      {
+       "beat": 4,
+       "global_beat": 4,
+       "t": 1.40625,
+       "frame": 84
+      }
+     ]
+    },
+    {
+     "bar": 2,
+     "start_s": 1.875,
+     "end_s": 3.75,
+     "start_frame": 113,
+     "section": "Hook 开场钩子",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      },
+      {
+       "beat": 3,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S02",
+      "S03"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 5,
+       "t": 1.875,
+       "frame": 113
+      },
+      {
+       "beat": 2,
+       "global_beat": 6,
+       "t": 2.34375,
+       "frame": 141
+      },
+      {
+       "beat": 3,
+       "global_beat": 7,
+       "t": 2.8125,
+       "frame": 169
+      },
+      {
+       "beat": 4,
+       "global_beat": 8,
+       "t": 3.28125,
+       "frame": 197
+      }
+     ]
+    },
+    {
+     "bar": 3,
+     "start_s": 3.75,
+     "end_s": 5.625,
+     "start_frame": 225,
+     "section": "主歌 A",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      }
+     ],
+     "shots": [
+      "S04"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 9,
+       "t": 3.75,
+       "frame": 225
+      },
+      {
+       "beat": 2,
+       "global_beat": 10,
+       "t": 4.21875,
+       "frame": 253
+      },
+      {
+       "beat": 3,
+       "global_beat": 11,
+       "t": 4.6875,
+       "frame": 281
+      },
+      {
+       "beat": 4,
+       "global_beat": 12,
+       "t": 5.15625,
+       "frame": 309
+      }
+     ]
+    },
+    {
+     "bar": 4,
+     "start_s": 5.625,
+     "end_s": 7.5,
+     "start_frame": 338,
+     "section": "主歌 A",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S05"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 13,
+       "t": 5.625,
+       "frame": 338
+      },
+      {
+       "beat": 2,
+       "global_beat": 14,
+       "t": 6.09375,
+       "frame": 366
+      },
+      {
+       "beat": 3,
+       "global_beat": 15,
+       "t": 6.5625,
+       "frame": 394
+      },
+      {
+       "beat": 4,
+       "global_beat": 16,
+       "t": 7.03125,
+       "frame": 422
+      }
+     ]
+    },
+    {
+     "bar": 5,
+     "start_s": 7.5,
+     "end_s": 9.375,
+     "start_frame": 450,
+     "section": "主歌 A",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S06"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 17,
+       "t": 7.5,
+       "frame": 450
+      },
+      {
+       "beat": 2,
+       "global_beat": 18,
+       "t": 7.96875,
+       "frame": 478
+      },
+      {
+       "beat": 3,
+       "global_beat": 19,
+       "t": 8.4375,
+       "frame": 506
+      },
+      {
+       "beat": 4,
+       "global_beat": 20,
+       "t": 8.90625,
+       "frame": 534
+      }
+     ]
+    },
+    {
+     "bar": 6,
+     "start_s": 9.375,
+     "end_s": 11.25,
+     "start_frame": 563,
+     "section": "主歌 A",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S07"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 21,
+       "t": 9.375,
+       "frame": 563
+      },
+      {
+       "beat": 2,
+       "global_beat": 22,
+       "t": 9.84375,
+       "frame": 591
+      },
+      {
+       "beat": 3,
+       "global_beat": 23,
+       "t": 10.3125,
+       "frame": 619
+      },
+      {
+       "beat": 4,
+       "global_beat": 24,
+       "t": 10.78125,
+       "frame": 647
+      }
+     ]
+    },
+    {
+     "bar": 7,
+     "start_s": 11.25,
+     "end_s": 13.125,
+     "start_frame": 675,
+     "section": "主歌 B / 积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      }
+     ],
+     "shots": [
+      "S08"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 25,
+       "t": 11.25,
+       "frame": 675
+      },
+      {
+       "beat": 2,
+       "global_beat": 26,
+       "t": 11.71875,
+       "frame": 703
+      },
+      {
+       "beat": 3,
+       "global_beat": 27,
+       "t": 12.1875,
+       "frame": 731
+      },
+      {
+       "beat": 4,
+       "global_beat": 28,
+       "t": 12.65625,
+       "frame": 759
+      }
+     ]
+    },
+    {
+     "bar": 8,
+     "start_s": 13.125,
+     "end_s": 15.0,
+     "start_frame": 788,
+     "section": "主歌 B / 积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S09"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 29,
+       "t": 13.125,
+       "frame": 788
+      },
+      {
+       "beat": 2,
+       "global_beat": 30,
+       "t": 13.59375,
+       "frame": 816
+      },
+      {
+       "beat": 3,
+       "global_beat": 31,
+       "t": 14.0625,
+       "frame": 844
+      },
+      {
+       "beat": 4,
+       "global_beat": 32,
+       "t": 14.53125,
+       "frame": 872
+      }
+     ]
+    },
+    {
+     "bar": 9,
+     "start_s": 15.0,
+     "end_s": 16.875,
+     "start_frame": 900,
+     "section": "主歌 B / 积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S10"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 33,
+       "t": 15.0,
+       "frame": 900
+      },
+      {
+       "beat": 2,
+       "global_beat": 34,
+       "t": 15.46875,
+       "frame": 928
+      },
+      {
+       "beat": 3,
+       "global_beat": 35,
+       "t": 15.9375,
+       "frame": 956
+      },
+      {
+       "beat": 4,
+       "global_beat": 36,
+       "t": 16.40625,
+       "frame": 984
+      }
+     ]
+    },
+    {
+     "bar": 10,
+     "start_s": 16.875,
+     "end_s": 18.75,
+     "start_frame": 1013,
+     "section": "主歌 B / 积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S11"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 37,
+       "t": 16.875,
+       "frame": 1013
+      },
+      {
+       "beat": 2,
+       "global_beat": 38,
+       "t": 17.34375,
+       "frame": 1041
+      },
+      {
+       "beat": 3,
+       "global_beat": 39,
+       "t": 17.8125,
+       "frame": 1069
+      },
+      {
+       "beat": 4,
+       "global_beat": 40,
+       "t": 18.28125,
+       "frame": 1097
+      }
+     ]
+    },
+    {
+     "bar": 11,
+     "start_s": 18.75,
+     "end_s": 20.625,
+     "start_frame": 1125,
+     "section": "预冲",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      },
+      {
+       "beat": 3,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S12"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 41,
+       "t": 18.75,
+       "frame": 1125
+      },
+      {
+       "beat": 2,
+       "global_beat": 42,
+       "t": 19.21875,
+       "frame": 1153
+      },
+      {
+       "beat": 3,
+       "global_beat": 43,
+       "t": 19.6875,
+       "frame": 1181
+      },
+      {
+       "beat": 4,
+       "global_beat": 44,
+       "t": 20.15625,
+       "frame": 1209
+      }
+     ]
+    },
+    {
+     "bar": 12,
+     "start_s": 20.625,
+     "end_s": 22.5,
+     "start_frame": 1238,
+     "section": "副歌 1（DROP）",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S13"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 45,
+       "t": 20.625,
+       "frame": 1238
+      },
+      {
+       "beat": 2,
+       "global_beat": 46,
+       "t": 21.09375,
+       "frame": 1266
+      },
+      {
+       "beat": 3,
+       "global_beat": 47,
+       "t": 21.5625,
+       "frame": 1294
+      },
+      {
+       "beat": 4,
+       "global_beat": 48,
+       "t": 22.03125,
+       "frame": 1322
+      }
+     ]
+    },
+    {
+     "bar": 13,
+     "start_s": 22.5,
+     "end_s": 24.375,
+     "start_frame": 1350,
+     "section": "副歌 1（DROP）",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S14"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 49,
+       "t": 22.5,
+       "frame": 1350
+      },
+      {
+       "beat": 2,
+       "global_beat": 50,
+       "t": 22.96875,
+       "frame": 1378
+      },
+      {
+       "beat": 3,
+       "global_beat": 51,
+       "t": 23.4375,
+       "frame": 1406
+      },
+      {
+       "beat": 4,
+       "global_beat": 52,
+       "t": 23.90625,
+       "frame": 1434
+      }
+     ]
+    },
+    {
+     "bar": 14,
+     "start_s": 24.375,
+     "end_s": 26.25,
+     "start_frame": 1463,
+     "section": "副歌 1（DROP）",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      },
+      {
+       "beat": 3,
+       "chord": "F#m"
+      }
+     ],
+     "shots": [
+      "S15"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 53,
+       "t": 24.375,
+       "frame": 1463
+      },
+      {
+       "beat": 2,
+       "global_beat": 54,
+       "t": 24.84375,
+       "frame": 1491
+      },
+      {
+       "beat": 3,
+       "global_beat": 55,
+       "t": 25.3125,
+       "frame": 1519
+      },
+      {
+       "beat": 4,
+       "global_beat": 56,
+       "t": 25.78125,
+       "frame": 1547
+      }
+     ]
+    },
+    {
+     "bar": 15,
+     "start_s": 26.25,
+     "end_s": 28.125,
+     "start_frame": 1575,
+     "section": "副歌 1（DROP）",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      },
+      {
+       "beat": 3,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S16"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 57,
+       "t": 26.25,
+       "frame": 1575
+      },
+      {
+       "beat": 2,
+       "global_beat": 58,
+       "t": 26.71875,
+       "frame": 1603
+      },
+      {
+       "beat": 3,
+       "global_beat": 59,
+       "t": 27.1875,
+       "frame": 1631
+      },
+      {
+       "beat": 4,
+       "global_beat": 60,
+       "t": 27.65625,
+       "frame": 1659
+      }
+     ]
+    },
+    {
+     "bar": 16,
+     "start_s": 28.125,
+     "end_s": 30.0,
+     "start_frame": 1688,
+     "section": "2048 攀升 → 高潮",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S17"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 61,
+       "t": 28.125,
+       "frame": 1688
+      },
+      {
+       "beat": 2,
+       "global_beat": 62,
+       "t": 28.59375,
+       "frame": 1716
+      },
+      {
+       "beat": 3,
+       "global_beat": 63,
+       "t": 29.0625,
+       "frame": 1744
+      },
+      {
+       "beat": 4,
+       "global_beat": 64,
+       "t": 29.53125,
+       "frame": 1772
+      }
+     ]
+    },
+    {
+     "bar": 17,
+     "start_s": 30.0,
+     "end_s": 31.875,
+     "start_frame": 1800,
+     "section": "2048 攀升 → 高潮",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      },
+      {
+       "beat": 3,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S17"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 65,
+       "t": 30.0,
+       "frame": 1800
+      },
+      {
+       "beat": 2,
+       "global_beat": 66,
+       "t": 30.46875,
+       "frame": 1828
+      },
+      {
+       "beat": 3,
+       "global_beat": 67,
+       "t": 30.9375,
+       "frame": 1856
+      },
+      {
+       "beat": 4,
+       "global_beat": 68,
+       "t": 31.40625,
+       "frame": 1884
+      }
+     ]
+    },
+    {
+     "bar": 18,
+     "start_s": 31.875,
+     "end_s": 33.75,
+     "start_frame": 1913,
+     "section": "余波",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S18"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 69,
+       "t": 31.875,
+       "frame": 1913
+      },
+      {
+       "beat": 2,
+       "global_beat": 70,
+       "t": 32.34375,
+       "frame": 1941
+      },
+      {
+       "beat": 3,
+       "global_beat": 71,
+       "t": 32.8125,
+       "frame": 1969
+      },
+      {
+       "beat": 4,
+       "global_beat": 72,
+       "t": 33.28125,
+       "frame": 1997
+      }
+     ]
+    },
+    {
+     "bar": 19,
+     "start_s": 33.75,
+     "end_s": 35.625,
+     "start_frame": 2025,
+     "section": "间奏",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S19"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 73,
+       "t": 33.75,
+       "frame": 2025
+      },
+      {
+       "beat": 2,
+       "global_beat": 74,
+       "t": 34.21875,
+       "frame": 2053
+      },
+      {
+       "beat": 3,
+       "global_beat": 75,
+       "t": 34.6875,
+       "frame": 2081
+      },
+      {
+       "beat": 4,
+       "global_beat": 76,
+       "t": 35.15625,
+       "frame": 2109
+      }
+     ]
+    },
+    {
+     "bar": 20,
+     "start_s": 35.625,
+     "end_s": 37.5,
+     "start_frame": 2138,
+     "section": "间奏",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S20"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 77,
+       "t": 35.625,
+       "frame": 2138
+      },
+      {
+       "beat": 2,
+       "global_beat": 78,
+       "t": 36.09375,
+       "frame": 2166
+      },
+      {
+       "beat": 3,
+       "global_beat": 79,
+       "t": 36.5625,
+       "frame": 2194
+      },
+      {
+       "beat": 4,
+       "global_beat": 80,
+       "t": 37.03125,
+       "frame": 2222
+      }
+     ]
+    },
+    {
+     "bar": 21,
+     "start_s": 37.5,
+     "end_s": 39.375,
+     "start_frame": 2250,
+     "section": "间奏",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "F#m"
+      }
+     ],
+     "shots": [
+      "S21"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 81,
+       "t": 37.5,
+       "frame": 2250
+      },
+      {
+       "beat": 2,
+       "global_beat": 82,
+       "t": 37.96875,
+       "frame": 2278
+      },
+      {
+       "beat": 3,
+       "global_beat": 83,
+       "t": 38.4375,
+       "frame": 2306
+      },
+      {
+       "beat": 4,
+       "global_beat": 84,
+       "t": 38.90625,
+       "frame": 2334
+      }
+     ]
+    },
+    {
+     "bar": 22,
+     "start_s": 39.375,
+     "end_s": 41.25,
+     "start_frame": 2363,
+     "section": "故障",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      }
+     ],
+     "shots": [
+      "S22"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 85,
+       "t": 39.375,
+       "frame": 2363
+      },
+      {
+       "beat": 2,
+       "global_beat": 86,
+       "t": 39.84375,
+       "frame": 2391
+      },
+      {
+       "beat": 3,
+       "global_beat": 87,
+       "t": 40.3125,
+       "frame": 2419
+      },
+      {
+       "beat": 4,
+       "global_beat": 88,
+       "t": 40.78125,
+       "frame": 2447
+      }
+     ]
+    },
+    {
+     "bar": 23,
+     "start_s": 41.25,
+     "end_s": 43.125,
+     "start_frame": 2475,
+     "section": "积累 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S23"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 89,
+       "t": 41.25,
+       "frame": 2475
+      },
+      {
+       "beat": 2,
+       "global_beat": 90,
+       "t": 41.71875,
+       "frame": 2503
+      },
+      {
+       "beat": 3,
+       "global_beat": 91,
+       "t": 42.1875,
+       "frame": 2531
+      },
+      {
+       "beat": 4,
+       "global_beat": 92,
+       "t": 42.65625,
+       "frame": 2559
+      }
+     ]
+    },
+    {
+     "bar": 24,
+     "start_s": 43.125,
+     "end_s": 45.0,
+     "start_frame": 2588,
+     "section": "积累 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S24"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 93,
+       "t": 43.125,
+       "frame": 2588
+      },
+      {
+       "beat": 2,
+       "global_beat": 94,
+       "t": 43.59375,
+       "frame": 2616
+      },
+      {
+       "beat": 3,
+       "global_beat": 95,
+       "t": 44.0625,
+       "frame": 2644
+      },
+      {
+       "beat": 4,
+       "global_beat": 96,
+       "t": 44.53125,
+       "frame": 2672
+      }
+     ]
+    },
+    {
+     "bar": 25,
+     "start_s": 45.0,
+     "end_s": 46.875,
+     "start_frame": 2700,
+     "section": "积累 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S25"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 97,
+       "t": 45.0,
+       "frame": 2700
+      },
+      {
+       "beat": 2,
+       "global_beat": 98,
+       "t": 45.46875,
+       "frame": 2728
+      },
+      {
+       "beat": 3,
+       "global_beat": 99,
+       "t": 45.9375,
+       "frame": 2756
+      },
+      {
+       "beat": 4,
+       "global_beat": 100,
+       "t": 46.40625,
+       "frame": 2784
+      }
+     ]
+    },
+    {
+     "bar": 26,
+     "start_s": 46.875,
+     "end_s": 48.75,
+     "start_frame": 2813,
+     "section": "副歌 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S26"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 101,
+       "t": 46.875,
+       "frame": 2813
+      },
+      {
+       "beat": 2,
+       "global_beat": 102,
+       "t": 47.34375,
+       "frame": 2841
+      },
+      {
+       "beat": 3,
+       "global_beat": 103,
+       "t": 47.8125,
+       "frame": 2869
+      },
+      {
+       "beat": 4,
+       "global_beat": 104,
+       "t": 48.28125,
+       "frame": 2897
+      }
+     ]
+    },
+    {
+     "bar": 27,
+     "start_s": 48.75,
+     "end_s": 50.625,
+     "start_frame": 2925,
+     "section": "副歌 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      }
+     ],
+     "shots": [
+      "S27"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 105,
+       "t": 48.75,
+       "frame": 2925
+      },
+      {
+       "beat": 2,
+       "global_beat": 106,
+       "t": 49.21875,
+       "frame": 2953
+      },
+      {
+       "beat": 3,
+       "global_beat": 107,
+       "t": 49.6875,
+       "frame": 2981
+      },
+      {
+       "beat": 4,
+       "global_beat": 108,
+       "t": 50.15625,
+       "frame": 3009
+      }
+     ]
+    },
+    {
+     "bar": 28,
+     "start_s": 50.625,
+     "end_s": 52.5,
+     "start_frame": 3038,
+     "section": "副歌 2",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      },
+      {
+       "beat": 4,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S28"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 109,
+       "t": 50.625,
+       "frame": 3038
+      },
+      {
+       "beat": 2,
+       "global_beat": 110,
+       "t": 51.09375,
+       "frame": 3066
+      },
+      {
+       "beat": 3,
+       "global_beat": 111,
+       "t": 51.5625,
+       "frame": 3094
+      },
+      {
+       "beat": 4,
+       "global_beat": 112,
+       "t": 52.03125,
+       "frame": 3122
+      }
+     ]
+    },
+    {
+     "bar": 29,
+     "start_s": 52.5,
+     "end_s": 54.375,
+     "start_frame": 3150,
+     "section": "尾声",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S29"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 113,
+       "t": 52.5,
+       "frame": 3150
+      },
+      {
+       "beat": 2,
+       "global_beat": 114,
+       "t": 52.96875,
+       "frame": 3178
+      },
+      {
+       "beat": 3,
+       "global_beat": 115,
+       "t": 53.4375,
+       "frame": 3206
+      },
+      {
+       "beat": 4,
+       "global_beat": 116,
+       "t": 53.90625,
+       "frame": 3234
+      }
+     ]
+    },
+    {
+     "bar": 30,
+     "start_s": 54.375,
+     "end_s": 56.25,
+     "start_frame": 3263,
+     "section": "尾声",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "S29"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 117,
+       "t": 54.375,
+       "frame": 3263
+      },
+      {
+       "beat": 2,
+       "global_beat": 118,
+       "t": 54.84375,
+       "frame": 3291
+      },
+      {
+       "beat": 3,
+       "global_beat": 119,
+       "t": 55.3125,
+       "frame": 3319
+      },
+      {
+       "beat": 4,
+       "global_beat": 120,
+       "t": 55.78125,
+       "frame": 3347
+      }
+     ]
+    },
+    {
+     "bar": 31,
+     "start_s": 56.25,
+     "end_s": 58.125,
+     "start_frame": 3375,
+     "section": "收尾",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "S30"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 121,
+       "t": 56.25,
+       "frame": 3375
+      },
+      {
+       "beat": 2,
+       "global_beat": 122,
+       "t": 56.71875,
+       "frame": 3403
+      },
+      {
+       "beat": 3,
+       "global_beat": 123,
+       "t": 57.1875,
+       "frame": 3431
+      },
+      {
+       "beat": 4,
+       "global_beat": 124,
+       "t": 57.65625,
+       "frame": 3459
+      }
+     ]
+    },
+    {
+     "bar": 32,
+     "start_s": 58.125,
+     "end_s": 60.0,
+     "start_frame": 3488,
+     "section": "收尾",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "S30"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 125,
+       "t": 58.125,
+       "frame": 3488
+      },
+      {
+       "beat": 2,
+       "global_beat": 126,
+       "t": 58.59375,
+       "frame": 3516
+      },
+      {
+       "beat": 3,
+       "global_beat": 127,
+       "t": 59.0625,
+       "frame": 3544
+      },
+      {
+       "beat": 4,
+       "global_beat": 128,
+       "t": 59.53125,
+       "frame": 3572
+      }
+     ]
+    }
+   ],
+   "music_accents": [
+    {
+     "t": 0.0,
+     "frame": 0,
+     "bar": 1,
+     "beat": 1.0,
+     "kind": "riser_start",
+     "note": "开场 riser（2 拍）"
+    },
+    {
+     "t": 0.9375,
+     "frame": 56,
+     "bar": 1,
+     "beat": 3.0,
+     "kind": "riser_end",
+     "note": "开场 riser（2 拍）"
+    },
+    {
+     "t": 0.9375,
+     "frame": 56,
+     "bar": 1,
+     "beat": 3.0,
+     "kind": "impact",
+     "note": "开场 IMPACT：荔枝落地、荔宝炸开"
+    },
+    {
+     "t": 2.8125,
+     "frame": 169,
+     "bar": 2,
+     "beat": 3.0,
+     "kind": "tom",
+     "note": "栗栗落位"
+    },
+    {
+     "t": 3.28125,
+     "frame": 197,
+     "bar": 2,
+     "beat": 4.0,
+     "kind": "tom",
+     "note": "小白落位"
+    },
+    {
+     "t": 3.75,
+     "frame": 225,
+     "bar": 3,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "主歌 A 起（轻镲）"
+    },
+    {
+     "t": 11.25,
+     "frame": 675,
+     "bar": 7,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "主歌 B 起"
+    },
+    {
+     "t": 12.65625,
+     "frame": 759,
+     "bar": 7,
+     "beat": 4.0,
+     "kind": "stab",
+     "note": "「添加」小和弦"
+    },
+    {
+     "t": 15.0,
+     "frame": 900,
+     "bar": 9,
+     "beat": 1.0,
+     "kind": "coin_chord",
+     "note": "金币和弦"
+    },
+    {
+     "t": 15.0,
+     "frame": 900,
+     "bar": 9,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "金币和弦"
+    },
+    {
+     "t": 18.75,
+     "frame": 1125,
+     "bar": 11,
+     "beat": 1.0,
+     "kind": "horn",
+     "note": "收获号角 D5–G5–B5"
+    },
+    {
+     "t": 18.75,
+     "frame": 1125,
+     "bar": 11,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "收获"
+    },
+    {
+     "t": 19.6875,
+     "frame": 1181,
+     "bar": 11,
+     "beat": 3.0,
+     "kind": "riser_start",
+     "note": "DROP 前 riser"
+    },
+    {
+     "t": 20.390625,
+     "frame": 1223,
+     "bar": 11,
+     "beat": 4.5,
+     "kind": "riser_end",
+     "note": "DROP 前 riser"
+    },
+    {
+     "t": 20.390625,
+     "frame": 1223,
+     "bar": 11,
+     "beat": 4.5,
+     "kind": "silence_start",
+     "note": "DROP 前最后一个 8 分音符全静音（画面全黑）"
+    },
+    {
+     "t": 20.625,
+     "frame": 1238,
+     "bar": 12,
+     "beat": 1.0,
+     "kind": "silence_end",
+     "note": "DROP 前最后一个 8 分音符全静音（画面全黑）"
+    },
+    {
+     "t": 20.625,
+     "frame": 1238,
+     "bar": 12,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "DROP：荔湖晴昼"
+    },
+    {
+     "t": 22.5,
+     "frame": 1350,
+     "bar": 13,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "雨后书屋"
+    },
+    {
+     "t": 23.4375,
+     "frame": 1406,
+     "bar": 13,
+     "beat": 3.0,
+     "kind": "crash",
+     "note": "拍 3 白闪"
+    },
+    {
+     "t": 24.375,
+     "frame": 1463,
+     "bar": 14,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "蓝调晚庭"
+    },
+    {
+     "t": 26.25,
+     "frame": 1575,
+     "bar": 15,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "庭院建设"
+    },
+    {
+     "t": 27.65625,
+     "frame": 1659,
+     "bar": 15,
+     "beat": 4.0,
+     "kind": "riser_start",
+     "note": "进入 2048 攀升"
+    },
+    {
+     "t": 28.125,
+     "frame": 1688,
+     "bar": 16,
+     "beat": 1.0,
+     "kind": "merge",
+     "note": "D5"
+    },
+    {
+     "t": 28.359375,
+     "frame": 1702,
+     "bar": 16,
+     "beat": 1.5,
+     "kind": "merge",
+     "note": "E5"
+    },
+    {
+     "t": 28.59375,
+     "frame": 1716,
+     "bar": 16,
+     "beat": 2.0,
+     "kind": "merge",
+     "note": "F#5"
+    },
+    {
+     "t": 28.828125,
+     "frame": 1730,
+     "bar": 16,
+     "beat": 2.5,
+     "kind": "merge",
+     "note": "A5"
+    },
+    {
+     "t": 29.0625,
+     "frame": 1744,
+     "bar": 16,
+     "beat": 3.0,
+     "kind": "merge",
+     "note": "B5"
+    },
+    {
+     "t": 29.296875,
+     "frame": 1758,
+     "bar": 16,
+     "beat": 3.5,
+     "kind": "merge",
+     "note": "D6"
+    },
+    {
+     "t": 29.53125,
+     "frame": 1772,
+     "bar": 16,
+     "beat": 4.0,
+     "kind": "merge",
+     "note": "E6"
+    },
+    {
+     "t": 29.765625,
+     "frame": 1786,
+     "bar": 16,
+     "beat": 4.5,
+     "kind": "merge",
+     "note": "F#6"
+    },
+    {
+     "t": 30.0,
+     "frame": 1800,
+     "bar": 17,
+     "beat": 1.0,
+     "kind": "riser_end",
+     "note": "进入 2048 攀升"
+    },
+    {
+     "t": 30.0,
+     "frame": 1800,
+     "bar": 17,
+     "beat": 1.0,
+     "kind": "merge",
+     "note": "A6"
+    },
+    {
+     "t": 30.0,
+     "frame": 1800,
+     "bar": 17,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "合出荔枝篮 1024"
+    },
+    {
+     "t": 30.46875,
+     "frame": 1828,
+     "bar": 17,
+     "beat": 2.0,
+     "kind": "tape_stop",
+     "note": "全曲刹车（1 拍）+ 吸气 riser，两枚 1024 发光"
+    },
+    {
+     "t": 30.9375,
+     "frame": 1856,
+     "bar": 17,
+     "beat": 3.0,
+     "kind": "impact_max",
+     "note": "全片最大冲击：荔宝丰收礼 2048（boom + 全乐队和弦 + 双镲，软削波）"
+    },
+    {
+     "t": 31.40625,
+     "frame": 1884,
+     "bar": 17,
+     "beat": 4.0,
+     "kind": "sparkle_arp",
+     "note": "闪光琶音（32 分音符）"
+    },
+    {
+     "t": 38.90625,
+     "frame": 2334,
+     "bar": 21,
+     "beat": 4.0,
+     "kind": "riser_start",
+     "note": "小 riser，被「断电」截断"
+    },
+    {
+     "t": 39.375,
+     "frame": 2363,
+     "bar": 22,
+     "beat": 1.0,
+     "kind": "riser_end",
+     "note": "小 riser，被「断电」截断"
+    },
+    {
+     "t": 39.375,
+     "frame": 2363,
+     "bar": 22,
+     "beat": 1.0,
+     "kind": "power_down",
+     "note": "断电：bitcrush 下滑"
+    },
+    {
+     "t": 39.375,
+     "frame": 2363,
+     "bar": 22,
+     "beat": 1.0,
+     "kind": "silence_start",
+     "note": "断电下滑 0.26 s 后静音到拍 2（共 1 拍）"
+    },
+    {
+     "t": 39.84375,
+     "frame": 2391,
+     "bar": 22,
+     "beat": 2.0,
+     "kind": "silence_end",
+     "note": "断电下滑 0.26 s 后静音到拍 2（共 1 拍）"
+    },
+    {
+     "t": 43.125,
+     "frame": 2588,
+     "bar": 24,
+     "beat": 1.0,
+     "kind": "riser_start",
+     "note": "登录前 riser"
+    },
+    {
+     "t": 45.0,
+     "frame": 2700,
+     "bar": 25,
+     "beat": 1.0,
+     "kind": "riser_end",
+     "note": "登录前 riser"
+    },
+    {
+     "t": 45.0,
+     "frame": 2700,
+     "bar": 25,
+     "beat": 1.0,
+     "kind": "success_chord",
+     "note": "「上线」成功和弦（D）"
+    },
+    {
+     "t": 45.0,
+     "frame": 2700,
+     "bar": 25,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "「上线」，鼓组回归"
+    },
+    {
+     "t": 46.875,
+     "frame": 2813,
+     "bar": 26,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "副歌 2：双平台"
+    },
+    {
+     "t": 48.75,
+     "frame": 2925,
+     "bar": 27,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "徽章砸下：数据只存本机"
+    },
+    {
+     "t": 49.21875,
+     "frame": 2953,
+     "bar": 27,
+     "beat": 2.0,
+     "kind": "impact",
+     "note": "徽章砸下：没有遥测"
+    },
+    {
+     "t": 49.6875,
+     "frame": 2981,
+     "bar": 27,
+     "beat": 3.0,
+     "kind": "impact",
+     "note": "徽章砸下：断网也能用"
+    },
+    {
+     "t": 51.5625,
+     "frame": 3094,
+     "bar": 28,
+     "beat": 3.0,
+     "kind": "stab",
+     "note": "「开源 · MIT」大字"
+    },
+    {
+     "t": 52.03125,
+     "frame": 3122,
+     "bar": 28,
+     "beat": 4.0,
+     "kind": "reverse_cymbal",
+     "note": "反向镲，落点 52.5000s"
+    },
+    {
+     "t": 52.5,
+     "frame": 3150,
+     "bar": 29,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "结尾冲击：应用图标砸出"
+    },
+    {
+     "t": 57.65625,
+     "frame": 3459,
+     "bar": 31,
+     "beat": 4.0,
+     "kind": "reverse_cymbal",
+     "note": "反向镲，落点 58.1250s"
+    },
+    {
+     "t": 58.125,
+     "frame": 3488,
+     "bar": 32,
+     "beat": 1.0,
+     "kind": "final_hit",
+     "note": "第 32 小节拍 1 收尾 hit + 金币「叮」，之后只剩混响尾巴"
+    }
+   ],
+   "sfx_cues": [
+    {
+     "hit_t": 0.46875,
+     "hit_frame": 28,
+     "start_t": 0.46875,
+     "bar": 1,
+     "beat": 2.0,
+     "sfx": "coin",
+     "file": "sfx/coin.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.155,
+     "pan": 0.0,
+     "shot": "S01",
+     "note": "0.469 s 金币 blip"
+    },
+    {
+     "hit_t": 0.9375,
+     "hit_frame": 56,
+     "start_t": 0.7,
+     "bar": 1,
+     "beat": 3.0,
+     "sfx": "fall_whistle",
+     "file": "sfx/fall_whistle.wav",
+     "gain_in_mix": 0.55,
+     "remotion_volume_over_music_only": 0.076,
+     "pan": 0.0,
+     "shot": "S01",
+     "note": "荔枝 0.70 s 起下落，0.9375 s 落地"
+    },
+    {
+     "hit_t": 0.9375,
+     "hit_frame": 56,
+     "start_t": 0.9375,
+     "bar": 1,
+     "beat": 3.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.251,
+     "pan": 0.0,
+     "shot": "S02",
+     "note": "40 颗素材粒子四散"
+    },
+    {
+     "hit_t": 2.8125,
+     "hit_frame": 169,
+     "start_t": 2.8125,
+     "bar": 2,
+     "beat": 3.0,
+     "sfx": "dust",
+     "file": "sfx/dust.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.089,
+     "pan": -0.5,
+     "shot": "S03",
+     "note": "栗栗落地像素尘"
+    },
+    {
+     "hit_t": 3.28125,
+     "hit_frame": 197,
+     "start_t": 3.28125,
+     "bar": 2,
+     "beat": 4.0,
+     "sfx": "dust",
+     "file": "sfx/dust.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.089,
+     "pan": 0.5,
+     "shot": "S03",
+     "note": "小白落地像素尘"
+    },
+    {
+     "hit_t": 3.69,
+     "hit_frame": 221,
+     "start_t": 3.525,
+     "bar": 2,
+     "beat": 4.872,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 1.17,
+     "remotion_volume_over_music_only": 0.483,
+     "pan": 0.0,
+     "shot": "S03→S04",
+     "note": "拍 8 末向右甩镜"
+    },
+    {
+     "hit_t": 3.9,
+     "hit_frame": 234,
+     "start_t": 3.72,
+     "bar": 3,
+     "beat": 1.32,
+     "sfx": "whoosh_soft",
+     "file": "sfx/whoosh_soft.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.214,
+     "pan": 0.0,
+     "shot": "S04",
+     "note": "主窗口 rotateY 飞入"
+    },
+    {
+     "hit_t": 4.570312,
+     "hit_frame": 274,
+     "start_t": 4.570312,
+     "bar": 3,
+     "beat": 2.75,
+     "sfx": "hop",
+     "file": "sfx/hop.wav",
+     "gain_in_mix": 0.84,
+     "remotion_volume_over_music_only": 0.068,
+     "pan": 0.3,
+     "shot": "S04",
+     "note": "荔宝跳出窗口"
+    },
+    {
+     "hit_t": 4.6875,
+     "hit_frame": 281,
+     "start_t": 4.6875,
+     "bar": 3,
+     "beat": 3.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.288,
+     "pan": 0.3,
+     "shot": "S04",
+     "note": "拍 3 气泡弹出"
+    },
+    {
+     "hit_t": 5.625,
+     "hit_frame": 338,
+     "start_t": 5.625,
+     "bar": 4,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.02,
+     "remotion_volume_over_music_only": 0.296,
+     "pan": 0.0,
+     "shot": "S05",
+     "note": "光标按住荔宝"
+    },
+    {
+     "hit_t": 6.095,
+     "hit_frame": 366,
+     "start_t": 5.625,
+     "bar": 4,
+     "beat": 2.0027,
+     "sfx": "whoosh_drag",
+     "file": "sfx/whoosh_drag.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.22,
+     "pan": 0.0,
+     "shot": "S05",
+     "note": "拖动弧线（拍 1–2）"
+    },
+    {
+     "hit_t": 6.5625,
+     "hit_frame": 394,
+     "start_t": 6.5625,
+     "bar": 4,
+     "beat": 3.0,
+     "sfx": "land_soft",
+     "file": "sfx/land_soft.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.16,
+     "pan": 0.5,
+     "shot": "S05",
+     "note": "落在任务栏上方"
+    },
+    {
+     "hit_t": 6.5625,
+     "hit_frame": 394,
+     "start_t": 6.5625,
+     "bar": 4,
+     "beat": 3.0,
+     "sfx": "scroll_tick_1",
+     "file": "sfx/scroll_tick_1.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.176,
+     "pan": 0.4,
+     "shot": "S05",
+     "note": "滚轮第 1 档 → 110%"
+    },
+    {
+     "hit_t": 6.679688,
+     "hit_frame": 401,
+     "start_t": 6.679688,
+     "bar": 4,
+     "beat": 3.25,
+     "sfx": "scroll_tick_2",
+     "file": "sfx/scroll_tick_2.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.179,
+     "pan": 0.4,
+     "shot": "S05",
+     "note": "滚轮第 2 档 → 120%"
+    },
+    {
+     "hit_t": 6.796875,
+     "hit_frame": 408,
+     "start_t": 6.796875,
+     "bar": 4,
+     "beat": 3.5,
+     "sfx": "scroll_tick_3",
+     "file": "sfx/scroll_tick_3.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.199,
+     "pan": 0.4,
+     "shot": "S05",
+     "note": "滚轮第 3 档 → 130%"
+    },
+    {
+     "hit_t": 6.914062,
+     "hit_frame": 415,
+     "start_t": 6.914062,
+     "bar": 4,
+     "beat": 3.75,
+     "sfx": "scroll_tick_4",
+     "file": "sfx/scroll_tick_4.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.183,
+     "pan": 0.4,
+     "shot": "S05",
+     "note": "滚轮第 4 档 → 140%"
+    },
+    {
+     "hit_t": 7.03125,
+     "hit_frame": 422,
+     "start_t": 7.03125,
+     "bar": 4,
+     "beat": 4.0,
+     "sfx": "scroll_tick_5",
+     "file": "sfx/scroll_tick_5.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.169,
+     "pan": 0.4,
+     "shot": "S05",
+     "note": "滚轮第 5 档 → 150%"
+    },
+    {
+     "hit_t": 7.5,
+     "hit_frame": 450,
+     "start_t": 7.5,
+     "bar": 5,
+     "beat": 1.0,
+     "sfx": "menu_open",
+     "file": "sfx/menu_open.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.263,
+     "pan": 0.0,
+     "shot": "S06",
+     "note": "点击荔宝弹出伙伴菜单"
+    },
+    {
+     "hit_t": 7.96875,
+     "hit_frame": 478,
+     "start_t": 7.96875,
+     "bar": 5,
+     "beat": 2.0,
+     "sfx": "hover_tick",
+     "file": "sfx/hover_tick.wav",
+     "gain_in_mix": 1.6,
+     "remotion_volume_over_music_only": 0.109,
+     "pan": 0.0,
+     "shot": "S06",
+     "note": "光标移到「摸摸头」"
+    },
+    {
+     "hit_t": 8.4375,
+     "hit_frame": 506,
+     "start_t": 8.4375,
+     "bar": 5,
+     "beat": 3.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.345,
+     "pan": 0.0,
+     "shot": "S06",
+     "note": "点「摸摸头」"
+    },
+    {
+     "hit_t": 8.4375,
+     "hit_frame": 506,
+     "start_t": 8.4375,
+     "bar": 5,
+     "beat": 3.0,
+     "sfx": "pat_chime",
+     "file": "sfx/pat_chime.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.168,
+     "pan": 0.0,
+     "shot": "S06",
+     "note": "摸头三音 + 爱心"
+    },
+    {
+     "hit_t": 8.90625,
+     "hit_frame": 534,
+     "start_t": 8.90625,
+     "bar": 5,
+     "beat": 4.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.845,
+     "remotion_volume_over_music_only": 0.234,
+     "pan": 0.3,
+     "shot": "S06",
+     "note": "气泡「嘿嘿，叶子都被你摸歪啦。」"
+    },
+    {
+     "hit_t": 9.375,
+     "hit_frame": 563,
+     "start_t": 9.375,
+     "bar": 6,
+     "beat": 1.0,
+     "sfx": "bloop_D5",
+     "file": "sfx/bloop_D5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.206,
+     "pan": 0.0,
+     "shot": "S07",
+     "note": "名字点亮 / 溶解成荔宝"
+    },
+    {
+     "hit_t": 9.375,
+     "hit_frame": 563,
+     "start_t": 9.375,
+     "bar": 6,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 0.935,
+     "remotion_volume_over_music_only": 0.271,
+     "pan": 0.0,
+     "shot": "S07",
+     "note": "打开「切换伙伴 ▸」"
+    },
+    {
+     "hit_t": 9.84375,
+     "hit_frame": 591,
+     "start_t": 9.84375,
+     "bar": 6,
+     "beat": 2.0,
+     "sfx": "bloop_Fs5",
+     "file": "sfx/bloop_Fs5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.209,
+     "pan": 0.0,
+     "shot": "S07",
+     "note": "名字点亮 / 溶解成栗栗"
+    },
+    {
+     "hit_t": 10.078125,
+     "hit_frame": 605,
+     "start_t": 10.078125,
+     "bar": 6,
+     "beat": 2.5,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.585,
+     "remotion_volume_over_music_only": 0.162,
+     "pan": -0.3,
+     "shot": "S07",
+     "note": "栗栗气泡"
+    },
+    {
+     "hit_t": 10.3125,
+     "hit_frame": 619,
+     "start_t": 10.3125,
+     "bar": 6,
+     "beat": 3.0,
+     "sfx": "bloop_A5",
+     "file": "sfx/bloop_A5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.188,
+     "pan": 0.0,
+     "shot": "S07",
+     "note": "名字点亮 / 溶解成小白"
+    },
+    {
+     "hit_t": 10.546875,
+     "hit_frame": 633,
+     "start_t": 10.546875,
+     "bar": 6,
+     "beat": 3.5,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.585,
+     "remotion_volume_over_music_only": 0.162,
+     "pan": 0.3,
+     "shot": "S07",
+     "note": "小白气泡"
+    },
+    {
+     "hit_t": 11.25,
+     "hit_frame": 675,
+     "start_t": 11.25,
+     "bar": 7,
+     "beat": 1.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.225,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 1 字"
+    },
+    {
+     "hit_t": 11.25,
+     "hit_frame": 675,
+     "start_t": 10.7812,
+     "bar": 7,
+     "beat": 1.0,
+     "sfx": "whoosh_inhale",
+     "file": "sfx/whoosh_inhale.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.546,
+     "pan": 0.0,
+     "shot": "S07→S08",
+     "note": "拍 4 冲向主窗口，穿屏"
+    },
+    {
+     "hit_t": 11.367188,
+     "hit_frame": 682,
+     "start_t": 11.367188,
+     "bar": 7,
+     "beat": 1.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.211,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 2 字"
+    },
+    {
+     "hit_t": 11.484375,
+     "hit_frame": 689,
+     "start_t": 11.484375,
+     "bar": 7,
+     "beat": 1.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.149,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 3 字"
+    },
+    {
+     "hit_t": 11.601562,
+     "hit_frame": 696,
+     "start_t": 11.601562,
+     "bar": 7,
+     "beat": 1.75,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.162,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 4 字"
+    },
+    {
+     "hit_t": 11.71875,
+     "hit_frame": 703,
+     "start_t": 11.71875,
+     "bar": 7,
+     "beat": 2.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.225,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 5 字"
+    },
+    {
+     "hit_t": 11.835938,
+     "hit_frame": 710,
+     "start_t": 11.835938,
+     "bar": 7,
+     "beat": 2.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.211,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 6 字"
+    },
+    {
+     "hit_t": 11.953125,
+     "hit_frame": 717,
+     "start_t": 11.953125,
+     "bar": 7,
+     "beat": 2.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.4,
+     "remotion_volume_over_music_only": 0.149,
+     "pan": 0.15,
+     "shot": "S08",
+     "note": "键入「复习高数第三章」第 7 字"
+    },
+    {
+     "hit_t": 12.65625,
+     "hit_frame": 759,
+     "start_t": 12.65625,
+     "bar": 7,
+     "beat": 4.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.275,
+     "remotion_volume_over_music_only": 0.37,
+     "pan": 0.0,
+     "shot": "S08",
+     "note": "点「添加」"
+    },
+    {
+     "hit_t": 13.125,
+     "hit_frame": 788,
+     "start_t": 13.125,
+     "bar": 8,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.275,
+     "remotion_volume_over_music_only": 0.37,
+     "pan": 0.0,
+     "shot": "S09",
+     "note": "点「25 分钟」"
+    },
+    {
+     "hit_t": 13.59375,
+     "hit_frame": 816,
+     "start_t": 13.59375,
+     "bar": 8,
+     "beat": 2.0,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.672,
+     "remotion_volume_over_music_only": 0.09,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 13.710938,
+     "hit_frame": 823,
+     "start_t": 13.710938,
+     "bar": 8,
+     "beat": 2.25,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.712,
+     "remotion_volume_over_music_only": 0.096,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 13.828125,
+     "hit_frame": 830,
+     "start_t": 13.828125,
+     "bar": 8,
+     "beat": 2.5,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.752,
+     "remotion_volume_over_music_only": 0.101,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 13.945312,
+     "hit_frame": 837,
+     "start_t": 13.945312,
+     "bar": 8,
+     "beat": 2.75,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.792,
+     "remotion_volume_over_music_only": 0.107,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.0625,
+     "hit_frame": 844,
+     "start_t": 14.0625,
+     "bar": 8,
+     "beat": 3.0,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.832,
+     "remotion_volume_over_music_only": 0.162,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.179688,
+     "hit_frame": 851,
+     "start_t": 14.179688,
+     "bar": 8,
+     "beat": 3.25,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.872,
+     "remotion_volume_over_music_only": 0.169,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.296875,
+     "hit_frame": 858,
+     "start_t": 14.296875,
+     "bar": 8,
+     "beat": 3.5,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.912,
+     "remotion_volume_over_music_only": 0.177,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.414062,
+     "hit_frame": 865,
+     "start_t": 14.414062,
+     "bar": 8,
+     "beat": 3.75,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.952,
+     "remotion_volume_over_music_only": 0.185,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.53125,
+     "hit_frame": 872,
+     "start_t": 14.53125,
+     "bar": 8,
+     "beat": 4.0,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 0.992,
+     "remotion_volume_over_music_only": 0.175,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.589844,
+     "hit_frame": 875,
+     "start_t": 14.589844,
+     "bar": 8,
+     "beat": 4.125,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 1.032,
+     "remotion_volume_over_music_only": 0.182,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.648438,
+     "hit_frame": 879,
+     "start_t": 14.648438,
+     "bar": 8,
+     "beat": 4.25,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 1.072,
+     "remotion_volume_over_music_only": 0.19,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.707031,
+     "hit_frame": 882,
+     "start_t": 14.707031,
+     "bar": 8,
+     "beat": 4.375,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 1.112,
+     "remotion_volume_over_music_only": 0.197,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.765625,
+     "hit_frame": 886,
+     "start_t": 14.765625,
+     "bar": 8,
+     "beat": 4.5,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.152,
+     "remotion_volume_over_music_only": 0.294,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.824219,
+     "hit_frame": 889,
+     "start_t": 14.824219,
+     "bar": 8,
+     "beat": 4.625,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.192,
+     "remotion_volume_over_music_only": 0.304,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.882812,
+     "hit_frame": 893,
+     "start_t": 14.882812,
+     "bar": 8,
+     "beat": 4.75,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.232,
+     "remotion_volume_over_music_only": 0.314,
+     "pan": 0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 14.941406,
+     "hit_frame": 896,
+     "start_t": 14.941406,
+     "bar": 8,
+     "beat": 4.875,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.272,
+     "remotion_volume_over_music_only": 0.324,
+     "pan": -0.2,
+     "shot": "S09",
+     "note": "延时时钟 tick（16 分→32 分）"
+    },
+    {
+     "hit_t": 15.0,
+     "hit_frame": 900,
+     "start_t": 15.0,
+     "bar": 9,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.345,
+     "pan": 0.0,
+     "shot": "S10",
+     "note": "点「完成并领取奖励」"
+    },
+    {
+     "hit_t": 15.0,
+     "hit_frame": 900,
+     "start_t": 15.0,
+     "bar": 9,
+     "beat": 1.0,
+     "sfx": "coin",
+     "file": "sfx/coin.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.186,
+     "pan": 0.0,
+     "shot": "S10",
+     "note": "+25 荔枝币"
+    },
+    {
+     "hit_t": 15.117188,
+     "hit_frame": 907,
+     "start_t": 15.117188,
+     "bar": 9,
+     "beat": 1.25,
+     "sfx": "coin_tinkle_1",
+     "file": "sfx/coin_tinkle_1.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.076,
+     "pan": 0.0,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.234375,
+     "hit_frame": 914,
+     "start_t": 15.234375,
+     "bar": 9,
+     "beat": 1.5,
+     "sfx": "coin_tinkle_2",
+     "file": "sfx/coin_tinkle_2.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.077,
+     "pan": 0.595,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.351562,
+     "hit_frame": 921,
+     "start_t": 15.351562,
+     "bar": 9,
+     "beat": 1.75,
+     "sfx": "coin_tinkle_3",
+     "file": "sfx/coin_tinkle_3.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.08,
+     "pan": -0.153,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.46875,
+     "hit_frame": 928,
+     "start_t": 15.46875,
+     "bar": 9,
+     "beat": 2.0,
+     "sfx": "coin_tinkle_4",
+     "file": "sfx/coin_tinkle_4.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.077,
+     "pan": -0.555,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.585938,
+     "hit_frame": 935,
+     "start_t": 15.585938,
+     "bar": 9,
+     "beat": 2.25,
+     "sfx": "coin_tinkle_5",
+     "file": "sfx/coin_tinkle_5.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.074,
+     "pan": 0.296,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.703125,
+     "hit_frame": 942,
+     "start_t": 15.703125,
+     "bar": 9,
+     "beat": 2.5,
+     "sfx": "coin_tinkle_6",
+     "file": "sfx/coin_tinkle_6.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.072,
+     "pan": 0.479,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.820312,
+     "hit_frame": 949,
+     "start_t": 15.820312,
+     "bar": 9,
+     "beat": 2.75,
+     "sfx": "coin_tinkle_1",
+     "file": "sfx/coin_tinkle_1.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.076,
+     "pan": -0.42,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 15.9375,
+     "hit_frame": 956,
+     "start_t": 15.9375,
+     "bar": 9,
+     "beat": 3.0,
+     "sfx": "coin_tinkle_2",
+     "file": "sfx/coin_tinkle_2.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.077,
+     "pan": -0.371,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 16.054688,
+     "hit_frame": 963,
+     "start_t": 16.054688,
+     "bar": 9,
+     "beat": 3.25,
+     "sfx": "coin_tinkle_3",
+     "file": "sfx/coin_tinkle_3.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.08,
+     "pan": 0.515,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 16.171875,
+     "hit_frame": 970,
+     "start_t": 16.171875,
+     "bar": 9,
+     "beat": 3.5,
+     "sfx": "coin_tinkle_4",
+     "file": "sfx/coin_tinkle_4.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.077,
+     "pan": 0.238,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 16.289062,
+     "hit_frame": 977,
+     "start_t": 16.289062,
+     "bar": 9,
+     "beat": 3.75,
+     "sfx": "coin_tinkle_5",
+     "file": "sfx/coin_tinkle_5.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.074,
+     "pan": -0.577,
+     "shot": "S10",
+     "note": "金币飞进计数牌"
+    },
+    {
+     "hit_t": 16.55625,
+     "hit_frame": 993,
+     "start_t": 16.38825,
+     "bar": 9,
+     "beat": 4.32,
+     "sfx": "whoosh_down",
+     "file": "sfx/whoosh_down.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.165,
+     "pan": 0.0,
+     "shot": "S10→S11",
+     "note": "金币下倾，镜头下摇到农田"
+    },
+    {
+     "hit_t": 17.34375,
+     "hit_frame": 1041,
+     "start_t": 17.34375,
+     "bar": 10,
+     "beat": 2.0,
+     "sfx": "water",
+     "file": "sfx/water.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.177,
+     "pan": 0.35,
+     "shot": "S11",
+     "note": "荔宝浇水"
+    },
+    {
+     "hit_t": 18.28125,
+     "hit_frame": 1097,
+     "start_t": 18.28125,
+     "bar": 10,
+     "beat": 4.0,
+     "sfx": "notify",
+     "file": "sfx/notify.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.115,
+     "pan": 0.0,
+     "shot": "S11",
+     "note": "「已浇水」标签闪一下"
+    },
+    {
+     "hit_t": 18.75,
+     "hit_frame": 1125,
+     "start_t": 18.75,
+     "bar": 11,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.02,
+     "remotion_volume_over_music_only": 0.296,
+     "pan": 0.0,
+     "shot": "S12",
+     "note": "点成熟萝卜田"
+    },
+    {
+     "hit_t": 18.75,
+     "hit_frame": 1125,
+     "start_t": 18.75,
+     "bar": 11,
+     "beat": 1.0,
+     "sfx": "harvest_pop",
+     "file": "sfx/harvest_pop.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.336,
+     "pan": 0.0,
+     "shot": "S12",
+     "note": "收获入仓 · 小萝卜 +2"
+    },
+    {
+     "hit_t": 19.21875,
+     "hit_frame": 1153,
+     "start_t": 19.21875,
+     "bar": 11,
+     "beat": 2.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.216,
+     "pan": 0.35,
+     "shot": "S12",
+     "note": "荔宝气泡"
+    },
+    {
+     "hit_t": 19.234375,
+     "hit_frame": 1154,
+     "start_t": 18.931975,
+     "bar": 11,
+     "beat": 2.0333,
+     "sfx": "whoosh_zoom",
+     "file": "sfx/whoosh_zoom.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.538,
+     "pan": 0.0,
+     "shot": "S12",
+     "note": "两颗小萝卜冲向镜头"
+    },
+    {
+     "hit_t": 22.325625,
+     "hit_frame": 1340,
+     "start_t": 22.160625,
+     "bar": 12,
+     "beat": 4.628,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.403,
+     "pan": 0.0,
+     "shot": "S13→S14",
+     "note": "小节末甩镜"
+    },
+    {
+     "hit_t": 25.3125,
+     "hit_frame": 1519,
+     "start_t": 25.3125,
+     "bar": 14,
+     "beat": 3.0,
+     "sfx": "flip_1",
+     "file": "sfx/flip_1.wav",
+     "gain_in_mix": 1.05,
+     "remotion_volume_over_music_only": 0.137,
+     "pan": -0.5,
+     "shot": "S15",
+     "note": "四宫格第 1 格翻出（v2：16 分音符）"
+    },
+    {
+     "hit_t": 25.429688,
+     "hit_frame": 1526,
+     "start_t": 25.429688,
+     "bar": 14,
+     "beat": 3.25,
+     "sfx": "flip_2",
+     "file": "sfx/flip_2.wav",
+     "gain_in_mix": 1.05,
+     "remotion_volume_over_music_only": 0.143,
+     "pan": 0.5,
+     "shot": "S15",
+     "note": "四宫格第 2 格翻出（v2：16 分音符）"
+    },
+    {
+     "hit_t": 25.546875,
+     "hit_frame": 1533,
+     "start_t": 25.546875,
+     "bar": 14,
+     "beat": 3.5,
+     "sfx": "flip_3",
+     "file": "sfx/flip_3.wav",
+     "gain_in_mix": 1.05,
+     "remotion_volume_over_music_only": 0.203,
+     "pan": -0.5,
+     "shot": "S15",
+     "note": "四宫格第 3 格翻出（v2：16 分音符）"
+    },
+    {
+     "hit_t": 25.664062,
+     "hit_frame": 1540,
+     "start_t": 25.664062,
+     "bar": 14,
+     "beat": 3.75,
+     "sfx": "flip_4",
+     "file": "sfx/flip_4.wav",
+     "gain_in_mix": 1.05,
+     "remotion_volume_over_music_only": 0.154,
+     "pan": 0.5,
+     "shot": "S15",
+     "note": "四宫格第 4 格翻出（v2：16 分音符）"
+    },
+    {
+     "hit_t": 26.71875,
+     "hit_frame": 1603,
+     "start_t": 26.71875,
+     "bar": 15,
+     "beat": 2.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.345,
+     "pan": 0.0,
+     "shot": "S16",
+     "note": "v2：拍 2 点「布置湖畔野餐角 →」（拍 1 先推近就绪状态）"
+    },
+    {
+     "hit_t": 26.78875,
+     "hit_frame": 1607,
+     "start_t": 26.78875,
+     "bar": 15,
+     "beat": 2.1493,
+     "sfx": "success",
+     "file": "sfx/success.wav",
+     "gain_in_mix": 0.84,
+     "remotion_volume_over_music_only": 0.286,
+     "pan": 0.0,
+     "shot": "S16",
+     "note": "真实提示「湖畔野餐角建好啦」弹出"
+    },
+    {
+     "hit_t": 27.1875,
+     "hit_frame": 1631,
+     "start_t": 27.1875,
+     "bar": 15,
+     "beat": 3.0,
+     "sfx": "build_thud_1",
+     "file": "sfx/build_thud_1.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.245,
+     "pan": 0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.304688,
+     "hit_frame": 1638,
+     "start_t": 27.304688,
+     "bar": 15,
+     "beat": 3.25,
+     "sfx": "build_thud_2",
+     "file": "sfx/build_thud_2.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.21,
+     "pan": -0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.421875,
+     "hit_frame": 1645,
+     "start_t": 27.421875,
+     "bar": 15,
+     "beat": 3.5,
+     "sfx": "build_thud_3",
+     "file": "sfx/build_thud_3.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.217,
+     "pan": 0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.539062,
+     "hit_frame": 1652,
+     "start_t": 27.539062,
+     "bar": 15,
+     "beat": 3.75,
+     "sfx": "build_thud_4",
+     "file": "sfx/build_thud_4.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.244,
+     "pan": -0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.65625,
+     "hit_frame": 1659,
+     "start_t": 27.65625,
+     "bar": 15,
+     "beat": 4.0,
+     "sfx": "build_thud_5",
+     "file": "sfx/build_thud_5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.206,
+     "pan": 0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.773438,
+     "hit_frame": 1666,
+     "start_t": 27.773438,
+     "bar": 15,
+     "beat": 4.25,
+     "sfx": "build_thud_6",
+     "file": "sfx/build_thud_6.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.21,
+     "pan": -0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 27.890625,
+     "hit_frame": 1673,
+     "start_t": 27.890625,
+     "bar": 15,
+     "beat": 4.5,
+     "sfx": "build_thud_7",
+     "file": "sfx/build_thud_7.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.226,
+     "pan": 0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 28.007812,
+     "hit_frame": 1680,
+     "start_t": 28.007812,
+     "bar": 15,
+     "beat": 4.75,
+     "sfx": "build_thud_8",
+     "file": "sfx/build_thud_8.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.251,
+     "pan": -0.3,
+     "shot": "S16",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 28.125,
+     "hit_frame": 1688,
+     "start_t": 28.125,
+     "bar": 16,
+     "beat": 1.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": 0.2,
+     "shot": "S17",
+     "note": "合成 嫩芽 4"
+    },
+    {
+     "hit_t": 28.359375,
+     "hit_frame": 1702,
+     "start_t": 28.359375,
+     "bar": 16,
+     "beat": 1.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": -0.2,
+     "shot": "S17",
+     "note": "合成 小萝卜 8"
+    },
+    {
+     "hit_t": 28.59375,
+     "hit_frame": 1716,
+     "start_t": 28.59375,
+     "bar": 16,
+     "beat": 2.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": 0.2,
+     "shot": "S17",
+     "note": "合成 草莓 16"
+    },
+    {
+     "hit_t": 28.828125,
+     "hit_frame": 1730,
+     "start_t": 28.828125,
+     "bar": 16,
+     "beat": 2.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": -0.2,
+     "shot": "S17",
+     "note": "合成 蓝莓 32"
+    },
+    {
+     "hit_t": 29.0625,
+     "hit_frame": 1744,
+     "start_t": 29.0625,
+     "bar": 16,
+     "beat": 3.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": 0.2,
+     "shot": "S17",
+     "note": "合成 荔枝 64"
+    },
+    {
+     "hit_t": 29.296875,
+     "hit_frame": 1758,
+     "start_t": 29.296875,
+     "bar": 16,
+     "beat": 3.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": -0.2,
+     "shot": "S17",
+     "note": "合成 萝卜篮 128"
+    },
+    {
+     "hit_t": 29.53125,
+     "hit_frame": 1772,
+     "start_t": 29.53125,
+     "bar": 16,
+     "beat": 4.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": 0.2,
+     "shot": "S17",
+     "note": "合成 草莓篮 256"
+    },
+    {
+     "hit_t": 29.765625,
+     "hit_frame": 1786,
+     "start_t": 29.765625,
+     "bar": 16,
+     "beat": 4.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": -0.2,
+     "shot": "S17",
+     "note": "合成 蓝莓篮 512"
+    },
+    {
+     "hit_t": 30.0,
+     "hit_frame": 1800,
+     "start_t": 30.0,
+     "bar": 17,
+     "beat": 1.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.13,
+     "pan": 0.2,
+     "shot": "S17",
+     "note": "合成 荔枝篮 1024"
+    },
+    {
+     "hit_t": 30.9375,
+     "hit_frame": 1856,
+     "start_t": 30.9375,
+     "bar": 17,
+     "beat": 3.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.335,
+     "pan": 0.0,
+     "shot": "S17",
+     "note": "全素材彩纸 360° 爆发"
+    },
+    {
+     "hit_t": 32.8125,
+     "hit_frame": 1969,
+     "start_t": 32.8125,
+     "bar": 18,
+     "beat": 3.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.345,
+     "pan": 0.0,
+     "shot": "S18",
+     "note": "点「领取种子与小礼」"
+    },
+    {
+     "hit_t": 32.8125,
+     "hit_frame": 1969,
+     "start_t": 32.8125,
+     "bar": 18,
+     "beat": 3.0,
+     "sfx": "coin_chord",
+     "file": "sfx/coin_chord.wav",
+     "gain_in_mix": 0.6,
+     "remotion_volume_over_music_only": 0.192,
+     "pan": 0.0,
+     "shot": "S18",
+     "note": "备种礼：金币和弦"
+    },
+    {
+     "hit_t": 33.246875,
+     "hit_frame": 1995,
+     "start_t": 33.006875,
+     "bar": 18,
+     "beat": 3.9267,
+     "sfx": "whoosh_up",
+     "file": "sfx/whoosh_up.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.207,
+     "pan": 0.0,
+     "shot": "S18",
+     "note": "种子袋飞向农田"
+    },
+    {
+     "hit_t": 33.75,
+     "hit_frame": 2025,
+     "start_t": 33.75,
+     "bar": 19,
+     "beat": 1.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 33.867188,
+     "hit_frame": 2032,
+     "start_t": 33.867188,
+     "bar": 19,
+     "beat": 1.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 33.984375,
+     "hit_frame": 2039,
+     "start_t": 33.984375,
+     "bar": 19,
+     "beat": 1.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.107,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.101562,
+     "hit_frame": 2046,
+     "start_t": 34.101562,
+     "bar": 19,
+     "beat": 1.75,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.115,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.21875,
+     "hit_frame": 2053,
+     "start_t": 34.21875,
+     "bar": 19,
+     "beat": 2.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.335938,
+     "hit_frame": 2060,
+     "start_t": 34.335938,
+     "bar": 19,
+     "beat": 2.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.453125,
+     "hit_frame": 2067,
+     "start_t": 34.453125,
+     "bar": 19,
+     "beat": 2.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.107,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.570312,
+     "hit_frame": 2074,
+     "start_t": 34.570312,
+     "bar": 19,
+     "beat": 2.75,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.115,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.6875,
+     "hit_frame": 2081,
+     "start_t": 34.6875,
+     "bar": 19,
+     "beat": 3.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.804688,
+     "hit_frame": 2088,
+     "start_t": 34.804688,
+     "bar": 19,
+     "beat": 3.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 34.921875,
+     "hit_frame": 2095,
+     "start_t": 34.921875,
+     "bar": 19,
+     "beat": 3.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.107,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.039062,
+     "hit_frame": 2102,
+     "start_t": 35.039062,
+     "bar": 19,
+     "beat": 3.75,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.115,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.15625,
+     "hit_frame": 2109,
+     "start_t": 35.15625,
+     "bar": 19,
+     "beat": 4.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.273438,
+     "hit_frame": 2116,
+     "start_t": 35.273438,
+     "bar": 19,
+     "beat": 4.25,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.390625,
+     "hit_frame": 2123,
+     "start_t": 35.390625,
+     "bar": 19,
+     "beat": 4.5,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.107,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.507812,
+     "hit_frame": 2130,
+     "start_t": 35.507812,
+     "bar": 19,
+     "beat": 4.75,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.0,
+     "remotion_volume_over_music_only": 0.115,
+     "pan": 0.15,
+     "shot": "S19",
+     "note": "Markdown 键入"
+    },
+    {
+     "hit_t": 35.625,
+     "hit_frame": 2138,
+     "start_t": 35.505,
+     "bar": 20,
+     "beat": 1.0,
+     "sfx": "page_flip",
+     "file": "sfx/page_flip.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.23,
+     "pan": 0.0,
+     "shot": "S20",
+     "note": "切到「阅读」"
+    },
+    {
+     "hit_t": 36.09375,
+     "hit_frame": 2166,
+     "start_t": 36.09375,
+     "bar": 20,
+     "beat": 2.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.198,
+     "pan": 0.0,
+     "shot": "S20",
+     "note": "展开「本页大纲」"
+    },
+    {
+     "hit_t": 36.5625,
+     "hit_frame": 2194,
+     "start_t": 36.5625,
+     "bar": 20,
+     "beat": 3.0,
+     "sfx": "chime3_A",
+     "file": "sfx/chime3_A.wav",
+     "gain_in_mix": 0.72,
+     "remotion_volume_over_music_only": 0.132,
+     "pan": 0.0,
+     "shot": "S20",
+     "note": "三音 chime"
+    },
+    {
+     "hit_t": 36.5625,
+     "hit_frame": 2194,
+     "start_t": 36.5625,
+     "bar": 20,
+     "beat": 3.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.105,
+     "remotion_volume_over_music_only": 0.32,
+     "pan": 0.0,
+     "shot": "S20",
+     "note": "点「还没弄懂」"
+    },
+    {
+     "hit_t": 36.946875,
+     "hit_frame": 2217,
+     "start_t": 36.778875,
+     "bar": 20,
+     "beat": 3.82,
+     "sfx": "whoosh_down",
+     "file": "sfx/whoosh_down.wav",
+     "gain_in_mix": 0.585,
+     "remotion_volume_over_music_only": 0.099,
+     "pan": 0.0,
+     "shot": "S20",
+     "note": "正文跳到该标题"
+    },
+    {
+     "hit_t": 37.5,
+     "hit_frame": 2250,
+     "start_t": 37.43,
+     "bar": 21,
+     "beat": 1.0,
+     "sfx": "select_swish",
+     "file": "sfx/select_swish.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.0,
+     "shot": "S21",
+     "note": "选中「课后做完习题 3.2」"
+    },
+    {
+     "hit_t": 37.96875,
+     "hit_frame": 2278,
+     "start_t": 37.96875,
+     "bar": 21,
+     "beat": 2.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.345,
+     "pan": 0.0,
+     "shot": "S21",
+     "note": "点「加入学习待办」"
+    },
+    {
+     "hit_t": 37.96875,
+     "hit_frame": 2278,
+     "start_t": 37.96875,
+     "bar": 21,
+     "beat": 2.0,
+     "sfx": "notify",
+     "file": "sfx/notify.wav",
+     "gain_in_mix": 0.65,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.0,
+     "shot": "S21",
+     "note": "加入成功提示"
+    },
+    {
+     "hit_t": 38.305937,
+     "hit_frame": 2298,
+     "start_t": 38.080937,
+     "bar": 21,
+     "beat": 2.7193,
+     "sfx": "paper_whoosh",
+     "file": "sfx/paper_whoosh.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.205,
+     "pan": 0.0,
+     "shot": "S21",
+     "note": "纸条飞出"
+    },
+    {
+     "hit_t": 38.4375,
+     "hit_frame": 2306,
+     "start_t": 38.4375,
+     "bar": 21,
+     "beat": 3.0,
+     "sfx": "paper_land",
+     "file": "sfx/paper_land.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.129,
+     "pan": 0.4,
+     "shot": "S21",
+     "note": "落进「我的小事」"
+    },
+    {
+     "hit_t": 39.375,
+     "hit_frame": 2363,
+     "start_t": 39.235,
+     "bar": 22,
+     "beat": 1.0,
+     "sfx": "glitch",
+     "file": "sfx/glitch.wav",
+     "gain_in_mix": 0.8,
+     "remotion_volume_over_music_only": 0.114,
+     "pan": 0.0,
+     "shot": "S21→S22",
+     "note": "故障转场（RGB 分离 + 2 帧黑），落点 = 小节线"
+    },
+    {
+     "hit_t": 39.84375,
+     "hit_frame": 2391,
+     "start_t": 39.84375,
+     "bar": 22,
+     "beat": 2.0,
+     "sfx": "signal_off_1",
+     "file": "sfx/signal_off_1.wav",
+     "gain_in_mix": 0.6,
+     "remotion_volume_over_music_only": 0.101,
+     "pan": 0.0,
+     "shot": "S22",
+     "note": "信号柱第 4 根熄灭"
+    },
+    {
+     "hit_t": 39.960938,
+     "hit_frame": 2398,
+     "start_t": 39.960938,
+     "bar": 22,
+     "beat": 2.25,
+     "sfx": "signal_off_2",
+     "file": "sfx/signal_off_2.wav",
+     "gain_in_mix": 0.6,
+     "remotion_volume_over_music_only": 0.101,
+     "pan": 0.0,
+     "shot": "S22",
+     "note": "信号柱第 3 根熄灭"
+    },
+    {
+     "hit_t": 40.078125,
+     "hit_frame": 2405,
+     "start_t": 40.078125,
+     "bar": 22,
+     "beat": 2.5,
+     "sfx": "signal_off_3",
+     "file": "sfx/signal_off_3.wav",
+     "gain_in_mix": 0.6,
+     "remotion_volume_over_music_only": 0.1,
+     "pan": 0.0,
+     "shot": "S22",
+     "note": "信号柱第 2 根熄灭"
+    },
+    {
+     "hit_t": 40.195312,
+     "hit_frame": 2412,
+     "start_t": 40.195312,
+     "bar": 22,
+     "beat": 2.75,
+     "sfx": "signal_off_4",
+     "file": "sfx/signal_off_4.wav",
+     "gain_in_mix": 0.6,
+     "remotion_volume_over_music_only": 0.1,
+     "pan": 0.0,
+     "shot": "S22",
+     "note": "信号柱第 1 根熄灭"
+    },
+    {
+     "hit_t": 41.25,
+     "hit_frame": 2475,
+     "start_t": 41.25,
+     "bar": 23,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.105,
+     "remotion_volume_over_music_only": 0.32,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "点「运行网络诊断」"
+    },
+    {
+     "hit_t": 41.25,
+     "hit_frame": 2475,
+     "start_t": 41.25,
+     "bar": 23,
+     "beat": 1.0,
+     "sfx": "diag_ok",
+     "file": "sfx/diag_ok.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.185,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "区域判定 ✓"
+    },
+    {
+     "hit_t": 41.71875,
+     "hit_frame": 2503,
+     "start_t": 41.71875,
+     "bar": 23,
+     "beat": 2.0,
+     "sfx": "diag_fail",
+     "file": "sfx/diag_fail.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.191,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "互联网 ✗"
+    },
+    {
+     "hit_t": 42.1875,
+     "hit_frame": 2531,
+     "start_t": 42.1875,
+     "bar": 23,
+     "beat": 3.0,
+     "sfx": "diag_ok",
+     "file": "sfx/diag_ok.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.185,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "教学区门户 ✓"
+    },
+    {
+     "hit_t": 42.65625,
+     "hit_frame": 2559,
+     "start_t": 42.65625,
+     "bar": 23,
+     "beat": 4.0,
+     "sfx": "diag_neutral",
+     "file": "sfx/diag_neutral.wav",
+     "gain_in_mix": 1.28,
+     "remotion_volume_over_music_only": 0.1,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "宿舍区门户 ·"
+    },
+    {
+     "hit_t": 43.010625,
+     "hit_frame": 2581,
+     "start_t": 42.830625,
+     "bar": 23,
+     "beat": 4.756,
+     "sfx": "whoosh_soft",
+     "file": "sfx/whoosh_soft.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.168,
+     "pan": 0.0,
+     "shot": "S23",
+     "note": "结论条滑出"
+    },
+    {
+     "hit_t": 43.125,
+     "hit_frame": 2588,
+     "start_t": 43.125,
+     "bar": 24,
+     "beat": 1.0,
+     "sfx": "menu_open",
+     "file": "sfx/menu_open.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.23,
+     "pan": 0.0,
+     "shot": "S24",
+     "note": "「所在区域」下拉展开"
+    },
+    {
+     "hit_t": 43.59375,
+     "hit_frame": 2616,
+     "start_t": 43.59375,
+     "bar": 24,
+     "beat": 2.0,
+     "sfx": "scan_sweep",
+     "file": "sfx/scan_sweep.wav",
+     "gain_in_mix": 1.12,
+     "remotion_volume_over_music_only": 0.119,
+     "pan": 0.0,
+     "shot": "S24",
+     "note": "像素扫描线停在「教学区」"
+    },
+    {
+     "hit_t": 44.0625,
+     "hit_frame": 2644,
+     "start_t": 44.0625,
+     "bar": 24,
+     "beat": 3.0,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.193,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.121094,
+     "hit_frame": 2647,
+     "start_t": 44.121094,
+     "bar": 24,
+     "beat": 3.125,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.181,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.179688,
+     "hit_frame": 2651,
+     "start_t": 44.179688,
+     "bar": 24,
+     "beat": 3.25,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.128,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.238281,
+     "hit_frame": 2654,
+     "start_t": 44.238281,
+     "bar": 24,
+     "beat": 3.375,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.139,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.296875,
+     "hit_frame": 2658,
+     "start_t": 44.296875,
+     "bar": 24,
+     "beat": 3.5,
+     "sfx": "key_tick_1",
+     "file": "sfx/key_tick_1.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.193,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.355469,
+     "hit_frame": 2661,
+     "start_t": 44.355469,
+     "bar": 24,
+     "beat": 3.625,
+     "sfx": "key_tick_2",
+     "file": "sfx/key_tick_2.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.181,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.414062,
+     "hit_frame": 2665,
+     "start_t": 44.414062,
+     "bar": 24,
+     "beat": 3.75,
+     "sfx": "key_tick_3",
+     "file": "sfx/key_tick_3.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.128,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.472656,
+     "hit_frame": 2668,
+     "start_t": 44.472656,
+     "bar": 24,
+     "beat": 3.875,
+     "sfx": "key_tick_4",
+     "file": "sfx/key_tick_4.wav",
+     "gain_in_mix": 1.2,
+     "remotion_volume_over_music_only": 0.139,
+     "pan": 0.15,
+     "shot": "S24",
+     "note": "键入演示卡号与圆点密码"
+    },
+    {
+     "hit_t": 44.53125,
+     "hit_frame": 2672,
+     "start_t": 44.53125,
+     "bar": 24,
+     "beat": 4.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.36,
+     "remotion_volume_over_music_only": 0.394,
+     "pan": 0.0,
+     "shot": "S24",
+     "note": "点「登录校园网」"
+    },
+    {
+     "hit_t": 45.0,
+     "hit_frame": 2700,
+     "start_t": 45.0,
+     "bar": 25,
+     "beat": 1.0,
+     "sfx": "connect_success",
+     "file": "sfx/connect_success.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.31,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "当前网络出口已在线"
+    },
+    {
+     "hit_t": 45.117188,
+     "hit_frame": 2707,
+     "start_t": 45.117188,
+     "bar": 25,
+     "beat": 1.25,
+     "sfx": "signal_on_1",
+     "file": "sfx/signal_on_1.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.12,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "信号柱第 1 根亮起"
+    },
+    {
+     "hit_t": 45.234375,
+     "hit_frame": 2714,
+     "start_t": 45.234375,
+     "bar": 25,
+     "beat": 1.5,
+     "sfx": "signal_on_2",
+     "file": "sfx/signal_on_2.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.12,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "信号柱第 2 根亮起"
+    },
+    {
+     "hit_t": 45.351562,
+     "hit_frame": 2721,
+     "start_t": 45.351562,
+     "bar": 25,
+     "beat": 1.75,
+     "sfx": "signal_on_3",
+     "file": "sfx/signal_on_3.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.12,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "信号柱第 3 根亮起"
+    },
+    {
+     "hit_t": 45.46875,
+     "hit_frame": 2728,
+     "start_t": 45.46875,
+     "bar": 25,
+     "beat": 2.0,
+     "sfx": "signal_on_4",
+     "file": "sfx/signal_on_4.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.119,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "信号柱第 4 根亮起"
+    },
+    {
+     "hit_t": 46.0975,
+     "hit_frame": 2766,
+     "start_t": 45.9325,
+     "bar": 25,
+     "beat": 3.3413,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.376,
+     "pan": 0.0,
+     "shot": "S25",
+     "note": "甩镜到学院公告 / 校历"
+    },
+    {
+     "hit_t": 46.875,
+     "hit_frame": 2813,
+     "start_t": 46.476,
+     "bar": 26,
+     "beat": 1.0,
+     "sfx": "whoosh_pair",
+     "file": "sfx/whoosh_pair.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.472,
+     "pan": 0.0,
+     "shot": "S26",
+     "note": "两扇窗在拍 1 交汇"
+    },
+    {
+     "hit_t": 47.8125,
+     "hit_frame": 2869,
+     "start_t": 47.8125,
+     "bar": 26,
+     "beat": 3.0,
+     "sfx": "sparkle",
+     "file": "sfx/sparkle.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.133,
+     "pan": 0.0,
+     "shot": "S26",
+     "note": "平台名亮起"
+    },
+    {
+     "hit_t": 48.75,
+     "hit_frame": 2925,
+     "start_t": 48.75,
+     "bar": 27,
+     "beat": 1.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.2,
+     "pan": -0.4,
+     "shot": "S27",
+     "note": "数据只存本机"
+    },
+    {
+     "hit_t": 49.21875,
+     "hit_frame": 2953,
+     "start_t": 49.21875,
+     "bar": 27,
+     "beat": 2.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.2,
+     "pan": 0.0,
+     "shot": "S27",
+     "note": "没有遥测"
+    },
+    {
+     "hit_t": 49.6875,
+     "hit_frame": 2981,
+     "start_t": 49.6875,
+     "bar": 27,
+     "beat": 3.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.2,
+     "pan": 0.4,
+     "shot": "S27",
+     "note": "断网也能用"
+    },
+    {
+     "hit_t": 50.735,
+     "hit_frame": 3044,
+     "start_t": 50.627,
+     "bar": 28,
+     "beat": 1.2347,
+     "sfx": "whoosh_pullback",
+     "file": "sfx/whoosh_pullback.wav",
+     "gain_in_mix": 0.975,
+     "remotion_volume_over_music_only": 0.188,
+     "pan": 0.0,
+     "shot": "S28",
+     "note": "从荔宝一帧急速后拉出动作墙"
+    },
+    {
+     "hit_t": 52.5,
+     "hit_frame": 3150,
+     "start_t": 52.5,
+     "bar": 29,
+     "beat": 1.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.251,
+     "pan": 0.0,
+     "shot": "S29",
+     "note": "logo 弹出"
+    },
+    {
+     "hit_t": 56.45,
+     "hit_frame": 3387,
+     "start_t": 56.21,
+     "bar": 31,
+     "beat": 1.4267,
+     "sfx": "whoosh_up",
+     "file": "sfx/whoosh_up.wav",
+     "gain_in_mix": 0.65,
+     "remotion_volume_over_music_only": 0.172,
+     "pan": 0.0,
+     "shot": "S30",
+     "note": "下载牌从下方滑入"
+    },
+    {
+     "hit_t": 58.359375,
+     "hit_frame": 3502,
+     "start_t": 58.359375,
+     "bar": 32,
+     "beat": 1.5,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.198,
+     "pan": 0.3,
+     "shot": "S30",
+     "note": "荔宝 greet 气泡"
+    }
+   ],
+   "silences": [
+    {
+     "start_s": 20.390625,
+     "end_s": 20.625,
+     "start_frame": 1223,
+     "end_frame": 1238,
+     "note": "数字静音（样本全 0）"
+    },
+    {
+     "start_s": 39.635,
+     "end_s": 39.84375,
+     "start_frame": 2378,
+     "end_frame": 2391,
+     "note": "数字静音（样本全 0）"
+    }
+   ],
+   "tape_stops": [
+    {
+     "start_s": 30.46875,
+     "end_s": 30.9375
+    }
+   ],
+   "ending": {
+    "fade_out_s": [
+     59.5,
+     60.0
+    ],
+    "note": "v2：最后一小节拍 1 收尾 hit + 金币「叮」后不留持续音，混响尾巴叠加 dB 线性释放（hit+0.3 s 起，到结束前 0.1 s 共 -26 dB），59.9 s / 29.9 s 前 ≤ -40 dBFS；最后 0.5 s 余弦淡出只作保险，最后一个样本为 0；画面保持到结束、不淡黑"
+   }
+  },
+  "9x16": {
+   "duration_s": 30.0,
+   "bars": 16,
+   "full_mix": "promo_9x16_full.wav",
+   "music_only": "music_9x16.wav",
+   "sections": [
+    {
+     "bars": [
+      1,
+      2
+     ],
+     "start_s": 0.0,
+     "end_s": 3.75,
+     "name": "Hook 开场钩子"
+    },
+    {
+     "bars": [
+      3,
+      4
+     ],
+     "start_s": 3.75,
+     "end_s": 7.5,
+     "name": "主歌"
+    },
+    {
+     "bars": [
+      5,
+      6
+     ],
+     "start_s": 7.5,
+     "end_s": 11.25,
+     "name": "积累"
+    },
+    {
+     "bars": [
+      7,
+      7
+     ],
+     "start_s": 11.25,
+     "end_s": 13.125,
+     "name": "DROP"
+    },
+    {
+     "bars": [
+      8,
+      9
+     ],
+     "start_s": 13.125,
+     "end_s": 16.875,
+     "name": "2048 攀升 → 高潮"
+    },
+    {
+     "bars": [
+      10,
+      10
+     ],
+     "start_s": 16.875,
+     "end_s": 18.75,
+     "name": "余波 / 建设"
+    },
+    {
+     "bars": [
+      11,
+      14
+     ],
+     "start_s": 18.75,
+     "end_s": 26.25,
+     "name": "副歌延续"
+    },
+    {
+     "bars": [
+      15,
+      16
+     ],
+     "start_s": 26.25,
+     "end_s": 30.0,
+     "name": "尾声"
+    }
+   ],
+   "grid": [
+    {
+     "bar": 1,
+     "start_s": 0.0,
+     "end_s": 1.875,
+     "start_frame": 0,
+     "section": "Hook 开场钩子",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V01",
+      "V02"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 1,
+       "t": 0.0,
+       "frame": 0
+      },
+      {
+       "beat": 2,
+       "global_beat": 2,
+       "t": 0.46875,
+       "frame": 28
+      },
+      {
+       "beat": 3,
+       "global_beat": 3,
+       "t": 0.9375,
+       "frame": 56
+      },
+      {
+       "beat": 4,
+       "global_beat": 4,
+       "t": 1.40625,
+       "frame": 84
+      }
+     ]
+    },
+    {
+     "bar": 2,
+     "start_s": 1.875,
+     "end_s": 3.75,
+     "start_frame": 113,
+     "section": "Hook 开场钩子",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      },
+      {
+       "beat": 3,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "V02"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 5,
+       "t": 1.875,
+       "frame": 113
+      },
+      {
+       "beat": 2,
+       "global_beat": 6,
+       "t": 2.34375,
+       "frame": 141
+      },
+      {
+       "beat": 3,
+       "global_beat": 7,
+       "t": 2.8125,
+       "frame": 169
+      },
+      {
+       "beat": 4,
+       "global_beat": 8,
+       "t": 3.28125,
+       "frame": 197
+      }
+     ]
+    },
+    {
+     "bar": 3,
+     "start_s": 3.75,
+     "end_s": 5.625,
+     "start_frame": 225,
+     "section": "主歌",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      }
+     ],
+     "shots": [
+      "V03"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 9,
+       "t": 3.75,
+       "frame": 225
+      },
+      {
+       "beat": 2,
+       "global_beat": 10,
+       "t": 4.21875,
+       "frame": 253
+      },
+      {
+       "beat": 3,
+       "global_beat": 11,
+       "t": 4.6875,
+       "frame": 281
+      },
+      {
+       "beat": 4,
+       "global_beat": 12,
+       "t": 5.15625,
+       "frame": 309
+      }
+     ]
+    },
+    {
+     "bar": 4,
+     "start_s": 5.625,
+     "end_s": 7.5,
+     "start_frame": 338,
+     "section": "主歌",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "V04"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 13,
+       "t": 5.625,
+       "frame": 338
+      },
+      {
+       "beat": 2,
+       "global_beat": 14,
+       "t": 6.09375,
+       "frame": 366
+      },
+      {
+       "beat": 3,
+       "global_beat": 15,
+       "t": 6.5625,
+       "frame": 394
+      },
+      {
+       "beat": 4,
+       "global_beat": 16,
+       "t": 7.03125,
+       "frame": 422
+      }
+     ]
+    },
+    {
+     "bar": 5,
+     "start_s": 7.5,
+     "end_s": 9.375,
+     "start_frame": 450,
+     "section": "积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V05"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 17,
+       "t": 7.5,
+       "frame": 450
+      },
+      {
+       "beat": 2,
+       "global_beat": 18,
+       "t": 7.96875,
+       "frame": 478
+      },
+      {
+       "beat": 3,
+       "global_beat": 19,
+       "t": 8.4375,
+       "frame": 506
+      },
+      {
+       "beat": 4,
+       "global_beat": 20,
+       "t": 8.90625,
+       "frame": 534
+      }
+     ]
+    },
+    {
+     "bar": 6,
+     "start_s": 9.375,
+     "end_s": 11.25,
+     "start_frame": 563,
+     "section": "积累",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      },
+      {
+       "beat": 3,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "V06"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 21,
+       "t": 9.375,
+       "frame": 563
+      },
+      {
+       "beat": 2,
+       "global_beat": 22,
+       "t": 9.84375,
+       "frame": 591
+      },
+      {
+       "beat": 3,
+       "global_beat": 23,
+       "t": 10.3125,
+       "frame": 619
+      },
+      {
+       "beat": 4,
+       "global_beat": 24,
+       "t": 10.78125,
+       "frame": 647
+      }
+     ]
+    },
+    {
+     "bar": 7,
+     "start_s": 11.25,
+     "end_s": 13.125,
+     "start_frame": 675,
+     "section": "DROP",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V07"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 25,
+       "t": 11.25,
+       "frame": 675
+      },
+      {
+       "beat": 2,
+       "global_beat": 26,
+       "t": 11.71875,
+       "frame": 703
+      },
+      {
+       "beat": 3,
+       "global_beat": 27,
+       "t": 12.1875,
+       "frame": 731
+      },
+      {
+       "beat": 4,
+       "global_beat": 28,
+       "t": 12.65625,
+       "frame": 759
+      }
+     ]
+    },
+    {
+     "bar": 8,
+     "start_s": 13.125,
+     "end_s": 15.0,
+     "start_frame": 788,
+     "section": "2048 攀升 → 高潮",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V08"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 29,
+       "t": 13.125,
+       "frame": 788
+      },
+      {
+       "beat": 2,
+       "global_beat": 30,
+       "t": 13.59375,
+       "frame": 816
+      },
+      {
+       "beat": 3,
+       "global_beat": 31,
+       "t": 14.0625,
+       "frame": 844
+      },
+      {
+       "beat": 4,
+       "global_beat": 32,
+       "t": 14.53125,
+       "frame": 872
+      }
+     ]
+    },
+    {
+     "bar": 9,
+     "start_s": 15.0,
+     "end_s": 16.875,
+     "start_frame": 900,
+     "section": "2048 攀升 → 高潮",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      },
+      {
+       "beat": 3,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V08"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 33,
+       "t": 15.0,
+       "frame": 900
+      },
+      {
+       "beat": 2,
+       "global_beat": 34,
+       "t": 15.46875,
+       "frame": 928
+      },
+      {
+       "beat": 3,
+       "global_beat": 35,
+       "t": 15.9375,
+       "frame": 956
+      },
+      {
+       "beat": 4,
+       "global_beat": 36,
+       "t": 16.40625,
+       "frame": 984
+      }
+     ]
+    },
+    {
+     "bar": 10,
+     "start_s": 16.875,
+     "end_s": 18.75,
+     "start_frame": 1013,
+     "section": "余波 / 建设",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "V09"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 37,
+       "t": 16.875,
+       "frame": 1013
+      },
+      {
+       "beat": 2,
+       "global_beat": 38,
+       "t": 17.34375,
+       "frame": 1041
+      },
+      {
+       "beat": 3,
+       "global_beat": 39,
+       "t": 17.8125,
+       "frame": 1069
+      },
+      {
+       "beat": 4,
+       "global_beat": 40,
+       "t": 18.28125,
+       "frame": 1097
+      }
+     ]
+    },
+    {
+     "bar": 11,
+     "start_s": 18.75,
+     "end_s": 20.625,
+     "start_frame": 1125,
+     "section": "副歌延续",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "V10"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 41,
+       "t": 18.75,
+       "frame": 1125
+      },
+      {
+       "beat": 2,
+       "global_beat": 42,
+       "t": 19.21875,
+       "frame": 1153
+      },
+      {
+       "beat": 3,
+       "global_beat": 43,
+       "t": 19.6875,
+       "frame": 1181
+      },
+      {
+       "beat": 4,
+       "global_beat": 44,
+       "t": 20.15625,
+       "frame": 1209
+      }
+     ]
+    },
+    {
+     "bar": 12,
+     "start_s": 20.625,
+     "end_s": 22.5,
+     "start_frame": 1238,
+     "section": "副歌延续",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "Bm"
+      },
+      {
+       "beat": 3,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "V11"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 45,
+       "t": 20.625,
+       "frame": 1238
+      },
+      {
+       "beat": 2,
+       "global_beat": 46,
+       "t": 21.09375,
+       "frame": 1266
+      },
+      {
+       "beat": 3,
+       "global_beat": 47,
+       "t": 21.5625,
+       "frame": 1294
+      },
+      {
+       "beat": 4,
+       "global_beat": 48,
+       "t": 22.03125,
+       "frame": 1322
+      }
+     ]
+    },
+    {
+     "bar": 13,
+     "start_s": 22.5,
+     "end_s": 24.375,
+     "start_frame": 1350,
+     "section": "副歌延续",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      },
+      {
+       "beat": 3,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "V11"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 49,
+       "t": 22.5,
+       "frame": 1350
+      },
+      {
+       "beat": 2,
+       "global_beat": 50,
+       "t": 22.96875,
+       "frame": 1378
+      },
+      {
+       "beat": 3,
+       "global_beat": 51,
+       "t": 23.4375,
+       "frame": 1406
+      },
+      {
+       "beat": 4,
+       "global_beat": 52,
+       "t": 23.90625,
+       "frame": 1434
+      }
+     ]
+    },
+    {
+     "bar": 14,
+     "start_s": 24.375,
+     "end_s": 26.25,
+     "start_frame": 1463,
+     "section": "副歌延续",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "G"
+      },
+      {
+       "beat": 4,
+       "chord": "A"
+      }
+     ],
+     "shots": [
+      "V12"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 53,
+       "t": 24.375,
+       "frame": 1463
+      },
+      {
+       "beat": 2,
+       "global_beat": 54,
+       "t": 24.84375,
+       "frame": 1491
+      },
+      {
+       "beat": 3,
+       "global_beat": 55,
+       "t": 25.3125,
+       "frame": 1519
+      },
+      {
+       "beat": 4,
+       "global_beat": 56,
+       "t": 25.78125,
+       "frame": 1547
+      }
+     ]
+    },
+    {
+     "bar": 15,
+     "start_s": 26.25,
+     "end_s": 28.125,
+     "start_frame": 1575,
+     "section": "尾声",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      },
+      {
+       "beat": 3,
+       "chord": "G"
+      }
+     ],
+     "shots": [
+      "V13"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 57,
+       "t": 26.25,
+       "frame": 1575
+      },
+      {
+       "beat": 2,
+       "global_beat": 58,
+       "t": 26.71875,
+       "frame": 1603
+      },
+      {
+       "beat": 3,
+       "global_beat": 59,
+       "t": 27.1875,
+       "frame": 1631
+      },
+      {
+       "beat": 4,
+       "global_beat": 60,
+       "t": 27.65625,
+       "frame": 1659
+      }
+     ]
+    },
+    {
+     "bar": 16,
+     "start_s": 28.125,
+     "end_s": 30.0,
+     "start_frame": 1688,
+     "section": "尾声",
+     "chords": [
+      {
+       "beat": 1,
+       "chord": "D"
+      }
+     ],
+     "shots": [
+      "V13"
+     ],
+     "beats": [
+      {
+       "beat": 1,
+       "global_beat": 61,
+       "t": 28.125,
+       "frame": 1688
+      },
+      {
+       "beat": 2,
+       "global_beat": 62,
+       "t": 28.59375,
+       "frame": 1716
+      },
+      {
+       "beat": 3,
+       "global_beat": 63,
+       "t": 29.0625,
+       "frame": 1744
+      },
+      {
+       "beat": 4,
+       "global_beat": 64,
+       "t": 29.53125,
+       "frame": 1772
+      }
+     ]
+    }
+   ],
+   "music_accents": [
+    {
+     "t": 0.0,
+     "frame": 0,
+     "bar": 1,
+     "beat": 1.0,
+     "kind": "riser_start",
+     "note": "开场 riser（2 拍）"
+    },
+    {
+     "t": 0.9375,
+     "frame": 56,
+     "bar": 1,
+     "beat": 3.0,
+     "kind": "riser_end",
+     "note": "开场 riser（2 拍）"
+    },
+    {
+     "t": 0.9375,
+     "frame": 56,
+     "bar": 1,
+     "beat": 3.0,
+     "kind": "impact",
+     "note": "开场 IMPACT"
+    },
+    {
+     "t": 2.8125,
+     "frame": 169,
+     "bar": 2,
+     "beat": 3.0,
+     "kind": "tom",
+     "note": "栗栗滑入"
+    },
+    {
+     "t": 3.28125,
+     "frame": 197,
+     "bar": 2,
+     "beat": 4.0,
+     "kind": "tom",
+     "note": "小白滑入"
+    },
+    {
+     "t": 3.75,
+     "frame": 225,
+     "bar": 3,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "主歌起（轻镲）"
+    },
+    {
+     "t": 7.5,
+     "frame": 450,
+     "bar": 5,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "积累起"
+    },
+    {
+     "t": 8.4375,
+     "frame": 506,
+     "bar": 5,
+     "beat": 3.0,
+     "kind": "coin_chord",
+     "note": "金币和弦"
+    },
+    {
+     "t": 8.4375,
+     "frame": 506,
+     "bar": 5,
+     "beat": 3.0,
+     "kind": "crash",
+     "note": "金币和弦"
+    },
+    {
+     "t": 9.375,
+     "frame": 563,
+     "bar": 6,
+     "beat": 1.0,
+     "kind": "horn",
+     "note": "收获号角 D5–G5–B5"
+    },
+    {
+     "t": 9.375,
+     "frame": 563,
+     "bar": 6,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "收获"
+    },
+    {
+     "t": 10.3125,
+     "frame": 619,
+     "bar": 6,
+     "beat": 3.0,
+     "kind": "riser_start",
+     "note": "DROP 前 riser"
+    },
+    {
+     "t": 11.015625,
+     "frame": 661,
+     "bar": 6,
+     "beat": 4.5,
+     "kind": "riser_end",
+     "note": "DROP 前 riser"
+    },
+    {
+     "t": 11.015625,
+     "frame": 661,
+     "bar": 6,
+     "beat": 4.5,
+     "kind": "silence_start",
+     "note": "DROP 前最后一个 8 分音符全静音"
+    },
+    {
+     "t": 11.25,
+     "frame": 675,
+     "bar": 7,
+     "beat": 1.0,
+     "kind": "silence_end",
+     "note": "DROP 前最后一个 8 分音符全静音"
+    },
+    {
+     "t": 11.25,
+     "frame": 675,
+     "bar": 7,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "DROP：荔湖晴昼"
+    },
+    {
+     "t": 12.1875,
+     "frame": 731,
+     "bar": 7,
+     "beat": 3.0,
+     "kind": "crash",
+     "note": "雨后书屋"
+    },
+    {
+     "t": 12.65625,
+     "frame": 759,
+     "bar": 7,
+     "beat": 4.0,
+     "kind": "crash",
+     "note": "蓝调晚庭"
+    },
+    {
+     "t": 13.125,
+     "frame": 788,
+     "bar": 8,
+     "beat": 1.0,
+     "kind": "merge",
+     "note": "D5"
+    },
+    {
+     "t": 13.125,
+     "frame": 788,
+     "bar": 8,
+     "beat": 1.0,
+     "kind": "riser_start",
+     "note": "2048 攀升 riser"
+    },
+    {
+     "t": 13.359375,
+     "frame": 802,
+     "bar": 8,
+     "beat": 1.5,
+     "kind": "merge",
+     "note": "E5"
+    },
+    {
+     "t": 13.59375,
+     "frame": 816,
+     "bar": 8,
+     "beat": 2.0,
+     "kind": "merge",
+     "note": "F#5"
+    },
+    {
+     "t": 13.828125,
+     "frame": 830,
+     "bar": 8,
+     "beat": 2.5,
+     "kind": "merge",
+     "note": "A5"
+    },
+    {
+     "t": 14.0625,
+     "frame": 844,
+     "bar": 8,
+     "beat": 3.0,
+     "kind": "merge",
+     "note": "B5"
+    },
+    {
+     "t": 14.296875,
+     "frame": 858,
+     "bar": 8,
+     "beat": 3.5,
+     "kind": "merge",
+     "note": "D6"
+    },
+    {
+     "t": 14.53125,
+     "frame": 872,
+     "bar": 8,
+     "beat": 4.0,
+     "kind": "merge",
+     "note": "E6"
+    },
+    {
+     "t": 14.765625,
+     "frame": 886,
+     "bar": 8,
+     "beat": 4.5,
+     "kind": "merge",
+     "note": "F#6"
+    },
+    {
+     "t": 15.0,
+     "frame": 900,
+     "bar": 9,
+     "beat": 1.0,
+     "kind": "merge",
+     "note": "A6"
+    },
+    {
+     "t": 15.0,
+     "frame": 900,
+     "bar": 9,
+     "beat": 1.0,
+     "kind": "riser_end",
+     "note": "2048 攀升 riser"
+    },
+    {
+     "t": 15.0,
+     "frame": 900,
+     "bar": 9,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "合出荔枝篮 1024"
+    },
+    {
+     "t": 15.46875,
+     "frame": 928,
+     "bar": 9,
+     "beat": 2.0,
+     "kind": "tape_stop",
+     "note": "全曲刹车 + 吸气 riser"
+    },
+    {
+     "t": 15.9375,
+     "frame": 956,
+     "bar": 9,
+     "beat": 3.0,
+     "kind": "impact_max",
+     "note": "全片最大冲击：荔宝丰收礼占满全屏（软削波）"
+    },
+    {
+     "t": 16.40625,
+     "frame": 984,
+     "bar": 9,
+     "beat": 4.0,
+     "kind": "sparkle_arp",
+     "note": "闪光琶音（32 分音符）"
+    },
+    {
+     "t": 18.75,
+     "frame": 1125,
+     "bar": 11,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "副歌延续：课程笔记"
+    },
+    {
+     "t": 20.625,
+     "frame": 1238,
+     "bar": 12,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "校园网：诊断"
+    },
+    {
+     "t": 22.5,
+     "frame": 1350,
+     "bar": 13,
+     "beat": 1.0,
+     "kind": "success_chord",
+     "note": "「上线」成功和弦（D）"
+    },
+    {
+     "t": 22.5,
+     "frame": 1350,
+     "bar": 13,
+     "beat": 1.0,
+     "kind": "crash",
+     "note": "上线"
+    },
+    {
+     "t": 24.375,
+     "frame": 1463,
+     "bar": 14,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "徽章砸下：数据只存本机"
+    },
+    {
+     "t": 24.84375,
+     "frame": 1491,
+     "bar": 14,
+     "beat": 2.0,
+     "kind": "impact",
+     "note": "徽章砸下：没有遥测"
+    },
+    {
+     "t": 25.3125,
+     "frame": 1519,
+     "bar": 14,
+     "beat": 3.0,
+     "kind": "impact",
+     "note": "徽章砸下：开源 MIT"
+    },
+    {
+     "t": 25.78125,
+     "frame": 1547,
+     "bar": 14,
+     "beat": 4.0,
+     "kind": "reverse_cymbal",
+     "note": "反向镲，落点 26.2500s"
+    },
+    {
+     "t": 26.25,
+     "frame": 1575,
+     "bar": 15,
+     "beat": 1.0,
+     "kind": "impact",
+     "note": "结尾冲击：应用图标砸出"
+    },
+    {
+     "t": 27.65625,
+     "frame": 1659,
+     "bar": 15,
+     "beat": 4.0,
+     "kind": "reverse_cymbal",
+     "note": "反向镲，落点 28.1250s"
+    },
+    {
+     "t": 28.125,
+     "frame": 1688,
+     "bar": 16,
+     "beat": 1.0,
+     "kind": "final_hit",
+     "note": "第 16 小节拍 1 收尾 hit + 金币「叮」，之后只剩混响尾巴"
+    }
+   ],
+   "sfx_cues": [
+    {
+     "hit_t": 0.46875,
+     "hit_frame": 28,
+     "start_t": 0.46875,
+     "bar": 1,
+     "beat": 2.0,
+     "sfx": "coin",
+     "file": "sfx/coin.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.125,
+     "pan": 0.0,
+     "shot": "V01",
+     "note": "0.469 s 金币 blip"
+    },
+    {
+     "hit_t": 0.9375,
+     "hit_frame": 56,
+     "start_t": 0.7,
+     "bar": 1,
+     "beat": 3.0,
+     "sfx": "fall_whistle",
+     "file": "sfx/fall_whistle.wav",
+     "gain_in_mix": 0.55,
+     "remotion_volume_over_music_only": 0.062,
+     "pan": 0.0,
+     "shot": "V01",
+     "note": "荔枝下落，0.9375 s 落地"
+    },
+    {
+     "hit_t": 0.9375,
+     "hit_frame": 56,
+     "start_t": 0.9375,
+     "bar": 1,
+     "beat": 3.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.203,
+     "pan": 0.0,
+     "shot": "V02",
+     "note": "素材粒子爆发"
+    },
+    {
+     "hit_t": 2.8125,
+     "hit_frame": 169,
+     "start_t": 2.8125,
+     "bar": 2,
+     "beat": 3.0,
+     "sfx": "dust",
+     "file": "sfx/dust.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.072,
+     "pan": -0.5,
+     "shot": "V02",
+     "note": "栗栗落位"
+    },
+    {
+     "hit_t": 3.28125,
+     "hit_frame": 197,
+     "start_t": 3.28125,
+     "bar": 2,
+     "beat": 4.0,
+     "sfx": "dust",
+     "file": "sfx/dust.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.072,
+     "pan": 0.5,
+     "shot": "V02",
+     "note": "小白落位"
+    },
+    {
+     "hit_t": 3.69,
+     "hit_frame": 221,
+     "start_t": 3.525,
+     "bar": 2,
+     "beat": 4.872,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 1.17,
+     "remotion_volume_over_music_only": 0.391,
+     "pan": 0.0,
+     "shot": "V02→V03",
+     "note": "甩镜进桌面"
+    },
+    {
+     "hit_t": 3.9,
+     "hit_frame": 234,
+     "start_t": 3.72,
+     "bar": 3,
+     "beat": 1.32,
+     "sfx": "whoosh_soft",
+     "file": "sfx/whoosh_soft.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.173,
+     "pan": 0.0,
+     "shot": "V03",
+     "note": "主窗口飞入"
+    },
+    {
+     "hit_t": 4.21875,
+     "hit_frame": 253,
+     "start_t": 4.21875,
+     "bar": 3,
+     "beat": 2.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.233,
+     "pan": 0.3,
+     "shot": "V03",
+     "note": "荔宝坐在窗口边沿冒气泡"
+    },
+    {
+     "hit_t": 4.6875,
+     "hit_frame": 281,
+     "start_t": 4.6875,
+     "bar": 3,
+     "beat": 3.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 0.935,
+     "remotion_volume_over_music_only": 0.219,
+     "pan": 0.0,
+     "shot": "V03",
+     "note": "光标按住荔宝"
+    },
+    {
+     "hit_t": 4.8875,
+     "hit_frame": 293,
+     "start_t": 4.4175,
+     "bar": 3,
+     "beat": 3.4267,
+     "sfx": "whoosh_drag",
+     "file": "sfx/whoosh_drag.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.142,
+     "pan": 0.0,
+     "shot": "V03",
+     "note": "拖到下方"
+    },
+    {
+     "hit_t": 5.039062,
+     "hit_frame": 302,
+     "start_t": 5.039062,
+     "bar": 3,
+     "beat": 3.75,
+     "sfx": "scroll_tick_1",
+     "file": "sfx/scroll_tick_1.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.142,
+     "pan": 0.4,
+     "shot": "V03",
+     "note": "滚轮第 1 档 → 110%"
+    },
+    {
+     "hit_t": 5.15625,
+     "hit_frame": 309,
+     "start_t": 5.15625,
+     "bar": 3,
+     "beat": 4.0,
+     "sfx": "scroll_tick_2",
+     "file": "sfx/scroll_tick_2.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.145,
+     "pan": 0.4,
+     "shot": "V03",
+     "note": "滚轮第 2 档 → 120%"
+    },
+    {
+     "hit_t": 5.273438,
+     "hit_frame": 316,
+     "start_t": 5.273438,
+     "bar": 3,
+     "beat": 4.25,
+     "sfx": "scroll_tick_3",
+     "file": "sfx/scroll_tick_3.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.4,
+     "shot": "V03",
+     "note": "滚轮第 3 档 → 130%"
+    },
+    {
+     "hit_t": 5.390625,
+     "hit_frame": 323,
+     "start_t": 5.390625,
+     "bar": 3,
+     "beat": 4.5,
+     "sfx": "scroll_tick_4",
+     "file": "sfx/scroll_tick_4.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.148,
+     "pan": 0.4,
+     "shot": "V03",
+     "note": "滚轮第 4 档 → 140%"
+    },
+    {
+     "hit_t": 5.507812,
+     "hit_frame": 330,
+     "start_t": 5.507812,
+     "bar": 3,
+     "beat": 4.75,
+     "sfx": "scroll_tick_5",
+     "file": "sfx/scroll_tick_5.wav",
+     "gain_in_mix": 0.7,
+     "remotion_volume_over_music_only": 0.136,
+     "pan": 0.4,
+     "shot": "V03",
+     "note": "滚轮第 5 档 → 150%"
+    },
+    {
+     "hit_t": 5.625,
+     "hit_frame": 338,
+     "start_t": 5.625,
+     "bar": 4,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.279,
+     "pan": 0.0,
+     "shot": "V04",
+     "note": "菜单点「摸摸头」"
+    },
+    {
+     "hit_t": 5.625,
+     "hit_frame": 338,
+     "start_t": 5.625,
+     "bar": 4,
+     "beat": 1.0,
+     "sfx": "pat_chime",
+     "file": "sfx/pat_chime.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.136,
+     "pan": 0.0,
+     "shot": "V04",
+     "note": "摸头三音 + 爱心"
+    },
+    {
+     "hit_t": 6.09375,
+     "hit_frame": 366,
+     "start_t": 6.09375,
+     "bar": 4,
+     "beat": 2.0,
+     "sfx": "bloop_D5",
+     "file": "sfx/bloop_D5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.166,
+     "pan": 0.0,
+     "shot": "V04",
+     "note": "像素溶解成栗栗"
+    },
+    {
+     "hit_t": 6.5625,
+     "hit_frame": 394,
+     "start_t": 6.5625,
+     "bar": 4,
+     "beat": 3.0,
+     "sfx": "bloop_Fs5",
+     "file": "sfx/bloop_Fs5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.169,
+     "pan": 0.0,
+     "shot": "V04",
+     "note": "像素溶解成小白"
+    },
+    {
+     "hit_t": 7.03125,
+     "hit_frame": 422,
+     "start_t": 7.03125,
+     "bar": 4,
+     "beat": 4.0,
+     "sfx": "bloop_A5",
+     "file": "sfx/bloop_A5.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.152,
+     "pan": 0.0,
+     "shot": "V04",
+     "note": "像素溶解成荔宝"
+    },
+    {
+     "hit_t": 7.5,
+     "hit_frame": 450,
+     "start_t": 7.5,
+     "bar": 5,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.279,
+     "pan": 0.0,
+     "shot": "V05",
+     "note": "点「25 分钟」"
+    },
+    {
+     "hit_t": 7.617188,
+     "hit_frame": 457,
+     "start_t": 7.617188,
+     "bar": 5,
+     "beat": 1.25,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.672,
+     "remotion_volume_over_music_only": 0.073,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 7.734375,
+     "hit_frame": 464,
+     "start_t": 7.734375,
+     "bar": 5,
+     "beat": 1.5,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.72,
+     "remotion_volume_over_music_only": 0.078,
+     "pan": -0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 7.851562,
+     "hit_frame": 471,
+     "start_t": 7.851562,
+     "bar": 5,
+     "beat": 1.75,
+     "sfx": "clock_tick_1",
+     "file": "sfx/clock_tick_1.wav",
+     "gain_in_mix": 0.768,
+     "remotion_volume_over_music_only": 0.084,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 7.96875,
+     "hit_frame": 478,
+     "start_t": 7.96875,
+     "bar": 5,
+     "beat": 2.0,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.816,
+     "remotion_volume_over_music_only": 0.128,
+     "pan": -0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.027344,
+     "hit_frame": 482,
+     "start_t": 8.027344,
+     "bar": 5,
+     "beat": 2.125,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.136,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.085938,
+     "hit_frame": 485,
+     "start_t": 8.085938,
+     "bar": 5,
+     "beat": 2.25,
+     "sfx": "clock_tick_2",
+     "file": "sfx/clock_tick_2.wav",
+     "gain_in_mix": 0.912,
+     "remotion_volume_over_music_only": 0.143,
+     "pan": -0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.144531,
+     "hit_frame": 489,
+     "start_t": 8.144531,
+     "bar": 5,
+     "beat": 2.375,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.137,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.203125,
+     "hit_frame": 492,
+     "start_t": 8.203125,
+     "bar": 5,
+     "beat": 2.5,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 1.008,
+     "remotion_volume_over_music_only": 0.144,
+     "pan": -0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.261719,
+     "hit_frame": 496,
+     "start_t": 8.261719,
+     "bar": 5,
+     "beat": 2.625,
+     "sfx": "clock_tick_3",
+     "file": "sfx/clock_tick_3.wav",
+     "gain_in_mix": 1.056,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.320312,
+     "hit_frame": 499,
+     "start_t": 8.320312,
+     "bar": 5,
+     "beat": 2.75,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.104,
+     "remotion_volume_over_music_only": 0.228,
+     "pan": -0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.378906,
+     "hit_frame": 503,
+     "start_t": 8.378906,
+     "bar": 5,
+     "beat": 2.875,
+     "sfx": "clock_tick_4",
+     "file": "sfx/clock_tick_4.wav",
+     "gain_in_mix": 1.152,
+     "remotion_volume_over_music_only": 0.238,
+     "pan": 0.2,
+     "shot": "V05",
+     "note": "25:00→00:00 延时 tick"
+    },
+    {
+     "hit_t": 8.4375,
+     "hit_frame": 506,
+     "start_t": 8.4375,
+     "bar": 5,
+     "beat": 3.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.279,
+     "pan": 0.0,
+     "shot": "V05",
+     "note": "点「完成并领取奖励」"
+    },
+    {
+     "hit_t": 8.4375,
+     "hit_frame": 506,
+     "start_t": 8.4375,
+     "bar": 5,
+     "beat": 3.0,
+     "sfx": "coin",
+     "file": "sfx/coin.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.151,
+     "pan": 0.0,
+     "shot": "V05",
+     "note": "+25 荔枝币"
+    },
+    {
+     "hit_t": 8.554688,
+     "hit_frame": 513,
+     "start_t": 8.554688,
+     "bar": 5,
+     "beat": 3.25,
+     "sfx": "coin_tinkle_1",
+     "file": "sfx/coin_tinkle_1.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.062,
+     "pan": 0.0,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 8.671875,
+     "hit_frame": 520,
+     "start_t": 8.671875,
+     "bar": 5,
+     "beat": 3.5,
+     "sfx": "coin_tinkle_2",
+     "file": "sfx/coin_tinkle_2.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.062,
+     "pan": 0.595,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 8.789062,
+     "hit_frame": 527,
+     "start_t": 8.789062,
+     "bar": 5,
+     "beat": 3.75,
+     "sfx": "coin_tinkle_3",
+     "file": "sfx/coin_tinkle_3.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.065,
+     "pan": -0.153,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 8.90625,
+     "hit_frame": 534,
+     "start_t": 8.90625,
+     "bar": 5,
+     "beat": 4.0,
+     "sfx": "coin_tinkle_4",
+     "file": "sfx/coin_tinkle_4.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.063,
+     "pan": -0.555,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 9.023438,
+     "hit_frame": 541,
+     "start_t": 9.023438,
+     "bar": 5,
+     "beat": 4.25,
+     "sfx": "coin_tinkle_5",
+     "file": "sfx/coin_tinkle_5.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.06,
+     "pan": 0.296,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 9.140625,
+     "hit_frame": 548,
+     "start_t": 9.140625,
+     "bar": 5,
+     "beat": 4.5,
+     "sfx": "coin_tinkle_6",
+     "file": "sfx/coin_tinkle_6.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.059,
+     "pan": 0.479,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 9.257812,
+     "hit_frame": 555,
+     "start_t": 9.257812,
+     "bar": 5,
+     "beat": 4.75,
+     "sfx": "coin_tinkle_1",
+     "file": "sfx/coin_tinkle_1.wav",
+     "gain_in_mix": 0.63,
+     "remotion_volume_over_music_only": 0.062,
+     "pan": -0.42,
+     "shot": "V05",
+     "note": "金币飞向计数牌"
+    },
+    {
+     "hit_t": 9.375,
+     "hit_frame": 563,
+     "start_t": 9.375,
+     "bar": 6,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.02,
+     "remotion_volume_over_music_only": 0.239,
+     "pan": 0.0,
+     "shot": "V06",
+     "note": "点成熟萝卜田"
+    },
+    {
+     "hit_t": 9.375,
+     "hit_frame": 563,
+     "start_t": 9.375,
+     "bar": 6,
+     "beat": 1.0,
+     "sfx": "harvest_pop",
+     "file": "sfx/harvest_pop.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.272,
+     "pan": 0.0,
+     "shot": "V06",
+     "note": "收获"
+    },
+    {
+     "hit_t": 9.84375,
+     "hit_frame": 591,
+     "start_t": 9.84375,
+     "bar": 6,
+     "beat": 2.0,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.175,
+     "pan": 0.35,
+     "shot": "V06",
+     "note": "荔宝气泡"
+    },
+    {
+     "hit_t": 9.859375,
+     "hit_frame": 592,
+     "start_t": 9.556975,
+     "bar": 6,
+     "beat": 2.0333,
+     "sfx": "whoosh_zoom",
+     "file": "sfx/whoosh_zoom.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.435,
+     "pan": 0.0,
+     "shot": "V06",
+     "note": "萝卜冲镜头"
+    },
+    {
+     "hit_t": 12.1875,
+     "hit_frame": 731,
+     "start_t": 12.0225,
+     "bar": 7,
+     "beat": 3.0,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.261,
+     "pan": 0.0,
+     "shot": "V07",
+     "note": "切雨后书屋"
+    },
+    {
+     "hit_t": 12.65625,
+     "hit_frame": 759,
+     "start_t": 12.49125,
+     "bar": 7,
+     "beat": 4.0,
+     "sfx": "whoosh_whip",
+     "file": "sfx/whoosh_whip.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.239,
+     "pan": 0.0,
+     "shot": "V07",
+     "note": "切蓝调晚庭"
+    },
+    {
+     "hit_t": 13.125,
+     "hit_frame": 788,
+     "start_t": 13.125,
+     "bar": 8,
+     "beat": 1.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.2,
+     "shot": "V08",
+     "note": "合成 嫩芽 4"
+    },
+    {
+     "hit_t": 13.359375,
+     "hit_frame": 802,
+     "start_t": 13.359375,
+     "bar": 8,
+     "beat": 1.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": -0.2,
+     "shot": "V08",
+     "note": "合成 小萝卜 8"
+    },
+    {
+     "hit_t": 13.59375,
+     "hit_frame": 816,
+     "start_t": 13.59375,
+     "bar": 8,
+     "beat": 2.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.2,
+     "shot": "V08",
+     "note": "合成 草莓 16"
+    },
+    {
+     "hit_t": 13.828125,
+     "hit_frame": 830,
+     "start_t": 13.828125,
+     "bar": 8,
+     "beat": 2.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": -0.2,
+     "shot": "V08",
+     "note": "合成 蓝莓 32"
+    },
+    {
+     "hit_t": 14.0625,
+     "hit_frame": 844,
+     "start_t": 14.0625,
+     "bar": 8,
+     "beat": 3.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.2,
+     "shot": "V08",
+     "note": "合成 荔枝 64"
+    },
+    {
+     "hit_t": 14.296875,
+     "hit_frame": 858,
+     "start_t": 14.296875,
+     "bar": 8,
+     "beat": 3.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": -0.2,
+     "shot": "V08",
+     "note": "合成 萝卜篮 128"
+    },
+    {
+     "hit_t": 14.53125,
+     "hit_frame": 872,
+     "start_t": 14.53125,
+     "bar": 8,
+     "beat": 4.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.2,
+     "shot": "V08",
+     "note": "合成 草莓篮 256"
+    },
+    {
+     "hit_t": 14.765625,
+     "hit_frame": 886,
+     "start_t": 14.765625,
+     "bar": 8,
+     "beat": 4.5,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": -0.2,
+     "shot": "V08",
+     "note": "合成 蓝莓篮 512"
+    },
+    {
+     "hit_t": 15.0,
+     "hit_frame": 900,
+     "start_t": 15.0,
+     "bar": 9,
+     "beat": 1.0,
+     "sfx": "tile_clack",
+     "file": "sfx/tile_clack.wav",
+     "gain_in_mix": 0.96,
+     "remotion_volume_over_music_only": 0.105,
+     "pan": 0.2,
+     "shot": "V08",
+     "note": "合成 荔枝篮 1024"
+    },
+    {
+     "hit_t": 15.9375,
+     "hit_frame": 956,
+     "start_t": 15.9375,
+     "bar": 9,
+     "beat": 3.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 1.04,
+     "remotion_volume_over_music_only": 0.271,
+     "pan": 0.0,
+     "shot": "V08",
+     "note": "彩纸爆发"
+    },
+    {
+     "hit_t": 16.875,
+     "hit_frame": 1013,
+     "start_t": 16.875,
+     "bar": 10,
+     "beat": 1.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.279,
+     "pan": 0.0,
+     "shot": "V09",
+     "note": "点「布置湖畔野餐角 →」"
+    },
+    {
+     "hit_t": 17.109375,
+     "hit_frame": 1027,
+     "start_t": 17.109375,
+     "bar": 10,
+     "beat": 1.5,
+     "sfx": "success",
+     "file": "sfx/success.wav",
+     "gain_in_mix": 0.77,
+     "remotion_volume_over_music_only": 0.212,
+     "pan": 0.0,
+     "shot": "V09",
+     "note": "建好啦"
+    },
+    {
+     "hit_t": 17.34375,
+     "hit_frame": 1041,
+     "start_t": 17.34375,
+     "bar": 10,
+     "beat": 2.0,
+     "sfx": "build_thud_1",
+     "file": "sfx/build_thud_1.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.19,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 17.460938,
+     "hit_frame": 1048,
+     "start_t": 17.460938,
+     "bar": 10,
+     "beat": 2.25,
+     "sfx": "build_thud_2",
+     "file": "sfx/build_thud_2.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.163,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 17.578125,
+     "hit_frame": 1055,
+     "start_t": 17.578125,
+     "bar": 10,
+     "beat": 2.5,
+     "sfx": "build_thud_3",
+     "file": "sfx/build_thud_3.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.168,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 17.695312,
+     "hit_frame": 1062,
+     "start_t": 17.695312,
+     "bar": 10,
+     "beat": 2.75,
+     "sfx": "build_thud_4",
+     "file": "sfx/build_thud_4.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.189,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 17.8125,
+     "hit_frame": 1069,
+     "start_t": 17.8125,
+     "bar": 10,
+     "beat": 3.0,
+     "sfx": "build_thud_5",
+     "file": "sfx/build_thud_5.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.16,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 17.929688,
+     "hit_frame": 1076,
+     "start_t": 17.929688,
+     "bar": 10,
+     "beat": 3.25,
+     "sfx": "build_thud_6",
+     "file": "sfx/build_thud_6.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.163,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.046875,
+     "hit_frame": 1083,
+     "start_t": 18.046875,
+     "bar": 10,
+     "beat": 3.5,
+     "sfx": "build_thud_7",
+     "file": "sfx/build_thud_7.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.176,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.164062,
+     "hit_frame": 1090,
+     "start_t": 18.164062,
+     "bar": 10,
+     "beat": 3.75,
+     "sfx": "build_thud_8",
+     "file": "sfx/build_thud_8.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.195,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.28125,
+     "hit_frame": 1097,
+     "start_t": 18.28125,
+     "bar": 10,
+     "beat": 4.0,
+     "sfx": "build_thud_9",
+     "file": "sfx/build_thud_9.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.167,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.398438,
+     "hit_frame": 1104,
+     "start_t": 18.398438,
+     "bar": 10,
+     "beat": 4.25,
+     "sfx": "build_thud_10",
+     "file": "sfx/build_thud_10.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.19,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.515625,
+     "hit_frame": 1111,
+     "start_t": 18.515625,
+     "bar": 10,
+     "beat": 4.5,
+     "sfx": "build_thud_11",
+     "file": "sfx/build_thud_11.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.167,
+     "pan": 0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.632812,
+     "hit_frame": 1118,
+     "start_t": 18.632812,
+     "bar": 10,
+     "beat": 4.75,
+     "sfx": "build_thud_12",
+     "file": "sfx/build_thud_12.wav",
+     "gain_in_mix": 0.864,
+     "remotion_volume_over_music_only": 0.182,
+     "pan": -0.3,
+     "shot": "V09",
+     "note": "野餐角逐行搭建"
+    },
+    {
+     "hit_t": 18.75,
+     "hit_frame": 1125,
+     "start_t": 18.63,
+     "bar": 11,
+     "beat": 1.0,
+     "sfx": "page_flip",
+     "file": "sfx/page_flip.wav",
+     "gain_in_mix": 0.84,
+     "remotion_volume_over_music_only": 0.163,
+     "pan": 0.0,
+     "shot": "V10",
+     "note": "展开本页大纲"
+    },
+    {
+     "hit_t": 19.21875,
+     "hit_frame": 1153,
+     "start_t": 19.21875,
+     "bar": 11,
+     "beat": 2.0,
+     "sfx": "chime3_A",
+     "file": "sfx/chime3_A.wav",
+     "gain_in_mix": 0.66,
+     "remotion_volume_over_music_only": 0.098,
+     "pan": 0.0,
+     "shot": "V10",
+     "note": "点标题跳转"
+    },
+    {
+     "hit_t": 19.6875,
+     "hit_frame": 1181,
+     "start_t": 19.6175,
+     "bar": 11,
+     "beat": 3.0,
+     "sfx": "select_swish",
+     "file": "sfx/select_swish.wav",
+     "gain_in_mix": 0.9,
+     "remotion_volume_over_music_only": 0.122,
+     "pan": 0.0,
+     "shot": "V10",
+     "note": "选中一句"
+    },
+    {
+     "hit_t": 20.15625,
+     "hit_frame": 1209,
+     "start_t": 20.15625,
+     "bar": 11,
+     "beat": 4.0,
+     "sfx": "click",
+     "file": "sfx/click.wav",
+     "gain_in_mix": 1.19,
+     "remotion_volume_over_music_only": 0.279,
+     "pan": 0.0,
+     "shot": "V10",
+     "note": "点「加入学习待办」"
+    },
+    {
+     "hit_t": 20.493437,
+     "hit_frame": 1230,
+     "start_t": 20.268437,
+     "bar": 11,
+     "beat": 4.7193,
+     "sfx": "paper_whoosh",
+     "file": "sfx/paper_whoosh.wav",
+     "gain_in_mix": 0.84,
+     "remotion_volume_over_music_only": 0.145,
+     "pan": 0.0,
+     "shot": "V10",
+     "note": "纸条飞出"
+    },
+    {
+     "hit_t": 20.625,
+     "hit_frame": 1238,
+     "start_t": 20.625,
+     "bar": 12,
+     "beat": 1.0,
+     "sfx": "diag_ok",
+     "file": "sfx/diag_ok.wav",
+     "gain_in_mix": 1.105,
+     "remotion_volume_over_music_only": 0.159,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "区域判定 ✓"
+    },
+    {
+     "hit_t": 21.09375,
+     "hit_frame": 1266,
+     "start_t": 21.09375,
+     "bar": 12,
+     "beat": 2.0,
+     "sfx": "diag_fail",
+     "file": "sfx/diag_fail.wav",
+     "gain_in_mix": 1.275,
+     "remotion_volume_over_music_only": 0.164,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "互联网 ✗"
+    },
+    {
+     "hit_t": 21.5625,
+     "hit_frame": 1294,
+     "start_t": 21.5625,
+     "bar": 12,
+     "beat": 3.0,
+     "sfx": "diag_ok",
+     "file": "sfx/diag_ok.wav",
+     "gain_in_mix": 1.105,
+     "remotion_volume_over_music_only": 0.159,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "教学区门户 ✓"
+    },
+    {
+     "hit_t": 22.03125,
+     "hit_frame": 1322,
+     "start_t": 22.03125,
+     "bar": 12,
+     "beat": 4.0,
+     "sfx": "diag_neutral",
+     "file": "sfx/diag_neutral.wav",
+     "gain_in_mix": 1.36,
+     "remotion_volume_over_music_only": 0.086,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "宿舍区门户 ·"
+    },
+    {
+     "hit_t": 22.5,
+     "hit_frame": 1350,
+     "start_t": 22.5,
+     "bar": 13,
+     "beat": 1.0,
+     "sfx": "connect_success",
+     "file": "sfx/connect_success.wav",
+     "gain_in_mix": 0.91,
+     "remotion_volume_over_music_only": 0.251,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "当前网络出口已在线"
+    },
+    {
+     "hit_t": 22.96875,
+     "hit_frame": 1378,
+     "start_t": 22.96875,
+     "bar": 13,
+     "beat": 2.0,
+     "sfx": "signal_on_1",
+     "file": "sfx/signal_on_1.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.097,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "信号柱第 1 根亮起"
+    },
+    {
+     "hit_t": 23.085938,
+     "hit_frame": 1385,
+     "start_t": 23.085938,
+     "bar": 13,
+     "beat": 2.25,
+     "sfx": "signal_on_2",
+     "file": "sfx/signal_on_2.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.097,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "信号柱第 2 根亮起"
+    },
+    {
+     "hit_t": 23.203125,
+     "hit_frame": 1392,
+     "start_t": 23.203125,
+     "bar": 13,
+     "beat": 2.5,
+     "sfx": "signal_on_3",
+     "file": "sfx/signal_on_3.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.097,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "信号柱第 3 根亮起"
+    },
+    {
+     "hit_t": 23.320312,
+     "hit_frame": 1399,
+     "start_t": 23.320312,
+     "bar": 13,
+     "beat": 2.75,
+     "sfx": "signal_on_4",
+     "file": "sfx/signal_on_4.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.097,
+     "pan": 0.0,
+     "shot": "V11",
+     "note": "信号柱第 4 根亮起"
+    },
+    {
+     "hit_t": 24.375,
+     "hit_frame": 1463,
+     "start_t": 24.375,
+     "bar": 14,
+     "beat": 1.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": -0.4,
+     "shot": "V12",
+     "note": "数据只存本机"
+    },
+    {
+     "hit_t": 24.84375,
+     "hit_frame": 1491,
+     "start_t": 24.84375,
+     "bar": 14,
+     "beat": 2.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.0,
+     "shot": "V12",
+     "note": "没有遥测"
+    },
+    {
+     "hit_t": 25.3125,
+     "hit_frame": 1519,
+     "start_t": 25.3125,
+     "bar": 14,
+     "beat": 3.0,
+     "sfx": "badge_slam",
+     "file": "sfx/badge_slam.wav",
+     "gain_in_mix": 0.75,
+     "remotion_volume_over_music_only": 0.161,
+     "pan": 0.4,
+     "shot": "V12",
+     "note": "开源 MIT"
+    },
+    {
+     "hit_t": 26.25,
+     "hit_frame": 1575,
+     "start_t": 26.25,
+     "bar": 15,
+     "beat": 1.0,
+     "sfx": "sparkle_burst",
+     "file": "sfx/sparkle_burst.wav",
+     "gain_in_mix": 0.78,
+     "remotion_volume_over_music_only": 0.203,
+     "pan": 0.0,
+     "shot": "V13",
+     "note": "logo 弹出"
+    },
+    {
+     "hit_t": 28.175,
+     "hit_frame": 1691,
+     "start_t": 27.935,
+     "bar": 16,
+     "beat": 1.1067,
+     "sfx": "whoosh_up",
+     "file": "sfx/whoosh_up.wav",
+     "gain_in_mix": 0.585,
+     "remotion_volume_over_music_only": 0.125,
+     "pan": 0.0,
+     "shot": "V13",
+     "note": "下载牌滑入"
+    },
+    {
+     "hit_t": 28.359375,
+     "hit_frame": 1702,
+     "start_t": 28.359375,
+     "bar": 16,
+     "beat": 1.5,
+     "sfx": "pop",
+     "file": "sfx/pop.wav",
+     "gain_in_mix": 0.715,
+     "remotion_volume_over_music_only": 0.16,
+     "pan": 0.3,
+     "shot": "V13",
+     "note": "荔宝气泡"
+    }
+   ],
+   "silences": [
+    {
+     "start_s": 11.015625,
+     "end_s": 11.25,
+     "start_frame": 661,
+     "end_frame": 675,
+     "note": "数字静音（样本全 0）"
+    }
+   ],
+   "tape_stops": [
+    {
+     "start_s": 15.46875,
+     "end_s": 15.9375
+    }
+   ],
+   "ending": {
+    "fade_out_s": [
+     29.5,
+     30.0
+    ],
+    "note": "v2：最后一小节拍 1 收尾 hit + 金币「叮」后不留持续音，混响尾巴叠加 dB 线性释放（hit+0.3 s 起，到结束前 0.1 s 共 -26 dB），59.9 s / 29.9 s 前 ≤ -40 dBFS；最后 0.5 s 余弦淡出只作保险，最后一个样本为 0；画面保持到结束、不淡黑"
+   }
+  }
+ },
+ "sfx_library": [
+  {
+   "name": "coin",
+   "file": "sfx/coin.wav",
+   "group": "reward",
+   "desc": "金币 blip：方波 B5→E6（55 ms + 450 ms 衰减）",
+   "duration_s": 0.525,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_1",
+   "file": "sfx/coin_tinkle_1.wav",
+   "group": "reward",
+   "desc": "金币叮当（E6，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_2",
+   "file": "sfx/coin_tinkle_2.wav",
+   "group": "reward",
+   "desc": "金币叮当（F#6，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_3",
+   "file": "sfx/coin_tinkle_3.wav",
+   "group": "reward",
+   "desc": "金币叮当（A6，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_4",
+   "file": "sfx/coin_tinkle_4.wav",
+   "group": "reward",
+   "desc": "金币叮当（B6，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_5",
+   "file": "sfx/coin_tinkle_5.wav",
+   "group": "reward",
+   "desc": "金币叮当（D7，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_tinkle_6",
+   "file": "sfx/coin_tinkle_6.wav",
+   "group": "reward",
+   "desc": "金币叮当（E7，三角波+12.5% 脉冲，160 ms）",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "coin_chord",
+   "file": "sfx/coin_chord.wav",
+   "group": "reward",
+   "desc": "金币和弦：方波 D6 F#6 A6 D7 64 分琶音 + FM 铃 + 金币",
+   "duration_s": 1.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "ding",
+   "file": "sfx/ding.wav",
+   "group": "reward",
+   "desc": "结尾金币「叮」：金币 + E6/B6 长尾铃",
+   "duration_s": 2.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "pop",
+   "file": "sfx/pop.wav",
+   "group": "ui",
+   "desc": "气泡 pop：正弦上滑 320→1150 Hz",
+   "duration_s": 0.2,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "click",
+   "file": "sfx/click.wav",
+   "group": "ui",
+   "desc": "点击：带通噪声 + 2 kHz 衰减正弦 + 330 Hz 低频体",
+   "duration_s": 0.08,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "key_tick_1",
+   "file": "sfx/key_tick_1.wav",
+   "group": "ui",
+   "desc": "键盘 tick（4 个随机变体，轮换使用）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "key_tick_2",
+   "file": "sfx/key_tick_2.wav",
+   "group": "ui",
+   "desc": "键盘 tick（4 个随机变体，轮换使用）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "key_tick_3",
+   "file": "sfx/key_tick_3.wav",
+   "group": "ui",
+   "desc": "键盘 tick（4 个随机变体，轮换使用）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "key_tick_4",
+   "file": "sfx/key_tick_4.wav",
+   "group": "ui",
+   "desc": "键盘 tick（4 个随机变体，轮换使用）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "hover_tick",
+   "file": "sfx/hover_tick.wav",
+   "group": "ui",
+   "desc": "光标划过的轻 tick",
+   "duration_s": 0.08,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scroll_tick_1",
+   "file": "sfx/scroll_tick_1.wav",
+   "group": "ui",
+   "desc": "滚轮 tick（D6，逐档升高）",
+   "duration_s": 0.09,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scroll_tick_2",
+   "file": "sfx/scroll_tick_2.wav",
+   "group": "ui",
+   "desc": "滚轮 tick（E6，逐档升高）",
+   "duration_s": 0.09,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scroll_tick_3",
+   "file": "sfx/scroll_tick_3.wav",
+   "group": "ui",
+   "desc": "滚轮 tick（F#6，逐档升高）",
+   "duration_s": 0.09,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scroll_tick_4",
+   "file": "sfx/scroll_tick_4.wav",
+   "group": "ui",
+   "desc": "滚轮 tick（A6，逐档升高）",
+   "duration_s": 0.09,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scroll_tick_5",
+   "file": "sfx/scroll_tick_5.wav",
+   "group": "ui",
+   "desc": "滚轮 tick（B6，逐档升高）",
+   "duration_s": 0.09,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "clock_tick_1",
+   "file": "sfx/clock_tick_1.wav",
+   "group": "ui",
+   "desc": "时钟 tick（1→4 越来越亮）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "clock_tick_2",
+   "file": "sfx/clock_tick_2.wav",
+   "group": "ui",
+   "desc": "时钟 tick（1→4 越来越亮）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "clock_tick_3",
+   "file": "sfx/clock_tick_3.wav",
+   "group": "ui",
+   "desc": "时钟 tick（1→4 越来越亮）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "clock_tick_4",
+   "file": "sfx/clock_tick_4.wav",
+   "group": "ui",
+   "desc": "时钟 tick（1→4 越来越亮）",
+   "duration_s": 0.07,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "menu_open",
+   "file": "sfx/menu_open.wav",
+   "group": "ui",
+   "desc": "菜单展开：点击 + 方波 A5→D6",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "pat_chime",
+   "file": "sfx/pat_chime.wav",
+   "group": "ui",
+   "desc": "摸摸头：三角波 D6 F#6 A6 上行 + 爱心闪光",
+   "duration_s": 0.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "sparkle",
+   "file": "sfx/sparkle.wav",
+   "group": "ui",
+   "desc": "闪光：五声音阶高音粒子",
+   "duration_s": 0.76,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "sparkle_burst",
+   "file": "sfx/sparkle_burst.wav",
+   "group": "ui",
+   "desc": "粒子爆发：闪光 + 多个小 pop",
+   "duration_s": 1.216,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "bloop_D5",
+   "file": "sfx/bloop_D5.wav",
+   "group": "ui",
+   "desc": "换伙伴 bloop（D5，像素化 6-bit）",
+   "duration_s": 0.28,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "bloop_Fs5",
+   "file": "sfx/bloop_Fs5.wav",
+   "group": "ui",
+   "desc": "换伙伴 bloop（F#5，像素化 6-bit）",
+   "duration_s": 0.28,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "bloop_A5",
+   "file": "sfx/bloop_A5.wav",
+   "group": "ui",
+   "desc": "换伙伴 bloop（A5，像素化 6-bit）",
+   "duration_s": 0.28,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_whip",
+   "file": "sfx/whoosh_whip.wav",
+   "group": "whoosh",
+   "desc": "甩镜 whoosh（左→右，落点在 55%）",
+   "duration_s": 0.32,
+   "hit_offset_s": 0.165,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_soft",
+   "file": "sfx/whoosh_soft.wav",
+   "group": "whoosh",
+   "desc": "柔和 whoosh（窗口飞入）",
+   "duration_s": 0.47,
+   "hit_offset_s": 0.18,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_drag",
+   "file": "sfx/whoosh_drag.wav",
+   "group": "whoosh",
+   "desc": "拖动 whoosh（0.94 s，向右下）",
+   "duration_s": 0.96,
+   "hit_offset_s": 0.47,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_inhale",
+   "file": "sfx/whoosh_inhale.wav",
+   "group": "whoosh",
+   "desc": "吸入 whoosh（反向镲 + 上行噪声，落点在末尾）",
+   "duration_s": 0.4888,
+   "hit_offset_s": 0.4688,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_zoom",
+   "file": "sfx/whoosh_zoom.wav",
+   "group": "whoosh",
+   "desc": "冲镜头 whoosh（带音高）",
+   "duration_s": 0.44,
+   "hit_offset_s": 0.3024,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_down",
+   "file": "sfx/whoosh_down.wav",
+   "group": "whoosh",
+   "desc": "下摇 whoosh（高→低）",
+   "duration_s": 0.44,
+   "hit_offset_s": 0.168,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_up",
+   "file": "sfx/whoosh_up.wav",
+   "group": "whoosh",
+   "desc": "上滑 whoosh（低→高）",
+   "duration_s": 0.42,
+   "hit_offset_s": 0.24,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_pullback",
+   "file": "sfx/whoosh_pullback.wav",
+   "group": "whoosh",
+   "desc": "急速后拉 whoosh（0.9 s）",
+   "duration_s": 0.92,
+   "hit_offset_s": 0.108,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "whoosh_pair",
+   "file": "sfx/whoosh_pair.wav",
+   "group": "whoosh",
+   "desc": "两扇窗对向飞入并交汇（落点 = 交汇）",
+   "duration_s": 0.84,
+   "hit_offset_s": 0.399,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "paper_whoosh",
+   "file": "sfx/paper_whoosh.wav",
+   "group": "whoosh",
+   "desc": "纸条飞出 whoosh",
+   "duration_s": 0.52,
+   "hit_offset_s": 0.225,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "select_swish",
+   "file": "sfx/select_swish.wav",
+   "group": "whoosh",
+   "desc": "选中文字 swish",
+   "duration_s": 0.22,
+   "hit_offset_s": 0.07,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "fall_whistle",
+   "file": "sfx/fall_whistle.wav",
+   "group": "foley",
+   "desc": "下落哨音 1900→420 Hz（0.2375 s，落点在末尾）",
+   "duration_s": 0.2575,
+   "hit_offset_s": 0.2375,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "hop",
+   "file": "sfx/hop.wav",
+   "group": "foley",
+   "desc": "伙伴跳起 boing",
+   "duration_s": 0.16,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "thump",
+   "file": "sfx/thump.wav",
+   "group": "foley",
+   "desc": "低频落地 thump",
+   "duration_s": 0.34,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "land_soft",
+   "file": "sfx/land_soft.wav",
+   "group": "foley",
+   "desc": "轻落地",
+   "duration_s": 0.34,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "dust",
+   "file": "sfx/dust.wav",
+   "group": "foley",
+   "desc": "像素尘 puff",
+   "duration_s": 0.34,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "water",
+   "file": "sfx/water.wav",
+   "group": "foley",
+   "desc": "浇水：调制带通噪声 + 6 颗水滴",
+   "duration_s": 0.77,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "notify",
+   "file": "sfx/notify.wav",
+   "group": "ui",
+   "desc": "提示音：FM 铃 A5 → E6",
+   "duration_s": 1.22,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "success",
+   "file": "sfx/success.wav",
+   "group": "ui",
+   "desc": "成功音：脉冲波 D5 F#5 A5 D6 + D6 铃",
+   "duration_s": 1.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "harvest_pop",
+   "file": "sfx/harvest_pop.wav",
+   "group": "reward",
+   "desc": "收获 pop：大 pop + 木质 thock + G5 B5 D6 G6 小琶音",
+   "duration_s": 0.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "flip_1",
+   "file": "sfx/flip_1.wav",
+   "group": "ui",
+   "desc": "卡片翻转 fwip",
+   "duration_s": 0.13,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "flip_2",
+   "file": "sfx/flip_2.wav",
+   "group": "ui",
+   "desc": "卡片翻转 fwip",
+   "duration_s": 0.13,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "flip_3",
+   "file": "sfx/flip_3.wav",
+   "group": "ui",
+   "desc": "卡片翻转 fwip",
+   "duration_s": 0.13,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "flip_4",
+   "file": "sfx/flip_4.wav",
+   "group": "ui",
+   "desc": "卡片翻转 fwip",
+   "duration_s": 0.13,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_1",
+   "file": "sfx/build_thud_1.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_2",
+   "file": "sfx/build_thud_2.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_3",
+   "file": "sfx/build_thud_3.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_4",
+   "file": "sfx/build_thud_4.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_5",
+   "file": "sfx/build_thud_5.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_6",
+   "file": "sfx/build_thud_6.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_7",
+   "file": "sfx/build_thud_7.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_8",
+   "file": "sfx/build_thud_8.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_9",
+   "file": "sfx/build_thud_9.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_10",
+   "file": "sfx/build_thud_10.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_11",
+   "file": "sfx/build_thud_11.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "build_thud_12",
+   "file": "sfx/build_thud_12.wav",
+   "group": "foley",
+   "desc": "搭建「咚」（G3 起五声音阶逐个升高）",
+   "duration_s": 0.24,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "tile_clack",
+   "file": "sfx/tile_clack.wav",
+   "group": "foley",
+   "desc": "2048 棋子相撞 clack",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "page_flip",
+   "file": "sfx/page_flip.wav",
+   "group": "foley",
+   "desc": "翻页",
+   "duration_s": 0.34,
+   "hit_offset_s": 0.12,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "paper_land",
+   "file": "sfx/paper_land.wav",
+   "group": "foley",
+   "desc": "纸条落入",
+   "duration_s": 0.34,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "chime3",
+   "file": "sfx/chime3.wav",
+   "group": "ui",
+   "desc": "三音 chime：D6 F#6 A6（D 和弦）",
+   "duration_s": 1.6544,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "chime3_A",
+   "file": "sfx/chime3_A.wav",
+   "group": "ui",
+   "desc": "三音 chime：C#6 E6 A6（A 和弦）",
+   "duration_s": 1.6544,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "glitch",
+   "file": "sfx/glitch.wav",
+   "group": "ui",
+   "desc": "故障转场：4-bit 断续方波 + LFSR 噪声（落点在末尾）",
+   "duration_s": 0.16,
+   "hit_offset_s": 0.14,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "power_down",
+   "file": "sfx/power_down.wav",
+   "group": "music",
+   "desc": "断电：Bm 和弦 2.6 个八度下滑 + 递增 bitcrush",
+   "duration_s": 0.38,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_off_1",
+   "file": "sfx/signal_off_1.wav",
+   "group": "ui",
+   "desc": "信号柱熄灭（A5，下滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_off_2",
+   "file": "sfx/signal_off_2.wav",
+   "group": "ui",
+   "desc": "信号柱熄灭（F#5，下滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_off_3",
+   "file": "sfx/signal_off_3.wav",
+   "group": "ui",
+   "desc": "信号柱熄灭（D5，下滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_off_4",
+   "file": "sfx/signal_off_4.wav",
+   "group": "ui",
+   "desc": "信号柱熄灭（A4，下滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_on_1",
+   "file": "sfx/signal_on_1.wav",
+   "group": "ui",
+   "desc": "信号柱亮起（D5，上滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_on_2",
+   "file": "sfx/signal_on_2.wav",
+   "group": "ui",
+   "desc": "信号柱亮起（F#5，上滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_on_3",
+   "file": "sfx/signal_on_3.wav",
+   "group": "ui",
+   "desc": "信号柱亮起（A5，上滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "signal_on_4",
+   "file": "sfx/signal_on_4.wav",
+   "group": "ui",
+   "desc": "信号柱亮起（D6，上滑）",
+   "duration_s": 0.14,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "diag_ok",
+   "file": "sfx/diag_ok.wav",
+   "group": "ui",
+   "desc": "诊断 ✓：A5→E6 上行双音",
+   "duration_s": 0.47,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "diag_fail",
+   "file": "sfx/diag_fail.wav",
+   "group": "ui",
+   "desc": "诊断 ✗：低频双 buzz",
+   "duration_s": 0.38,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "diag_neutral",
+   "file": "sfx/diag_neutral.wav",
+   "group": "ui",
+   "desc": "诊断 ·：中性 F#5 blip",
+   "duration_s": 0.18,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "scan_sweep",
+   "file": "sfx/scan_sweep.wav",
+   "group": "ui",
+   "desc": "区域扫描 sweep 420→2600 Hz",
+   "duration_s": 0.47,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "connect_success",
+   "file": "sfx/connect_success.wav",
+   "group": "ui",
+   "desc": "上线成功（成功音 + pop）",
+   "duration_s": 1.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "badge_slam",
+   "file": "sfx/badge_slam.wav",
+   "group": "foley",
+   "desc": "徽章砸下：thump + clack + 双侧像素尘",
+   "duration_s": 0.54,
+   "hit_offset_s": 0.0,
+   "used_in_mix": true,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_1",
+   "file": "sfx/merge_1.wav",
+   "group": "music",
+   "desc": "2048 合并音 1（D5，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_2",
+   "file": "sfx/merge_2.wav",
+   "group": "music",
+   "desc": "2048 合并音 2（E5，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_3",
+   "file": "sfx/merge_3.wav",
+   "group": "music",
+   "desc": "2048 合并音 3（F#5，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_4",
+   "file": "sfx/merge_4.wav",
+   "group": "music",
+   "desc": "2048 合并音 4（A5，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_5",
+   "file": "sfx/merge_5.wav",
+   "group": "music",
+   "desc": "2048 合并音 5（B5，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_6",
+   "file": "sfx/merge_6.wav",
+   "group": "music",
+   "desc": "2048 合并音 6（D6，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_7",
+   "file": "sfx/merge_7.wav",
+   "group": "music",
+   "desc": "2048 合并音 7（E6，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_8",
+   "file": "sfx/merge_8.wav",
+   "group": "music",
+   "desc": "2048 合并音 8（F#6，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "merge_9",
+   "file": "sfx/merge_9.wav",
+   "group": "music",
+   "desc": "2048 合并音 9（A6，方波 + 芯片琶音起头）",
+   "duration_s": 0.36,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "levelup_2048",
+   "file": "sfx/levelup_2048.wav",
+   "group": "music",
+   "desc": "合成升级：9 个合并音串 + 最大冲击（落点 = 冲击）",
+   "duration_s": 4.6747,
+   "hit_offset_s": 1.114688,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "impact",
+   "file": "sfx/impact.wav",
+   "group": "music",
+   "desc": "冲击：31–91 Hz 下滑 boom + 扫频噪声 + LFSR crunch",
+   "duration_s": 3.22,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "impact_max",
+   "file": "sfx/impact_max.wav",
+   "group": "music",
+   "desc": "最大冲击：大 boom + 硬底鼓 + 镲 + D 大和弦 stab",
+   "duration_s": 3.62,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "riser_2beat",
+   "file": "sfx/riser_2beat.wav",
+   "group": "music",
+   "desc": "riser 2 拍：带通噪声上扫 + 失谐锯齿 D3→D5（落点在末尾）",
+   "duration_s": 0.9575,
+   "hit_offset_s": 0.9375,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "riser_1bar",
+   "file": "sfx/riser_1bar.wav",
+   "group": "music",
+   "desc": "riser 1 小节（落点在末尾）",
+   "duration_s": 1.895,
+   "hit_offset_s": 1.875,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "reverse_cymbal",
+   "file": "sfx/reverse_cymbal.wav",
+   "group": "music",
+   "desc": "反向镲 1 拍（落点在末尾）",
+   "duration_s": 0.4888,
+   "hit_offset_s": 0.46875,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  },
+  {
+   "name": "horn_harvest",
+   "file": "sfx/horn_harvest.wav",
+   "group": "music",
+   "desc": "收获号角 D5–G5–B5",
+   "duration_s": 0.92,
+   "hit_offset_s": 0.0,
+   "used_in_mix": false,
+   "true_peak_dbtp": -1.5
+  }
+ ]
+}

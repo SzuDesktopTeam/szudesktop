@@ -1,0 +1,56 @@
+{
+  "key": "clip_scene_lake_v7",
+  "kind": "clip",
+  "file": "clip_scene_lake_v7.mp4",
+  "first": "clip_scene_lake_v7.first.png",
+  "last": "clip_scene_lake_v7.last.png",
+  "heroes": [
+    "clip_scene_lake_v7.f0000.png",
+    "clip_scene_lake_v7.f0032.png",
+    "clip_scene_lake_v7.f0063.png"
+  ],
+  "frameCount": 64,
+  "probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "nb_read_frames": "64"
+      }
+    ],
+    "format": {
+      "duration": "1.066667",
+      "size": "1487125"
+    }
+  },
+  "description": "v2 逐镜重渲：应用自带三渲二场景（home-scene-world.mjs skin='lake'），1080×1920，64 帧 60fps，上屏 1× 播放（无抽帧）。竖版 DROP：相机距离 1.16→0.80（easeOut），绕 Y 轴 -6°→+5°；world.update(2 + f/60) 真实时间。内部 2 倍超采样（2160,3840），其余管线同 cap-scenes.mjs。不含任何界面文字。",
+  "render": {
+    "skin": "lake",
+    "width": 1080,
+    "height": 1920,
+    "retreat": 1.55,
+    "fov": 39,
+    "target": [
+      -0.9,
+      1.65,
+      -2
+    ],
+    "position": [
+      18,
+      10.7,
+      23
+    ],
+    "frames": 64,
+    "fps": 60,
+    "internalScale": 2,
+    "internal": [
+      2160,
+      3840
+    ]
+  }
+}

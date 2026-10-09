@@ -1,0 +1,39 @@
+{
+  "key": "ui_note_desk",
+  "kind": "still",
+  "file": "ui_note_desk.png",
+  "description": "学习书屋 → 课程笔记整屏（书写模式，2x）：左为「我的课程书架」（全部笔记 / 高等数学 A / 数据结构 / 大学英语），中为页列表，右为「第三章 · 函数极限」课堂记录页。分层合成用的区域见 viewportRects。",
+  "viewportRects": {
+    "layout": {
+      "x": 209,
+      "y": 88.28125,
+      "width": 1182,
+      "height": 776.46875
+    },
+    "shelf": {
+      "x": 210,
+      "y": 89.28125,
+      "width": 210,
+      "height": 774.46875
+    },
+    "pages": {
+      "x": 420,
+      "y": 151.28125,
+      "width": 970,
+      "height": 712.46875
+    },
+    "paper": {
+      "x": 656,
+      "y": 167.28125,
+      "width": 718,
+      "height": 680.46875
+    },
+    "textarea": {
+      "x": 703,
+      "y": 443.359375,
+      "width": 624,
+      "height": 345
+    }
+  },
+  "scrollY": 356
+}

@@ -1,0 +1,12 @@
+{
+  "key": "ui_focus_week",
+  "kind": "still",
+  "file": "ui_focus_week.png",
+  "description": "「这一周，慢慢积累」卡片区域截图（2x）：近 7 天 25 / 45 / 30 / 25 / — / 50 / 25 分钟（最后一根是刚领取的今天），合计 200 分钟。",
+  "clipCss": {
+    "x": 201,
+    "y": 265.8125,
+    "width": 1198,
+    "height": 447.390625
+  }
+}
