@@ -34,15 +34,138 @@ func TestReleaseChannels(t *testing.T) {
 	if err != nil || result.Version != "beta0.10.0" || !result.Prerelease || result.URL != releasesPage+"beta0.10.0" {
 		t.Fatalf("wrong beta result: %+v %v", result, err)
 	}
-	body = `{"tag_name":"v1.0.0","published_at":"2026-09-27","html_url":"https://evil.invalid"}`
-	result, _, err = fetchRelease(context.Background(), releaseClient(t, releasesAPI+"/latest", body, 200), "stable", "")
+	body = `[{"tag_name":"v1.0.0","published_at":"2026-09-27","html_url":"https://evil.invalid"}]`
+	result, _, err = fetchRelease(context.Background(), releaseClient(t, releasesAPI+"?per_page=10", body, 200), "stable", "")
 	if err != nil || result.Version != "v1.0.0" || result.Prerelease || result.URL != releasesPage+"v1.0.0" {
 		t.Fatalf("wrong stable result: %+v %v", result, err)
 	}
 }
 
+// GitHub 的 Latest 可能是宣传素材归档；正式版渠道只能展示应用版本。
+func TestReleaseStableSkipsPromotionalArchive(t *testing.T) {
+	archive := `{"tag_name":"archive-promo-video-20261009","draft":false,"prerelease":false,"published_at":"2026-10-09T03:34:41Z"}`
+	for _, tc := range []struct {
+		name    string
+		body    string
+		version string
+	}{
+		{"no formal release", `[` + archive + `,{"tag_name":"beta0.9.7","prerelease":true,"published_at":"2026-10-04T21:42:31Z"}]`, ""},
+		{"earlier formal release", `[` + archive + `,{"tag_name":"beta99.0.0","prerelease":true,"published_at":"2026-10-08T00:00:00Z"},{"tag_name":"v1.0.0","prerelease":false,"published_at":"2026-10-07T00:00:00Z"}]`, "v1.0.0"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := &http.Client{Transport: releaseTransport(func(r *http.Request) (*http.Response, error) {
+				if r.Method != http.MethodGet || r.Header.Get("Cookie") != "" || r.Header.Get("Authorization") != "" {
+					t.Fatal("release lookup must remain a public GET")
+				}
+				body := tc.body
+				switch r.URL.String() {
+				case releasesAPI + "/latest":
+					body = archive
+				case releasesAPI + "?per_page=10":
+				default:
+					t.Fatalf("unexpected release endpoint: %s", r.URL)
+				}
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+			})}
+			result, _, err := fetchRelease(context.Background(), client, "stable", "")
+			if err != nil {
+				t.Fatalf("promotional archive must not break application lookup: %v", err)
+			}
+			if result.Version != tc.version || result.Available != (tc.version != "") || result.Prerelease {
+				t.Fatalf("wrong stable result: %+v", result)
+			}
+			if tc.version == "" && !strings.Contains(result.Message, "还没有正式版") {
+				t.Fatalf("missing formal release must be explicit: %+v", result)
+			}
+		})
+	}
+}
+
+func TestReleaseStableSearchesPastFullPages(t *testing.T) {
+	items := make([]githubRelease, 10)
+	for i := range items {
+		items[i] = githubRelease{TagName: fmt.Sprintf("beta0.9.%d", i), Prerelease: true, PublishedAt: "2026-10-09"}
+	}
+	fullPage, _ := json.Marshal(items)
+	formalPage := `[{"tag_name":"v1.0.0","published_at":"2026-10-08"}]`
+	for _, tc := range []struct {
+		name    string
+		channel string
+		pages   []string
+		version string
+		etag    string
+	}{
+		{"formal on second page", "stable", []string{string(fullPage), formalPage}, "v1.0.0", ""},
+		{"formal on third page", "stable", []string{string(fullPage), string(fullPage), formalPage}, "v1.0.0", ""},
+		{"no formal through final page", "stable", []string{string(fullPage), `[]`}, "", ""},
+		{"beta only reads first page", "beta", []string{string(fullPage)}, "beta0.9.9", `W/"list"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			requests := 0
+			client := &http.Client{Transport: releaseTransport(func(r *http.Request) (*http.Response, error) {
+				endpoint := releasesAPI + "?per_page=10"
+				if requests > 0 {
+					endpoint += fmt.Sprintf("&page=%d", requests+1)
+				}
+				if requests >= len(tc.pages) || r.URL.String() != endpoint || r.Header.Get("If-None-Match") != "" {
+					t.Fatalf("unexpected page request: %s ETag=%q", r.URL, r.Header.Get("If-None-Match"))
+				}
+				body := tc.pages[requests]
+				requests++
+				header := make(http.Header)
+				header.Set("ETag", `W/"list"`)
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: header}, nil
+			})}
+			info, etag, err := fetchRelease(context.Background(), client, tc.channel, "")
+			if err != nil || info.Version != tc.version || info.Available != (tc.version != "") || etag != tc.etag || requests != len(tc.pages) {
+				t.Fatalf("wrong paginated result: %+v ETag=%q requests=%d error=%v", info, etag, requests, err)
+			}
+			if tc.version == "" && !strings.Contains(info.Message, "还没有正式版") {
+				t.Fatalf("missing formal release must be explicit: %+v", info)
+			}
+		})
+	}
+}
+
+func TestReleaseStableRechecksLaterPages(t *testing.T) {
+	items := make([]githubRelease, 10)
+	for i := range items {
+		items[i] = githubRelease{TagName: fmt.Sprintf("beta0.9.%d", i), Prerelease: true, PublishedAt: "2026-10-09"}
+	}
+	fullPage, _ := json.Marshal(items)
+	formalVersion, requests := "v1.0.0", 0
+	client := &http.Client{Transport: releaseTransport(func(r *http.Request) (*http.Response, error) {
+		requests++
+		header := make(http.Header)
+		body := string(fullPage)
+		switch r.URL.String() {
+		case releasesAPI + "?per_page=10":
+			header.Set("ETag", `W/"unchanged-first-page"`)
+			if r.Header.Get("If-None-Match") != "" {
+				return &http.Response{StatusCode: http.StatusNotModified, Body: http.NoBody, Header: header}, nil
+			}
+		case releasesAPI + "?per_page=10&page=2":
+			body = fmt.Sprintf(`[{"tag_name":%q,"published_at":"2026-10-08"}]`, formalVersion)
+		default:
+			t.Fatalf("unexpected release endpoint: %s", r.URL)
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: header}, nil
+	})}
+	checker := releaseChecker{client: client}
+	if info, err := checker.check(context.Background(), "stable"); err != nil || info.Version != "v1.0.0" {
+		t.Fatalf("initial formal release: %+v %v", info, err)
+	}
+	entry := checker.entries["stable"]
+	entry.at = time.Now().Add(-releaseCacheTTL - time.Second)
+	checker.entries["stable"] = entry
+	formalVersion = "v1.1.0"
+	if info, err := checker.check(context.Background(), "stable"); err != nil || info.Version != "v1.1.0" || info.Stale || requests != 4 {
+		t.Fatalf("first-page 304 must not hide a later-page change: %+v requests=%d error=%v", info, requests, err)
+	}
+}
+
 func TestReleaseMissingAndFailures(t *testing.T) {
-	result, _, err := fetchRelease(context.Background(), releaseClient(t, releasesAPI+"/latest", `{}`, 404), "stable", "")
+	result, _, err := fetchRelease(context.Background(), releaseClient(t, releasesAPI+"?per_page=10", `{}`, 404), "stable", "")
 	if err != nil || result.Available || !strings.Contains(result.Message, "还没有正式版") {
 		t.Fatalf("no stable release must be explicit: %+v %v", result, err)
 	}
@@ -122,6 +245,52 @@ func TestReleaseCheckCachesAndRevalidates(t *testing.T) {
 	fresh.handleReleases(w, httptest.NewRequest("GET", "/api/releases?channel=beta", nil))
 	if w.Code != http.StatusBadGateway || strings.Contains(w.Body.String(), "rate limit") || !strings.Contains(w.Body.String(), `"ok":false`) {
 		t.Fatalf("uncached failure must be a safe JSON error: %d %s", w.Code, w.Body.String())
+	}
+}
+
+func TestReleaseCheckKeepsChannelsSeparate(t *testing.T) {
+	body := `[{"tag_name":"beta2.0.0","prerelease":true,"published_at":"2026-10-09"},{"tag_name":"v1.0.0","published_at":"2026-10-08"}]`
+	wantETags := []string{"", "", `W/"stable-v1"`, `W/"beta-v1"`}
+	requests := 0
+	client := &http.Client{Transport: releaseTransport(func(r *http.Request) (*http.Response, error) {
+		if r.URL.String() != releasesAPI+"?per_page=10" {
+			t.Fatalf("unexpected release endpoint: %s", r.URL)
+		}
+		if requests >= len(wantETags) || r.Header.Get("If-None-Match") != wantETags[requests] {
+			t.Fatalf("request %d used the wrong channel ETag: %q", requests, r.Header.Get("If-None-Match"))
+		}
+		header := make(http.Header)
+		status := http.StatusNotModified
+		if requests < 2 {
+			status = http.StatusOK
+			header.Set("ETag", wantETags[requests+2])
+		}
+		requests++
+		return &http.Response{StatusCode: status, Body: io.NopCloser(strings.NewReader(body)), Header: header}, nil
+	})}
+	checker := releaseChecker{client: client}
+	check := func(channel, version string) {
+		t.Helper()
+		info, err := checker.check(context.Background(), channel)
+		if err != nil || info.Channel != channel || !info.Available || info.Version != version || info.Stale {
+			t.Fatalf("wrong %s result: %+v %v", channel, info, err)
+		}
+	}
+	check("stable", "v1.0.0")
+	check("beta", "beta2.0.0")
+	check("stable", "v1.0.0")
+	check("beta", "beta2.0.0")
+	if requests != 2 {
+		t.Fatalf("fresh channel results must come from memory: %d requests", requests)
+	}
+	for channel, entry := range checker.entries {
+		entry.at = time.Now().Add(-releaseCacheTTL - time.Second)
+		checker.entries[channel] = entry
+	}
+	check("stable", "v1.0.0")
+	check("beta", "beta2.0.0")
+	if requests != 4 {
+		t.Fatalf("each expired channel must revalidate: %d requests", requests)
 	}
 }
 

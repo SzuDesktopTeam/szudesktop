@@ -183,7 +183,7 @@ const top=(template,label)=>template.find(item=>item.label===label);
 
 // ───────────── 学校与飞书窗口：onWindowMenu 拿到的就是 setMenu 用的那一份；报错文案只在 darwin 上改指向「页面」菜单 ─────────────
 const token='0123456789abcdef'.repeat(4);
-const profile=()=>({setPermissionRequestHandler(){},setPermissionCheckHandler(){},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}});
+const profile=()=>({setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async()=>{},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}});
 function officialWindowClass(){
   const windows=[];let loadResult=()=>Promise.resolve();
   class OfficialWindow extends EventEmitter {

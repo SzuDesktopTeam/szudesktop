@@ -14,10 +14,8 @@ import (
 // 别的网络的缓存不能跟着丢。
 func TestAttachAcIDCacheDropsRejectedCacheFromDisk(t *testing.T) {
 	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
-	key := netpref.Egress()
-	if key == "" {
-		t.Skip("这台机器取不到网关或本机地址，没法按网缓存 ac_id")
-	}
+	const host, clientIP = "http://127.0.0.1:1", "10.20.30.40"
+	key := netpref.CampusKey(host, clientIP)
 	const otherNet = "另一张网"
 	prefs := netpref.Load()
 	prefs.SetAcID(key, "5")
@@ -27,8 +25,9 @@ func TestAttachAcIDCacheDropsRejectedCacheFromDisk(t *testing.T) {
 	}
 
 	// 地址用不上：缓存命中时定 ac_id 不发任何请求。
-	c := portal.NewSrunClient("http://127.0.0.1:1", "123456", "not-real")
+	c := portal.NewSrunClient(host, "123456", "not-real")
 	attachAcIDCache(c, true)
+	c.SetLastAcID(c.AcIDCacheLookup(clientIP))
 	if id, source := c.ResolveAcIDWithSource(); id != "5" || source != portal.AcIDSourceCache {
 		t.Fatalf("应该先用这张网缓存的 5，实际 %q（%s）", id, source)
 	}
@@ -36,6 +35,9 @@ func TestAttachAcIDCacheDropsRejectedCacheFromDisk(t *testing.T) {
 		t.Fatal("没接 OnAcIDRejected：被拒的缓存会一直留在磁盘上")
 	}
 	c.OnAcIDRejected("5")
+	if id := c.AcIDCacheLookup(clientIP); id != "" {
+		t.Fatalf("下一次握手不能从内存重新读到被拒的缓存 %q", id)
+	}
 
 	got := netpref.Load()
 	if id := got.AcIDFor(key); id != "" {
@@ -49,6 +51,9 @@ func TestAttachAcIDCacheDropsRejectedCacheFromDisk(t *testing.T) {
 	manual := portal.NewSrunClient("http://127.0.0.1:1", "123456", "not-real")
 	manual.AcID = "9"
 	attachAcIDCache(manual, false)
+	if cached := manual.AcIDCacheLookup(clientIP); cached != "" {
+		t.Fatalf("manual choice must not read cached value %q", cached)
+	}
 	if id, source := manual.ResolveAcIDWithSource(); id != "9" || source != portal.AcIDSourceManual {
 		t.Fatalf("手动指定的编号说了算，实际 %q（%s）", id, source)
 	}

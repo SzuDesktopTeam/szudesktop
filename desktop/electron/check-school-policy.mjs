@@ -19,7 +19,7 @@ assert.doesNotMatch(window,/webSecurity:false|preload:|nodeIntegration:true|sand
 // account, rather than leave a previously imported person's session available.
 const requests=[];
 let responseStatus=400,responseMessage='请先在应用内的学校页面完成登录';
-const profile={setPermissionRequestHandler(){},setPermissionCheckHandler(){},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}};
+const profile={setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async()=>{},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}};
 // 学校会话只在内存里（没有 persist: 前缀），退出即失效。
 const fromPartition=(name,options)=>{assert.equal(name,'szu-official');assert.deepEqual(options,{cache:false});return profile;};
 const localApi=async(url,options)=>{
@@ -46,6 +46,29 @@ await assert.rejects(school.clear(),{message:responseMessage});
 assert.equal(requests.at(-1).url,'http://127.0.0.1:1234/api/academic/browser-session?scope=all');
 assert.equal(requests.at(-1).options.method,'DELETE');
 assert.equal(requests.at(-1).options.headers['X-SZU-Token'],token);
+// 学校窗口必须等直连配置生效后才导航；否则会跟随系统代理，和 Go 教务请求走不同出口。
+{
+  let releaseProxy,created=0;
+  const proxyCalls=[],navigated=[];
+  const directProfile={...profile,setProxy:config=>{proxyCalls.push(config);return new Promise(resolve=>{releaseProxy=resolve;});}};
+  class DirectWindow{
+    constructor(){created++;this.webContents=Object.assign(new EventEmitter(),{setWindowOpenHandler(){},getURL:()=>''});}
+    on(){}show(){}focus(){}isDestroyed(){return false;}setMenu(){}
+    loadURL(url){navigated.push(url);return Promise.resolve();}
+  }
+  const options={BrowserWindow:DirectWindow,Menu:{buildFromTemplate:value=>value},dialog:{showErrorBox(){throw Error('unexpected load error');}},session:{fromPartition:()=>directProfile}};
+  const directSchool=createSchoolWindows(()=>'http://127.0.0.1:1234',()=>token,options);
+  const opening=directSchool.open('undergrad');
+  assert.deepEqual(proxyCalls,[{mode:'direct'}]);
+  assert.equal(created,0,'do not create a school window before proxy setup completes');
+  assert.deepEqual(navigated,[]);
+  releaseProxy();await opening;
+  assert.deepEqual(navigated,[schoolTargets.undergrad]);
+  const failedSchool=createSchoolWindows(()=>'http://127.0.0.1:1234',()=>token,{...options,
+    session:{fromPartition:()=>({...profile,setProxy:async()=>{throw Error('proxy setup failed');}})}});
+  await assert.rejects(failedSchool.open('graduate'),/proxy setup failed/);
+  assert.equal(created,1,'failed proxy setup must not fall back to the inherited proxy');
+}
 // loadURL 被页面自身跳转或再次打开打断（ERR_ABORTED）时页面仍在加载，不能弹“无法打开”；
 // 真正的网络错误，以及被我们自己拦下的主框架重定向，仍要提示。
 {

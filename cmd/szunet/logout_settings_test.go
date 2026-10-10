@@ -103,10 +103,7 @@ func TestLogoutReusesLoginClientSettings(t *testing.T) {
 	})
 
 	t.Run("这张网缓存的 ac_id", func(t *testing.T) {
-		key := netpref.Egress()
-		if key == "" {
-			t.Skip("这台机器取不到网关或本机地址，没法按网缓存 ac_id")
-		}
+		key := netpref.CampusKey(srv.URL, "10.20.30.40")
 		dir := t.TempDir()
 		t.Setenv("SZUNET_CONFIG_DIR", dir)
 		prefs := netpref.Load()

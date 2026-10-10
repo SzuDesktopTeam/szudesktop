@@ -65,7 +65,7 @@ func TestCLIAdvicesKeepFlagHints(t *testing.T) {
 //
 // 以前掉线预判在 portal（Notes）和 diagnose（Advices）各写了一份：两个门户都通、
 // 但两种指纹都探不到时，Notes 说「掉线后按宿舍区处理」，Advices 却说「判不出来」。
-// 真掉线后 classify 判的是宿舍区，所以 Advices 是错的。
+// 现在无指纹时统一为未确认，不会仅凭页面可达就自动认证。
 // 这里把四个探测字段的 16 种组合全跑一遍，两边必须给出同一个结论。
 func TestFingerprintAdviceAgreesWithNotes(t *testing.T) {
 	for mask := range 16 {
@@ -103,11 +103,11 @@ func TestFingerprintAdviceAgreesWithNotes(t *testing.T) {
 	}
 }
 
-// TestNoFingerprintBothPortalsPredictsDorm 是上面那条规则里真踩过的那一格，单独钉死。
-func TestNoFingerprintBothPortalsPredictsDorm(t *testing.T) {
+// 页面响应不是协议指纹，诊断不能建议自动走宿舍区认证。
+func TestNoFingerprintBothPortalsRemainUnconfirmed(t *testing.T) {
 	d := &portal.DetectResult{InternetOK: true, Probed: true, DormPortalOK: true, TeachPortalOK: true}
 	advice := fingerprintAdvice(d, Options{})
-	if !strings.Contains(advice, "宿舍区") || strings.Contains(advice, "判不出") {
-		t.Fatalf("两个门户都通、没有指纹时，掉线后按宿舍区处理，建议却是 %q", advice)
+	if strings.Contains(advice, "宿舍区") || !strings.Contains(advice, "判不出") {
+		t.Fatalf("两个门户页面可达但没有协议指纹，建议应保持未确认，实际 %q", advice)
 	}
 }

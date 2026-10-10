@@ -303,18 +303,20 @@ func drcomClient(o *options, user, pass string) *portal.DrcomClient {
 
 // attachAcIDCache 让客户端复用上次这张网成功的 ac_id，成功后写回缓存。
 //
-// ac_id 跟着"插哪个墙口 / 走哪条线路"变，所以缓存键用出口标识（网关优先），
-// 而不是写死一个值。换网后缓存命中不了，客户端会自动重新发现；
-// 同一个网关后面换了接入点、缓存值被服务端拒掉时，客户端会通知这里删掉缓存，
-// 再重新发现一次。
+// 缓存键绑定本次握手返回的客户端 IP 和门户 origin；不信任旧网关键。
+// 同一学校出口的接入点仍可能变化，缓存被明确拒绝后删除该出口记录并重新发现一次。
 //
 // 只缓存"可信来源"的结果：猜出来的值不写盘（见 portal.AcIDSource），
 // 否则会把一次侥幸固化下来，下次在别的网络里继续用错值。
 func attachAcIDCache(c *portal.SrunClient) {
 	prefs := netpref.Load()
-	key := netpref.Egress()
-	if id := prefs.AcIDFor(key); id != "" {
-		c.SetLastAcID(id)
+	var key string
+	c.AcIDCacheLookup = func(clientIP string) string {
+		key = netpref.CampusKey(c.Host, clientIP)
+		if key != "" {
+			return prefs.AcIDFor(key)
+		}
+		return ""
 	}
 	c.OnAcIDResolved = func(id string) {
 		prefs.SetAcID(key, id)
@@ -344,7 +346,7 @@ func cmdLogout(args []string) {
 		res, err := logoutByZone(zone, &o, user, pass)
 		reportResult(res, err, zone, o.asJSON, o.verbose)
 	default:
-		fail(fmt.Errorf("不在校园网内，没有可注销的会话"))
+		fail(fmt.Errorf("未能确认校园网认证区域，尚未执行注销。请手动指定 --zone teaching 或 --zone dorm"))
 	}
 }
 

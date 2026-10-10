@@ -40,6 +40,10 @@ type SrunClient struct {
 	// 跳过缓存重新发现一次（见 Login）。
 	lastAcID string
 
+	// AcIDCacheLookup binds cached values to the client IP observed by this portal.
+	// It runs after each successful challenge, before selecting an ac_id.
+	AcIDCacheLookup func(clientIP string) string
+
 	// OnAcIDResolved 在自动发现出 ac_id 后回调，方便调用方持久化。
 	// 可以为 nil。
 	OnAcIDResolved func(acID string)
@@ -135,8 +139,12 @@ type srunUserInfo struct {
 // 是按设备登记会话的，一个账号可以挂多台，但一个出口 IP 仍然只认一个账号。
 // 撞上 ip_already_online 时，这是唯一能把情况说清楚的信息。
 func (c *SrunClient) Status() (*OnlineStatus, error) {
+	return c.statusContext(context.Background())
+}
+
+func (c *SrunClient) statusContext(ctx context.Context) (*OnlineStatus, error) {
 	u := fmt.Sprintf("%s/cgi-bin/rad_user_info?callback=_&_=%d", c.Host, time.Now().Unix())
-	body, err := c.get(u)
+	body, err := c.getContext(ctx, u)
 	if err != nil {
 		return nil, fmt.Errorf("查询在线状态失败: %w", err)
 	}
@@ -156,6 +164,9 @@ func (c *SrunClient) Status() (*OnlineStatus, error) {
 	}
 	if strings.TrimSpace(resp.Error) == "" {
 		return nil, fmt.Errorf("在线状态响应缺少有效的 error 字段")
+	}
+	if resp.Error != "ok" && resp.Error != "not_online" && resp.Error != "not_online_error" {
+		return nil, fmt.Errorf("在线状态响应包含未识别的 error 字段，暂不能确认认证状态")
 	}
 
 	return &OnlineStatus{
@@ -235,7 +246,12 @@ func parseOnlineDevices(detail string) []string {
 // 只重试这一种来源：手填的值用户说了算，网关跳转来的值本身就是权威，
 // 重试也换不出别的答案。
 func (c *SrunClient) Login() (*Result, error) {
-	res, acIDRejected, err := c.loginOnce()
+	return c.LoginContext(context.Background())
+}
+
+// LoginContext 让整个认证流程共用调用方的截止时间和取消信号。
+func (c *SrunClient) LoginContext(ctx context.Context) (*Result, error) {
+	res, acIDRejected, err := c.loginOnce(ctx)
 	if err != nil || res.OK || !acIDRejected || res.AcIDSource != string(AcIDSourceCache) {
 		return res, err
 	}
@@ -244,19 +260,22 @@ func (c *SrunClient) Login() (*Result, error) {
 	if c.OnAcIDRejected != nil {
 		c.OnAcIDRejected(stale)
 	}
-	// lastAcID 已清空，这次只会走跳转发现或兜底猜测，不会再回到缓存。
-	res, _, err = c.loginOnce()
+	// 拒绝回调先删除当前出口缓存，下一次握手重新绑定出口后再发现一次。
+	res, _, err = c.loginOnce(ctx)
 	return res, err
 }
 
 // loginOnce 发一次登录请求。acIDRejected 表示服务端明确说 ac_id 不对。
-func (c *SrunClient) loginOnce() (res *Result, acIDRejected bool, err error) {
-	token, ip, err := c.challenge()
+func (c *SrunClient) loginOnce(ctx context.Context) (res *Result, acIDRejected bool, err error) {
+	token, ip, err := c.challengeContext(ctx)
 	if err != nil {
 		return nil, false, err
 	}
 
-	acID, acIDSource := c.resolveAcIDWithSource()
+	acID, acIDSource := c.resolveAcIDWithSourceContext(ctx)
+	if err := ctx.Err(); err != nil {
+		return nil, false, err
+	}
 
 	pwd := crypto.HMACMD5Hex(c.Password, token)
 
@@ -294,7 +313,7 @@ func (c *SrunClient) loginOnce() (res *Result, acIDRejected bool, err error) {
 
 	// 查询串里有学号、{MD5} 摘要和加密后的用户信息：get 已经把错误里的地址
 	// 截掉了查询串，响应正文里出现这几样时也整段不给出；这里再兜一次底。
-	body, err := c.get(c.Host+"/cgi-bin/srun_portal?"+q.Encode(), c.Password, pwd, info)
+	body, err := c.getContext(ctx, c.Host+"/cgi-bin/srun_portal?"+q.Encode(), c.Password, pwd, info)
 	if err != nil {
 		return nil, false, scrubSecrets(fmt.Errorf("发送登录请求失败: %w", err), c.Password, pwd, info)
 	}
@@ -329,9 +348,13 @@ func (c *SrunClient) loginOnce() (res *Result, acIDRejected bool, err error) {
 	// 下次在别的网络里拿着错值去认证，反而更难查。
 	if resp.Error == "ok" {
 		if strings.Contains(resp.SucMsg, "ip_already_online") {
+			message, err := c.explainIPAlreadyOnline(ctx)
+			if err != nil {
+				return nil, false, err
+			}
 			return &Result{
 				OK:         false,
-				Message:    c.explainIPAlreadyOnline(),
+				Message:    message,
 				Raw:        raw,
 				AcID:       acID,
 				AcIDSource: string(acIDSource),
@@ -404,12 +427,15 @@ func srunAcIDRejected(resp srunPortalResp) bool {
 // 查得到活跃会话，就明确告诉他"能上网就别折腾了"。
 //
 // 这次多出来的查询是只读的，而且只在登录失败这条路径上跑，值得。
-func (c *SrunClient) explainIPAlreadyOnline() string {
+func (c *SrunClient) explainIPAlreadyOnline(ctx context.Context) (string, error) {
 	const lead = "这个网络出口已经有会话在线了，本次登录没有生效"
 
-	st, err := c.Status()
+	st, err := c.statusContext(ctx)
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
 	if err != nil || !st.Online {
-		return lead + "。如果你现在能上网，说明那个会话是有效的，不用再登录"
+		return lead + "。如果你现在能上网，说明那个会话是有效的，不用再登录", nil
 	}
 
 	var detail strings.Builder
@@ -425,7 +451,7 @@ func (c *SrunClient) explainIPAlreadyOnline() string {
 	}
 
 	return lead + "。" + detail.String() +
-		"能上网就说明那个会话是有效的，不用再登录；想换账号，得先让原来那个会话下线"
+		"能上网就说明那个会话是有效的，不用再登录；想换账号，得先让原来那个会话下线", nil
 }
 
 // Logout 注销当前会话（相当于把自己踢下线）。
@@ -465,10 +491,14 @@ func (c *SrunClient) Logout() (*Result, error) {
 // 这个串是后面所有加密的密钥，每次请求都不同，所以认证请求无法重放。
 // 顺带把服务端认定的本机 IP 拿回来。
 func (c *SrunClient) challenge() (token, ip string, err error) {
+	return c.challengeContext(context.Background())
+}
+
+func (c *SrunClient) challengeContext(ctx context.Context) (token, ip string, err error) {
 	u := fmt.Sprintf("%s/cgi-bin/get_challenge?callback=_&username=%s&ip=",
 		c.Host, url.QueryEscape(c.Username))
 
-	body, err := c.get(u)
+	body, err := c.getContext(ctx, u)
 	if err != nil {
 		return "", "", fmt.Errorf("获取 challenge 失败: %w", err)
 	}
@@ -479,6 +509,9 @@ func (c *SrunClient) challenge() (token, ip string, err error) {
 	}
 	if resp.Challenge == "" {
 		return "", "", fmt.Errorf("服务端没有返回 challenge（error=%s）", resp.Error)
+	}
+	if c.AcIDCacheLookup != nil {
+		c.lastAcID = c.AcIDCacheLookup(resp.ClientIP)
 	}
 	return resp.Challenge, resp.ClientIP, nil
 }
@@ -566,28 +599,43 @@ const redirectProbeTimeout = 4 * time.Second
 // 几个探针并发发出，谁先读出编号就用谁的：都没被拦时总耗时是最慢的那一个，
 // 而不是几个超时加起来。
 func (c *SrunClient) discoverAcIDFromRedirect() string {
+	return c.discoverAcIDFromRedirectContext(context.Background())
+}
+
+func (c *SrunClient) discoverAcIDFromRedirectContext(ctx context.Context) string {
 	probes := c.redirectProbes
-	if len(probes) == 0 {
+	if len(probes) == 0 || ctx.Err() != nil {
 		return ""
 	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	client := noProxyClient(redirectProbeTimeout)
 
 	// 带缓冲：提前返回后，剩下的探针照样能把结果放下，不会卡住协程。
 	found := make(chan string, len(probes))
 	for _, p := range probes {
-		go func(p string) { found <- c.acIDFromProbe(client, p) }(p)
+		go func(p string) { found <- c.acIDFromProbe(ctx, client, p) }(p)
 	}
 	for range probes {
-		if id := <-found; id != "" {
-			return id
+		select {
+		case id := <-found:
+			if id != "" {
+				return id
+			}
+		case <-ctx.Done():
+			return ""
 		}
 	}
 	return ""
 }
 
 // acIDFromProbe 请求一个探针，被网关拦下时从跳转里读 ac_id。
-func (c *SrunClient) acIDFromProbe(client *http.Client, probe string) string {
-	resp, err := client.Get(probe)
+func (c *SrunClient) acIDFromProbe(ctx context.Context, client *http.Client, probe string) string {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, probe, nil)
+	if err != nil {
+		return ""
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return ""
 	}
@@ -605,7 +653,7 @@ func (c *SrunClient) acIDFromProbe(client *http.Client, probe string) string {
 	}
 	// 有些网关不返回 Location 头，而是塞一个带 meta refresh /
 	// JS 跳转的拦截页。这种也一起捞，否则在那些设备上就彻底瞎了。
-	return acIDFromInterceptPage(string(body))
+	return c.acIDFromInterceptPage(probe, string(body))
 }
 
 // acIDFromLocation 把可能是相对路径的 Location 补全后取 ac_id。
@@ -620,6 +668,14 @@ func (c *SrunClient) acIDFromLocation(requestURL, loc string) string {
 			}
 		}
 	}
+	u, err := url.Parse(loc)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" {
+		return ""
+	}
+	portalURL, err := url.Parse(c.Host)
+	if !IsSchoolHost(u.Hostname()) && (err != nil || !strings.EqualFold(u.Host, portalURL.Host)) {
+		return ""
+	}
 	return acIDFromURL(loc)
 }
 
@@ -633,14 +689,14 @@ var (
 	jsRedirectPattern  = regexp.MustCompile(`(?i)location(?:\.\s*(?:href|replace|assign)\s*=\s*|\s*\.\s*(?:replace|assign)\s*\(\s*)["']([^"']+)["']`)
 )
 
-func acIDFromInterceptPage(body string) string {
+func (c *SrunClient) acIDFromInterceptPage(requestURL, body string) string {
 	if body == "" {
 		return ""
 	}
 	for _, re := range []*regexp.Regexp{metaRefreshPattern, jsRedirectPattern} {
 		for _, m := range re.FindAllStringSubmatch(body, -1) {
 			if len(m) > 1 {
-				if id := acIDFromURL(m[1]); id != "" {
+				if id := c.acIDFromLocation(requestURL, m[1]); id != "" {
 					return id
 				}
 			}
@@ -664,6 +720,10 @@ func acIDFromInterceptPage(body string) string {
 // 门户连不上时（校外、代理把域名解析抢走），第一个请求就会失败，
 // 后面几个也一样，没必要每个都干等超时——直接放弃，交给最后的兜底。
 func (c *SrunClient) discoverAcIDFromPortal() string {
+	return c.discoverAcIDFromPortalContext(context.Background())
+}
+
+func (c *SrunClient) discoverAcIDFromPortalContext(ctx context.Context) string {
 	candidates := []string{}
 	if c.lastAcID != "" {
 		candidates = append(candidates, c.lastAcID)
@@ -672,13 +732,16 @@ func (c *SrunClient) discoverAcIDFromPortal() string {
 
 	seen := map[string]bool{}
 	for _, id := range candidates {
+		if ctx.Err() != nil {
+			return ""
+		}
 		if id == "" || seen[id] {
 			continue
 		}
 		seen[id] = true
 
-		ctx, cancel := context.WithTimeout(context.Background(), portalGuessTimeout)
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		requestCtx, cancel := context.WithTimeout(ctx, portalGuessTimeout)
+		req, err := http.NewRequestWithContext(requestCtx, http.MethodGet,
 			c.Host+"/srun_portal_pc?ac_id="+url.QueryEscape(id)+"&theme=proyx", nil)
 		if err != nil {
 			cancel()
@@ -742,16 +805,20 @@ const (
 //  4. 挨个试门户入口 —— 只证明编号存在，属于猜，不缓存；
 //  5. "1" —— 最后兜底，同样不缓存。
 func (c *SrunClient) resolveAcIDWithSource() (string, AcIDSource) {
+	return c.resolveAcIDWithSourceContext(context.Background())
+}
+
+func (c *SrunClient) resolveAcIDWithSourceContext(ctx context.Context) (string, AcIDSource) {
 	if c.AcID != "" {
 		return c.AcID, AcIDSourceManual
 	}
 	if c.lastAcID != "" {
 		return c.lastAcID, AcIDSourceCache
 	}
-	if id := c.discoverAcIDFromRedirect(); id != "" {
+	if id := c.discoverAcIDFromRedirectContext(ctx); id != "" {
 		return id, AcIDSourceRedirect
 	}
-	if id := c.discoverAcIDFromPortal(); id != "" {
+	if id := c.discoverAcIDFromPortalContext(ctx); id != "" {
 		return id, AcIDSourceGuess
 	}
 	return "1", AcIDSourceGuess
@@ -797,7 +864,18 @@ func (c *SrunClient) encodeUserInfo(token, ip, acID string) (string, error) {
 // 请求出错时，错误里的地址只保留到路径，见 redactRequestError；
 // secrets 是请求里带的机密，响应不是 JSONP 时不让它们随正文进错误，见 parseJSONP。
 func (c *SrunClient) get(rawURL string, secrets ...string) ([]byte, error) {
-	resp, err := c.http.Get(rawURL)
+	return c.getContext(context.Background(), rawURL, secrets...)
+}
+
+func (c *SrunClient) getContext(ctx context.Context, rawURL string, secrets ...string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, redactRequestError(err)
+	}
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, redactRequestError(err)
 	}

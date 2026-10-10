@@ -34,14 +34,10 @@ func TestACIDAdviceExplainsSource(t *testing.T) {
 	}
 }
 
-// 诊断页读的是这张网上次认证成功的 ac_id：命中缓存时不能再去探测门户，
-// 编号和来历要写进页面会显示的 advices；不是深澜网络时不查也不显示。
-func TestDiagShowsACIDFromCacheWithoutProbing(t *testing.T) {
+// 手动接入点无需现场探测；未握手确认学校出口时，旧网关缓存不能作为可信来源。
+func TestDiagShowsManualACIDWithoutProbing(t *testing.T) {
 	t.Setenv("SZUNET_CONFIG_DIR", t.TempDir())
-	key := netpref.Egress()
-	if key == "" {
-		t.Skip("这台机器取不到网关或本机地址，没法按网缓存 ac_id")
-	}
+	const key = "192.168.1.1" // legacy gateway-only entry
 	prefs := netpref.Load()
 	prefs.SetAcID(key, "17")
 	if err := prefs.Save(); err != nil {
@@ -61,7 +57,6 @@ func TestDiagShowsACIDFromCacheWithoutProbing(t *testing.T) {
 		wantAdvice string
 		wantNoAcID bool
 	}{
-		{name: "cached", srun: true, wantID: "17", wantAdvice: "ac_id）：17，来自这张网上次认证成功的记录"},
 		{name: "startup flag wins", acID: "5", srun: true, wantID: "5", wantAdvice: "ac_id）：5，来自启动参数"},
 		{name: "not srun", srun: false, wantNoAcID: true},
 	} {

@@ -122,8 +122,9 @@ func fakeIPAdvice(d *portal.DetectResult) string {
 	if d == nil || !d.SrunDNSFakeIP {
 		return ""
 	}
-	return "学校域名 net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址：" + portal.ProxyTakeoverHint +
-		"。改好后重新运行诊断，这条提示消失才算生效"
+	return "学校域名 net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址，说明 DNS 被代理接管，不能单独证明断网。" +
+		"学校访问正常时无需修改；实际访问失败时：" + portal.ProxyTakeoverHint +
+		"。请先保存工作、检查命中规则，以原来失败的学校功能恢复为准"
 }
 
 func boolCN(v bool) string {
@@ -166,11 +167,14 @@ func advices(r *Report, opts Options) []string {
 	case portal.ZoneOutside:
 		out = append(out, "两个认证门户都连不上。先确认是不是在校外；"+
 			"如果人在校内，可能是墙上端口或交换机故障，直接报修比反复重试有用")
+	case portal.ZoneUnknown:
+		out = append(out, "门户页面有响应，但没有确认认证协议，可能是维护页或网络拦截页。"+
+			"请核对校园网官方页面；确认所在区域后，可以在登录页手动选择")
 	}
 
 	if !r.Detect.SrunDNSOK {
-		dns := "net.szu.edu.cn 这个域名解析不出来。开着代理或 DoH 时很常见，" +
-			"先关掉代理（或者在代理规则里让 net.szu.edu.cn 直连）再试"
+		dns := "net.szu.edu.cn 这个域名解析不出来。请检查当前网络的 DNS 和学校域名分流规则，" +
+			"先保存工作，保留当前连接；不需要默认关闭整个代理"
 		if opts.CLIHints {
 			dns += "，也可以用 --ip 直接指定服务器地址"
 		}

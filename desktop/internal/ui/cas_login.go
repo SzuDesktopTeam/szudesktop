@@ -203,13 +203,16 @@ func casDo(ctx context.Context, client *http.Client, address string, form url.Va
 		return 0, nil, nil, schoolConnectionError("学校系统暂时无法连接", "学校系统暂时无法连接，请检查校园网后重试", req.URL, err)
 	}
 	defer res.Body.Close()
-	b, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))
-	if err != nil || len(b) > ehallMaxBody {
-		return 0, nil, nil, errors.New("学校响应无法完整读取")
-	}
 	final := u
 	if res.Request != nil && res.Request.URL != nil {
 		final = res.Request.URL
+	}
+	b, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))
+	if err != nil {
+		return 0, nil, nil, schoolConnectionError("学校响应无法完整读取", "学校响应无法完整读取", final, err)
+	}
+	if len(b) > ehallMaxBody {
+		return 0, nil, nil, errors.New("学校响应无法完整读取")
 	}
 	return res.StatusCode, b, final, nil
 }

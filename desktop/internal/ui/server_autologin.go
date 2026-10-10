@@ -53,7 +53,7 @@ func (s *Server) autoLoginOnce() (autoLoginResult, bool) {
 	if st := s.networkState(); st.onlineErr == nil && st.online != nil && st.online.Online {
 		result.Message = "本机已在校园网在线，启动时没有重复认证"
 	} else if zone := s.loginZone(""); zone != portal.ZoneTeaching && zone != portal.ZoneDorm {
-		result.Message = "没有检测到校园网认证门户，启动时没有尝试认证"
+		result.Message = "未能确认校园网认证协议，启动时没有尝试认证"
 	} else {
 		res := s.doLogin(user, pass, string(zone), "")
 		result.Result = autoLoginOK

@@ -12,7 +12,10 @@ func TestAuthenticationZoneSeparatesConnectivity(t *testing.T) {
 		{"online teaching", DetectResult{Zone: ZoneOnline, InternetOK: true, Probed: true, SrunUsable: true}, ZoneTeaching},
 		{"online dorm", DetectResult{Zone: ZoneOnline, InternetOK: true, Probed: true, DormUsable: true}, ZoneDorm},
 		{"both follow classification", DetectResult{Zone: ZoneOnline, InternetOK: true, Probed: true, SrunUsable: true, DormUsable: true}, ZoneDorm},
-		{"offline portal fallback", DetectResult{Zone: ZoneTeaching, Probed: true}, ZoneTeaching},
+		{"offline teaching fingerprint", DetectResult{Zone: ZoneTeaching, Probed: true, SrunUsable: true}, ZoneTeaching},
+		{"offline dorm fingerprint", DetectResult{Zone: ZoneDorm, Probed: true, DormUsable: true}, ZoneDorm},
+		{"reachable teaching page is not a protocol", DetectResult{Zone: ZoneTeaching, Probed: true, TeachPortalOK: true}, ZoneUnknown},
+		{"reachable dorm pages are not a protocol", DetectResult{Zone: ZoneDorm, Probed: true, DormPortalOK: true, TeachPortalOK: true}, ZoneUnknown},
 		{"outside", DetectResult{Zone: ZoneOutside, Probed: true}, ZoneUnknown},
 	}
 	for _, tc := range cases {

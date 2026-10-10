@@ -31,6 +31,9 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
   async function open(target){
     const url=schoolTargets[target]||target;
     if(!isSchoolURL(url))throw Error('不支持的学校页面');
+    // 与 Go 的学校请求一致地直连；这里只设置学校会话，系统代理和其他窗口照常工作。
+    // TUN / Fake-IP 仍由代理软件管理，不受这项 HTTP 代理设置控制。
+    await profile.setProxy({mode:'direct'});
     if(!window||window.isDestroyed()){
       window=new BrowserWindow({width:1100,height:820,minWidth:420,minHeight:520,title:'学校官方页面 · szuDesktop',
         webPreferences:{session:profile,contextIsolation:true,nodeIntegration:false,sandbox:true}});

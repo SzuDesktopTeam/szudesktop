@@ -79,7 +79,7 @@ func TestStatusSeparatesOffCampusFromUnconfirmedAuth(t *testing.T) {
 			if (got.OnlineError != "") != tc.warn {
 				t.Fatalf("online_error 只在判定在校园网里却查不到时出现，实际 %q", got.OnlineError)
 			}
-			want := "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）"
+			want := "外网可用；校园网认证状态暂未确认"
 			if tc.det.SrunDNSFakeIP {
 				want += "。人在校内的话：" + portal.ProxyTakeoverHint
 			}

@@ -62,21 +62,18 @@ func QueryOnline(zone Zone, srunHost, drcomHost, username, password string) (*On
 	}
 }
 
-// NoCampusPortal 判断「外网正常、没判到教学区或宿舍区、门户又查不到」。
-//
-// 人在校外（家里、手机热点）时本来就是这样，不是故障。桌面端 /api/status 以前把它
-// 写成「暂时无法确认」并常驻一条琥珀色警告（O7），命令行 status 写的是「没查到」；
-// 两边改用同一条判据和同一句说明（NoCampusPortalNote），免得又各说各的。
+// NoCampusPortal 选择外网可用、校园认证查询未确认时的中性说明。
+// 查询错误不能证明人在校外，也不能证明认证门户不存在。
 func NoCampusPortal(zone Zone, det *DetectResult, queryErr error) bool {
 	return queryErr != nil && zone == ZoneOnline && det != nil && det.InternetOK
 }
 
 // NoCampusPortalNote 是上面那种情况给人看的说明，桌面端原样显示，命令行原样打印。
 //
-// 同一次探测看到学校域名解析进了 198.18.0.0/15：人在校内开着 Clash 这类代理时，门户正是
-// 因此查不到。仍是中性说明（在家开着代理的同学更多，不能把他们引去排查），但要带上代理提示。
+// 同一次探测看到学校域名解析进了 198.18.0.0/15 时附加代理建议；
+// 这只是已观察到的 DNS 接管线索，不断言它就是查询失败的原因。
 func NoCampusPortalNote(det *DetectResult) string {
-	note := "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）"
+	note := "外网可用；校园网认证状态暂未确认"
 	if det != nil && det.SrunDNSFakeIP {
 		note += "。人在校内的话：" + ProxyTakeoverHint
 	}

@@ -119,7 +119,14 @@ func academicRequest(ctx context.Context, client *http.Client, address string, f
 		return nil, errors.New("学校系统暂时未能完成请求，请稍后重试")
 	}
 	b, err := io.ReadAll(io.LimitReader(res.Body, ehallMaxBody+1))
-	if err != nil || len(b) > ehallMaxBody {
+	if err != nil {
+		final := req.URL
+		if res.Request != nil && res.Request.URL != nil {
+			final = res.Request.URL
+		}
+		return nil, schoolConnectionError("学校响应无法完整读取", "学校响应无法完整读取", final, err)
+	}
+	if len(b) > ehallMaxBody {
 		return nil, errors.New("学校响应无法完整读取")
 	}
 	return b, nil

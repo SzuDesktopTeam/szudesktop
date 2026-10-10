@@ -16,7 +16,7 @@ import (
 
 // 本包的测试不做真实 DNS：维护机自己就开着 Fake-IP 代理（学校域名解析成 198.18.x.x），
 // 学校业务报错的文案会跟着机器变。要测 Fake-IP 的用例用 withSchoolFakeIP 换成固定结果。
-func init() { schoolFakeIP = func(string) bool { return false } }
+func init() { schoolFakeIP = func(context.Context, string) bool { return false } }
 
 // withSchoolFakeIP 让学校域名一律「被接管」（fake=true）或一律正常，返回被查过的主机名。
 func withSchoolFakeIP(t *testing.T, fake bool) *[]string {
@@ -24,7 +24,7 @@ func withSchoolFakeIP(t *testing.T, fake bool) *[]string {
 	var mu sync.Mutex
 	asked := &[]string{}
 	old := schoolFakeIP
-	schoolFakeIP = func(host string) bool {
+	schoolFakeIP = func(_ context.Context, host string) bool {
 		mu.Lock()
 		*asked = append(*asked, host)
 		mu.Unlock()
