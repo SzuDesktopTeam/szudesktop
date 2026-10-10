@@ -236,3 +236,126 @@ func TestStatusAfterLoginDoesNotWaitForStaleProbe(t *testing.T) {
 		t.Fatalf("expected the stale probe plus one fresh probe, got %d", d)
 	}
 }
+
+func TestStatusForcedRefreshBypassesFreshCache(t *testing.T) {
+	var queries, detects int32
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&queries, 1)
+		_, _ = w.Write([]byte(`dr1003({"result":0})`))
+	}))
+	defer fake.Close()
+	s := &Server{
+		opts:  Options{DrcomHost: fake.URL, SrunHost: fake.URL},
+		store: &statusTestStore{err: credential.ErrNotFound},
+		detect: func() *portal.DetectResult {
+			n := atomic.AddInt32(&detects, 1)
+			return &portal.DetectResult{Zone: portal.ZoneDorm, InternetOK: n > 1}
+		},
+	}
+	status := func(target string) statusResp {
+		rec := httptest.NewRecorder()
+		s.handleStatus(rec, httptest.NewRequest(http.MethodGet, target, nil))
+		var got statusResp
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	if got := status("/api/status"); got.InternetOK {
+		t.Fatalf("unexpected initial status: %+v", got)
+	}
+	status("/api/status?refresh=0")
+	if d, q := atomic.LoadInt32(&detects), atomic.LoadInt32(&queries); d != 1 || q != 1 {
+		t.Fatalf("ordinary status must reuse the fresh cache: detects=%d queries=%d", d, q)
+	}
+	if got := status("/api/status?refresh=1"); !got.InternetOK {
+		t.Fatalf("forced refresh returned the old cached status: %+v", got)
+	}
+	if got := status("/api/status"); !got.InternetOK {
+		t.Fatalf("ordinary status did not reuse the refreshed result: %+v", got)
+	}
+	if d, q := atomic.LoadInt32(&detects), atomic.LoadInt32(&queries); d != 2 || q != 2 {
+		t.Fatalf("expected one initial and one forced probe: detects=%d queries=%d", d, q)
+	}
+}
+
+func TestStatusForcedRefreshReplacesInflightProbe(t *testing.T) {
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`dr1003({"result":1})`))
+	}))
+	defer fake.Close()
+	oldEntered, freshEntered := make(chan struct{}), make(chan struct{})
+	releaseOld, releaseFresh := make(chan struct{}), make(chan struct{})
+	var oldOnce, freshOnce sync.Once
+	defer oldOnce.Do(func() { close(releaseOld) })
+	defer freshOnce.Do(func() { close(releaseFresh) })
+	var detects int32
+	s := &Server{
+		opts:  Options{DrcomHost: fake.URL, SrunHost: fake.URL},
+		store: &statusTestStore{err: credential.ErrNotFound},
+		detect: func() *portal.DetectResult {
+			switch atomic.AddInt32(&detects, 1) {
+			case 1:
+				close(oldEntered)
+				<-releaseOld
+				return &portal.DetectResult{Zone: portal.ZoneOutside}
+			case 2:
+				close(freshEntered)
+				<-releaseFresh
+			}
+			return &portal.DetectResult{Zone: portal.ZoneDorm, InternetOK: true}
+		},
+	}
+	status := func(target string) <-chan *httptest.ResponseRecorder {
+		out := make(chan *httptest.ResponseRecorder, 1)
+		go func() {
+			rec := httptest.NewRecorder()
+			s.handleStatus(rec, httptest.NewRequest(http.MethodGet, target, nil))
+			out <- rec
+		}()
+		return out
+	}
+	readStatus := func(out <-chan *httptest.ResponseRecorder) statusResp {
+		select {
+		case rec := <-out:
+			var got statusResp
+			if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+				t.Fatal(err)
+			}
+			return got
+		case <-time.After(time.Second):
+			t.Fatal("status waited for a stale in-flight probe")
+			return statusResp{}
+		}
+	}
+	old := status("/api/status")
+	<-oldEntered
+	fresh := status("/api/status?refresh=1")
+	select {
+	case <-freshEntered:
+	case <-time.After(time.Second):
+		t.Fatal("forced refresh did not start a new probe while the old probe was running")
+	}
+	shared := status("/api/status")
+	select {
+	case <-shared:
+		t.Fatal("ordinary status returned before the fresh probe finished")
+	case <-time.After(50 * time.Millisecond):
+	}
+	freshOnce.Do(func() { close(releaseFresh) })
+	for _, out := range []<-chan *httptest.ResponseRecorder{fresh, shared} {
+		if got := readStatus(out); got.Zone != string(portal.ZoneDorm) || !got.InternetOK || !got.Online {
+			t.Fatalf("status did not share the fresh probe: %+v", got)
+		}
+	}
+	oldOnce.Do(func() { close(releaseOld) })
+	if got := readStatus(old); got.Zone != string(portal.ZoneOutside) {
+		t.Fatalf("the original request lost its own probe result: %+v", got)
+	}
+	if got := readStatus(status("/api/status")); got.Zone != string(portal.ZoneDorm) || !got.Online {
+		t.Fatalf("stale probe overwrote the fresh cache: %+v", got)
+	}
+	if d := atomic.LoadInt32(&detects); d != 2 {
+		t.Fatalf("ordinary requests must share the forced probe, got %d probes", d)
+	}
+}

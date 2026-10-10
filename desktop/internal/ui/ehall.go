@@ -168,7 +168,11 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, fmt.Errorf("读取学校系统响应失败：%w", err)
+		final := req.URL
+		if res.Request != nil && res.Request.URL != nil {
+			final = res.Request.URL
+		}
+		return nil, schoolConnectionError("读取学校系统响应失败", "读取学校系统响应失败，请检查网络后重试", final, err)
 	}
 	if len(data) > ehallMaxBody {
 		return nil, errors.New("学校系统返回的内容异常大，已中止")

@@ -78,6 +78,7 @@ func TestAcIDFromURL(t *testing.T) {
 // 带 meta refresh 或 JS 跳转的页面。如果只认 Location 头，
 // 在这些设备上就彻底拿不到 ac_id 了 —— 而这是唯一可靠的来源。
 func TestAcIDFromInterceptPage(t *testing.T) {
+	client := NewSrunClient(DefaultSrunHost, "", "")
 	cases := []struct {
 		name string
 		body string
@@ -112,7 +113,7 @@ func TestAcIDFromInterceptPage(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := acIDFromInterceptPage(c.body); got != c.want {
+			if got := client.acIDFromInterceptPage("http://probe.invalid/", c.body); got != c.want {
 				t.Fatalf("acIDFromInterceptPage(...) = %q，期望 %q", got, c.want)
 			}
 		})
@@ -325,8 +326,11 @@ func TestRedirectProbeReadsRealGatewayRedirect(t *testing.T) {
 	}
 
 	// 相对跳转也要能补全后读出来。
-	if got := c.acIDFromLocation("https://probe.example.com/x", "/login?ac_id=7"); got != "7" {
-		t.Fatalf("相对跳转应该也能读出 7，实际 %q", got)
+	if got := c.acIDFromLocation(portal.URL+"/x", "/login?ac_id=7"); got != "7" {
+		t.Fatalf("当前门户的相对跳转应该读出 7，实际 %q", got)
+	}
+	if got := c.acIDFromLocation("https://probe.example.com/x", "/login?ac_id=7"); got != "" {
+		t.Fatalf("外网相对跳转不属于认证门户，不应读出 %q", got)
 	}
 }
 

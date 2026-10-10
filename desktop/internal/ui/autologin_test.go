@@ -145,7 +145,9 @@ func TestAutoLoginScrubsPasswordEchoedBySrunPortal(t *testing.T) {
 	s := New(Options{SrunHost: srun.URL, DrcomHost: srun.URL, AutoLogin: true, AcID: "12"})
 	s.store = &guardTestStore{value: credential.Credentials{Username: "123456", Password: password}}
 	s.detect = func() *portal.DetectResult { return &portal.DetectResult{Zone: portal.ZoneTeaching} }
-	s.probe = func() *portal.DetectResult { return &portal.DetectResult{Zone: portal.ZoneTeaching, Probed: true} }
+	s.probe = func() *portal.DetectResult {
+		return &portal.DetectResult{Zone: portal.ZoneTeaching, Probed: true, SrunUsable: true}
+	}
 	s.runAutoLogin()
 	_, got := autoLoginStatus(t, s) // 状态正文里出现密码会直接 Fatal
 	if atomic.LoadInt32(&logins) != 1 || got == nil || got.Result != autoLoginFailed {
@@ -174,7 +176,7 @@ func TestAutoLoginOutcomesAreReportedInStatus(t *testing.T) {
 		{"login ok", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":1,"msg":"认证成功"})`, autoLoginOK, "认证成功", 1},
 		{"login failed", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":0,"msg":"口令已过期"})`, autoLoginFailed, "已过期", 1},
 		{"portal echoes the password", &guardTestStore{value: saved}, false, portal.ZoneDorm, `dr1003({"result":0,"msg":"口令 S3cretPass 已过期"})`, autoLoginFailed, "隐去", 1},
-		{"off campus", &guardTestStore{value: saved}, false, portal.ZoneOutside, `dr1003({"result":1})`, autoLoginSkipped, "没有检测到校园网认证门户", 0},
+		{"off campus", &guardTestStore{value: saved}, false, portal.ZoneOutside, `dr1003({"result":1})`, autoLoginSkipped, "未能确认校园网认证协议", 0},
 		{"nothing saved", &statusTestStore{err: credential.ErrNotFound}, false, portal.ZoneDorm, `dr1003({"result":1})`, "", "", 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

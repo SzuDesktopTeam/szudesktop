@@ -61,10 +61,15 @@ func IsSchoolHost(host string) bool {
 // 琴房这类直接用内网 IP 的服务、外部站点不归这条管。
 // 会做一次 DNS 查询，调用方只在排查或请求已经失败时调用。
 func SchoolHostFakeIP(host string) bool {
+	return SchoolHostFakeIPContext(context.Background(), host)
+}
+
+// SchoolHostFakeIPContext lets an in-progress operation cancel its diagnostic DNS check.
+func SchoolHostFakeIPContext(parent context.Context, host string) bool {
 	if !IsSchoolHost(host) {
 		return false
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), hostLookupTimeout)
+	ctx, cancel := context.WithTimeout(parent, hostLookupTimeout)
 	defer cancel()
 	_, fake := resolveHost(ctx, host)
 	return fake

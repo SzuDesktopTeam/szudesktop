@@ -79,8 +79,8 @@ const onlineZone=code=>code==='teaching'||code==='dorm'?zone(code):'没有（门
 
 function statusLines(status){
  if(!status)return ['本次打开后还没有读到网络状态。'];
- const auth={online:'出口已在线',offline:'出口未在线',no_campus_portal:'外网正常，没有检测到校园网认证页面',not_queried:'没有判定在教学区或宿舍区，未查询',unconfirmed:'未查明（查询出错）'}[authState(status)];
- const auto={ok:'成功',failed:'未成功',skipped:'已在线，跳过'}[status.auto_login?.result]||'本次未尝试';
+ const auth={online:'出口已在线',offline:'出口未在线',no_campus_portal:'外网可用；校园网认证状态暂未确认',not_queried:'没有判定在教学区或宿舍区，未查询',unconfirmed:'未查明（查询出错）'}[authState(status)];
+ const auto={ok:'成功',failed:'未成功',skipped:'已跳过'}[status.auto_login?.result]||'本次未尝试';
  return [`判区：${zone(status.zone)}`,`外网：${yes(status.internet_ok,'可用','不可用')}`,`校园认证：${auth}`,`确认在线的区域：${onlineZone(status.online_zone)}`,`启动时自动连接：${auto}`];
 }
 function diagLines(diag){

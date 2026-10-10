@@ -1,6 +1,7 @@
 package portal
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -62,6 +63,11 @@ type drcomResp struct {
 
 // Login 执行一次 Dr.COM 网页认证。
 func (c *DrcomClient) Login() (*Result, error) {
+	return c.LoginContext(context.Background())
+}
+
+// LoginContext 让登录请求遵守调用方的截止时间和取消信号。
+func (c *DrcomClient) LoginContext(ctx context.Context) (*Result, error) {
 	q := url.Values{}
 	q.Set("callback", "dr1003")
 	q.Set("login_method", "1")
@@ -81,7 +87,7 @@ func (c *DrcomClient) Login() (*Result, error) {
 
 	// 查询串里是明文密码：get 已经把错误里的地址截掉了查询串，响应正文里
 	// 出现密码时也整段不给出；这里再按密码兜一次底。
-	body, err := c.get(c.Host+"/eportal/portal/login?"+q.Encode(), c.Password)
+	body, err := c.getContext(ctx, c.Host+"/eportal/portal/login?"+q.Encode(), c.Password)
 	if err != nil {
 		return nil, scrubSecrets(fmt.Errorf("发送登录请求失败: %w", err), c.Password)
 	}
@@ -156,7 +162,18 @@ func (c *DrcomClient) Status() (*OnlineStatus, error) {
 // 请求出错时，错误里的地址只保留到路径，见 redactRequestError；
 // secrets 是请求里带的机密，响应不是 JSONP 时不让它们随正文进错误，见 parseJSONP。
 func (c *DrcomClient) get(rawURL string, secrets ...string) ([]byte, error) {
-	resp, err := c.http.Get(rawURL)
+	return c.getContext(context.Background(), rawURL, secrets...)
+}
+
+func (c *DrcomClient) getContext(ctx context.Context, rawURL string, secrets ...string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, redactRequestError(err)
+	}
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, redactRequestError(err)
 	}

@@ -139,7 +139,7 @@ func TestNoCampusPortalNeedsWorkingInternetAndQueryError(t *testing.T) {
 		}
 	}
 	plain := NoCampusPortalNote(online)
-	if plain != "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）" || strings.Contains(NoCampusPortalNote(nil), ProxyTakeoverHint) {
+	if plain != "外网可用；校园网认证状态暂未确认" || strings.Contains(NoCampusPortalNote(nil), ProxyTakeoverHint) {
 		t.Fatalf("中性说明不对：%q", plain)
 	}
 	if got := NoCampusPortalNote(&DetectResult{InternetOK: true, SrunDNSFakeIP: true}); got != plain+"。人在校内的话："+ProxyTakeoverHint {

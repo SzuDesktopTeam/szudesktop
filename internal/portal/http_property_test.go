@@ -399,9 +399,17 @@ func TestPropertyAcIDFromLocationAndInterceptPage(t *testing.T) {
 		target := "/srun_portal_pc?ac_id=" + id + "&theme=proyx"
 		probe := []string{"http://connect.rom.miui.com/generate_204", "http://www.msftconnecttest.com/redirect", "http://captive.apple.com/hotspot-detect.html"}[r.Intn(3)]
 		absolute := "https://net.szu.edu.cn" + target
-		for _, loc := range []string{absolute, target, "//net.szu.edu.cn" + target, strings.TrimPrefix(target, "/")} {
+		for _, loc := range []string{absolute, "//net.szu.edu.cn" + target} {
 			if got := c.acIDFromLocation(probe, loc); got != id {
 				t.Fatalf("第 %d 例：Location %q 应读出 %s，实际 %q", i, loc, id, got)
+			}
+		}
+		for _, loc := range []string{target, strings.TrimPrefix(target, "/")} {
+			if got := c.acIDFromLocation(c.Host+"/x", loc); got != id {
+				t.Fatalf("第 %d 例：门户相对跳转应读出 %s，实际 %q", i, id, got)
+			}
+			if got := c.acIDFromLocation(probe, loc); got != "" {
+				t.Fatalf("第 %d 例：外网相对跳转不应作为可信接入点 %q", i, got)
 			}
 		}
 		if got := c.acIDFromLocation(probe, ""); got != "" {
@@ -420,10 +428,10 @@ func TestPropertyAcIDFromLocationAndInterceptPage(t *testing.T) {
 			`<script>top.location.assign( ` + quote + absolute + quote + ` )</script>`,
 		}
 		page := randomCJK(r, 0, 30) + pages[r.Intn(len(pages))] + randomCJK(r, 0, 30)
-		if got := acIDFromInterceptPage(page); got != id {
+		if got := c.acIDFromInterceptPage(probe, page); got != id {
 			t.Fatalf("第 %d 例：拦截页应读出 %s，实际 %q\n%s", i, id, got, page)
 		}
-		if got := acIDFromInterceptPage(randomCJK(r, 0, 60)); got != "" {
+		if got := c.acIDFromInterceptPage(probe, randomCJK(r, 0, 60)); got != "" {
 			t.Fatalf("第 %d 例：普通页面不该读出 ac_id，实际 %q", i, got)
 		}
 	}
@@ -511,7 +519,7 @@ func TestPropertyConcludeProbeConsistent(t *testing.T) {
 		case !in.InternetOK && res.Zone != predicted:
 			t.Fatalf("第 %d 例：classify 给 %s，PredictDropZone 给 %s：%+v", i, res.Zone, predicted, in)
 		}
-		if (predicted == ZoneTeaching) != (in.SrunUsable && !in.DormUsable || !in.SrunUsable && !in.DormUsable && !in.DormPortalOK && in.TeachPortalOK) {
+		if (predicted == ZoneTeaching) != (in.SrunUsable && !in.DormUsable) {
 			t.Fatalf("第 %d 例：教学区判据不符合约定：%+v → %s", i, in, predicted)
 		}
 		if in.DormUsable && predicted != ZoneDorm {
@@ -521,10 +529,8 @@ func TestPropertyConcludeProbeConsistent(t *testing.T) {
 		switch {
 		case in.DormUsable && auth != ZoneDorm, !in.DormUsable && in.SrunUsable && auth != ZoneTeaching:
 			t.Fatalf("第 %d 例：AuthenticationZone 与指纹不一致：%+v → %s", i, in, auth)
-		case !in.DormUsable && !in.SrunUsable && in.InternetOK && auth != ZoneUnknown:
-			t.Fatalf("第 %d 例：没有指纹、只是能上外网，不能认定已认证：%+v → %s", i, in, auth)
-		case !in.DormUsable && !in.SrunUsable && !in.InternetOK && (res.Zone == ZoneTeaching || res.Zone == ZoneDorm) && auth != res.Zone:
-			t.Fatalf("第 %d 例：AuthenticationZone 应沿用判区结果 %s，实际 %s", i, res.Zone, auth)
+		case !in.DormUsable && !in.SrunUsable && auth != ZoneUnknown:
+			t.Fatalf("第 %d 例：没有协议指纹，不能仅凭页面可达选择认证协议：%+v → %s", i, in, auth)
 		}
 		if hasDNS := strings.Contains(strings.Join(res.Notes, "\n"), dnsWarning); hasDNS == in.SrunDNSOK {
 			t.Fatalf("第 %d 例：DNS 提醒与 SrunDNSOK=%v 不符：%v", i, in.SrunDNSOK, res.Notes)

@@ -77,7 +77,7 @@ func TestPropertyAdvicesFollowProbeResult(t *testing.T) {
 					t.Fatalf("第 %d 例：两套指纹都有时才提示改按教学区（both=%v）：%q", i, both, rep.Advices)
 				}
 			} else {
-				want := map[portal.Zone]string{portal.ZoneTeaching: "你在教学区", portal.ZoneDorm: "你在宿舍区", portal.ZoneOutside: "两个认证门户都连不上"}[zone]
+				want := map[portal.Zone]string{portal.ZoneTeaching: "你在教学区", portal.ZoneDorm: "你在宿舍区", portal.ZoneOutside: "两个认证门户都连不上", portal.ZoneUnknown: "没有确认认证协议"}[zone]
 				if want == "" || !strings.Contains(text, want) {
 					t.Fatalf("第 %d 例：区域 %s 的建议缺少「%s」：%q", i, zone, want, rep.Advices)
 				}

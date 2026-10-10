@@ -16,9 +16,9 @@ import (
 const releasesAPI = "https://api.github.com/repos/SzuDesktopTeam/szudesktop/releases"
 const releasesPage = "https://github.com/SzuDesktopTeam/szudesktop/releases/tag/"
 
-// 测试版渠道只看最近几个发布：列表按时间倒序，新版本一定在前面。
+// 测试版看最近一页，正式版找不到时继续翻页，避免 /latest 指向宣传素材归档。
 // 以前一次拉 100 个完整发布对象，响应迟早会超过下面的 2 MiB 上限而被截断。
-const betaReleasesQuery = "?per_page=10"
+const releasesQuery = "?per_page=10"
 
 // releaseCacheTTL 内重复检查直接用上次的结果。
 //
@@ -93,69 +93,80 @@ func fetchRelease(ctx context.Context, client *http.Client, channel, etag string
 	if channel != "stable" && channel != "beta" {
 		return result, "", errors.New("请选择正式版或测试版渠道")
 	}
-	endpoint := releasesAPI + "/latest"
-	if channel == "beta" {
-		endpoint = releasesAPI + betaReleasesQuery
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return result, "", err
-	}
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "szuDesktop-release-check")
-	if etag != "" {
-		req.Header.Set("If-None-Match", etag)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return result, "", errors.New("暂时无法连接 GitHub 发布服务，请检查网络后重试")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotModified && etag != "" {
-		return result, etag, errReleaseNotModified
-	}
-	etag = resp.Header.Get("ETag")
-	if resp.StatusCode == http.StatusNotFound && channel == "stable" {
-		result.Message = "目前还没有正式版，可选择测试版渠道查看公开版本。"
+	for page := 1; ; page++ {
+		endpoint := releasesAPI + releasesQuery
+		if page > 1 {
+			endpoint += "&page=" + strconv.Itoa(page)
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+		if err != nil {
+			return result, "", err
+		}
+		req.Header.Set("Accept", "application/vnd.github+json")
+		req.Header.Set("User-Agent", "szuDesktop-release-check")
+		if etag != "" {
+			req.Header.Set("If-None-Match", etag)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			return result, "", errors.New("暂时无法连接 GitHub 发布服务，请检查网络后重试")
+		}
+		if resp.StatusCode == http.StatusNotModified && etag != "" {
+			resp.Body.Close()
+			return result, etag, errReleaseNotModified
+		}
+		etag = resp.Header.Get("ETag")
+		if page > 1 {
+			etag = ""
+		}
+		if resp.StatusCode == http.StatusNotFound && channel == "stable" {
+			resp.Body.Close()
+			result.Message = "目前还没有正式版，可选择测试版渠道查看公开版本。"
+			return result, etag, nil
+		}
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			return result, "", errors.New("GitHub 暂未提供版本信息，可能是连接受限或请求额度已用完，请稍后重试")
+		}
+		decoder := json.NewDecoder(io.LimitReader(resp.Body, 2<<20))
+		var candidates []githubRelease
+		err = decoder.Decode(&candidates)
+		resp.Body.Close()
+		if err != nil {
+			return result, "", errors.New("发布服务返回了无法识别的内容，请稍后重试")
+		}
+		var best [4]int
+		for _, item := range candidates {
+			value, valid := releaseVersion(item.TagName)
+			if !valid || item.Draft || item.PublishedAt == "" || (channel == "stable" && (item.Prerelease || value[3] == 0)) {
+				continue
+			}
+			if !result.Available || newerRelease(value, best) {
+				best = value
+				result.Available = true
+				result.Version = item.TagName
+				result.URL = releasesPage + item.TagName
+				result.Prerelease = item.Prerelease || value[3] == 0
+				result.PublishedAt = item.PublishedAt
+			}
+		}
+		if !result.Available {
+			if channel == "stable" {
+				if len(candidates) == 10 {
+					// 首页 ETag 不能代表后续页面；分页结果过期后要重新读取。
+					etag = ""
+					continue
+				}
+				result.Message = "目前还没有正式版，可选择测试版渠道查看公开版本。"
+				return result, etag, nil
+			}
+			if len(candidates) != 0 {
+				return result, "", errors.New("发布列表中没有可识别的版本，请直接查看项目发布页")
+			}
+			result.Message = "所选渠道暂时没有公开版本。"
+		}
 		return result, etag, nil
 	}
-	if resp.StatusCode != http.StatusOK {
-		return result, "", errors.New("GitHub 暂未提供版本信息，可能是连接受限或请求额度已用完，请稍后重试")
-	}
-	decoder := json.NewDecoder(io.LimitReader(resp.Body, 2<<20))
-	var candidates []githubRelease
-	if channel == "stable" {
-		var item githubRelease
-		err = decoder.Decode(&item)
-		candidates = []githubRelease{item}
-	} else {
-		err = decoder.Decode(&candidates)
-	}
-	if err != nil {
-		return result, "", errors.New("发布服务返回了无法识别的内容，请稍后重试")
-	}
-	var best [4]int
-	for _, item := range candidates {
-		value, valid := releaseVersion(item.TagName)
-		if !valid || item.Draft || item.PublishedAt == "" || (channel == "stable" && (item.Prerelease || value[3] == 0)) {
-			continue
-		}
-		if !result.Available || newerRelease(value, best) {
-			best = value
-			result.Available = true
-			result.Version = item.TagName
-			result.URL = releasesPage + item.TagName
-			result.Prerelease = item.Prerelease || value[3] == 0
-			result.PublishedAt = item.PublishedAt
-		}
-	}
-	if !result.Available {
-		if len(candidates) != 0 {
-			return result, "", errors.New("发布列表中没有可识别的版本，请直接查看项目发布页")
-		}
-		result.Message = "所选渠道暂时没有公开版本。"
-	}
-	return result, etag, nil
 }
 
 type releaseEntry struct {

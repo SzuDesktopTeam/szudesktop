@@ -20,6 +20,9 @@ func TestPredictDropZoneIsTheOnlyRule(t *testing.T) {
 			TeachPortalOK: mask&8 != 0,
 		}
 		want, reason := PredictDropZone(&r)
+		if !r.SrunUsable && !r.DormUsable && (r.DormPortalOK || r.TeachPortalOK) && want != ZoneUnknown {
+			t.Errorf("%+v：只有页面响应不能确定认证区域，实际 %s", r, want)
+		}
 		if reason == "" {
 			t.Errorf("%+v：预判要带上依据", r)
 		}
@@ -30,7 +33,7 @@ func TestPredictDropZoneIsTheOnlyRule(t *testing.T) {
 		}
 
 		note := zoneFingerprintNote(&r)
-		if want == ZoneOutside {
+		if want == ZoneOutside || want == ZoneUnknown {
 			if !strings.Contains(note, "判不出") {
 				t.Errorf("%+v：门户都探不到时应说判不出区，实际 %q", r, note)
 			}

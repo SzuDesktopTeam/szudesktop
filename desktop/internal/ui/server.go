@@ -132,13 +132,19 @@ func (s *Server) selectedZone(detected portal.Zone) portal.Zone {
 // 「已经能上外网，不用再认证」而直接跳过——可是掉线重连恰恰要的就是认证。
 // Probe() 会把门户和指纹跑完，能真实回答"我该用哪套协议"。
 func (s *Server) loginZone(requested string) portal.Zone {
+	zone, _ := s.loginZoneWithProbe(requested)
+	return zone
+}
+
+func (s *Server) loginZoneWithProbe(requested string) (portal.Zone, *portal.DetectResult) {
 	if zone, ok := parseZone(requested); ok {
-		return zone
+		return zone, nil
 	}
 	if zone, ok := parseZone(s.opts.Zone); ok {
-		return zone
+		return zone, nil
 	}
-	return s.probe().AuthenticationZone()
+	det := s.probe()
+	return det.AuthenticationZone(), det
 }
 
 // creds 按「命令行参数 > 已保存的凭据」的顺序取账号密码。
@@ -487,6 +493,9 @@ type statusResp struct {
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	creds, credErr := s.store.Load()
 
+	if r.URL.Query().Get("refresh") == "1" {
+		s.invalidateNetworkState()
+	}
 	netState := s.networkState()
 	det, zone := netState.det, netState.zone
 	out := statusResp{
@@ -555,7 +564,7 @@ const (
 // noCampusPortalNote 是中性说明的字面量。接口实际返回的是 portal.NoCampusPortalNote（命令行同一句），
 // 这里留一份字面量，是因为页面在旧版接口没有 online_note 时兜底用同一句，check-network-ui.mjs
 // 按这一行核对；与 portal 的一致由 TestStatusNoCampusPortalNoteMatchesPortal 锁住。
-const noCampusPortalNote = "外网正常；没有检测到校园网认证页面（不在校园网内时属正常）"
+const noCampusPortalNote = "外网可用；校园网认证状态暂未确认"
 
 type loginResp struct {
 	OK      bool   `json:"ok"`
@@ -592,7 +601,9 @@ func readCredRequest(r *http.Request) credRequest {
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	req := readCredRequest(r)
-	res := s.doLogin(req.Username, req.Password, req.Zone, req.AcID)
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	res := s.doLoginContext(ctx, req.Username, req.Password, req.Zone, req.AcID)
 	writeJSON(w, loginResp{
 		OK:          res.OK,
 		Message:     res.Message,
@@ -606,6 +617,15 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 // acID 留空时按"这次填的 > 上次这张网成功的 > 现场探测"的顺序自动定，
 // 确认对了还会记下来，所以正常情况下用户根本不需要知道有这个东西。
 func (s *Server) doLogin(user, pass, requestedZone, acID string) portal.Result {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return s.doLoginContext(ctx, user, pass, requestedZone, acID)
+}
+
+func (s *Server) doLoginContext(ctx context.Context, user, pass, requestedZone, acID string) portal.Result {
+	if err := ctx.Err(); err != nil {
+		return s.remember(portalErrorMessageContext(ctx, "认证", err, pass, ""))
+	}
 	if (user == "") != (pass == "") {
 		return s.remember("请同时填写本次账号和密码，或将两项都留空使用已保存凭据")
 	}
@@ -622,7 +642,10 @@ func (s *Server) doLogin(user, pass, requestedZone, acID string) portal.Result {
 		}
 	}
 
-	zone := s.loginZone(requestedZone)
+	zone, det := s.loginZoneWithProbe(requestedZone)
+	if err := ctx.Err(); err != nil {
+		return s.remember(portalErrorMessageContext(ctx, "认证", err, pass, ""))
+	}
 	s.mu.Lock()
 	s.lastZone = zone
 	s.mu.Unlock()
@@ -631,9 +654,12 @@ func (s *Server) doLogin(user, pass, requestedZone, acID string) portal.Result {
 	case portal.ZoneTeaching, portal.ZoneDorm:
 		// 无论成败，认证状态都可能变了：让页面紧接着的刷新重新探测。
 		defer s.invalidateNetworkState()
-		return s.loginWithProtocol(zone, user, pass, acID)
+		return s.loginWithProtocolContext(ctx, zone, user, pass, acID)
 
 	default:
+		if det != nil && det.SrunDNSFakeIP {
+			return s.remember("未能确认校园网认证区域，尚未验证账号密码。" + portal.ProxyTakeoverHint + "，然后重试")
+		}
 		return s.remember("未能确认校园网认证区域，尚未验证账号密码。请确认已连接校园网，或手动选择教学区 / 宿舍区。外网可用不代表账号认证成功")
 	}
 }
@@ -641,6 +667,10 @@ func (s *Server) doLogin(user, pass, requestedZone, acID string) portal.Result {
 // loginWithProtocol 按指定区域真打一次认证请求。教学区和宿舍区各一套协议。
 // acID 是界面上"实在连不上才手动指定"的接入点编号，留空走自动。
 func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) portal.Result {
+	return s.loginWithProtocolContext(context.Background(), zone, user, pass, acID)
+}
+
+func (s *Server) loginWithProtocolContext(ctx context.Context, zone portal.Zone, user, pass, acID string) portal.Result {
 	switch zone {
 	case portal.ZoneTeaching:
 		c := portal.NewSrunClient(s.opts.SrunHost, user, pass)
@@ -653,9 +683,9 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 			c.AcID = manual
 		}
 		attachAcIDCache(c, manual == "")
-		res, err := c.Login()
+		res, err := c.LoginContext(ctx)
 		if err != nil {
-			return s.remember(portalErrorMessage("认证", err, pass))
+			return s.remember(portalErrorMessageContext(ctx, "认证", err, pass, s.opts.SrunHost))
 		}
 		if !res.OK {
 			return s.remember(scrubSecret(res.Message, pass))
@@ -664,10 +694,10 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 		return *res
 
 	case portal.ZoneDorm:
-		res, err := portal.NewDrcomClient(s.opts.DrcomHost, user, pass).Login()
+		res, err := portal.NewDrcomClient(s.opts.DrcomHost, user, pass).LoginContext(ctx)
 		if err != nil {
 			// 宿舍区的登录地址里就有明文密码，错误文本一个字都不能透传。
-			return s.remember(portalErrorMessage("认证", err, pass))
+			return s.remember(portalErrorMessageContext(ctx, "认证", err, pass, s.opts.DrcomHost))
 		}
 		if !res.OK {
 			return s.remember(scrubSecret(res.Message, pass))
@@ -682,21 +712,21 @@ func (s *Server) loginWithProtocol(zone portal.Zone, user, pass, acID string) po
 //
 // ac_id 不是固定值：同一台笔记本插不同墙口、走有线还是路由器，
 // 接入点编号都可能变（教学区常见 1，接路由器后见过 12）。
-// 拿错就会报 Unknow ac-type。这里按"出口标识"分网缓存，
-// 换网后缓存命中不了，客户端会自动重新发现；
-// 同一个网关后面换了接入点、缓存值被服务端拒掉时，客户端会通知这里
-// 把这张网的缓存从磁盘上删掉，免得下次登录还先拿错值去撞一次。
+// 按本次握手返回的客户端 IP 和门户 origin 分开缓存，避免不同路由器的
+// 相同私网网关、或 VPN 改变默认路由时串用。相同学校出口的接入点仍可能变化，
+// 缓存被明确拒绝时删除当前出口的记录，再重新发现一次。
 //
 // useCache 为 false 时说明用户手动指定了 ac_id，那就别用缓存覆盖他的选择，
 // 但成功之后仍要记下来。
 func attachAcIDCache(c *portal.SrunClient, useCache bool) {
 	prefs := netpref.Load()
-	key := netpref.Egress()
-
-	if useCache {
-		if id := prefs.AcIDFor(key); id != "" {
-			c.SetLastAcID(id)
+	var key string
+	c.AcIDCacheLookup = func(clientIP string) string {
+		key = netpref.CampusKey(c.Host, clientIP)
+		if useCache && key != "" {
+			return prefs.AcIDFor(key)
 		}
+		return ""
 	}
 	c.OnAcIDResolved = func(id string) {
 		prefs.SetAcID(key, id)
@@ -748,12 +778,16 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	case portal.ZoneDorm:
 		res, e = portal.NewDrcomClient(s.opts.DrcomHost, user, pass).Logout()
 	default:
-		writeJSON(w, loginResp{OK: false, Message: "不在校园网里，没有可注销的会话"})
+		writeJSON(w, loginResp{OK: false, Message: "未能确认校园网认证区域，尚未执行注销。请手动选择教学区 / 宿舍区后重试"})
 		return
 	}
 	s.invalidateNetworkState()
 	if e != nil {
-		writeJSON(w, loginResp{OK: false, Message: portalErrorMessage("注销", e, pass)})
+		host := s.opts.DrcomHost
+		if zone == portal.ZoneTeaching {
+			host = s.opts.SrunHost
+		}
+		writeJSON(w, loginResp{OK: false, Message: portalErrorMessageContext(r.Context(), "注销", e, pass, host)})
 		return
 	}
 	writeJSON(w, loginResp{OK: res.OK, Zone: string(zone), Message: scrubSecret(res.Message, pass)})
@@ -820,14 +854,12 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 	// 顺带把接入点编号算出来，写进页面会显示的建议里。
 	//
 	// 只在深澜指纹明确时才查：宿舍区走的是另一套协议，没有 ac_id 这回事，
-	// 白跑一轮探测只会拖慢诊断。取值口径与登录一致：先看启动参数，
-	// 再看这张网上次成功的缓存（命中就不再发请求），最后才现场探测。
+	// 白跑一轮探测只会拖慢诊断。先看启动参数，否则现场发现；这里没有
+	// 握手返回的客户端 IP，不能把本机网关缓存当成当前学校出口的可信编号。
 	if rep.Detect.SrunUsable {
 		c := portal.NewSrunClient(s.opts.SrunHost, user, pass)
 		if s.opts.AcID != "" {
 			c.AcID = s.opts.AcID
-		} else if id := netpref.Load().AcIDFor(netpref.Egress()); id != "" {
-			c.SetLastAcID(id)
 		}
 		id, source := c.ResolveAcIDWithSource()
 		out.AcID = id

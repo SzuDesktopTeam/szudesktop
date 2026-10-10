@@ -9,7 +9,7 @@ import (
 )
 
 // schoolFakeIP 判断学校域名是否被本机代理的 Fake-IP 接管，测试替换它，不碰真实 DNS。
-var schoolFakeIP = portal.SchoolHostFakeIP
+var schoolFakeIP = portal.SchoolHostFakeIPContext
 
 // schoolConnectionError 是学校业务请求连不上时的报错：学校域名解析进了 198.18.0.0/15，
 // 就把「请检查网络」换成能照做的那句（O7）。
@@ -21,8 +21,12 @@ var schoolFakeIP = portal.SchoolHostFakeIP
 // requestURL 是这次请求的地址；err 里有跳转后的地址时以它为准（真正连不上的是那一跳）。
 // 地址只取主机名来判断，不进报错文本。
 func schoolConnectionError(lead, fallback string, requestURL *url.URL, err error) error {
+	return schoolConnectionErrorContext(context.Background(), lead, fallback, requestURL, err)
+}
+
+func schoolConnectionErrorContext(ctx context.Context, lead, fallback string, requestURL *url.URL, err error) error {
 	// 页面自己取消的请求不是连不上，不用再去查 DNS。
-	if errors.Is(err, context.Canceled) {
+	if ctx.Err() != nil || errors.Is(err, context.Canceled) {
 		return errors.New(fallback)
 	}
 	host := ""
@@ -35,7 +39,7 @@ func schoolConnectionError(lead, fallback string, requestURL *url.URL, err error
 			host = u.Hostname()
 		}
 	}
-	if host != "" && schoolFakeIP(host) {
+	if host != "" && schoolFakeIP(ctx, host) {
 		return errors.New(lead + "：" + portal.ProxyTakeoverHint + "，然后重试")
 	}
 	return errors.New(fallback)

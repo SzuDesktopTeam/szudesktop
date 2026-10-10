@@ -160,7 +160,8 @@ func probePortals(r *DetectResult) {
 // （zoneFingerprintNote），以及 diagnose 里的建议都从这里取结论。以前三处各写
 // 一份，同一份诊断报告里一边说「按宿舍区处理」、一边说「判不出来」。
 //
-// 返回 ZoneOutside 表示两个门户都探不到，真掉线时判不出区。
+// 返回 ZoneUnknown 表示页面可达但没有协议指纹；ZoneOutside 表示两个门户都探不到。
+// 这两种情况都不能自动选择认证协议。
 // 只看探测字段，不看外网通不通；调用方要自己确认 r.Probed。
 func PredictDropZone(r *DetectResult) (Zone, string) {
 	if r == nil {
@@ -173,13 +174,8 @@ func PredictDropZone(r *DetectResult) (Zone, string) {
 		return ZoneDorm, "ePortal 登录接口在、深澜握手失败"
 	case r.SrunUsable && r.DormUsable:
 		return ZoneDorm, "两套接口都有回应（宿舍区常见）"
-	case r.DormPortalOK && r.TeachPortalOK:
-		// 这是宿舍区未认证时最常见的情况，容易误判成教学区，所以排在门户规则第一个。
-		return ZoneDorm, "两个门户都能连上、认证接口都没指纹（宿舍区未认证时两个门户都通）"
-	case r.DormPortalOK:
-		return ZoneDorm, "只有宿舍门户能连上"
-	case r.TeachPortalOK:
-		return ZoneTeaching, "只有教学门户能连上"
+	case r.DormPortalOK || r.TeachPortalOK:
+		return ZoneUnknown, "门户页面有响应，但没有确认认证协议"
 	default:
 		return ZoneOutside, "两个门户都连不上"
 	}
@@ -189,6 +185,8 @@ func PredictDropZone(r *DetectResult) (Zone, string) {
 func classify(r *DetectResult) Zone {
 	zone, reason := PredictDropZone(r)
 	switch {
+	case zone == ZoneUnknown:
+		r.Notes = append(r.Notes, reason+" → 暂不自动认证，请运行诊断或手动选择所在区域")
 	case zone == ZoneOutside:
 		r.Notes = append(r.Notes, reason+" → 不在校园网内，或者校园网本身故障")
 	case r.SrunUsable && r.DormUsable:
@@ -202,7 +200,7 @@ func classify(r *DetectResult) Zone {
 // zoneFingerprintNote 把指纹结论讲成人话，供联网状态下参考。
 func zoneFingerprintNote(r *DetectResult) string {
 	zone, reason := PredictDropZone(r)
-	if zone == ZoneOutside {
+	if zone == ZoneOutside || zone == ZoneUnknown {
 		return reason + "，真掉线时判不出区"
 	}
 	return reason + "，掉线后按「" + zoneShortName(zone) + "」处理"
@@ -235,40 +233,69 @@ func (r *DetectResult) AuthenticationZone() Zone {
 			return ZoneTeaching
 		}
 	}
-	if !r.InternetOK && (r.Zone == ZoneTeaching || r.Zone == ZoneDorm) {
-		return r.Zone
-	}
+	// 门户首页可达也可能只是维护页或路由器拦截页，不能据此自动发送凭据。
+	// 手动指定协议由调用方处理；自动认证必须有本次探测的协议指纹。
 	return ZoneUnknown
 }
 
 const dnsWarning = "注意：net.szu.edu.cn 这个域名解析不出来。如果开着代理或 DoH，" +
-	"它可能把域名解析抢走了，可以先关掉代理（或者在代理规则里让 net.szu.edu.cn 直连）再试"
+	"请检查学校域名的 DNS 和直连分流规则；先保存工作，不需要默认关闭整个代理"
 
 // fakeIPWarning 是 net.szu.edu.cn 解析进 Fake-IP 段时的说明。上面的门户探测也经过了代理，
 // 结论可能不准，所以把原因和做法一起写明。
 const fakeIPWarning = "注意：net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址。" + ProxyTakeoverHint
 
 // resolveSchoolDNS 解析教学区门户的域名：能不能解析出来、是不是被 Fake-IP 接管。
-// 探测的其余各项都有自己的超时，这里和以前一样用系统解析器的默认超时。
+// 和其余探测一样限制等待时间，避免系统解析器拖住整个并发探测。
 func resolveSchoolDNS() (ok, fakeIP bool) {
-	return resolveHost(context.Background(), "net.szu.edu.cn")
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+	return resolveHost(ctx, "net.szu.edu.cn")
 }
 
-// internetReachable 检查是否真的能上外网。
+// internetReachable 用两个独立来源检查外网，避免一个服务被过滤就误报断网。
+// 不跟随认证页跳转；任一来源返回预期内容即结束，并取消仍在等待的请求。
 func internetReachable() bool {
-	client := &http.Client{
-		Timeout:   5 * time.Second,
-		Transport: probeTransport,
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	client := noProxyClient(5 * time.Second)
+	probes := []struct {
+		url    string
+		status int
+		body   string
+	}{
+		{connectivityProbe, http.StatusNoContent, ""},
+		{"http://www.msftconnecttest.com/connecttest.txt", http.StatusOK, "Microsoft Connect Test"},
 	}
-	resp, err := client.Get(connectivityProbe)
-	if err != nil {
-		return false
+	results := make(chan bool, len(probes))
+	for _, probe := range probes {
+		go func(rawURL string, status int, expectedBody string) {
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+			if err != nil {
+				results <- false
+				return
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				results <- false
+				return
+			}
+			defer resp.Body.Close()
+			body, err := io.ReadAll(io.LimitReader(resp.Body, 1024))
+			results <- err == nil && resp.StatusCode == status && string(body) == expectedBody
+		}(probe.url, probe.status, probe.body)
 	}
-	defer resp.Body.Close()
-	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1024))
-
-	// 只有干净的 204 才算真的通。被网关劫持时状态码通常不是 204。
-	return resp.StatusCode == http.StatusNoContent
+	for range probes {
+		select {
+		case ok := <-results:
+			if ok {
+				return true
+			}
+		case <-ctx.Done():
+			return false
+		}
+	}
+	return false
 }
 
 // reachable 只关心"连不连得上"，不管对方返回什么。
@@ -300,8 +327,8 @@ var probeTransport = &http.Transport{
 
 // noProxyClient 造一个明确不走系统代理、不跟随跳转的探测客户端。
 //
-// 开着代理时，net.szu.edu.cn 这类内网域名会被代理抢走解析，
-// 探测结果就不可信了。所以探测一律绕开代理。
+// 这里仅绕开应用层 HTTP 代理；TUN 路由和被接管的 DNS 仍由系统与代理软件决定。
+// Fake-IP 是单独记录的排障线索，不因此否定实际成功的响应。
 func noProxyClient(timeout time.Duration) *http.Client {
 	return &http.Client{
 		Timeout:   timeout,

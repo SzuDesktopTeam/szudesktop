@@ -10,9 +10,9 @@ import (
 // statusCacheTTL 内重复的 /api/status 直接复用上一次的网络探测。
 //
 // 一次探测要连外网和两个门户，校外或网络异常时要十几秒。页面轮询、
-// 手动刷新、多个窗口和启动时的自动登录撞在一起时没必要各探一遍：
+// 多个窗口和启动时的自动登录撞在一起时没必要各探一遍：
 // 同一时刻只跑一次，并发到达的请求等它的结果，结果再保留几秒。
-// 登录、注销之后立即作废，页面紧接着的刷新看到的一定是新状态。
+// 手动刷新、登录、注销会立即作废；之后的普通请求共用新一代探测。
 const statusCacheTTL = 5 * time.Second
 
 // networkState 是一次网络探测加在线查询的结果，只读共享，不要修改。
@@ -87,7 +87,7 @@ func (s *Server) runNetworkProbe(p *netProbe) *networkState {
 	return p.st
 }
 
-// invalidateNetworkState 在认证状态可能变化后调用（登录、注销）。
+// invalidateNetworkState 在认证状态可能变化后（登录、注销）或手动刷新时调用。
 func (s *Server) invalidateNetworkState() {
 	c := &s.netState
 	c.mu.Lock()

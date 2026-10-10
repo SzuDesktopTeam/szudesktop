@@ -29,7 +29,7 @@ console.log('PASS environment allowlist, explicit copy and clipboard fallback');
  const diag={zone:'teaching',zone_label:'教学区',internet_ok:false,probed:true,teaching_portal_ok:true,dorm_portal_ok:false,dns_ok:true,ac_id:'12',ac_id_trusted:true,advices:['你在教学区，走深澜（SRun）认证。账号是 6 位校园卡号，密码是统一身份认证密码','教学区接入点编号（ac_id）：12，由校园网网关下发，可信','出口 10.1.2.3 已被账号 2024123456 占用'],notes:['本机 IP 10.1.2.3']};
  const report=diagnosticReport({environment:summary,status,diag,services:log.entries()});
  for(const secret of secrets)assert.ok(!report.includes(secret),'诊断报告里出现了具体值：'+secret);
- for(const line of ['判区：已联网（online）','外网：可用','校园认证：外网正常，没有检测到校园网认证页面','判区：教学区（teaching）','教学区门户：可达','宿舍区门户：不可达','net.szu.edu.cn 解析：成功','ac_id 来源：校园网网关下发',
+ for(const line of ['判区：已联网（online）','外网：可用','校园认证：外网可用；校园网认证状态暂未确认','判区：教学区（teaching）','教学区门户：可达','宿舍区门户：不可达','net.szu.edu.cn 解析：成功','ac_id 来源：校园网网关下发',
   '- 教学区接入点编号（ac_id）：（已隐藏），由校园网网关下发，可信','- 出口 （IP 已隐藏） 已被账号 （数字已隐藏） 占用',
   '在线成绩（本科）：2xx · level:string label:string items:array fetched:number total:number full:boolean · items 2 条，字段 name 2/2 term 1/2 credit 2/2 score 2/2 gpa 1/2 category 0/2 identity 2/2',
   '学校公告：2xx · source:string items:array fetched_at:string stale:boolean · items 1 条，字段 title 1/1 url 1/1 date 1/1','本科课表：4xx','我的琴房预约：无响应','官方校历：本次打开后未请求'])assert.ok(report.includes(line),'诊断报告缺少：'+line+'\n'+report);
@@ -47,6 +47,8 @@ console.log('PASS environment allowlist, explicit copy and clipboard fallback');
  assert.match(diagnosticReport({status:{...status,online_zone:'online'}}),/确认在线的区域：没有/);
  assert.match(diagnosticReport({diag:{...diag,dns_fake_ip:true}}),/学校域名解析到 198\.18\.0\.0\/15：是/);assert.match(diagnosticReport({diag:{...diag,dns_fake_ip:false}}),/学校域名解析到 198\.18\.0\.0\/15：否/);
  assert.match(diagnosticReport({status:{...status,zone:'teaching',internet_ok:false,online_state:'unconfirmed'}}),/校园认证：未查明（查询出错）/);
+ const skipped=diagnosticReport({status:{...status,auto_login:{result:'skipped'}}});
+ assert.match(skipped,/启动时自动连接：已跳过/);assert.doesNotMatch(skipped,/已在线，跳过/);
  assert.match(diagnosticReport({environment:summary}),/本次打开后还没有运行网络诊断/);
  assert.match(diagnosticReport({diag:{...diag,advices:['学校域名 net.szu.edu.cn 解析到了 198.18.0.0/15 里的假地址：代理软件接管了学校域名']}}),/学校域名解析到 198\.18\.0\.0\/15：是/,'结论里提到 Fake-IP 时报告为「是」，且不把网段当成 IP 遮掉');
  assert.equal(scrubAdvice('教学区接入点编号（ac_id）：abc-9，只是从门户页面推测的'),'教学区接入点编号（ac_id）：（已隐藏），只是从门户页面推测的');

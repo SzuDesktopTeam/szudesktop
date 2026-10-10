@@ -15,7 +15,7 @@ console.log('PASS network reachability, authentication and unknown status remain
 
 const app=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
-const refreshAt=app.indexOf('async function refresh(){'),refreshEnd=app.indexOf('\nlet networkCheckedAt=0;',refreshAt);
+const refreshAt=app.indexOf('async function refresh('),refreshEnd=app.indexOf('\nlet networkCheckedAt=0;',refreshAt);
 assert.ok(refreshAt>=0&&refreshEnd>refreshAt,'找不到 refresh()');
 const refresh=app.slice(refreshAt,refreshEnd);
 // 刷新逻辑写入的每个节点都必须真的出现在页面或模板里，不能再对着已删除的节点空转。
@@ -31,7 +31,7 @@ const pick=s=>{assert.ok(Object.hasOwn(nodes,s),'unexpected selector '+s);return
 const stampDocument={querySelector:s=>s==='meta[name=app-version]'?meta:pick(s),getElementById:()=>null};
 const ctx=vm.createContext({networkSummaryHTML,networkLoginHint,autoLoginHTML,$:pick,appVersion:'',networkCheckedAt:0,api:async()=>connected,Date});
 ctx.stampVersion=v=>stampVersion(v,{getVersion:()=>ctx.appVersion,setVersion:next=>{ctx.appVersion=next},document:stampDocument,cards:[]});
-vm.runInContext('let net=null,saved=false,probing=false;'+refresh,ctx);
+vm.runInContext('let net=null,saved=false,probing=false,networkRequest=0;'+refresh,ctx);
 assert.equal(await vm.runInContext('refresh()',ctx),true);
 assert.equal(meta.content,'beta9.9.9');
 assert.equal(nodes['#app-badge'].textContent,'beta9.9.9 · 非官方应用');
@@ -63,24 +63,47 @@ assert.doesNotMatch(nodes['#network-summary'].innerHTML,/data-tone="success"/);
 assert.equal(nodes['#auto-login-result'].innerHTML,'','状态读取失败时不保留旧的启动结果');
 assert.equal(vm.runInContext('net',ctx),null);
 assert.match(nodes['.network-login > summary small'].textContent,/状态待确认/);
+const authenticate=app.slice(app.indexOf('async function authenticate('),app.indexOf('\nasync function run('));
+for(const [staleFails,staleFirst] of [[false,false],[true,false],[false,true]]){
+ const calls=[],raceNodes={'#network-summary':{innerHTML:''},'#auto-login-result':{innerHTML:''},'.network-login > summary small':{textContent:''}};
+ let resolveOld,rejectOld,resolveNew;
+ const raceCtx=vm.createContext({networkSummaryHTML,networkLoginHint,autoLoginHTML,Date,$:selector=>raceNodes[selector],stampVersion:()=>{},
+  credentialInput:()=>({data:{username:'test',password:'not-real'},remember:false}),networkResult:()=>{},
+  api:path=>{calls.push(path);if(path==='/api/login')return Promise.resolve({ok:false,message:'未验证凭据'});if(path==='/api/status?refresh=1')return new Promise(resolve=>{resolveNew=resolve});return new Promise((resolve,reject)=>{resolveOld=resolve;rejectOld=reject})}});
+ vm.runInContext('let net=null,saved=false,probing=false,networkRequest=0,networkCheckedAt=0;'+refresh+'\n'+authenticate,raceCtx);
+ const old=vm.runInContext('refresh()',raceCtx);
+ assert.equal(await vm.runInContext('refresh()',raceCtx),false,'普通轮询仍共用正在进行的状态请求');
+ const login=vm.runInContext('authenticate()',raceCtx);
+ await new Promise(setImmediate);
+ assert.deepEqual(calls,['/api/status','/api/login','/api/status?refresh=1'],'认证完成必须另起强制刷新，不能被旧状态请求吞掉');
+ const finishOld=()=>{if(staleFails)rejectOld(Error('旧请求失败'));else resolveOld({internet_ok:false,online_known:false,online_state:'not_queried',zone:'outside'})};
+ if(staleFirst){finishOld();assert.equal(await old,false);assert.equal(vm.runInContext('probing',raceCtx),true,'旧请求结束不能解除新请求的刷新状态');assert.equal(await vm.runInContext('refresh()',raceCtx),false,'旧请求结束后普通轮询仍等待新请求')}
+ resolveNew(connected);
+ await login;
+ if(!staleFirst)finishOld();
+ assert.equal(await old,false,'过时响应不再作为刷新结果应用');
+ assert.equal(vm.runInContext('net.online',raceCtx),true,'晚到的旧状态或失败不能覆盖新的在线状态');
+ assert.match(raceNodes['#network-summary'].innerHTML,/出口已在线/);
+ assert.equal(vm.runInContext('probing',raceCtx),false);
+}
+console.log('PASS authentication forces a new status request and obsolete responses cannot replace it');
 let click,work,message;
-const pendingCtx=vm.createContext({busy:false,probing:true,officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},document:{addEventListener:(_,handler)=>{click=handler}},run:fn=>{work=fn()},toast:t=>{message=t},refresh:()=>{throw Error('duplicate refresh')}});
+const forced=[];
+const pendingCtx=vm.createContext({busy:false,probing:true,officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},document:{addEventListener:(_,handler)=>{click=handler}},run:fn=>{work=fn()},toast:t=>{message=t},refresh:async force=>{forced.push(force);return true}});
 vm.runInContext(app.slice(app.indexOf("document.addEventListener('click'"),app.indexOf("document.addEventListener('submit'")),pendingCtx);
 click({target:{closest:()=>({dataset:{action:'refresh'}})},preventDefault:()=>{}});
 await work;
-assert.match(message,/正在刷新/);
-assert.doesNotMatch(message,/失败|已刷新/);
-console.log('PASS failed refresh clears previous online state and reports failure');
+assert.deepEqual(forced,[true],'手动刷新必须绕过旧状态请求和缓存');
+assert.match(message,/已刷新/);
+console.log('PASS failed refresh clears previous online state; manual refresh starts a new request');
 
-const authenticate=app.slice(app.indexOf('async function authenticate('),app.indexOf('\nasync function run('));
 let refreshed=0;
 const authCtx=vm.createContext({credentialInput:()=>({data:{username:'test',password:'test'},remember:false}),networkResult:()=>{},api:async()=>({ok:false,message:'当前出口已有会话'}),refresh:async()=>{refreshed++}});
 vm.runInContext(authenticate,authCtx);
 await vm.runInContext('authenticate()',authCtx);
 assert.equal(refreshed,1);
 console.log('PASS a login that did not verify credentials still refreshes outlet status');
-// O7：外网正常、判区为「已联网」（接口真实返回 zone:'online'）、又没查明认证状态时，多半只是人在校外（宿舍区门户必然连不上），
-// 不再常驻琥珀色的「请运行诊断」，改成灰色中性说明。原断言要求这里是 warning，正是本条要改掉的行为。
+// 外网正常、判区为「已联网」（接口返回 zone:'online'）、认证未知时使用灰色中性说明，不猜所在网络或认证结果。
 const mixed=networkSummaryHTML({...connected,zone:'online',zone_label:'已联网',online_known:false,online_error:'<img src=x>'});
 assert.match(mixed,/data-tone="success"/);assert.match(mixed,/data-tone="muted"/);assert.doesNotMatch(mixed,/data-tone="warning"/);
 assert.ok(mixed.includes(OFF_CAMPUS_NOTE));assert.doesNotMatch(mixed,/img src=x|运行网络诊断|待确认/);
@@ -90,6 +113,7 @@ for(const zone of ['teaching','dorm']){const campus=networkSummaryHTML({internet
 // 中性说明优先用接口给的 online_note，照样按纯文本转义。
 const noPortal=networkSummaryHTML({internet_ok:true,zone:'online',zone_label:'已联网',online_known:false,online_state:'no_campus_portal',online_note:'<b>外网正常</b>'});
 assert.match(noPortal,/data-tone="muted"/);assert.doesNotMatch(noPortal,/data-tone="warning"/);assert.match(noPortal,/&lt;b&gt;外网正常&lt;\/b&gt;/);
+assert.doesNotMatch(noPortal,/当前网络出口已在线|出口已在线/,'外网可用但认证未知时不能显示已认证');
 assert.ok(networkSummaryHTML({internet_ok:true,zone:'online',online_known:false,online_state:'no_campus_portal'}).includes(OFF_CAMPUS_NOTE));
 const notQueried=networkSummaryHTML({internet_ok:false,zone:'outside',zone_label:'校外，或校园网不通',online_known:false,online_state:'not_queried'});
 assert.match(notQueried,/data-tone="error"/);assert.match(notQueried,/data-tone="muted"/);assert.doesNotMatch(notQueried,/data-tone="warning"/);
@@ -124,8 +148,13 @@ const attemptAt=1790000000,attemptTime=new Date(attemptAt*1000).toLocaleTimeStri
 assert.equal(autoLoginHTML(null),'');assert.equal(autoLoginHTML(connected),'');assert.equal(autoLoginHTML({auto_login:{result:'unknown'}}),'');
 const autoOk=autoLoginHTML({auto_login:{result:'ok',message:'认证成功',at:attemptAt}});
 assert.match(autoOk,/data-tone="success"/);assert.match(autoOk,/启动时已自动连接校园网/);assert.ok(autoOk.includes(attemptTime));
-const autoSkipped=autoLoginHTML({auto_login:{result:'skipped',message:'本机已在线',at:attemptAt}});
+const autoSkipped=autoLoginHTML({auto_login:{result:'skipped',message:'本机已在线，未重复认证',at:attemptAt}});
 assert.match(autoSkipped,/data-tone="muted"/);assert.match(autoSkipped,/未重复认证/);
+const autoSkippedUnknown=autoLoginHTML({auto_login:{result:'skipped',message:'<b>校园网认证状态暂未确认</b>，启动时没有尝试认证',at:attemptAt}});
+assert.match(autoSkippedUnknown,/data-tone="muted"/);assert.match(autoSkippedUnknown,/&lt;b&gt;校园网认证状态暂未确认&lt;\/b&gt;，启动时没有尝试认证/);
+assert.doesNotMatch(autoSkippedUnknown,/本机已在线|<b>/,'跳过自动连接不等于本机已在线，说明仍须转义');
+const autoSkippedFallback=autoLoginHTML({auto_login:{result:'skipped'}});
+assert.match(autoSkippedFallback,/启动时未自动连接/);assert.doesNotMatch(autoSkippedFallback,/已在线|已连接校园网/);
 const autoFailed=autoLoginHTML({auto_login:{result:'failed',message:'',at:0}});
 assert.match(autoFailed,/data-tone="warning"/);assert.match(autoFailed,/重新登录/);
 assert.match(app,/id="auto-login-result" class="auto-login-result">\$\{autoLoginHTML\(net\)\}/,'网络页必须显示启动时自动连接的结果');
@@ -133,7 +162,6 @@ console.log('PASS startup auto-connect results appear on the network page with e
 
 // 轮询条件是 app-logic.mjs 的 shouldPollNetwork；这里照 app.mjs 的 pollNetwork 接线：真的探测时记下时间（refresh() 开头就是这样做的）。
 assert.match(app,/function pollNetwork\(force=false,anyPage=false\)\{if\(shouldPollNetwork\(\{exiting,hidden:document\.hidden,page,force,anyPage,now:Date\.now\(\),checkedAt:networkCheckedAt\}\)\)void refresh\(\)\}/,'pollNetwork 必须把当前状态交给 shouldPollNetwork');
-assert.match(refresh,/^async function refresh\(\)\{if\(probing\)return false;probing=true;networkCheckedAt=Date\.now\(\);/,'每次探测都先记下时间，轮询才不会重复探测');
 let pollNow=1_000_000,refreshes=0;
 const pollCtx={exiting:false,page:'home',document:{hidden:false},checkedAt:0,
  pollNetwork(force=false,anyPage=false){if(shouldPollNetwork({exiting:this.exiting,hidden:this.document.hidden,page:this.page,force,anyPage,now:pollNow,checkedAt:this.checkedAt})){refreshes++;this.checkedAt=pollNow}}};

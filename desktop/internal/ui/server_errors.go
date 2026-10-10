@@ -33,6 +33,40 @@ func writeAPIError(w http.ResponseWriter, status int, err error) {
 // 所以网络错误一律换成固定文案；门户自己回的错误（如“服务端没有返回 challenge（error=…）”）
 // 不带地址、对排查有用，去掉密码后保留原文。
 func portalErrorMessage(action string, err error, secret string) string {
+	return portalErrorMessageContext(context.Background(), action, err, secret, "")
+}
+
+func portalErrorMessageContext(ctx context.Context, action string, err error, secret, host string) string {
+	if message := portalOperationStoppedMessage(ctx, action, err); message != "" {
+		return message
+	}
+	fallback := plainPortalErrorMessage(action, err, secret)
+	var dnsErr *net.DNSError
+	var netErr net.Error
+	var opErr *net.OpError
+	var urlErr *url.Error
+	if !errors.As(err, &dnsErr) && !errors.As(err, &netErr) && !errors.As(err, &opErr) && !errors.As(err, &urlErr) && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, os.ErrDeadlineExceeded) {
+		return fallback
+	}
+	u, _ := url.Parse(host)
+	message := schoolConnectionErrorContext(ctx, action+"失败", fallback, u, err).Error()
+	if stopped := portalOperationStoppedMessage(ctx, action, err); stopped != "" {
+		return stopped
+	}
+	return message
+}
+
+func portalOperationStoppedMessage(ctx context.Context, action string, err error) string {
+	if errors.Is(ctx.Err(), context.Canceled) || errors.Is(err, context.Canceled) {
+		return action + "已取消，暂不能确认结果。请先刷新网络状态，再决定是否重试"
+	}
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return action + "等待超时，暂不能确认结果。请先刷新网络状态，再检查校园网连接和代理设置"
+	}
+	return ""
+}
+
+func plainPortalErrorMessage(action string, err error, secret string) string {
 	var dnsErr *net.DNSError
 	var netErr net.Error
 	var opErr *net.OpError

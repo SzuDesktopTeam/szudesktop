@@ -10,11 +10,11 @@ export const networkLoginHint=status=>!status?'连接状态待确认，可展开
 const row=(tone,icon,title,detail)=>`<div class="network-line" data-tone="${tone}">${pixelIcon(icon)}<div><strong>${title}</strong>${detail?`<span>${esc(detail)}</span>`:''}</div></div>`;
 
 // 校园认证这一栏按 /api/status 的 online_state 分（与 desktop/internal/ui/server.go 的 onlineState* 一致）：
-// online / offline 已查明；no_campus_portal 是外网正常、没判到校园网区域、门户也查不到——人在校外时本来就是这样，
-// 不能常驻一条琥珀色的「请运行诊断」，把在家安装的新同学引去排查一个不存在的问题；not_queried 是没判到教学区或宿舍区、没去查。
+// online / offline 已查明；no_campus_portal 只说明外网可用、校园认证未确认，不能据此断言门户不存在或本机已认证。
+// not_queried 是没判到教学区或宿舍区、没去查。
 // 这两种都用灰色的中性说明。只有 unconfirmed（判定在教学区或宿舍区，门户却查不到）才保留琥珀色和诊断引导。
 // 旧版接口没有 online_state 时，按「外网正常、判区为已联网、没查明」自己判断中性状态，其余照旧按待确认处理。
-export const OFF_CAMPUS_NOTE='外网正常；没有检测到校园网认证页面（不在校园网内时属正常）';
+export const OFF_CAMPUS_NOTE='外网可用；校园网认证状态暂未确认';
 export function authState(status){
   if(status.online_known)return status.online?'online':'offline';
   if(['no_campus_portal','not_queried','unconfirmed'].includes(status.online_state))return status.online_state;
@@ -39,7 +39,7 @@ export function autoLoginHTML(status) {
   const when=at?' · '+at:'';
   if(attempt.result==='failed')return row('warning','i-key','启动时自动连接未成功'+when,attempt.message||'请在下方重新登录，或检查已记住的账号密码。');
   if(attempt.result==='ok')return row('success','i-signal','启动时已自动连接校园网'+when,'');
-  if(attempt.result==='skipped')return row('muted','i-compass','本机已在线，启动时未重复认证'+when,'');
+  if(attempt.result==='skipped')return row('muted','i-compass','启动时未自动连接'+when,attempt.message||'启动时跳过了自动连接。');
   return '';
 }
 

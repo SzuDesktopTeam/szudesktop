@@ -55,7 +55,7 @@ func TestProbedFlagDistinguishesNotProbedFromFailed(t *testing.T) {
 // 核心约定（踩过坑才定下来的）：
 //   - 只有深澜指纹 → 教学区
 //   - 只有 ePortal 指纹 → 宿舍区
-//   - 两个门户都通但都没有指纹 → 宿舍区（教学区机器上宿舍门户首页也返回 200）
+//   - 门户页面有响应但没有指纹 → 未知（可能是维护页或网络拦截页）
 //   - 什么都没探到 → 校外
 func TestClassifyUsesFingerprintNotJustPortalReachability(t *testing.T) {
 	cases := []struct {
@@ -79,19 +79,19 @@ func TestClassifyUsesFingerprintNotJustPortalReachability(t *testing.T) {
 			want: ZoneDorm,
 		},
 		{
-			name: "两个门户都通但无指纹 → 宿舍区（别误判成教学区）",
+			name: "两个门户都通但无指纹 → 未知",
 			in:   DetectResult{DormPortalOK: true, TeachPortalOK: true},
-			want: ZoneDorm,
+			want: ZoneUnknown,
 		},
 		{
-			name: "只有宿舍门户通 → 宿舍区",
+			name: "只有宿舍门户页面通 → 未知",
 			in:   DetectResult{DormPortalOK: true},
-			want: ZoneDorm,
+			want: ZoneUnknown,
 		},
 		{
-			name: "只有教学门户通 → 教学区",
+			name: "只有教学门户页面通 → 未知",
 			in:   DetectResult{TeachPortalOK: true},
-			want: ZoneTeaching,
+			want: ZoneUnknown,
 		},
 		{
 			name: "两个门户都探不到 → 校外",

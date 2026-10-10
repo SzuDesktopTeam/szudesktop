@@ -123,7 +123,7 @@ assert.doesNotMatch(source,/preload:|nodeIntegration:true|sandbox:false|webSecur
   const dialog=fakeDialog(),opened=[],cleared=[],partitions=[];let quitting=false,report=true,shellFails=false;
   const officialSession={fromPartition:(name,options)=>{
     assert.deepEqual(options,{cache:false});partitions.push(name);
-    return {setPermissionRequestHandler(){},setPermissionCheckHandler(){},cookies:{get:async()=>[]},
+    return {setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async config=>{assert.equal(name,'szu-official');assert.deepEqual(config,{mode:'direct'});},cookies:{get:async()=>[]},
       clearStorageData:async()=>{cleared.push(name+':storage');},clearCache:async()=>{cleared.push(name+':cache');}};
   }};
   const deps={BrowserWindow:FakeWindow,Menu:{buildFromTemplate:value=>value},dialog,session:officialSession,
