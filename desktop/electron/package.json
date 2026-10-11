@@ -14,7 +14,7 @@
     "check": "node ../run-checks.mjs --only-node"
   },
   "devDependencies": {
-    "electron": "44.5.1",
+    "electron": "44.7.0",
     "electron-builder": "26.15.3"
   }
 }
