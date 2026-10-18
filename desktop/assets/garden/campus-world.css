@@ -215,6 +215,20 @@ body[data-home-skin] .home-shortcuts button { background:var(--world-paper); bor
 .network-login > summary small { color:var(--world-muted); font-size:12px; }
 .network-login-body { margin-top:20px; }
 .network-offcampus > .notice { margin-top:12px; }
+/* 网络诊断报告：把六项探测结果从"一行小字"拆成有层次的块。
+   容器仍是 .notice[data-tone]（底色由它给），这里把内部文字改回正文色，
+   只让结果值带状态色——否则整块同色，读起来等于没有层级。 */
+.diag-report { display:grid; gap:9px; color:var(--ink); }
+.diag-report-head { font:15px/1.5 var(--pixel); color:var(--ink); }
+.diag-checks { display:flex; flex-wrap:wrap; gap:6px 20px; margin:0; padding:0; list-style:none; }
+.diag-checks li { display:flex; align-items:baseline; gap:7px; font-size:13px; line-height:1.6; }
+.diag-checks li span { color:var(--muted); }
+.diag-checks li b { font-weight:600; }
+.diag-checks li[data-state="ok"] b { color:var(--success); }
+.diag-checks li[data-state="bad"] b { color:var(--error); }
+.diag-checks li[data-state="unknown"] b { color:var(--muted); font-weight:400; }
+.diag-advices { margin:0; padding-left:18px; font-size:13px; line-height:1.8; color:var(--ink); }
+.diag-report .diag-guide { justify-self:start; font-size:13px; }
 @media(max-width:700px) { .network-overview .network-summary { grid-template-columns:1fr; } }
 body[data-home-skin] .mast { min-height:80px; padding-top:10px; padding-bottom:10px; }
 body[data-home-skin] nav { padding:6px 9px; }

@@ -43,8 +43,16 @@ export function autoLoginHTML(status) {
   return '';
 }
 
-// 网络诊断的结果：一行结论后面跟着校园网指南，看不懂结论时可以直接去查怎么处理。结论和报错都是纯文本，这里转义。
+// 网络诊断的结果：一段结构化的小报告，而不是把所有字段用「·」糊成一行。
+//
+// 一行式的写法在六项信息时基本没法读，尤其外面还套着琥珀色警告底——所有字
+// 同色同号，谁也没比谁重要。这里拆成三层：结论（区域）→ 探测项（带状态色）
+// → 建议。外层容器仍是 .notice[data-tone]，底色由它给；内部改回正文色，
+// 只让"可用 / 可达"这类结果值带颜色，层次才立得住。
+//
+// 诊断结论和报错都是纯文本，这里统一转义。
 export const NETWORK_GUIDE_URL='https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/network.md';
 const guideLink=`<a class="diag-guide" href="${NETWORK_GUIDE_URL}" target="_blank" rel="noopener noreferrer">校园网指南 ↗</a>`;
-export const diagResultHTML=d=>`<span>${esc([d.zone_label,'互联网：'+(d.internet_ok?'可用':'不可用'),'教学区门户：'+(d.teaching_portal_ok?'可达':'未确认'),'宿舍区门户：'+(d.dorm_portal_ok?'可达':'未确认'),...(d.advices||[])].join(' · '))}</span> ${guideLink}`;
-export const diagErrorHTML=message=>`<span>${esc(message)}</span> ${guideLink}`;
+const diagCheck=(label,state,value)=>`<li data-state="${state}"><span>${label}</span><b>${value}</b></li>`;
+export const diagResultHTML=d=>`<div class="diag-report"><strong class="diag-report-head">${esc(d.zone_label)}</strong><ul class="diag-checks">${diagCheck('互联网',d.internet_ok?'ok':'bad',d.internet_ok?'可用':'不可用')}${diagCheck('教学区门户',d.teaching_portal_ok?'ok':'unknown',d.teaching_portal_ok?'可达':'未确认')}${diagCheck('宿舍区门户',d.dorm_portal_ok?'ok':'unknown',d.dorm_portal_ok?'可达':'未确认')}</ul>${(d.advices||[]).length?`<ul class="diag-advices">${d.advices.map(a=>`<li>${esc(a)}</li>`).join('')}</ul>`:''}${guideLink}</div>`;
+export const diagErrorHTML=message=>`<div class="diag-report"><strong class="diag-report-head">诊断没能完成</strong><ul class="diag-advices"><li>${esc(message)}</li></ul>${guideLink}</div>`;

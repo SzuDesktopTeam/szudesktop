@@ -139,9 +139,19 @@ assert.match(server,/json:"online_state"/);assert.match(server,/json:"online_not
 console.log('PASS network status fields and wording match the engine (online_state values, online_note, dns_fake_ip)');
 // O8：诊断结果旁边就是校园网指南；诊断结论和报错都是纯文本。
 const diagnosed=diagResultHTML({zone_label:'<b>已联网</b>',internet_ok:true,teaching_portal_ok:false,dorm_portal_ok:true,advices:['当前能正常上外网']});
-assert.match(diagnosed,/&lt;b&gt;已联网&lt;\/b&gt; · 互联网：可用 · 教学区门户：未确认 · 宿舍区门户：可达 · 当前能正常上外网/);assert.doesNotMatch(diagnosed,/<b>/);
+// 结构化：区域结论 + 三项探测 + 建议各自成块，不再把六项信息用「·」糊成一行。
+assert.match(diagnosed,/class="diag-report"/);
+assert.match(diagnosed,/class="diag-report-head">&lt;b&gt;已联网&lt;\/b&gt;<\/strong>/);
+assert.match(diagnosed,/data-state="ok"><span>互联网<\/span><b>可用<\/b>/);
+assert.match(diagnosed,/data-state="unknown"><span>教学区门户<\/span><b>未确认<\/b>/);
+assert.match(diagnosed,/data-state="ok"><span>宿舍区门户<\/span><b>可达<\/b>/);
+assert.match(diagnosed,/class="diag-advices"><li>当前能正常上外网<\/li>/);
+assert.doesNotMatch(diagnosed,/<b>已联网/,'学校返回的文字必须转义，不能当 HTML 插进来');
+assert.doesNotMatch(diagnosed,/ · /,'六项信息不该再挤进一行');
+const diagFailed=diagErrorHTML('<i>诊断失败</i>');
+assert.match(diagFailed,/诊断没能完成/);assert.match(diagFailed,/&lt;i&gt;诊断失败&lt;\/i&gt;/);
 assert.equal(NETWORK_GUIDE_URL,'https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/network.md');
-for(const view of [diagnosed,diagErrorHTML('<i>诊断失败</i>')]){assert.ok(view.includes(`href="${NETWORK_GUIDE_URL}" target="_blank" rel="noopener noreferrer">校园网指南 ↗</a>`));assert.doesNotMatch(view,/<i>/)}
+for(const view of [diagnosed,diagFailed]){assert.ok(view.includes(`href="${NETWORK_GUIDE_URL}" target="_blank" rel="noopener noreferrer">校园网指南 ↗</a>`));assert.doesNotMatch(view,/<i>/)}
 assert.match(app,/el\.innerHTML=diagErrorHTML\(e\.message\);throw e\}lastDiag=d;el\.dataset\.tone=d\.internet_ok\?'info':'warning';el\.innerHTML=diagResultHTML\(d\);/,'网络诊断结果要带校园网指南链接，并记下最近一次结论给诊断报告');
 console.log('PASS diagnosis results link to the campus network guide and escape their text');
 const attemptAt=1790000000,attemptTime=new Date(attemptAt*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
