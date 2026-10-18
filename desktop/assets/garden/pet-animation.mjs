@@ -59,12 +59,12 @@ export function animationFrame(species, action, elapsedMs, {reducedMotion=false}
 }
 
 const IDLE_ROUTINES={
-  libao:['idle','look','idle','greet','idle','ponder','idle','signature','idle','look','idle','wake'],
-  chestnut:['idle','look','idle','ponder','idle','wake','idle','signature','idle','look','idle','idle'],
-  egret:['idle','look','idle','walk','idle','idle','ponder','idle','idle','signature','idle','look'],
-  pingu:['idle','look','idle','greet','idle','ponder','idle','signature','idle','walk','idle','look'],
-  skipper:['idle','look','idle','ponder','idle','walk','idle','signature','idle','look','idle','greet'],
-  turtle:['idle','idle','look','idle','ponder','idle','idle','idle','signature','idle','look','idle'],
+  libao:['idle','look','idle','greet','idle','ponder','idle','signature','idle','celebrate','idle','look','idle','harvest','idle','wake'],
+  chestnut:['idle','look','idle','ponder','idle','wake','idle','signature','idle','look','idle','celebrate','idle','idle','idle','look'],
+  egret:['idle','look','idle','walk','idle','idle','ponder','idle','idle','signature','idle','look','idle','water','idle','idle'],
+  pingu:['idle','look','idle','greet','idle','ponder','idle','signature','idle','walk','idle','look','idle','celebrate','idle','greet'],
+  skipper:['idle','look','idle','ponder','idle','walk','idle','signature','idle','look','idle','greet','idle','build','idle','celebrate'],
+  turtle:['idle','idle','look','idle','ponder','idle','idle','idle','signature','idle','look','idle','idle','water','idle','idle'],
 };
 /** Deterministic routines make a companion's personality visible without saving animation state. */
 export function idleAction(species,cycle=0){
