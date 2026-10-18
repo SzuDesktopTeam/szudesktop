@@ -237,7 +237,9 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size:13p
 dialog { border: 4px solid #7d4c25; background: #fff0cd; color: var(--ink); padding: 26px; max-width: min(440px,90vw); box-shadow: inset 0 0 0 2px #eab571,5px 5px #392c2266; line-height: 1.85; }dialog::backdrop { background: #35251488; }
 .skip { position: absolute; top: -60px; left: 10px; background: var(--paper); padding: 10px; z-index: 100; }.skip:focus { top: 5px; }
 body[data-motion=off] * { animation: none !important; transition: none !important; }
-@keyframes breathe { 50% { transform: translateY(-3px); } }
+/* 待机呼吸：3px 在 120px 高的伙伴身上只有 2.5%，基本看不出来。
+   5px 仍克制，但能让人察觉它在呼吸。 */
+@keyframes breathe { 50% { transform: translateY(-5px); } }
 @media(prefers-reduced-motion:reduce) { * { animation: none !important; transition: none !important; } }
 @media(max-width:1220px) { .mast,.shell { margin-left: 24px; margin-right: 24px; } }
 @media(max-width:900px) {

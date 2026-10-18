@@ -144,7 +144,10 @@ function cat(q,action){
 
 function libao(q,action){
   const d=painter(52,56),o='#6E1F35',red='#ED4C67',hi='#F585A0',shade='#C93A55',h=q.h,b=q.b;
-  const top=8+Math.max(0,Math.min(3,h)),bottom=44;
+  // 起伏上限从 3px 提到 5px：原来的幅度在 56px 高的身体上只有 5%，
+  // 盯着看也察觉不到在动。放大后"发呆/张望"才真的像在呼吸。
+  // 必须 round：painter 只接受整数像素坐标，小数会直接抛错。
+  const top=8+Math.round(Math.max(0,Math.min(5,h*1.7))),bottom=44;
   // Fruit leaf and twig have their own anticipation/settle beat.
   d.p([[18+q.t,top-4],[20+q.t,top-8],[24+q.t,top-8],[24+q.t,top-6],[28+q.t,top-6],[28+q.t,top-2],[34,top-2],[34,top]],o);
   d.r(20+q.t,top-6,4,2,red);d.r(20,top-2,12,2,hi);
