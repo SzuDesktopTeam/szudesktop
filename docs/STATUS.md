@@ -3707,3 +3707,34 @@ README 中英两版的下载按钮、DMG 直链、「当前版本」一行（含
 合并前本地完整检查包括 `go test ./... -count=1`、`go vet ./...`、109 个模块语法／链接检查、58 个 JS 检查和 6 个 Python 检查。独立候选目录包的运行证据见 74.6；该候选生成于最后这处注销文案修补之前，最终 PR 的构建与安装升级产物以该提交的 CI 为准。原安装版与当前网络不动，真实认证和换网验收继续保留。
 
 两处注销提示的离线回归均先观察旧代码失败、修改后通过，且本地假门户收到零请求。最终 Go 全套 12 个包通过（UI 11.635 秒、portal 5.198 秒），静态与文档检查通过。修复提交为 `a417ac3`；[PR #45](https://github.com/SzuDesktopTeam/szudesktop/pull/45) 包含本批修复与中英 README、CHANGELOG、网络／隐私指南及本总表。维护者授权在必需检查通过后 squash 合并；本轮只交付源码，不打标签或替换 beta0.9.7 公开安装包。GitHub 上的安装包构建／升级与 macOS 检查结果、最终合并状态统一查看该 PR。
+
+
+## 75. 界面排版升级与 beta0.9.8 发布（2026-10-18）
+
+### 75.1 界面
+
+- **建立排版尺度**：字号七档（12/13/14/16/20/26/32）、间距五档、表面三层。此前 `:root` 只有 18 个颜色变量，字号与间距全靠各模块写死，因此出现过 22 种字号、单一个 12px 用了两百多次的局面。
+- **正文 12px → 13px**（约 190 处）。中文在 12px 下偏挤，13px 是桌面端的可读下限；品牌副标题这类装饰性文字保留 12px。
+- **组件状态补完**：按钮的悬停／按下／禁用分别可辨；输入框聚焦从系统默认蓝框换成暖色描边加柔光。
+- **页面头**改为底部对齐，描述限宽 62ch。
+- **卡片**：纸面提亮、描边加深、自带标题的卡片共用一条分隔线、双层投影。
+- **网络诊断结果**改为结构化面板：区域结论 / 三项探测 / 处理建议三层，不再把六个字段用「·」拼成一行小字。
+- **功能页隐藏庭院拱窗**：校园网、校园服务、设置不再显示庭院小景预览；今日、庭院、书房保留。
+
+### 75.2 验收
+
+- 前端检查：check-ui 20、check-network-ui 9、check-campus 9、check-notebook 33、check-interactions 40、check-productivity 6、check-arcade 14，全部通过。
+- `check_release_notes.py` 35 项通过；Windows 构建与冒烟全部通过。
+- 启动真实引擎逐页截图（1240×880）人工确认；截图链路已留档（Electron + 独立 userData + 纯软件渲染）。
+- **未验证**：真实的重新登录／注销／切换路由器或代理；macOS 预览版；比 1240×880 更窄的窗口。
+
+### 75.3 发布
+
+- 标签 `beta0.9.8`，指向提交 `9d51349`；发布为预发布。
+- main 推送运行 `39154997210` 全绿后才打标签，其中包含 PR 上不运行的 `smoke-desktop-electron-macos-intel`。
+- 附件：Windows Setup、免安装 ZIP、独立 exe、macOS arm64 DMG、macOS x64 DMG，各带同名 `.sha256`。
+- Release 正文由 CHANGELOG 的 `## beta0.9.8` 一节抽取。
+
+### 75.4 下一步
+
+- 按 CONTRIBUTING 的要求，把安装升级验收基线挪到 beta0.9.8（`desktop/electron/smoke_installer.py` 的 `BASELINE_VERSION`／`BASELINE_SHA256`／`BASELINE_ELECTRON`／`BASELINE_COMPANIONS`，`mac_upgrade.py`、`check_dmg_upgrade.py` 与 `release.yml` 中写着基线版本号的步骤名）。这一步放在下一次升版本的 PR 里。
