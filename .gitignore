@@ -16,6 +16,10 @@ config.json
 credentials.json
 .env
 
+# Claude Code 的隔离工作树：每个 agent 会话留一份完整项目副本。
+# 实测四个就是几十万行，既占磁盘，也会污染全仓统计和搜索。
+.claude/worktrees/
+
 # 编辑器 / 系统
 .idea/
 .vscode/
