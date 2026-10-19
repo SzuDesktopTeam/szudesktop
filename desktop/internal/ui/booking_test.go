@@ -72,8 +72,10 @@ func TestBookingPublicSlotsAreReadOnly(t *testing.T) {
 	if day.Slots[0].Start != "14:00" || day.Slots[0].End != "14:30" {
 		t.Fatal("half-hour index mapping")
 	}
-	if _, err = s.booking.availability(context.Background(), 1, "2026-09-23", now); err == nil {
-		t.Fatal("beyond booking window accepted")
+	// lastReservationDayBeforeAppointment 的语义没核实清楚：实测学校在 Days=3 时
+	// 仍然对 +3 的日期返回空位，所以本地不再拿它卡，只保留 31 天的宽松兜底。
+	if _, err = s.booking.availability(context.Background(), 1, "2026-10-25", now); err == nil {
+		t.Fatal("超过 31 天的日期应该被拒")
 	}
 	if bookingToday(time.Date(2026, 9, 19, 17, 0, 0, 0, time.UTC)).Format("2006-01-02") != "2026-09-20" {
 		t.Fatal("not Shenzhen date")

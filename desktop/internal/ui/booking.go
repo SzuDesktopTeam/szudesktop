@@ -292,8 +292,12 @@ func (b *bookingService) availability(ctx context.Context, id int, date string, 
 	}
 	today := bookingToday(now)
 	day, err := time.ParseInLocation("2006-01-02", date, today.Location())
-	if err != nil || day.Before(today) || !day.Before(today.AddDate(0, 0, room.Type.Days)) {
-		return nil, errors.New("日期超出学校当前开放预约范围")
+	// 别拿 lastReservationDayBeforeAppointment 当"最多提前几天"来卡。
+	// 实测该字段是 3 时，今天+3 的日期学校仍然正常返回空位（不是边界），
+	// 说明它的语义还没核实清楚；拿它当硬限制会白白挡掉本来能约的日子。
+	// 这里只做一个宽松兜底，具体开放到哪天交给学校判断。
+	if err != nil || day.Before(today) || day.After(today.AddDate(0, 0, 31)) {
+		return nil, errors.New("日期超出了可查询范围（只支持未来 31 天内）")
 	}
 	var days []struct {
 		Date  string `json:"date"`
@@ -340,8 +344,12 @@ func (b *bookingService) availability(ctx context.Context, id int, date string, 
 
 func writeBookingError(w http.ResponseWriter, err error) {
 	code := 502
-	if errors.Is(err, errSessionPermission) {
+	switch {
+	case errors.Is(err, errSessionPermission):
 		code = 403
+	case errors.Is(err, errBookingSession):
+		// 还没登录是本地前置条件没满足，不是学校那边出错，别报成 502。
+		code = 400
 	}
 	writeAPIError(w, code, err)
 }

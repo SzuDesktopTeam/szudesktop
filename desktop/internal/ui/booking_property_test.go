@@ -81,7 +81,9 @@ func TestPropertyBookingAvailabilityFollowsMaskWindowAndClock(t *testing.T) {
 		}
 		day := today.AddDate(0, 0, offset)
 		sc.date = day.Format("2006-01-02")
-		inWindow := offset >= 0 && offset < sc.days && sc.days >= 1 && sc.days <= 31
+		// 日期窗口不再由 days 决定：实测学校在 days=3 时仍对 +3 返回空位，
+		// 该字段语义未核实。本地只保留「今天起 31 天内」这一条宽松兜底。
+		inWindow := offset >= 0 && offset <= 31 && sc.days >= 1 && sc.days <= 31
 		current = sc
 
 		got, err := b.availability(context.Background(), sc.id, sc.date, now)
