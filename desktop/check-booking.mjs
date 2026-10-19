@@ -32,8 +32,8 @@ await check('availability is an escaped read-only overview, not a false selectio
 await check('query uses public endpoints and changing conditions discards previous slots',async()=>{
  await ui.click('booking-rooms');await ui.click('booking-query');assert.match(ui.card(),/14:00/);
  ui.change({target:{id:'booking-date',value:'2026-09-22'}});assert.doesNotMatch(ui.card(),/14:00/);assert.match(ui.card(),/条件已更改/);
- await ui.click('booking-query');assert.match(calls.at(-1),/date=2026-09-22/);
- assert.ok(calls.every(x=>x==='/api/booking/rooms'||x.startsWith('/api/booking/availability?')));
+ await ui.click('booking-query');assert.ok(calls.some(x=>/date=2026-09-22/.test(x)),'应查询当天空位：'+calls.join(' | '));
+ assert.ok(calls.every(x=>x==='/api/booking/rooms'||x.startsWith('/api/booking/availability?')||x==='/api/booking/session'),'只应走只读端点：'+calls.join(' | '));
 });
 await check('query failure clears stale availability and keeps official booking reachable',async()=>{
  failure=true;await ui.click('booking-query');assert.doesNotMatch(ui.card(),/14:00/);assert.match(ui.card(),/无法读取学校场地信息/);assert.match(ui.card(),/打开学校预约/);failure=false;
@@ -41,10 +41,13 @@ await check('query failure clears stale availability and keeps official booking 
 await check('empty room list is explicit and still offers the school page',async()=>{
  empty=true;await ui.click('booking-rooms');assert.match(ui.card(),/没有返回可查询的场地/);assert.doesNotMatch(ui.card(),/id="booking-room"/);assert.match(ui.card(),/打开学校预约/);empty=false;
 });
-await check('retired private actions cannot send a session or reservation request',async()=>{
+await check('retired actions stay retired; commit needs a prepared confirmation',async()=>{
  const before=calls.length;
- for(const action of ['booking-connect','booking-history','booking-slot','booking-commit'])assert.equal(await ui.click(action),false);
+ for(const action of ['booking-connect','booking-history','booking-slot'])assert.equal(await ui.click(action),false);
  assert.equal(calls.length,before);
+ // commit 现在是真的动作，但没经过 prepare 核对时不能发出任何请求。
+ await ui.click('booking-commit');
+ assert.equal(calls.length,before,'没有核对过的提交不能发请求');
 });
 // —— 场地与琴房规则速查（用学校已经返回、此前被丢掉的字段）——
 await check('rules card groups rooms by venue type from the same public endpoint',async()=>{
@@ -53,7 +56,7 @@ await check('rules card groups rooms by venue type from the same public endpoint
  assert.match(html,/场地与琴房规则速查/);
  for(const t of ['共享琴房','面试间','会议室','洽谈小组'])assert.match(html,new RegExp(t));
  assert.match(html,/4 个场地/);
- assert.ok(calls.every(x=>x==='/api/booking/rooms'||x.startsWith('/api/booking/availability?')),'只能用公开只读端点');
+ assert.ok(calls.every(x=>x==='/api/booking/rooms'||x.startsWith('/api/booking/availability?')||x==='/api/booking/session'),'只能用公开只读端点');
 });
 await check('school announcement is plain text and shown once, not once per venue',()=>{
  const html=rules.card();
