@@ -357,7 +357,7 @@ node desktop/electron/check-pet-view.mjs
   其余段落不写具体版本号：要指向发布页就用不带标签的 `releases` 地址，或者链到「下载」一节。
   `docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
   另外核对便携 ZIP 的 `README-快速开始.txt` 模板与当前界面一致：它只留十来行（打开方式、第一次该做什么、数据存哪、
-  密码怎么存、不代提交、测试版边界），细节链接到使用指南，`make_release.py` 打包前用 `quickstart_problems()` 自检，`check_licenses.py` 在 `run-checks.mjs` 里也调用它。
+  密码怎么存、提交边界、测试版边界），细节链接到使用指南，`make_release.py` 打包前用 `quickstart_problems()` 自检，`check_licenses.py` 在 `run-checks.mjs` 里也调用它。
   使用指南里的下载大小写的是近几个版本的大致数字，变化不大时不用每版改。
 - **链接 STATUS**：一律指向标题前的显式锚点 `<a id="sNN"></a>`（如 `docs/STATUS.md#s65`），不要用标题生成的锚点；
   需要新的外部链接时，先在 STATUS 目标标题前补一行锚点（STATUS 开头「标题与链接」的约定）。

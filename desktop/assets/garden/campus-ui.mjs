@@ -120,7 +120,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render,workspa
 </details>`}
   <div class="actions" style="margin-top:10px"><span class="badge" data-tone="info">当前读取：${onlineLevel==='graduate'?'研究生':'本科'}成绩</span>${button('读取成绩','online-score')}</div>
   <div id="online-score" aria-live="polite">${onlineScoreHTML()}</div>
-  <p class="notice">只查询成绩，不提交预约、选课或评教。登录状态过期时会明确报错，不会显示成「没有成绩」。</p></details>
+  <p class="notice">成绩只做查询；选课和评教仍然要去学校页面。登录状态过期时会明确报错，不会显示成「没有成绩」。</p></details>
   <details><summary>批量导入成绩表</summary><p class="muted">从学校成绩表或 Excel 复制包含表头的多行内容，或选择 CSV / TSV 文件。当前不直接解析 PDF、图片和 XLSX，也没有后台自动同步。</p>
   <label for="grade-level">这份成绩属于</label><select id="grade-level"><option value="undergrad" ${gradeLevel==='undergrad'?'selected':''}>本科</option><option value="graduate" ${gradeLevel==='graduate'?'selected':''}>研究生</option></select>
   <label for="grade-file">选择表格文件（可选）</label><input id="grade-file" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain">

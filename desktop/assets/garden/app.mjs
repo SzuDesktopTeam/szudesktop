@@ -43,7 +43,7 @@ const $=s=>document.querySelector(s);
 const pageIcons={home:'i-cottage',network:'i-crystal',services:'i-sign',garden:'i-water',study:'i-book',settings:'i-workbench'};
 const gardenIcons={pet:'i-heart',farm:'i-seed',market:'i-chest',arcade:'i-medal',journal:'i-scroll'};
 const actionIcons={pat:'i-heart',feed:'i-bread',play:'i-heart',sleep:'i-lantern',gift:'i-chest',buySeed:'i-seed',water:'i-water',plant:'i-seed',harvest:'i-chest',unlock:'i-pickaxe',buyFood:'i-bread',sell:'i-coin',decor:'i-flower',export:'i-chest',diagnose:'i-compass',refresh:'i-signal',reveal:'i-key',logout:'i-sign',focusStart:'i-clock',focusClaim:'i-coin',focusCancel:'i-clock',quest:'i-scroll',achievement:'i-medal',forget:'i-key',shutdown:'i-cottage',autostart:'i-signal'};
-const pageTips={home:'欢迎回来。先做一件小事，再去看看田里的收成吧。',network:'WebVPN 用于访问学校网页，不会自动接通本机校园网。卡号默认不会显示。',services:'先找一处安静的自习空间，再看看学校的新通知吧。预约结果请在学校页面核对。',garden:'离开的时候我也会照顾好自己，作物成熟后会一直等你回来。',study:'把今天没弄懂的地方先记下来。书桌上的笔记会自动保存，想一起讨论就去共学文档。',settings:'你的庭院留在这台电脑里。换电脑前，记得带上一份导出的存档。'};
+const pageTips={home:'欢迎回来。先做一件小事，再去看看田里的收成吧。',network:'WebVPN 用于访问学校网页，不会自动接通本机校园网。卡号默认不会显示。',services:'先找一处安静的自习空间，再看看学校的新通知吧。空位和预约都能在这里办。',garden:'离开的时候我也会照顾好自己，作物成熟后会一直等你回来。',study:'把今天没弄懂的地方先记下来。书桌上的笔记会自动保存，想一起讨论就去共学文档。',settings:'你的庭院留在这台电脑里。换电脑前，记得带上一份导出的存档。'};
 const pages={home:'今日',network:'校园网',services:'校园服务',garden:'荔枝庭院',study:'学习书屋',settings:'设置'};
 const services=[
  ['常用','办事大厅','https://ehall.szu.edu.cn/','校园办事、业务申请与个人服务'],

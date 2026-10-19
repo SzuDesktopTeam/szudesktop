@@ -457,6 +457,12 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/cas/login", s.protectAPI(s.handleCasLogin, http.MethodPost))
 	mux.HandleFunc("/api/booking/rooms", s.protectAPI(s.handleBookingRooms, http.MethodGet))
 	mux.HandleFunc("/api/booking/availability", s.protectAPI(s.handleBookingAvailability, http.MethodGet))
+	// 提交预约：prepare 只核对并给一次性 token，commit 才真正写。
+	// 两步之间会重新校验空位，避免替用户占一个已经被抢走的时段。
+	mux.HandleFunc("/api/booking/session", s.protectAPI(s.handleBookingSession, http.MethodGet, http.MethodPost, http.MethodDelete))
+	mux.HandleFunc("/api/booking/history", s.protectAPI(s.handleBookingHistory, http.MethodGet))
+	mux.HandleFunc("/api/booking/prepare", s.protectAPI(s.handleBookingPrepare, http.MethodPost))
+	mux.HandleFunc("/api/booking/commit", s.protectAPI(s.handleBookingCommit, http.MethodPost))
 	mux.HandleFunc("/api/piano/status", s.protectAPI(s.handlePianoStatus, http.MethodGet))
 	mux.HandleFunc("/api/piano/login", s.protectAPI(s.handlePianoLogin, http.MethodPost))
 	mux.HandleFunc("/api/piano/logout", s.protectAPI(s.handlePianoLogout, http.MethodPost))

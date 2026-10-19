@@ -141,23 +141,45 @@ func TestBookingTransportFailuresExplainObservedCause(t *testing.T) {
 	}
 }
 
-// 预约只保留只读的场地与空位查询。这四个端点里 commit 会真的向学校提交预约，
-// session 会收用户粘贴的 Cookie，而界面早已不调用它们；留着就等于发布包里
-// 带一条没人验收过的写操作通路（STATUS.md F23）。
-func TestBookingWriteEndpointsAreNotServed(t *testing.T) {
+// 写端点在 2026-10-18 按维护者决定恢复（支持应用内提交），但仍要守住三条：
+// 方法受限、缺登录态必须拒绝、没有一次性 token 不能提交。
+func TestBookingWriteEndpointsRequireConfirmation(t *testing.T) {
 	s := &Server{booking: newBookingService()}
 	mux := authedRoutes(s, fstest.MapFS{})
 
-	for _, path := range []string{"/api/booking/session", "/api/booking/history", "/api/booking/prepare", "/api/booking/commit"} {
-		for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
-			r := httptest.NewRequest(method, "http://127.0.0.1"+path, strings.NewReader("{}"))
-			r.Header.Set("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-			mux.ServeHTTP(w, r)
-			if w.Code != http.StatusNotFound {
-				t.Fatalf("%s %s 仍在提供服务，得到 %d（应为 404）", method, path, w.Code)
-			}
-		}
+	// session 允许查询"有没有登录态"。
+	r := httptest.NewRequest(http.MethodGet, "http://127.0.0.1/api/booking/session", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/booking/session 得到 %d（应为 200）", w.Code)
+	}
+
+	// prepare 只收 POST。
+	r = httptest.NewRequest(http.MethodGet, "http://127.0.0.1/api/booking/prepare", nil)
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("GET /api/booking/prepare 得到 %d（应为 405）", w.Code)
+	}
+
+	// 没经过 prepare 就提交，必须 409：不能拿着空 token 去真的写。
+	r = httptest.NewRequest(http.MethodPost, "http://127.0.0.1/api/booking/commit", strings.NewReader(`{"token":"whatever"}`))
+	r.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusConflict {
+		t.Fatalf("没有确认 token 的提交得到 %d（应为 409）", w.Code)
+	}
+
+	// 没有登录态时 prepare 必须直接拒绝，而不是先替用户去学校试一次。
+	r = httptest.NewRequest(http.MethodPost, "http://127.0.0.1/api/booking/prepare",
+		strings.NewReader(`{"boothId":1,"date":"2026-09-22","timeList":[1],"phone":"13800138000","grade":"2023","agree":true}`))
+	r.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code == http.StatusOK {
+		t.Fatal("没有登录态也能准备预约")
 	}
 }
 

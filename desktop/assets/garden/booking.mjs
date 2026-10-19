@@ -94,6 +94,9 @@ export function createBookingUI({api,loadRooms}){
  // 同上：优先用上层共享的请求，单独使用时直连。
  const fetchRooms=loadRooms||(()=>api('/api/booking/rooms'));
  let rooms=[],today='',room='',date='',day=null,error='',message='',busy=false,requestVersion=0,opening=false,openMessage='',openError='';
+ // 预约提交流程：选时段 → 填写资料 → prepare（重新核对空位、拿一次性 token）
+ // → 确认 → commit。token 两分钟有效，过期要重新核对。
+ let picked=new Set(),phone='',grade='',agree=false,pending=null,hasSession=false,cookieDraft='',sessionMessage='';
  function content(){return `<div class="card-head"><h2 class="icon-heading tone-info">${pixelIcon('i-calendar','heading-icon')}社区空间</h2><span class="badge" data-tone="info">会议室 · 面试间 · 琴房</span></div>
  <p>找一处安静的空间。可以先查空位，再到学校页面登录、选时段并确认预约。</p>
  <div class="actions">${officialLink(opening?'正在打开…':'打开学校预约','button primary',opening)}${button(pixelIcon('i-compass')+(rooms.length?'刷新场地':'先看空位'),'rooms',busy)}</div>
@@ -101,10 +104,37 @@ export function createBookingUI({api,loadRooms}){
  ${openMessage||openError?`<p role="status" class="notice${openError?' error':''}">${esc(openError||openMessage)}</p>`:''}
  ${rooms.length?`<h3>空位速览</h3><p>这里可以先查空位；具体预约资格与最终结果以学校系统为准。</p><div class="grid"><div><label for="booking-room">场地 · ${rooms.length} 处</label><select id="booking-room">${rooms.map(x=>`<option value="${esc(x.id)}" ${String(x.id)===room?'selected':''}>${esc(x.campus)} · ${esc(x.name)}${x.status?'':'（停用）'}</option>`).join('')}</select></div><div><label for="booking-date">使用日期</label><input id="booking-date" type="date" value="${esc(date)}" min="${esc(today)}"></div></div><div class="actions">${button('查询空位','query',busy)}</div>`:''}
  <div role="status" aria-live="polite" class="notice" data-tone="${error?'error':'info'}">${esc(error||message||'校园网内可在这里直接查看场地空位，无需先登录。')}</div>${error?`<div class="actions">${officialLink('打开官方 WebVPN 预约页','button quiet')}</div>`:''}
- ${rooms.length?bookingSlotsHTML(day):''}`}
+ ${rooms.length?bookingSlotsHTML(day):''}
+ ${bookingSection()}`}
+// 预约区：只在读到空位后出现。时段格子本身就是按钮，选中标「已选」。
+// 提交分两步——先 prepare 重新核对空位并拿一次性 token，确认后才真正写。
+function bookingSection(){
+ if(!day||!Array.isArray(day.slots))return '';
+ const chips=day.slots.map(s=>{
+  const on=picked.has(s.index),can=s.state==='available';
+  return `<button type="button" class="booking-slot pick" data-tone="${on?'success':(tones[s.state]||'warning')}" data-action="booking-pick" data-index="${s.index}" aria-pressed="${on}"${can||on?'':' disabled'}><b>${esc(s.start)}–${esc(s.end)}</b><small>${esc(on?'已选':(labels[s.state]||'未确认'))}</small></button>`;
+ }).join('');
+ const limit=day.room&&day.room.type?day.room.type.samePersonMaxReservationPerDay:null;
+ return `<h3>直接预约</h3>
+  <p class="muted">选好时段，填一次手机号和入学年份。提交前会重新核对空位${Number.isSafeInteger(limit)&&limit>0?`，单日最多 ${limit} 格`:''}。</p>
+  <ul class="booking-slots">${chips}</ul>
+  <details class="booking-session"${hasSession?'':' open'}><summary>预约登录态 · ${hasSession?'已记住':'未设置'}</summary>
+   <p class="muted">先在官方 WebVPN 场馆页登录，再把浏览器里的 Cookie 粘进来。只存在内存里，关掉程序就清除。</p>
+   <label for="booking-cookie">WebVPN Cookie</label><input id="booking-cookie" value="${esc(cookieDraft)}" placeholder="粘贴整段 Cookie">
+   <div class="actions">${button(hasSession?'更新登录态':'记住登录态','session',busy)}${hasSession?button('清除登录态','session-clear'):''}</div>
+  </details>
+  ${sessionMessage?`<p class="notice" data-tone="info">${esc(sessionMessage)}</p>`:''}
+  <div class="grid three">
+   <div><label for="booking-phone">手机号</label><input id="booking-phone" inputmode="numeric" value="${esc(phone)}" placeholder="11 位手机号"></div>
+   <div><label for="booking-grade">入学年份</label><input id="booking-grade" inputmode="numeric" value="${esc(grade)}" placeholder="如 2023"></div>
+   <div><label><input id="booking-agree" type="checkbox"${agree?' checked':''}> 已读使用须知</label></div>
+  </div>
+  <div class="actions">${button('核对并继续','prepare',busy||!picked.size||!hasSession)}</div>
+  ${pending?`<div class="notice" data-tone="warning"><p><strong>${esc(pending.room)}</strong> · ${esc(pending.date)}</p><p>${esc(pending.times.join('、'))}</p><p class="muted">两分钟内有效，过期要重新核对。</p><div class="actions">${button('确认提交','commit',busy)}${button('取消','cancel')}</div></div>`:''}`;
+}
  function card(){return `<section class="card campus-booking" id="booking-panel">${content()}</section>`}
  function paint(){const el=document.getElementById('booking-panel');if(el)el.innerHTML=content()}
- async function click(a){
+ async function click(a,el){
   if(a==='booking-open-school'){
    if(opening)return true;
    opening=true;openMessage='';openError='';paint();
@@ -113,7 +143,53 @@ export function createBookingUI({api,loadRooms}){
    finally{opening=false;paint()}
    return true;
   }
-  if(!['booking-rooms','booking-query'].includes(a))return false;
+  if(a==='booking-pick'){
+  const i=Number(el&&el.dataset.index);
+  if(!Number.isInteger(i))return true;
+  if(picked.has(i))picked.delete(i);else picked.add(i);
+  pending=null;paint();return true;
+ }
+ if(a==='booking-session'||a==='booking-session-clear'){
+  if(busy)return true;
+  busy=true;error='';sessionMessage='';paint();
+  try{
+   if(a==='booking-session-clear'){
+    await api('/api/booking/session',{},'DELETE');
+    hasSession=false;sessionMessage='已清除登录态';
+   }else{
+    if(!cookieDraft.trim())throw Error('先把 WebVPN 的 Cookie 粘进来');
+    await api('/api/booking/session',{cookie:cookieDraft.trim()},'POST');
+    hasSession=true;sessionMessage='登录态已记住，只存在内存里';
+   }
+  }catch(e){error=e.message}
+  finally{busy=false;paint()}
+  return true;
+ }
+ if(a==='booking-cancel'){pending=null;message='已取消这次预约';paint();return true}
+ if(a==='booking-prepare'||a==='booking-commit'){
+  if(busy)return true;
+  busy=true;error='';paint();
+  try{
+   if(a==='booking-prepare'){
+    if(!picked.size)throw Error('先选至少一个时段');
+    if(!phone.trim())throw Error('填写手机号');
+    if(!grade.trim())throw Error('填写入学年份');
+    if(!agree)throw Error('先勾选已读使用须知');
+    const r=await api('/api/booking/prepare',{boothId:Number(room),phone:phone.trim(),grade:grade.trim(),date,timeList:[...picked].sort((x,y)=>x-y),agree:true},'POST');
+    pending={token:r.token,room:r.room,date:r.date,times:r.times};
+    message='核对通过，确认下面这次预约后再提交。';
+   }else{
+    if(!pending)throw Error('请先核对一次');
+    const r=await api('/api/booking/commit',{token:pending.token},'POST');
+    pending=null;picked.clear();
+    message=r.message||'提交成功，请核对「我的预约」';
+    day=await api(`/api/booking/availability?room=${encodeURIComponent(room)}&date=${encodeURIComponent(date)}`);
+   }
+  }catch(e){error=e.message;if(a==='booking-commit')pending=null}
+  finally{busy=false;paint()}
+  return true;
+ }
+ if(!['booking-rooms','booking-query'].includes(a))return false;
   if(busy)return true;
   const version=++requestVersion;busy=true;error='';message='正在读取学校场地信息…';day=null;paint();
   try{
@@ -125,13 +201,22 @@ export function createBookingUI({api,loadRooms}){
     day=null;
     const result=await api(`/api/booking/availability?room=${encodeURIComponent(room)}&date=${encodeURIComponent(date)}`);
     if(version!==requestVersion)return true;day=result;
-    message='已读取学校空位。预约请点击「去学校页面预约」。';
+    try{const st=await api('/api/booking/session');hasSession=!!(st&&st.has_session)}catch{hasSession=false}
+    message='已读取学校空位。选好时段可以直接在这里提交。';
    }
   }catch(e){if(version===requestVersion)error=e.message}
   finally{if(version===requestVersion){busy=false;paint()}}
   return true;
  }
  function change(e){
+  if(['booking-phone','booking-grade','booking-agree','booking-cookie'].includes(e.target.id)){
+   const id=e.target.id;
+   if(id==='booking-phone')phone=e.target.value;
+   else if(id==='booking-grade')grade=e.target.value;
+   else if(id==='booking-agree')agree=e.target.checked;
+   else cookieDraft=e.target.value;
+   return true; // 只记状态、不重绘：重绘会丢掉焦点和光标位置
+  }
   if(!['booking-room','booking-date'].includes(e.target.id))return false;
   if(e.target.id==='booking-room')room=e.target.value;else date=e.target.value;
   requestVersion++;busy=false;day=null;error='';message='条件已更改，请重新查询空位';paint();return true;
