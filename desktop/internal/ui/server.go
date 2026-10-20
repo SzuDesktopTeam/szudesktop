@@ -66,6 +66,8 @@ type Server struct {
 	academic      *academicService
 	cas           *casService
 	booking       *bookingService
+	sportMu       sync.Mutex
+	sportPending  *sportPending
 	piano         *pianoService
 	probe         func() *portal.DetectResult
 	detect        func() *portal.DetectResult
@@ -463,6 +465,11 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/booking/history", s.protectAPI(s.handleBookingHistory, http.MethodGet))
 	mux.HandleFunc("/api/booking/prepare", s.protectAPI(s.handleBookingPrepare, http.MethodPost))
 	mux.HandleFunc("/api/booking/commit", s.protectAPI(s.handleBookingCommit, http.MethodPost))
+	// 体育场馆（ehall 的 qljfwapp），和社区空间是完全不同的另一套。
+	mux.HandleFunc("/api/sport/venues", s.protectAPI(s.handleSportVenues, http.MethodGet))
+	mux.HandleFunc("/api/sport/times", s.protectAPI(s.handleSportTimes, http.MethodGet))
+	mux.HandleFunc("/api/sport/prepare", s.protectAPI(s.handleSportPrepare, http.MethodPost))
+	mux.HandleFunc("/api/sport/commit", s.protectAPI(s.handleSportCommit, http.MethodPost))
 	mux.HandleFunc("/api/piano/status", s.protectAPI(s.handlePianoStatus, http.MethodGet))
 	mux.HandleFunc("/api/piano/login", s.protectAPI(s.handlePianoLogin, http.MethodPost))
 	mux.HandleFunc("/api/piano/logout", s.protectAPI(s.handlePianoLogout, http.MethodPost))
