@@ -104,6 +104,11 @@ func parseSportVenues(body []byte) ([]sportRoom, error) {
 	if err := json.Unmarshal(body, &root); err != nil {
 		return nil, fmt.Errorf("学校场馆数据不是 JSON：%w", err)
 	}
+	// data 为空或 null 不能当成"零个场地"：会话过期时常见这种响应，
+	// 报"没有场地"会让用户以为真的没得约。
+	if len(root.Data) == 0 || string(root.Data) == "null" {
+		return nil, errors.New("学校没有返回场馆数据（可能登录状态已过期）")
+	}
 	var rows []map[string]json.RawMessage
 	// 先试 data 是对象（data.list / data.rows）
 	var m map[string]json.RawMessage
@@ -159,6 +164,9 @@ func parseSportTimes(body []byte, roomID, date string) (*sportDay, error) {
 	}
 	if err := json.Unmarshal(body, &root); err != nil {
 		return nil, fmt.Errorf("学校时段数据不是 JSON：%w", err)
+	}
+	if len(root.Data) == 0 || string(root.Data) == "null" {
+		return nil, errors.New("学校没有返回时段数据（可能登录状态已过期）")
 	}
 	var rows []map[string]json.RawMessage
 	var m map[string]json.RawMessage
