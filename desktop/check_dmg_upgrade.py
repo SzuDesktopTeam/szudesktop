@@ -23,12 +23,12 @@ def refuses(fn):
     raise AssertionError("Damaged upgrade evidence was accepted")
 
 
-assert upgrade.BASELINE_VERSION == "beta0.9.6"
+assert upgrade.BASELINE_VERSION == "beta0.9.8"
 assert upgrade.BASELINE_DIGESTS == {
-    "arm64": "2d28f939a5c8f51e5381268e037c268acf3edac831c644a7d3e7cb01c7e5a2b7",
-    "x64": "07e428960252c33d484e366120bd9e8248227a59e1b023e4d8eb51b829df2ac1",
+    "arm64": "98e5e0481fcc84bf2bc922aa3125280c6d726cf5af1a4fae9d09d52b36b37579",
+    "x64": "492f997da18f116cf63415a60c0b4204a3b4937b9882078069d9876a851b8056",
 }
-assert upgrade.baseline_name("x64") == "szuDesktop-0.9.6-mac-x64.dmg"
+assert upgrade.baseline_name("x64") == "szuDesktop-0.9.8-mac-x64.dmg"
 key = upgrade.cache_key()
 with patch.dict(upgrade.BASELINE_DIGESTS, {"x64": "0" * 64}):
     assert upgrade.cache_key() != key, "A changed baseline digest must invalidate the cache"
