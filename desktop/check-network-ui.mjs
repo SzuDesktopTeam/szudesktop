@@ -89,7 +89,7 @@ for(const [staleFails,staleFirst] of [[false,false],[true,false],[false,true]]){
 console.log('PASS authentication forces a new status request and obsolete responses cannot replace it');
 let click,work,message;
 const forced=[];
-const pendingCtx=vm.createContext({busy:false,probing:true,officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},sportUI:{click:async()=>false},document:{addEventListener:(_,handler)=>{click=handler}},run:fn=>{work=fn()},toast:t=>{message=t},refresh:async force=>{forced.push(force);return true}});
+const pendingCtx=vm.createContext({busy:false,probing:true,officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},sportUI:{click:async()=>false},libraryUI:{click:async()=>false},document:{addEventListener:(_,handler)=>{click=handler}},run:fn=>{work=fn()},toast:t=>{message=t},refresh:async force=>{forced.push(force);return true}});
 vm.runInContext(app.slice(app.indexOf("document.addEventListener('click'"),app.indexOf("document.addEventListener('submit'")),pendingCtx);
 click({target:{closest:()=>({dataset:{action:'refresh'}})},preventDefault:()=>{}});
 await work;

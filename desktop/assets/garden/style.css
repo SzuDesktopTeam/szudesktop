@@ -361,3 +361,9 @@ body[data-page=settings] .pagehead h1 { color:var(--magic); }
 .undergrad-arrangement{white-space:pre-wrap;overflow-wrap:anywhere}
 
 .notice-source{flex:1 1 260px;min-width:0}.notice-source select{max-width:100%}
+
+/* 图书馆检索结果 */
+.library-list{margin:16px 0 0;padding:0;list-style:none}
+.library-list li{padding:9px 0;border-bottom:1px solid var(--line)}
+.library-list li:last-child{border-bottom:0}
+.library-list small{display:block;color:var(--muted);font-size:12px}
