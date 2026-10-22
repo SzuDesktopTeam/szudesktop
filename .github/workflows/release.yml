@@ -377,6 +377,8 @@ jobs:
           path: |
             desktop/electron/release/szuDesktop-Setup-*.exe
             desktop/electron/release/szuDesktop-Setup-*.exe.sha256
+            desktop/electron/release/szuDesktop-*-portable.exe
+            desktop/electron/release/szuDesktop-*-portable.exe.sha256
           if-no-files-found: error
 
   # macOS 引擎只在这里构建一次：两个架构各编一份并 ad-hoc 签名（com.szudesktop.engine），
