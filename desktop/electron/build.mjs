@@ -36,7 +36,10 @@ try{
   execFileSync(process.execPath,[ebCli,'--win','--x64','--publish','never','--config',config,
     `--config.extraMetadata.version=${semver}`,`--config.extraMetadata.szuVersion=${ver}`],{cwd:here,stdio:'inherit'});
 }finally{rmSync(configDir,{recursive:true,force:true});}
-const installer=path.join(here,'release',`szuDesktop-Setup-${semver}.exe`);
-const digest=createHash('sha256').update(readFileSync(installer)).digest('hex');
-writeFileSync(installer+'.sha256',`${digest}  ${path.basename(installer)}\n`,'ascii');
-console.log('\n完成。安装包在 desktop/electron/release/，版本 '+ver);
+// 两个产物都要出校验值：安装包和便携版缺一个，用户就没法确认下载完整。
+for(const name of [`szuDesktop-Setup-${semver}.exe`,`szuDesktop-${semver}-portable.exe`]){
+  const file=path.join(here,'release',name);
+  const digest=createHash('sha256').update(readFileSync(file)).digest('hex');
+  writeFileSync(file+'.sha256',`${digest}  ${name}\n`,'ascii');
+}
+console.log('\n完成。安装包与便携版都在 desktop/electron/release/，版本 '+ver);

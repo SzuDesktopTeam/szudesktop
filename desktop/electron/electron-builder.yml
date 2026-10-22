@@ -71,7 +71,10 @@ electronLanguages:
   - zh-CN
   - en-US
 win:
-  target: nsis
+  # nsis = 安装包；portable = 下载即用的单文件，双击直接跑，不写注册表、不需要管理员。
+  target:
+    - nsis
+    - portable
   icon: ../assets/szudesktop.ico
   # electron-builder 把这里与顶层 extraResources 合并，Windows 安装包里的文件与原来相同。
   extraResources:
@@ -116,3 +119,6 @@ dmg:
   artifactName: szuDesktop-${version}-mac-${arch}.${ext}
   # 本轮不做自动更新：不生成 latest-mac.yml 和 blockmap。
   writeUpdateInfo: false
+portable:
+  # 下载下来就是一个 exe，双击即用。数据仍写在用户目录（换版本不会丢存档）。
+  artifactName: szuDesktop-${version}-portable.exe
