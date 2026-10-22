@@ -44,12 +44,12 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.6"
+BASELINE_VERSION = "beta0.9.8"
 # Checked against the beta0.9.6 tag (fd7af78): desktop/electron/package-lock.json
 # pins electron 44.4.5, and the release asset digest reported by GitHub for
 # szuDesktop-Setup-0.9.6.exe equals this SHA-256.
-BASELINE_ELECTRON = "44.4.5"
-BASELINE_SHA256 = "588cdbef9b7ce639271a72c11d048f8c33f069308b00d066d76170b55d244232"
+BASELINE_ELECTRON = "44.5.1"
+BASELINE_SHA256 = "d8aa61cef6a14c6aadb51363f6ba05c5a571e4ed71d1cb34181fa81d47b674d2"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
 # A fresh beta0.9.6 save carries exactly these companions, in this order (its
 # pet-catalog.mjs AVAILABLE_PETS at fd7af78, same five as beta0.9.3); the turtle

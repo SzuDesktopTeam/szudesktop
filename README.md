@@ -18,11 +18,11 @@
 电脑应用：Windows 10 / 11（64 位）或 macOS 13 起，**没有手机版**。<br>
 在手机上看到这里的话，请换到电脑打开这一页再下载。
 
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-Setup-0.9.8.exe"><img alt="下载 Windows 安装版" width="205" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20%E5%AE%89%E8%A3%85%E7%89%88-a3485d?style=flat-square&labelColor=6e1f35"></a>
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-0.9.8-mac-arm64.dmg"><img alt="下载 macOS 预览版（Apple 芯片）" width="301" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-macOS%20%E9%A2%84%E8%A7%88%E7%89%88%20%C2%B7%20Apple%20%E8%8A%AF%E7%89%87-326b3b?style=flat-square&labelColor=234a29"></a>
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-0.9.8-mac-x64.dmg"><img alt="下载 macOS 预览版（Intel）" width="250" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-macOS%20%E9%A2%84%E8%A7%88%E7%89%88%20%C2%B7%20Intel-326b3b?style=flat-square&labelColor=234a29"></a>
+<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-Setup-0.9.9.exe"><img alt="下载 Windows 安装版" width="205" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20%E5%AE%89%E8%A3%85%E7%89%88-a3485d?style=flat-square&labelColor=6e1f35"></a>
+<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-arm64.dmg"><img alt="下载 macOS 预览版（Apple 芯片）" width="301" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-macOS%20%E9%A2%84%E8%A7%88%E7%89%88%20%C2%B7%20Apple%20%E8%8A%AF%E7%89%87-326b3b?style=flat-square&labelColor=234a29"></a>
+<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-x64.dmg"><img alt="下载 macOS 预览版（Intel）" width="250" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-macOS%20%E9%A2%84%E8%A7%88%E7%89%88%20%C2%B7%20Intel-326b3b?style=flat-square&labelColor=234a29"></a>
 
-**beta0.9.8** · 预发布，按计划是 1.0 正式版前的最后一个测试版 · 免费开源<br>
+**beta0.9.9** · 预发布，按计划是 1.0 正式版前的最后一个测试版 · 免费开源<br>
 第一次打开会被系统拦一下，放行方法见[下载](#下载)
 
 ▶ 一分钟宣传片：[B站](https://www.bilibili.com/video/BV1wZpA66EVd/) · [抖音](https://v.douyin.com/B47JYZ3oDTU/) · [小红书](https://www.xiaohongshu.com/discovery/item/6ac514ab000000001402f08e?xsec_token=ABDDZO2ECkdAnJHuJuryd-K5E-n2N9TScBRz4FcAdYTQA=&xsec_source=pc_share)
@@ -54,11 +54,11 @@
 
 ## 下载
 
-szuDesktop 是电脑应用，在手机上看到这里的话，请换到电脑上打开这一页再下载。所有文件都在 GitHub [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.8)，当前版本是 **beta0.9.8**（2026-10-23 发布，预发布）。
+szuDesktop 是电脑应用，在手机上看到这里的话，请换到电脑上打开这一页再下载。所有文件都在 GitHub [发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.9)，当前版本是 **beta0.9.9**（2026-10-23 发布，预发布）。
 
-- **Windows 10 / 11（64 位）· 推荐安装版**：[下载 `szuDesktop-Setup-0.9.8.exe`](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-Setup-0.9.8.exe)（约 98 MB），运行后按提示安装，再打开 szuDesktop。自带窗口，不用另装浏览器或开发环境，有桌面伙伴和托盘。
-- **Windows · 不想安装**：[下载便携版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-0.9.8-portable.exe)（约 94 MB），双击即用，不写注册表、不需要管理员；数据仍存在用户目录，换版本不丢存档，和安装版共用同一份记录。
-- **Mac（预览版，macOS 13 起）**：Apple 芯片（M1 及更新）下载 [arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-0.9.8-mac-arm64.dmg)（约 123 MB），Intel 处理器下载 [x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.8/szuDesktop-0.9.8-mac-x64.dmg)（约 130 MB），不确定就看「苹果菜单 → 关于本机」里写的是「芯片」还是「处理器」。打开 DMG，把 szuDesktop 拖进「应用程序」再打开；有桌面伙伴，托盘换成屏幕顶部的菜单栏图标。
+- **Windows 10 / 11（64 位）· 推荐安装版**：[下载 `szuDesktop-Setup-0.9.9.exe`](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-Setup-0.9.9.exe)（约 98 MB），运行后按提示安装，再打开 szuDesktop。自带窗口，不用另装浏览器或开发环境，有桌面伙伴和托盘。
+- **Windows · 不想安装**：[下载便携版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-portable.exe)（约 94 MB），双击即用，不写注册表、不需要管理员；数据仍存在用户目录，换版本不丢存档，和安装版共用同一份记录。
+- **Mac（预览版，macOS 13 起）**：Apple 芯片（M1 及更新）下载 [arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-arm64.dmg)（约 123 MB），Intel 处理器下载 [x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-x64.dmg)（约 130 MB），不确定就看「苹果菜单 → 关于本机」里写的是「芯片」还是「处理器」。打开 DMG，把 szuDesktop 拖进「应用程序」再打开；有桌面伙伴，托盘换成屏幕顶部的菜单栏图标。
 - **Linux，或只想连校园网**：用[命令行 szunet](#命令行-szunet)，没有窗口，只做校园网认证与诊断；Linux 目前没有桌面版。
 
 **第一次打开会被拦一下，这是预期内的**：安装包还没有数字签名，Mac 版也没有经过 Apple 公证。
@@ -177,9 +177,9 @@ szunet logout        # 注销下线
 
 ## 更新日志
 
-校园网与代理兼容修复已通过本地回归，独立候选包在当前代理环境下的只读状态查询与隔离运行检查也已通过，真实重新认证和切换网络仍待验收。**公开安装包仍为 beta0.9.8，尚不包含这些修复**。内容包括多来源外网检测、切换出口后的接入点缓存、认证后强制刷新，以及更准确的未知状态；进度见 [STATUS 第 74 节](docs/STATUS.md#s74)。
+校园网与代理兼容修复已通过本地回归，独立候选包在当前代理环境下的只读状态查询与隔离运行检查也已通过，真实重新认证和切换网络仍待验收。**公开安装包仍为 beta0.9.9，尚不包含这些修复**。内容包括多来源外网检测、切换出口后的接入点缓存、认证后强制刷新，以及更准确的未知状态；进度见 [STATUS 第 74 节](docs/STATUS.md#s74)。
 
-当前版本 **beta0.9.8**（2026-10-05）是首轮试用版，按计划也是 1.0 正式版之前的最后一个测试版，此后到正式版只修试用中发现的问题。相对 beta0.9.6：隐藏主窗口后照料伙伴，不再让主窗口在后台一直绘制动画、多耗电（窗口运行时升级到 44.5.1）；托盘、伙伴菜单和通知的叫法与设置页、使用指南统一；「提交反馈」改为打开一页[反馈说明](docs/guide/feedback.md)；已在线时能看出是教学区还是宿舍区，诊断报告写明系统代理开没开；便携版专注时切到别的标签页，标题里的倒计时不再停住。还在用 beta0.9.6 的请升级：旧版遇到这种情况，要打开一次主窗口再关掉，后台动画才会停。
+当前版本 **beta0.9.9**（2026-10-05）是首轮试用版，按计划也是 1.0 正式版之前的最后一个测试版，此后到正式版只修试用中发现的问题。相对 beta0.9.6：隐藏主窗口后照料伙伴，不再让主窗口在后台一直绘制动画、多耗电（窗口运行时升级到 44.5.1）；托盘、伙伴菜单和通知的叫法与设置页、使用指南统一；「提交反馈」改为打开一页[反馈说明](docs/guide/feedback.md)；已在线时能看出是教学区还是宿舍区，诊断报告写明系统代理开没开；便携版专注时切到别的标签页，标题里的倒计时不再停住。还在用 beta0.9.6 的请升级：旧版遇到这种情况，要打开一次主窗口再关掉，后台动画才会停。
 
 这一版的安装和升级跑过自动化检查，发布后也逐个核对过下载附件；真实校园登录与校园网认证、睡眠恢复、多屏与长时间使用、发布者签名和 macOS 真机验收还没完成，所以这仍是预发布版，发布与核对记录见 [STATUS](docs/STATUS.md#s73-5)。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)，历次下载见 [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases)。
 
