@@ -144,7 +144,7 @@ else{
     openedAtLogin=openedAtLoginFn(app,process.platform);
     loginReopen=createLoginReopenGuard({platform:process.platform,openedAtLogin});
     if(mac){
-      app.setAboutPanelOptions({applicationName:'szuDesktop',applicationVersion:appVersion(),copyright:'学生自制的校园生活工具，与深圳大学官方无关'});
+      app.setAboutPanelOptions({applicationName:'szuDesktop',applicationVersion:appVersion(),copyright:''});
       refreshAppMenu();
       app.on('browser-window-focus',(_event,win)=>{focusedWindow=win;refreshAppMenu();});
       app.on('browser-window-blur',()=>{focusedWindow=null;refreshAppMenu();});

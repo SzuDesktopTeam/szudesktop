@@ -19,7 +19,6 @@ import {homeSkinDetails} from './assets/garden/home-skins.mjs';
 import {campusRoomHeader,campusSceneLinks} from './assets/garden/campus-world.mjs';
 import {cropIcon} from './assets/garden/garden-items.mjs';
 import {gardenNextStep} from './assets/garden/garden-path.mjs';
-import {unverifiedBadge} from './assets/garden/labels.mjs';
 import {networkSummaryHTML} from './assets/garden/network-status.mjs';
 const currentVersion=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
@@ -785,7 +784,7 @@ await check('a degraded workspace never lets the puzzle write over the unreadabl
 });
 // O3：「看过引导」不等于「回访」。首访当天（或第一次重启前）关掉引导后，首页仍是首访标题、展开的伙伴栏，主按钮直接开始 5 分钟专注。
 function homeFixture(state,{firstSession=false}={}){
- const context=vm.createContext({state,firstSession,net:null,settle,activePet,petSprite,PETS,PET_SPRITES,level,esc,homeSkinPicker,homeSkinDetails,projectScene,campusSceneLinks,cropIcon,gardenNextStep,unverifiedBadge,networkSummaryHTML,isReturningVisit,
+ const context=vm.createContext({state,firstSession,net:null,settle,activePet,petSprite,PETS,PET_SPRITES,level,esc,homeSkinPicker,homeSkinDetails,projectScene,campusSceneLinks,cropIcon,gardenNextStep,networkSummaryHTML,isReturningVisit,
   notebookUI:{summaryHTML:()=>''},todoHTML:()=>'',Date});
  vm.runInContext(section('const pageIcons=','const pageTips=')+section('const sprite=','let petPlayer=')+section('const btn=','function paintGardenPath(')+section('function companionRoster(','function renderStudyProgress(')+section('function home(){','function network(){'),context);
  const html=context.home(),letter=/<div class="home-letter">[\s\S]*?<p class="home-local">/.exec(html)?.[0]||'';

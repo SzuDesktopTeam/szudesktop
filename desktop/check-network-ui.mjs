@@ -25,7 +25,7 @@ assert.ok(written.length>=2);
 for(const id of written)assert.ok(declared.has(id),`refresh() 写入的 #${id} 不在 index.html 或页面模板里`);
 assert.doesNotMatch(app,/network-badge|networkBadgeHTML/,'已删除的网络徽章不能再留死分支');
 const meta={content:''};
-const nodes={'#network-summary':{innerHTML:''},'#auto-login-result':{innerHTML:''},'#app-badge':{textContent:'非官方应用'},'#about-version':{textContent:''},'.network-login > summary small':{textContent:''}};
+const nodes={'#network-summary':{innerHTML:''},'#auto-login-result':{innerHTML:''},'#app-badge':{textContent:''},'#about-version':{textContent:''},'.network-login > summary small':{textContent:''}};
 const pick=s=>{assert.ok(Object.hasOwn(nodes,s),'unexpected selector '+s);return nodes[s]};
 // 版本写到页面上的逻辑在 app-logic.mjs；这里接上与 app.mjs 相同的 getVersion/setVersion。
 const stampDocument={querySelector:s=>s==='meta[name=app-version]'?meta:pick(s),getElementById:()=>null};
@@ -34,7 +34,7 @@ ctx.stampVersion=v=>stampVersion(v,{getVersion:()=>ctx.appVersion,setVersion:nex
 vm.runInContext('let net=null,saved=false,probing=false,networkRequest=0;'+refresh,ctx);
 assert.equal(await vm.runInContext('refresh()',ctx),true);
 assert.equal(meta.content,'beta9.9.9');
-assert.equal(nodes['#app-badge'].textContent,'beta9.9.9 · 非官方应用');
+assert.equal(nodes['#app-badge'].textContent,'beta9.9.9');
 assert.equal(nodes['#about-version'].textContent,'szuDesktop beta9.9.9 · 荔枝庭院');
 assert.equal(vm.runInContext('appVersion',ctx),'beta9.9.9');
 assert.match(nodes['#network-summary'].innerHTML,/出口已在线/);
@@ -47,7 +47,7 @@ assert.match(nodes['.network-login > summary small'].textContent,/填写账号/)
 assert.doesNotMatch(nodes['.network-login > summary small'].textContent,/外网可用/);
 ctx.api=async()=>({internet_ok:true,zone_label:'当前已联网',online_known:true,online:true});
 assert.equal(await vm.runInContext('refresh()',ctx),true);
-assert.equal(nodes['#app-badge'].textContent,'beta9.9.9 · 非官方应用');
+assert.equal(nodes['#app-badge'].textContent,'beta9.9.9');
 assert.equal(meta.content,'beta9.9.9');
 console.log('PASS a status without app_version never blanks the displayed version');
 ctx.api=async()=>({...connected,auto_login:{result:'failed',message:'<b>认证失败</b>：密码错误',at:1790000000}});

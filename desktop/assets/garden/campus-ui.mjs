@@ -1,7 +1,6 @@
 import {createNoticesUI} from './notices.mjs';
 import {createBookingUI,createVenueRulesUI,createRoomsLoader} from './booking.mjs';
 import {pixelIcon} from './pixel.mjs';
-import {unverifiedBadge} from './labels.mjs';
 import {parseGrades,mergeGrades,makeStudyReminder,reminderICS,BOOKING_URL,GRADE_RULE_URL,PHONE_BOOK,PHONE_FALLBACK,PHONE_NOTE} from './campus.mjs';
 import {gpa} from './engine.mjs';
 import {esc} from './html.mjs';
@@ -96,7 +95,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render,workspa
   return `<section class="card span"><div class="card-head"><h2 class="icon-heading tone-magic">${pixelIcon('i-medal','heading-icon')}成绩与绩点</h2><span class="badge" data-tone="magic">${result.credits>0?`计入 <b>${result.credits}</b> 学分 · 加权绩点 <b>${result.value.toFixed(2)}</b>`:`${courses.length?'暂无计入课程':'尚未录入'} · 加权绩点 <b>—</b>`}</span></div>
   <p>本科和研究生分开记录，批量导入课程后按学分加权。这里的结果用于个人核对，官方平均绩点以学校系统为准。</p>
   <div class="actions">${link('https://ehall.szu.edu.cn/','学校办事大厅')}${link('https://cjzm.szu.edu.cn/gztcyUI/','本科成绩证明')}${link('https://gra.szu.edu.cn/info/1092/3484.htm','研究生成绩单指南')}</div>
-  <details open><summary>从学校系统直接读取（可选）${unverifiedBadge()}</summary>
+  <details open><summary>从学校系统直接读取（可选）</summary>
   <p class="muted">在线读取尚未完成真实成绩验收。保存学校登录状态后，可尝试读取所选业务；账号权限和会话需分别验证。</p>
   ${globalThis.szuDesktop?.openSchool?'<p class="muted">在上方完成学校登录并读取本次登录，再点击下面的「读取成绩」。读取范围跟随「我的培养层次」。</p>':`<details><summary>便携版备用登录</summary>
   <div id="session-status" aria-live="polite">${sessionHTML()}</div>
