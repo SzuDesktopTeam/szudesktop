@@ -4,6 +4,7 @@ export const schoolTargets=Object.freeze({
   'undergrad-scores':'https://ehall.szu.edu.cn/jwapp/sys/cjcx/*default/index.do',
   'graduate-scores':'https://ehall.szu.edu.cn/gsapp/sys/xscjglapp/*default/index.do',
   booking:'https://swzx.webvpn.szu.edu.cn/#/pages/booth/szu-booth-list',
+  sport:'https://ehall.szu.edu.cn/qljfwapp/sys/lwSzuCgyy/index.do#/sportVenue',
 });
 const hosts=new Set(['ehall.szu.edu.cn','authserver.szu.edu.cn','webvpn.szu.edu.cn','authserver-443.webvpn.szu.edu.cn',
   'swzx.webvpn.szu.edu.cn','swzx.szu.edu.cn']);

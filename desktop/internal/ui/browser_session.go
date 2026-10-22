@@ -34,6 +34,16 @@ func setBrowserCookies(client *http.Client, cookies []browserCookie) error {
 }
 
 func validateBrowserSession(ctx context.Context, client *http.Client, business string) error {
+	if business == "sport" {
+		// 体育场馆和教务同域，用同一个 ehall 会话。能读到场地列表就算登录有效。
+		c := &ehallClient{usesJar: true, base: ehallBaseURL, http: client}
+		body, err := c.postFormContext(ctx, sportAppPath+"/getSportVenueData.do", url.Values{})
+		if err != nil {
+			return err
+		}
+		_, err = parseSportVenues(body)
+		return err
+	}
 	if business == "graduate" {
 		_, err := readGraduateProfile(ctx, client)
 		return err
@@ -105,8 +115,8 @@ func (s *Server) handleBrowserSession(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, 400, errors.New("学校登录状态格式不正确"))
 		return
 	}
-	if in.Business != "undergrad" && in.Business != "graduate" && in.Business != "undergrad-scores" && in.Business != "graduate-scores" {
-		writeAPIError(w, 400, errors.New("请选择课表或成绩业务"))
+	if in.Business != "undergrad" && in.Business != "graduate" && in.Business != "undergrad-scores" && in.Business != "graduate-scores" && in.Business != "sport" {
+		writeAPIError(w, 400, errors.New("请选择课表、成绩或体育场馆业务"))
 		return
 	}
 	// Clear the selected account before anything else. Failed replacement must

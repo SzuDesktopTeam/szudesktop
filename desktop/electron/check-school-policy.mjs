@@ -21,7 +21,7 @@ const requests=[];
 let responseStatus=400,responseMessage='请先在应用内的学校页面完成登录';
 const profile={setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async()=>{},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}};
 // 学校会话只在内存里（没有 persist: 前缀），退出即失效。
-const fromPartition=(name,options)=>{assert.equal(name,'szu-official');assert.deepEqual(options,{cache:false});return profile;};
+const fromPartition=(name)=>{assert.equal(name,'persist:szu-official','学校窗口用持久化分区，关掉再开不用重登');return profile;};
 const localApi=async(url,options)=>{
  requests.push({url,options});
  return {ok:false,status:responseStatus,json:async()=>({ok:false,message:responseMessage})};

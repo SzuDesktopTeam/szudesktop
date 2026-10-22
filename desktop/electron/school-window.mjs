@@ -9,7 +9,9 @@ import {isNavigationAbort} from './window-policy.mjs';
 export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dialog,session,shell,fetch:request=globalThis.fetch,onWindowMenu=()=>{},platform}){
   const menuHint=platform==='darwin'?'菜单栏的「页面」菜单':'学校窗口菜单';
   let window=null,imported=false,loading=null,lastTarget=null;
-  const profile=session.fromPartition('szu-official',{cache:false});
+  // persist: 前缀让登录态留在本机，下次打开不用重登。
+  // 这里只存 Cookie，不存账号密码；用户仍可在学校页面主动退出。
+  const profile=session.fromPartition('persist:szu-official');
   profile.setPermissionRequestHandler((_wc,_permission,done)=>done(false));
   profile.setPermissionCheckHandler(()=>false);
   async function local(endpoint,body,method='POST'){
@@ -88,7 +90,7 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
     dialog.showErrorBox('学校页面暂时无法打开',`请检查校园网或 WebVPN；也可通过${menuHint}在系统浏览器中打开。`+code);
   }
   async function sync(business){
-    if(!Object.hasOwn(schoolTargets,business)||business==='booking')throw Error('请选择课表或成绩业务');
+    if(!Object.hasOwn(schoolTargets,business)&&business!=='sport')throw Error('请选择课表、成绩或体育场馆业务');
     const cookies=academicCookies(await profile.cookies.get({}));
     // An empty browser session also replaces the selected account. Let Go clear
     // its previous session before reporting that the user needs to log in.
@@ -96,6 +98,14 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
     return local('/api/academic/browser-session',{business,cookies});
   }
   function destroy(){if(window&&!window.isDestroyed())window.destroy();}
-  async function shutdown(){destroy();if(imported)await local('/api/academic/browser-session',undefined,'DELETE');}
-  return {open,sync,clear,destroy,shutdown};
+  // 关窗保留登录态：profile 已经是 persist 分区，下次打开直接复用。
+  // 清理由 discard() 负责，由用户在设置里主动触发。
+  async function shutdown(){destroy();}
+  async function discard(){
+    destroy();
+    if(imported)await local('/api/academic/browser-session',undefined,'DELETE');
+    imported=false;
+    await profile.clearStorageData();
+  }
+  return {open,sync,clear,destroy,shutdown,discard};
 }

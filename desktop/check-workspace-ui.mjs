@@ -247,7 +247,7 @@ function farmFixture(){
   document:{activeElement:seeds,title:'',getElementById:id=>nodes.get(id)||null,querySelector:selector=>({'.garden-tools .wallet':money,'.harvest-basket':basket,'#activity-bar':activity}[selector]||null),querySelectorAll:selector=>selector==='[data-farm-plot]'?plots:selector==='.daily-board'?[daily]:selector==='[data-ready]'?readyLabels.filter(x=>x.dataset.ready):selector==='#main button, #main select, #main input[type=file]'?[...plots,seeds,actions.current].filter(Boolean):[],addEventListener:(name,fn)=>{handlers[name]=fn}},
   btn:(text,action,extra='')=>`<button data-action="${action}" ${extra}>${text}</button>`,sprite:()=>'',cat:()=>'<svg data-animated-pet></svg>',cropIcon:key=>`<svg data-crop-icon="${key}"></svg>`,dailyBoard:g=>`daily:${g.daily.plant}/${g.daily.harvest}`,wallet:g=>`coins:${g.coins}`,
   render(){assert.fail('田块交互不应重绘整个页面')},renderPetCare(){assert.fail('田块交互不应重绘旁边表单')},exiting:false,refreshDay(){},paintGardenPath(){},toast(){},petActionMessage:()=>'',reactPet(){},actionReward:()=>null,
-  schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},focusKey,restoreFocus,
+  schoolUI:{click:async()=>false,sync(){}},officialUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},sportUI:{click:async()=>false},focusKey,restoreFocus,
   api:async(path,data)=>{assert.equal(path,'/api/workspace');assert.ok(data?.data);requests++;return {revision:requests+1}},
  });
  context.$=selector=>context.document.querySelector(selector);
@@ -301,7 +301,7 @@ function exportFixture(api){
  const context=vm.createContext({
   state:local,revision:1,busy:false,createState,normalize,Blob,Date,
   api,toast:()=>{},setTimeout:()=>{},render:()=>{},
-  officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},run:work=>{pending=work()},
+  officialUI:{click:async()=>false},schoolUI:{click:async()=>false},campusUI:{click:async()=>false},pianoUI:{click:async()=>false},sportUI:{click:async()=>false},run:work=>{pending=work()},
   document:{addEventListener:(_,handler)=>{click=handler},createElement:()=>({click:()=>{}})},
   URL:{createObjectURL:value=>{blob=value;return 'blob:workspace-test'},revokeObjectURL:()=>{}},
  });
@@ -544,7 +544,7 @@ function formFixture(){
  const context=vm.createContext({
   state:createState(),revision:1,busy:false,page:'study',studyTab:'focus',gardenTab:'pet',act,activePet,normalize,structuredClone,
   focusView,weeklyView,actionReward:()=>null,petActionMessage:()=>'',reactPet(action){reactions.push({action,revision:context.revision})},confirm:async()=>true,
-  schoolUI:{click:async()=>false,submit:async()=>false},campusUI:{click:async()=>false,submit:async()=>false},officialUI:{click:async()=>false},pianoUI:{click:async()=>false},
+  schoolUI:{click:async()=>false,submit:async()=>false},campusUI:{click:async()=>false,submit:async()=>false},officialUI:{click:async()=>false},pianoUI:{click:async()=>false},sportUI:{click:async()=>false},
   toast:message=>messages.push(message),
   document:{activeElement:draft,addEventListener:(name,callback)=>{listeners[name]=callback},getElementById:id=>nodes.get(id)||null,
    querySelector:selector=>selector==='.focus-studio'?focusPanel:selector==='.weekly-card'?weekPanel:null},

@@ -6,13 +6,17 @@ import {esc} from './html.mjs';
 const KINDS={'1':'包场','2':'散场'};
 
 export function createSportUI({api,toast}){
- let rooms=[],date='',day=null,busy=false,error='',message='';
+ let rooms=[],date='',day=null,busy=false,error='',message='',needLogin=false;
  let start='',end='',phone='',kind='2',agree=false,pending=null;
+
+ const hasWindow=()=>typeof globalThis.szuDesktop?.openSchool==='function';
+ const canSync=()=>typeof globalThis.szuDesktop?.syncSchool==='function';
 
  function content(){
   const roomOptions=rooms.map(r=>`<option value="${esc(r.id)}"${date===''?'':''}>${esc(KINDS[r.kind]||'场地')} · ${esc(r.name)}（${esc(r.campus==='2'?'丽湖':'粤海')}）</option>`).join('');
   return `<div class="card-head"><h2 class="icon-heading tone-info">体育场馆</h2><span class="badge" data-tone="info">羽毛球 · 篮球</span></div>
   <p>找一块能挥拍的场地。提交前会再核对一次时段。</p>
+  ${needLogin?`<div class="notice" data-tone="warning"><p>还没登录学校系统。先打开学校窗口登录一次，之后会记住。</p><div class="actions">${hasWindow()?`<button type="button" class="primary" data-action="sport-login">打开学校窗口</button>`:''}${canSync()?`<button type="button" data-action="sport-sync"${busy?' disabled':''}>登录完成了</button>`:''}</div></div>`:''}
   <div class="actions"><button type="button" data-action="sport-venues"${busy?' disabled':''}>${rooms.length?'刷新场地':'先读场地'}</button></div>
   ${rooms.length?`<div class="grid"><div><label for="sport-room">场地 · ${rooms.length}</label><select id="sport-room">${roomOptions}</select></div><div><label for="sport-date">使用日期</label><input id="sport-date" type="date" value="${esc(date)}"></div></div><div class="actions"><button type="button" data-action="sport-times"${busy?' disabled':''}>查询时段</button></div>`:''}
   ${error?`<p role="status" class="notice error">${esc(error)}</p>`:''}
@@ -38,6 +42,23 @@ export function createSportUI({api,toast}){
  function paint(){const el=document.getElementById('sport-panel');if(el)el.innerHTML=content()}
 
  async function click(a,el){
+  if(a==='sport-login'){
+   try{await globalThis.szuDesktop.openSchool('sport');message='学校窗口已打开，登录后回来点「登录完成了」。';error=''}
+   catch(e){error=e.message}
+   paint();return true;
+  }
+  if(a==='sport-sync'){
+   if(busy)return true;busy=true;error='';message='正在同步登录状态…';paint();
+   try{
+    const r=await globalThis.szuDesktop.syncSchool('sport');
+    needLogin=false;message=r&&r.message?r.message:'登录状态已同步';
+    const v=await api('/api/sport/venues');
+    rooms=v.rooms||[];
+    if(rooms.length&&!date)date=new Date().toISOString().slice(0,10);
+   }catch(e){error=e.message;needLogin=true}
+   finally{busy=false;paint()}
+   return true;
+  }
   if(a==='sport-venues'){
    if(busy)return true;busy=true;error='';message='正在读取场地…';paint();
    try{
@@ -45,7 +66,8 @@ export function createSportUI({api,toast}){
     rooms=r.rooms||[];
     message=rooms.length?`读到 ${rooms.length} 个场地`:'学校本次没有返回场地，请稍后再试。';
     if(rooms.length&&!date)date=new Date().toISOString().slice(0,10);
-   }catch(e){error=e.message}
+    needLogin=!rooms.length;
+   }catch(e){error=e.message;needLogin=/登录/.test(e.message)}
    finally{busy=false;paint()}
    return true;
   }

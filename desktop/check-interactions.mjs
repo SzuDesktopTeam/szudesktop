@@ -27,7 +27,7 @@ function fixture(){
   schoolUI:{click:async()=>false,sync:()=>{}},
   officialUI:{click:async()=>false},
   campusUI:{click:async action=>{calls.push(action);if(jobs.has(action))await jobs.get(action).promise;return true}},
-  pianoUI:{click:async()=>false},
+  pianoUI:{click:async()=>false},sportUI:{click:async()=>false},
   academicUI:{load:async()=>{}},toast:message=>toasts.push(message),clocks:()=>{},
   navigate:p=>{context.page=p},networkResult:()=>{},focusKey,restoreFocus,
  });

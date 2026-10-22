@@ -69,7 +69,18 @@ type sportPending struct {
 func newSportService() *sportService { return &sportService{} }
 
 // sportClient 从当前会话建一个 ehall 客户端。没登录返回明确错误。
+//
+// 优先复用 CAS 已认证的客户端：从学校窗口导入的登录态就走这条路，
+// 不必把 Cookie 再写进 sessionStore（少落一次盘）。
 func (s *Server) sportClient() (*ehallClient, error) {
+	if s.cas != nil {
+		s.cas.mu.Lock()
+		authed, client := s.cas.authenticated, s.cas.client
+		s.cas.mu.Unlock()
+		if authed && client != nil {
+			return &ehallClient{cookie: "", usesJar: true, base: ehallBaseURL, http: client}, nil
+		}
+	}
 	if s.session == nil {
 		return nil, errors.New("还没有学校系统的登录状态，请先在「校园服务」登录")
 	}

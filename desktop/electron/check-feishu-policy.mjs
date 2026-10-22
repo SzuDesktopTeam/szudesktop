@@ -121,16 +121,16 @@ assert.doesNotMatch(source,/preload:|nodeIntegration:true|sandbox:false|webSecur
 {
   loadResult=()=>Promise.resolve();
   const dialog=fakeDialog(),opened=[],cleared=[],partitions=[];let quitting=false,report=true,shellFails=false;
-  const officialSession={fromPartition:(name,options)=>{
-    assert.deepEqual(options,{cache:false});partitions.push(name);
-    return {setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async config=>{assert.equal(name,'szu-official');assert.deepEqual(config,{mode:'direct'});},cookies:{get:async()=>[]},
+  const officialSession={fromPartition:(name)=>{
+    partitions.push(name);
+    return {setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async config=>{assert.equal(name,'persist:szu-official');assert.deepEqual(config,{mode:'direct'});},cookies:{get:async()=>[]},
       clearStorageData:async()=>{cleared.push(name+':storage');},clearCache:async()=>{cleared.push(name+':cache');}};
   }};
   const deps={BrowserWindow:FakeWindow,Menu:{buildFromTemplate:value=>value},dialog,session:officialSession,
     shell:{openExternal:async url=>{if(shellFails)throw Error('no browser');opened.push(url);}},
     getBaseURL:()=>'http://127.0.0.1:1',getToken:()=>'0123456789abcdef'.repeat(4),isQuitting:()=>quitting,reportSchoolCleanup:()=>report};
   const official=createOfficialWindows(deps);
-  assert.deepEqual(partitions,['szu-official','szu-feishu-official'],'school and Feishu pages use separate in-memory sessions');
+  assert.deepEqual(partitions,['persist:szu-official','szu-feishu-official'],'school session persists on disk, Feishu pages stay in memory');
   const before=windows.length;
   for(const url of ['https://course.feishu.cn/docx/ROUTE1',schoolTargets.undergrad,'https://example.com/paper','file:///C:/secret','javascript:alert(1)','search-ms:query=x'])official.openExternal(url);
   await settle();
@@ -148,10 +148,11 @@ assert.doesNotMatch(source,/preload:|nodeIntegration:true|sandbox:false|webSecur
   globalThis.fetch=async()=>({ok:false,json:async()=>({message:'后台服务已停止'})});
   try{failing=createOfficialWindows(deps);}finally{globalThis.fetch=realFetch;}
   await assert.rejects(failing.school.sync('undergrad'),/后台服务已停止/);
+  const beforeShutdown=dialog.errors.length;
   await failing.shutdown();
-  assert.deepEqual(dialog.errors.at(-1),{title:'学校登录未能清除',message:'请在仍运行的便携版中清除学校登录，或退出该后台服务。'});
-  const reported=dialog.errors.length;report=false;await failing.shutdown();
-  assert.equal(dialog.errors.length,reported);
+  // 登录态改成持久化之后，关窗只销毁窗口，不再清 Cookie，
+  // 因此也不该再出现「学校登录未能清除」的提示。
+  assert.equal(dialog.errors.length,beforeShutdown,'关窗保留登录态，不弹清理失败提示');
 }
 assert.match(readFileSync(new URL('./preload.cjs',import.meta.url),'utf8'),/openFeishu: \(url\) => ipcRenderer\.invoke\('szu:feishu-open', url\)/);
 assert.equal(isFeishuPermissionAllowed('fullscreen','https://www.larkoffice.com/'),true);
