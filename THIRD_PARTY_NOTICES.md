@@ -46,3 +46,29 @@ Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款
 这是学生制作的非官方项目，与深圳大学及上述项目或游戏的权利人没有隶属或背书关系。
 
 安装版的本项目、字体、2048、Three.js 和 Sakura Crossing 许可位于 `resources/licenses/`；便携 ZIP 将其放在解压目录。Electron 自身许可保留在安装目录。
+
+## SZU CLI 校园业务适配参考
+
+全校课表和培养方案的查询路径、字段与映射参考并改编自 [AwesomeHou/szu-cli](https://github.com/AwesomeHou/szu-cli) 0.2.14 的 `src/modules/{timetable,program}{,-parser}.js`，在本项目中以 Go 重新实现。电量协议和图书馆授权入口亦参考该版本，并按学校实际匿名页面核对；不捆绑上游浏览器自动化或下载代码。以下完整声明随本文件进入安装版和便携 ZIP：
+
+MIT License
+
+Copyright (c) 2026 SZU CLI contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

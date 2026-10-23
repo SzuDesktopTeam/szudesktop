@@ -3,8 +3,14 @@ import {readFileSync} from 'node:fs';
 import {EventEmitter} from 'node:events';
 import {academicCookies,isSchoolURL,schoolTargets} from './school-policy.mjs';
 import {createSchoolWindows} from './school-window.mjs';
+import {createOfficialWindows} from './official-windows.mjs';
 import {isNavigationAbort} from './window-policy.mjs';
 for(const url of Object.values(schoolTargets))assert.ok(isSchoolURL(url));
+assert.equal(schoolTargets['catalog-timetable'],'https://ehall.szu.edu.cn/jwapp/sys/kcbcx/*default/index.do');
+assert.equal(schoolTargets['catalog-program'],'https://ehall.szu.edu.cn/jwapp/sys/qxfacx/*default/index.do');
+assert.equal(schoolTargets['academic-completion'],'https://ehall.szu.edu.cn/jwapp/sys/xywccx/*default/index.do');
+assert.equal(schoolTargets.lecture,'https://lecture.szu.edu.cn/');
+assert.equal(schoolTargets['library-account'],'https://www.lib.szu.edu.cn/opac/user/userinfo.aspx');
 assert.ok(isSchoolURL('https://authserver-443.webvpn.szu.edu.cn/authserver/login?service=https%3A%2F%2Fwebvpn.szu.edu.cn%2F'));
 for(const url of ['https://szu.edu.cn.evil.test/','http://ehall.szu.edu.cn/','https://ehall.szu.edu.cn:444/','https://user@ehall.szu.edu.cn/','https://authserver-443.webvpn.szu.edu.cn.evil.test/','http://authserver-443.webvpn.szu.edu.cn/','https://other.webvpn.szu.edu.cn/','file:///C:/test','javascript:alert(1)'])assert.equal(isSchoolURL(url),false,url);
 assert.deepEqual(academicCookies([
@@ -20,7 +26,7 @@ assert.doesNotMatch(window,/webSecurity:false|preload:|nodeIntegration:true|sand
 const requests=[];
 let responseStatus=400,responseMessage='请先在应用内的学校页面完成登录';
 const profile={setPermissionRequestHandler(){},setPermissionCheckHandler(){},setProxy:async()=>{},cookies:{get:async()=>[]},clearStorageData:async()=>{},clearCache:async()=>{}};
-// 学校会话只在内存里（没有 persist: 前缀），退出即失效。
+// 学校窗口保留本机登录，用户可主动清除。
 const fromPartition=(name)=>{assert.equal(name,'persist:szu-official','学校窗口用持久化分区，关掉再开不用重登');return profile;};
 const localApi=async(url,options)=>{
  requests.push({url,options});
@@ -38,6 +44,13 @@ for(const business of ['undergrad','graduate','undergrad-scores','graduate-score
  assert.deepEqual(JSON.parse(options.body),{business,cookies:[]});
 }
 assert.equal(requests.length,4);
+for(const business of ['catalog-timetable','catalog-program']){
+ await assert.rejects(school.sync(business),/请先在应用内的学校页面完成登录/);
+ assert.equal(JSON.parse(requests.at(-1).options.body).business,business);
+}
+const beforeResourceSync=requests.length;
+for(const business of ['academic-completion','lecture','library-account','booking'])await assert.rejects(school.sync(business),/不支持读取到本机/);
+assert.equal(requests.length,beforeResourceSync,'official-only entries must never export their cookies to the eHall importer');
 responseStatus=403;
 responseMessage='当前账号没有所选业务的访问权限，请核对培养层次或在官方系统确认权限';
 await assert.rejects(school.sync('undergrad'),{message:responseMessage});
@@ -119,6 +132,29 @@ assert.equal(requests.at(-1).options.headers['X-SZU-Token'],token);
 assert.equal(isNavigationAbort({code:'ERR_ABORTED'}),true);
 assert.equal(isNavigationAbort({errno:-3}),true);
 for(const error of [null,undefined,{},{code:'ERR_FAILED',errno:-2},new Error('x')])assert.equal(isNavigationAbort(error),false);
+// 授权中转页会继续跳到数据库域，须交给系统浏览器；个人借阅仍走受限学校窗口。
+{
+  const opened=[],loaded=[],windows=[];
+  class RoutedWindow extends EventEmitter{
+    constructor(){super();this.url='';this.webContents=Object.assign(new EventEmitter(),{getURL:()=>this.url,setWindowOpenHandler(){},navigationHistory:{}});windows.push(this);}
+    show(){}focus(){}isDestroyed(){return false;}setMenu(){}setTitle(){}
+    loadURL(url){this.url=url;loaded.push(url);return Promise.resolve();}
+  }
+  const routed=createOfficialWindows({BrowserWindow:RoutedWindow,Menu:{buildFromTemplate:value=>value},
+    dialog:{showErrorBox(){throw Error('unexpected routing error');}},session:{fromPartition:()=>profile},
+    shell:{openExternal:async url=>{opened.push(url);}},getBaseURL:()=>'',getToken:()=>token,isQuitting:()=>false,reportSchoolCleanup:()=>false});
+  const resources=['https://www.lib.szu.edu.cn/er/access/16084','https://www.lib.szu.edu.cn/er/access/16075'];
+  for(const url of resources)routed.openExternal(url);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(opened,resources,'institutional authorization entries must use the system browser');
+  assert.deepEqual(loaded,[],'database handoffs must not enter the restricted school window');
+  routed.openExternal('https://www.lib.szu.edu.cn/opac/user/userinfo.aspx');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(loaded,['https://www.lib.szu.edu.cn/opac/user/userinfo.aspx']);
+  let blocked=false;
+  windows[0].webContents.emit('will-redirect',{preventDefault(){blocked=true;}},'https://database.example/entry');
+  assert.equal(blocked,true,'the school window must still block off-list database domains');
+}
 const packaged=readFileSync(new URL('./electron-builder.yml',import.meta.url),'utf8');
 for(const name of ['pet-settings.mjs','smoke-pet.mjs','school-window.mjs','school-policy.mjs','window-policy.mjs'])assert.ok(packaged.includes(`- ${name}`),`${name} absent from installer`);
 console.log('School window: URL boundary, cookie scope, empty-session replacement, interrupted loads, blocked redirects, isolated profile and packaged modules passed');

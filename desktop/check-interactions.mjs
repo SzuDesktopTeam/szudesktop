@@ -53,13 +53,22 @@ function noteNavigationFixture(){
  return {context,toasts,events,history,methods,draft,gate,polls};
 }
 await check('all room links survive refresh, accept older page links and reject unknown sections',()=>{
- for(const [page,tabs] of Object.entries({study:['notes','focus','timetable','grades'],services:['spaces','notices','directory','piano'],garden:['pet','farm','market','arcade','journal'],settings:['appearance','desktop','data','about']})){
+ for(const [page,tabs] of Object.entries({study:['notes','focus','timetable','grades','catalog','program'],services:['spaces','sport','library','notices','electricity','directory','piano'],garden:['pet','farm','market','arcade','journal'],settings:['appearance','desktop','data','about']})){
   assert.deepEqual(readRoute('#'+page),{page,tab:tabs[0]});
   for(const tab of tabs)assert.deepEqual(readRoute(routeHash({page,tab})),{page,tab});
   assert.deepEqual(readRoute('#'+page+'/missing'),{page,tab:tabs[0]});
  }
  assert.deepEqual(readRoute('#unknown'),{page:'home',tab:undefined});
  assert.equal(routeHash({page:'home'}),'#home');
+});
+await check('every rendered workspace tab has a matching route',()=>{
+ const pages={studyTab:'study',serviceTab:'services',settingsTab:'settings'};
+ const menus=[...source.matchAll(/sectionNav\((\{[^{}]+\}),\w+,'(studyTab|serviceTab|settingsTab)'/g)];
+ assert.equal(menus.length,3,'check the actual navigation declarations, not a second list of tabs');
+ for(const [,literal,action] of menus){
+  const items=vm.runInNewContext('('+literal+')');
+  for(const tab of Object.keys(items))assert.deepEqual(readRoute('#'+pages[action]+'/'+tab),{page:pages[action],tab},action+' '+tab);
+ }
 });
 await check('leaving course notes waits for the real navigation save gate before changing page or history',async()=>{
  const f=noteNavigationFixture(),pending=f.context.navigate('home');
@@ -85,12 +94,12 @@ await check('switching from notes to another study tool also waits before replac
 });
 await check('room section changes record history, return to the top and focus the new content',async()=>{
  const f=noteNavigationFixture();f.gate.resolve();f.context.document.querySelector=()=>null;
- for(const [page,tab] of [['services','notices'],['services','directory'],['garden','farm'],['garden','market'],['settings','data']]){
+ for(const [page,tab] of [['services','sport'],['services','library'],['services','notices'],['services','directory'],['garden','farm'],['garden','market'],['settings','data']]){
   assert.equal(await f.context.navigate(page,tab),true);
   assert.equal(f.context.location.hash,'#'+page+'/'+tab);
   assert.deepEqual(f.events.slice(-3),['render','scroll','focus-main']);
  }
- assert.deepEqual(f.methods,['push','push','push','push','push']);
+ assert.deepEqual(f.methods,['push','push','push','push','push','push','push']);
  assert.equal(f.context.settingsTab,'data');
  await f.context.navigate('settings','data');assert.equal(f.methods.at(-1),'replace','clicking the current section must not duplicate browser history');
 });

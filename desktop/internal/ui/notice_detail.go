@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
-	"time"
 
 	xhtml "golang.org/x/net/html"
 )
@@ -52,7 +52,10 @@ var noticeAttachmentExt = []string{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".p
 
 func isSchoolSiteURL(raw string) bool {
 	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || u.Scheme != "http" && u.Scheme != "https" {
+	if err != nil || u.User != nil || u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+	if port := u.Port(); port != "" && (u.Scheme == "https" && port != "443" || u.Scheme == "http" && port != "80") {
 		return false
 	}
 	host := strings.ToLower(u.Hostname())
@@ -68,10 +71,7 @@ func fetchNoticeDetail(ctx context.Context, raw string) (*noticeDetail, error) {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", ehallUserAgent)
-	res, err := (&http.Client{
-		Timeout:   20 * time.Second,
-		Transport: &http.Transport{Proxy: nil},
-	}).Do(req)
+	res, err := noticeClient.Do(req)
 	if err != nil {
 		return nil, errors.New("学校页面暂时打不开，请稍后再试")
 	}
@@ -79,11 +79,18 @@ func fetchNoticeDetail(ctx context.Context, raw string) (*noticeDetail, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New("学校页面返回异常，请稍后再试")
 	}
-	return parseNoticeDetail(res.Body, raw)
+	return parseNoticeDetail(res.Body, res.Request.URL.String())
 }
 
 func parseNoticeDetail(body io.Reader, sourceURL string) (*noticeDetail, error) {
-	doc, err := xhtml.Parse(body)
+	data, err := io.ReadAll(io.LimitReader(body, (2<<20)+1))
+	if err != nil {
+		return nil, errors.New("公告正文未能完整读取，请稍后重试或查看原文")
+	}
+	if len(data) > 2<<20 {
+		return nil, errors.New("公告页面过大，请查看学校原文")
+	}
+	doc, err := xhtml.Parse(strings.NewReader(string(data)))
 	if err != nil {
 		return nil, errors.New("页面结构异常，未能解析")
 	}
@@ -153,7 +160,7 @@ func matchSelector(n *xhtml.Node, tag, class, id string) *xhtml.Node {
 	if n.Type == xhtml.ElementNode && n.Data == tag {
 		okClass := class == "" || hasClass(n, class)
 		okID := id == "" || nodeAttr(n, "id") == id
-		if okClass && okID && (class != "" || id != "") {
+		if okClass && okID {
 			return n
 		}
 	}
@@ -223,20 +230,22 @@ func collectAttachments(doc *xhtml.Node, base *url.URL) []noticeAttachment {
 		if n.Type == xhtml.ElementNode && n.Data == "a" {
 			href := nodeAttr(n, "href")
 			if href != "" {
-				lower := strings.ToLower(href)
+				abs := resolveURL(base, href)
+				u, err := url.Parse(abs)
+				if err != nil || abs == "" {
+					return
+				}
+				file := strings.HasSuffix(strings.ToLower(u.Path), "/download.jsp") && u.Query().Get("wbfileid") != ""
 				for _, ext := range noticeAttachmentExt {
-					if strings.Contains(lower, ext) {
-						abs := resolveURL(base, href)
-						if abs != "" && !seen[abs] {
-							seen[abs] = true
-							name := strings.TrimSpace(nodeText(n))
-							if name == "" {
-								name = abs[strings.LastIndex(abs, "/")+1:]
-							}
-							out = append(out, noticeAttachment{Name: name, URL: abs})
-						}
-						break
+					file = file || strings.HasSuffix(strings.ToLower(u.Path), ext)
+				}
+				if file && !seen[abs] {
+					seen[abs] = true
+					name := strings.TrimSpace(nodeText(n))
+					if name == "" {
+						name = path.Base(u.Path)
 					}
+					out = append(out, noticeAttachment{Name: name, URL: abs})
 				}
 			}
 		}

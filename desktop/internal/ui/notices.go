@@ -199,8 +199,8 @@ func parseNotices(body, base string) []campusNotice {
 	return items
 }
 
-var noticeClient = &http.Client{Timeout: 12 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
-	if len(via) >= 3 || req.URL.Scheme != "https" || req.URL.Host != via[0].URL.Host {
+var noticeClient = &http.Client{Timeout: 12 * time.Second, Transport: &http.Transport{Proxy: nil}, CheckRedirect: func(req *http.Request, via []*http.Request) error {
+	if len(via) >= 3 || req.URL.Scheme != "https" || !isSchoolSiteURL(req.URL.String()) || req.URL.Host != via[0].URL.Host {
 		return errors.New("unexpected notice redirect")
 	}
 	return nil

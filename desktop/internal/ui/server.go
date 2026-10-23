@@ -69,6 +69,7 @@ type Server struct {
 	sportMu       sync.Mutex
 	sportPending  *sportPending
 	piano         *pianoService
+	electricity   *electricityService
 	probe         func() *portal.DetectResult
 	detect        func() *portal.DetectResult
 	diagnose      func(user, pass, srunHost, drcomHost string) *diagnose.Report // 测试注入；nil 时用 diagnose.Run
@@ -105,7 +106,7 @@ func New(opts Options) *Server {
 		campus = &campusGateway{}
 	}
 	workspace := newWorkspaceStore()
-	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), probe: portal.Probe, detect: portal.Detect, workspace: workspace, notebook: newNotebookStore(filepath.Dir(workspace.path)), feishu: newFeishuService(), windows: newWindowSessions(), apiToken: newAPIToken()}
+	return &Server{opts: opts, store: credential.Default(), vpn: newVPNManager(), campus: campus, calendar: newCalendarService(filepath.Dir(workspace.path)), academic: newAcademicService(), cas: newCasService(), booking: newBookingService(), piano: newPianoService(), electricity: newElectricityService(filepath.Dir(workspace.path)), probe: portal.Probe, detect: portal.Detect, workspace: workspace, notebook: newNotebookStore(filepath.Dir(workspace.path)), feishu: newFeishuService(), windows: newWindowSessions(), apiToken: newAPIToken()}
 }
 
 func parseZone(raw string) (portal.Zone, bool) {
@@ -439,6 +440,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/campus/status", s.protectAPI(s.handleCampusStatus, http.MethodGet))
 	mux.HandleFunc("/api/campus/notice-sources", s.protectAPI(s.handleCampusNoticeSources, http.MethodGet))
 	mux.HandleFunc("/api/campus/notices", s.protectAPI(s.handleCampusNotices, http.MethodGet))
+	mux.HandleFunc("/api/campus/notices/search", s.protectAPI(s.handleCampusNoticeSearch, http.MethodGet))
 	mux.HandleFunc("/api/campus/notice", s.protectAPI(s.handleNoticeDetail, http.MethodGet))
 	mux.HandleFunc("/api/campus/calendar", s.protectAPI(s.handleCalendar, http.MethodGet))
 	// 学校系统（ehall）会话与个人业务。
@@ -453,6 +455,11 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/academic/login", s.protectAPI(s.handleAcademicLogin, http.MethodPost))
 	mux.HandleFunc("/api/academic/timetable", s.protectAPI(s.handleTimetable, http.MethodGet))
 	mux.HandleFunc("/api/academic/undergrad/timetable", s.protectAPI(s.handleUndergradTimetable, http.MethodGet))
+	mux.HandleFunc("/api/academic/catalog/terms", s.protectAPI(s.handleCatalogTerms, http.MethodGet))
+	mux.HandleFunc("/api/academic/catalog/classes", s.protectAPI(s.handleCatalogClasses, http.MethodGet))
+	mux.HandleFunc("/api/academic/catalog/timetable", s.protectAPI(s.handleCatalogTimetable, http.MethodGet))
+	mux.HandleFunc("/api/academic/catalog/programs", s.protectAPI(s.handleCatalogPrograms, http.MethodGet))
+	mux.HandleFunc("/api/academic/catalog/program", s.protectAPI(s.handleCatalogProgram, http.MethodGet))
 	// 统一身份认证（本科）应用内登录；与 /api/session 的粘 Cookie 是两套入口。
 	mux.HandleFunc("/api/cas/session", s.protectAPI(s.handleCasSession, http.MethodGet, http.MethodDelete))
 	mux.HandleFunc("/api/cas/challenge", s.protectAPI(s.handleCasChallenge, http.MethodPost))
@@ -474,6 +481,9 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	// 图书馆 OPAC：搜索匿名可用，借阅要 CAS（暂未接）。
 	mux.HandleFunc("/api/library/search", s.protectAPI(s.handleLibrarySearch, http.MethodGet))
 	mux.HandleFunc("/api/library/item", s.protectAPI(s.handleLibraryItem, http.MethodGet))
+	mux.HandleFunc("/api/electricity/settings", s.protectAPI(s.electricity.handleSettings, http.MethodGet, http.MethodPost))
+	mux.HandleFunc("/api/electricity/options", s.protectAPI(s.electricity.handleOptions, http.MethodGet))
+	mux.HandleFunc("/api/electricity/query", s.protectAPI(s.electricity.handleQuery, http.MethodPost))
 	mux.HandleFunc("/api/piano/status", s.protectAPI(s.handlePianoStatus, http.MethodGet))
 	mux.HandleFunc("/api/piano/login", s.protectAPI(s.handlePianoLogin, http.MethodPost))
 	mux.HandleFunc("/api/piano/logout", s.protectAPI(s.handlePianoLogout, http.MethodPost))

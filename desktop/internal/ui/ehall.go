@@ -229,11 +229,11 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 
 func ehallPathAllowed(path string) bool {
 	// 体育馆应用的页面和接口都在这个前缀下；它和成绩、课表同域，
-// 走同一个会话，重定向到这儿不是越权。
+	// 走同一个会话，重定向到这儿不是越权。
 	if strings.HasPrefix(path, "/qljfwapp/sys/lwSzuCgyy/") {
 		return true
 	}
-	return path == undergradScorePath || path == gradScorePath || path == undergradTimetablePath || path == undergradTermPath
+	return path == undergradScorePath || path == gradScorePath || path == undergradTimetablePath || path == undergradTermPath || catalogPathAllowed(path)
 }
 
 // ehallRows 从 ehall 的响应里取出数据行。

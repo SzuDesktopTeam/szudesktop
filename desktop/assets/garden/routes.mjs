@@ -1,6 +1,6 @@
 const tabs={
- study:['notes','focus','timetable','grades'],
- services:['spaces','notices','directory','piano'],
+ study:['notes','focus','timetable','grades','catalog','program'],
+ services:['spaces','sport','library','notices','electricity','directory','piano'],
  garden:['pet','farm','market','arcade','journal'],
  settings:['appearance','desktop','data','about'],
 };

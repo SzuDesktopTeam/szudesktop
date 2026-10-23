@@ -34,6 +34,9 @@ func setBrowserCookies(client *http.Client, cookies []browserCookie) error {
 }
 
 func validateBrowserSession(ctx context.Context, client *http.Client, business string) error {
+	if business == "catalog-timetable" || business == "catalog-program" {
+		return validateCatalogSession(ctx, client, business)
+	}
 	if business == "sport" {
 		// 体育场馆和教务同域，用同一个 ehall 会话。能读到场地列表就算登录有效。
 		c := &ehallClient{usesJar: true, base: ehallBaseURL, http: client}
@@ -119,8 +122,8 @@ func (s *Server) handleBrowserSession(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, 400, errors.New("学校登录状态格式不正确"))
 		return
 	}
-	if in.Business != "undergrad" && in.Business != "graduate" && in.Business != "undergrad-scores" && in.Business != "graduate-scores" && in.Business != "sport" {
-		writeAPIError(w, 400, errors.New("请选择课表、成绩或体育场馆业务"))
+	if in.Business != "undergrad" && in.Business != "graduate" && in.Business != "undergrad-scores" && in.Business != "graduate-scores" && in.Business != "sport" && in.Business != "catalog-timetable" && in.Business != "catalog-program" {
+		writeAPIError(w, 400, errors.New("请选择支持的学校业务"))
 		return
 	}
 	// Clear the selected account before anything else. Failed replacement must
@@ -180,7 +183,7 @@ func (s *Server) handleBrowserSession(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		writeJSON(w, map[string]any{"ok": true, "authenticated": true, "business": in.Business,
-			"message": "所选业务已通过学校查询验证，可以返回课表或成绩卡片读取；登录仅保留到退出应用"})
+			"message": "所选业务已通过学校查询验证，可以返回对应页面读取；本次读取会话保留到退出应用，学校窗口登录可在本机主动清除"})
 	}
 }
 
