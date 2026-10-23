@@ -5,15 +5,16 @@ import "net/http"
 // Verified against the school directory; each source points to its own public column.
 // Keep links for colleges whose feeds cannot yet be read, without claiming an empty feed.
 type noticeSource struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	URL      string `json:"url"`
-	Group    string `json:"group"`
-	Readable bool   `json:"readable"`
-	Note     string `json:"note,omitempty"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	URL        string `json:"url"`
+	Group      string `json:"group"`
+	Readable   bool   `json:"readable"`
+	Note       string `json:"note,omitempty"`
+	SearchMode string `json:"search_mode"`
 }
 
-var noticeCatalog = []noticeSource{
+var noticeCatalog = withNoticeSearchModes([]noticeSource{
 	{ID: "undergrad", Name: "教务部", URL: "https://jwb.szu.edu.cn/index/jwtz.htm", Group: "university", Readable: true, Note: "本科教学通知"},
 	{ID: "graduate", Name: "研究生院", URL: "https://gra.szu.edu.cn/", Group: "university", Readable: true, Note: "研究生院首页公开通知"},
 	{ID: "college-fe", Name: "教育学部", URL: "https://fe.szu.edu.cn/xbzx/tzgg.htm", Group: "college", Readable: true, Note: ""},
@@ -44,6 +45,22 @@ var noticeCatalog = []noticeSource{
 	{ID: "college-lxs", Name: "国际交流学院", URL: "https://lxs.szu.edu.cn/index/tzgg.htm", Group: "college", Readable: true, Note: ""},
 	{ID: "college-swift", Name: "深大微众金融科技学院", URL: "https://swift.szu.edu.cn/", Group: "college", Readable: false, Note: "暂未接入应用内读取，请在学院官网查看。"},
 	{ID: "college-safti", Name: "深圳南特金融科技学院", URL: "https://safti.szu.edu.cn/", Group: "college", Readable: false, Note: "暂未接入应用内读取，请在学院官网查看。"},
+})
+
+func withNoticeSearchModes(catalog []noticeSource) []noticeSource {
+	for i := range catalog {
+		catalog[i].SearchMode = "unavailable"
+		if catalog[i].Readable {
+			// These public columns expose the school's anonymous VSB search widget.
+			// Resolve its owner and column from the preset official page at query time.
+			catalog[i].SearchMode = "official"
+		}
+		if catalog[i].ID == "college-cmse" {
+			// This page has no public search widget. Do not claim a site-wide search.
+			catalog[i].SearchMode = "loaded_titles"
+		}
+	}
+	return catalog
 }
 
 var noticeSources = func() map[string]noticeSource {

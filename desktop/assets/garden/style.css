@@ -381,4 +381,33 @@ body[data-page=settings] .pagehead h1 { color:var(--magic); }
 .copy-list li:last-child{border-bottom:0}
 .copy-loc{flex:1 1 100%;color:var(--muted)}
 .copy-call{font-family:var(--pixel);font-size:12px}
-.copy-status{color:var(--ok,#2f7d32)}
+
+/* Campus workspaces share the garden's paper, spacing and readable ink. */
+#library-panel,#academic-catalog-panel,#electricity-panel{min-width:0;overflow-wrap:anywhere}
+#library-panel .card-head,#academic-catalog-panel .card-head,#electricity-panel .card-head{flex-wrap:wrap;gap:10px}
+#academic-catalog-panel .badge{white-space:normal;line-height:1.6}
+.library-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin:16px 0}
+.library-search input{min-width:0;width:100%}
+.library-results>p{margin:16px 0 8px}
+#library-panel .library-list>li,#academic-catalog-panel .library-list>li{padding:16px 0}
+#library-panel .library-list b,#academic-catalog-panel .library-list b{font-size:var(--fs-md,14px);line-height:1.7}
+#library-panel .library-list small,#academic-catalog-panel .library-list small{font-size:var(--fs-sm,13px);line-height:1.8;margin-top:4px}
+.library-copies{padding:12px 14px;background:var(--world-paper,var(--surface,#f7f2e3))}
+.library-copies-btn{font-size:var(--fs-sm,13px);margin:10px 8px 0 0}
+.copy-list li{padding:10px 0;gap:6px 14px}
+.copy-call{font-size:var(--fs-sm,13px);overflow-wrap:anywhere}
+.library-resources{margin-top:24px;padding-top:18px;border-top:2px solid var(--world-line,var(--line))}
+.library-resources h3{margin-top:0}
+.library-resources .actions{gap:10px 18px;line-height:1.8}
+#academic-catalog-panel .grid,#electricity-panel .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:16px;margin:18px 0}
+#academic-catalog-panel .grid>div,#electricity-panel .grid>div{min-width:0}
+#academic-catalog-panel input,#electricity-panel input,#electricity-panel select{width:100%;min-width:0}
+#academic-catalog-panel .actions,#electricity-panel .actions{gap:10px;flex-wrap:wrap;margin:16px 0}
+#academic-catalog-results>div{margin-top:24px;padding-top:18px;border-top:2px solid var(--world-line,var(--line))}
+#academic-catalog-results h4{margin:24px 0 8px;color:var(--info)}
+#academic-catalog-results details,#electricity-panel details{margin:16px 0;padding:14px;border:1px solid var(--world-line,var(--line));background:var(--world-paper,var(--surface,#f7f2e3))}
+#academic-catalog-results summary,#electricity-panel summary{cursor:pointer;font-weight:600;line-height:1.8}
+#academic-catalog-results details p{white-space:pre-wrap}
+#electricity-panel [aria-label="电量查询结果"]{margin:20px 0;padding:18px;border:2px solid var(--tone-line,#92ad69);border-left-width:5px;background:var(--world-paper,#edf3d6)}
+#electricity-panel [aria-label="电量查询结果"] h3{color:var(--success);font-size:var(--fs-lg,16px);margin-top:0}
+@media(max-width:520px){.library-search{grid-template-columns:minmax(0,1fr)}.library-search button{width:100%}#academic-catalog-panel .actions button,#electricity-panel .actions button{flex:1 1 auto}#electricity-panel [aria-label="电量查询结果"]{padding:14px}}

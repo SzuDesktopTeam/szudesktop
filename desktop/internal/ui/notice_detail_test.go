@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -62,7 +64,7 @@ func TestFetchNoticeDetailRejectsForeignHost(t *testing.T) {
 
 func TestIsSchoolSiteURL(t *testing.T) {
 	ok := []string{"https://www.szu.edu.cn/", "http://jw.szu.edu.cn/a", "https://szu.edu.cn/x"}
-	bad := []string{"https://szu.edu.cn.evil.com/", "https://notszu.edu.cn/", "javascript:alert(1)"}
+	bad := []string{"https://szu.edu.cn.evil.com/", "https://notszu.edu.cn/", "javascript:alert(1)", "https://user:password@ai.szu.edu.cn/info/1.htm", "https://ai.szu.edu.cn:8443/info/1.htm"}
 	for _, u := range ok {
 		if !isSchoolSiteURL(u) {
 			t.Fatalf("%s 应该允许", u)
@@ -72,5 +74,68 @@ func TestIsSchoolSiteURL(t *testing.T) {
 		if isSchoolSiteURL(u) {
 			t.Fatalf("%s 应该拒绝", u)
 		}
+	}
+}
+
+func TestNoticeDetailPrefersSemanticBodyOverPageWrapper(t *testing.T) {
+	for _, tag := range []string{"article", "main"} {
+		t.Run(tag, func(t *testing.T) {
+			page := `<div><nav>导航栏</nav><` + tag + `><p>` + strings.Repeat("应当读取的公告正文。", 4) + `</p></` + tag + `><div>不属于公告正文的边栏文字。</div></div>`
+			out, err := parseNoticeDetail(strings.NewReader(page), "https://ai.szu.edu.cn/info/1058/1.htm")
+			if err != nil || !strings.Contains(out.Body, "应当读取") || strings.Contains(out.Body, "边栏文字") {
+				t.Fatalf("semantic body lost to wrapper: out=%+v err=%v", out, err)
+			}
+		})
+	}
+}
+
+func TestNoticeDetailFindsSchoolDownloadLinksWithoutFalseExtensions(t *testing.T) {
+	page := `<article><p>` + strings.Repeat("真实公告内容。", 4) + `</p></article>
+<a href="/system/resource/code/datainfobase/download.jsp?owner=1&amp;wbfileid=fixture-id">申请表</a>
+<a href="/files/handbook.PDF">手册</a>
+<a href="/search?q=manual.pdf">不是附件</a>
+<a href="/files/manual.pdf.html">不是文件</a>`
+	out, err := parseNoticeDetail(strings.NewReader(page), "https://ai.szu.edu.cn/info/1058/1.htm")
+	if err != nil || len(out.Attachments) != 2 || out.Attachments[0].Name != "申请表" || !strings.Contains(out.Attachments[0].URL, "download.jsp?") {
+		t.Fatalf("wrong attachment recognition: out=%+v err=%v", out, err)
+	}
+}
+
+func TestNoticeDetailRejectsOversizedPages(t *testing.T) {
+	_, err := parseNoticeDetail(strings.NewReader(`<article>`+strings.Repeat("x", (2<<20)+1)+`</article>`), "https://ai.szu.edu.cn/info/1058/1.htm")
+	if err == nil || !strings.Contains(err.Error(), "过大") {
+		t.Fatalf("oversized page should fail truthfully: %v", err)
+	}
+}
+
+func TestFetchNoticeDetailKeepsRedirectsOnOriginalHTTPSHost(t *testing.T) {
+	original := noticeClient
+	t.Cleanup(func() { noticeClient = original })
+	for _, target := range []string{"https://example.com/body", "https://other.szu.edu.cn/body", "http://ai.szu.edu.cn/body", "https://user:secret@ai.szu.edu.cn/body", "https://ai.szu.edu.cn:8443/body"} {
+		t.Run(target, func(t *testing.T) {
+			calls := 0
+			client := *original
+			client.Transport = noticeTransport(func(req *http.Request) (*http.Response, error) {
+				calls++
+				return &http.Response{StatusCode: http.StatusFound, Header: http.Header{"Location": {target}}, Body: io.NopCloser(strings.NewReader("")), Request: req}, nil
+			})
+			noticeClient = &client
+			if _, err := fetchNoticeDetail(t.Context(), "https://ai.szu.edu.cn/start"); err == nil || calls != 1 {
+				t.Fatalf("unsafe redirect must not be fetched: calls=%d err=%v", calls, err)
+			}
+		})
+	}
+	client := *original
+	client.Transport = noticeTransport(func(req *http.Request) (*http.Response, error) {
+		if req.URL.Path == "/start" {
+			return &http.Response{StatusCode: http.StatusFound, Header: http.Header{"Location": {"/moved/body.htm"}}, Body: io.NopCloser(strings.NewReader("")), Request: req}, nil
+		}
+		body := `<article><p>` + strings.Repeat("实际公告正文。", 5) + `</p><a href="file.pdf">附件</a></article>`
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(body)), Request: req}, nil
+	})
+	noticeClient = &client
+	out, err := fetchNoticeDetail(t.Context(), "https://ai.szu.edu.cn/start")
+	if err != nil || out.SourceURL != "https://ai.szu.edu.cn/moved/body.htm" || len(out.Attachments) != 1 || out.Attachments[0].URL != "https://ai.szu.edu.cn/moved/file.pdf" {
+		t.Fatalf("source and attachments should follow the final school page: out=%+v err=%v", out, err)
 	}
 }

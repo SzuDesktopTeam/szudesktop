@@ -27,7 +27,7 @@ forAll('esc：输出去掉实体后不含 & < > \' "，可无损解码回原文�
 test('esc 对 null/undefined/数字/布尔/对象都不抛错且返回字符串',()=>{for(const v of [null,undefined,0,-0,1.5,NaN,true,false,[],{},[1,'<'],Symbol('x'),10n])assert.equal(typeof esc(v),'string')});
 
 // ───────────────────────── routes.mjs ─────────────────────────
-const PAGES={home:[],network:[],services:['spaces','notices','directory','piano'],garden:['pet','farm','market','arcade','journal'],study:['notes','focus','timetable','grades'],settings:['appearance','desktop','data','about']};
+const PAGES={home:[],network:[],services:['spaces','sport','library','notices','electricity','directory','piano'],garden:['pet','farm','market','arcade','journal'],study:['notes','focus','timetable','grades','catalog','program'],settings:['appearance','desktop','data','about']};
 const genHash=rng=>rng.weighted([[3,()=>'#'+rng.pick(Object.keys(PAGES))+(rng.bool(0.6)?'/'+rng.pick([...Object.values(PAGES).flat(),...PROTO_KEYS,'','x']):'')],[1,()=>rng.text(12)],[1,()=>rng.pick(['','#','##','#/','#/focus','#study/focus/extra','study/focus','#constructor','#__proto__/toString',null,undefined,42])]]);
 forAll('readRoute/routeHash：任意输入都落在路由表内，readRoute∘routeHash 是幂等往返，带分区的页面总有分区',genHash,hash=>{
   const route=readRoute(hash);

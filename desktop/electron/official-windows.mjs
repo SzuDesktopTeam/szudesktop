@@ -1,7 +1,7 @@
 // 学校与飞书官方页面的接线：主窗里点开的外部地址按域名分流到各自隔离的窗口，其余安全链接交给系统浏览器；
-// 退出时关闭两者并清掉会话。electron 对象由 main.mjs 注入，再原样交给两个窗口模块。
+// 退出时关闭窗口；学校登录在本机保留，飞书会话随进程退出失效。electron 对象由 main.mjs 注入。
 import {createSchoolWindows} from './school-window.mjs';
-import {isSchoolURL} from './school-policy.mjs';
+import {isLibraryAuthorizationURL,isSchoolURL} from './school-policy.mjs';
 import {createFeishuWindow} from './feishu-window.mjs';
 import {isFeishuDocumentURL} from './feishu-policy.mjs';
 import {isSafeExternalUrl} from './external-url.mjs';
@@ -17,7 +17,8 @@ export function createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,g
       void feishuWindow.open(url).catch(()=>dialog.showErrorBox('飞书页面暂时无法打开','请检查网络，或在系统浏览器打开课程文档。'));
       return;
     }
-    if(isSchoolURL(url)){
+    // 图书馆授权中转页需要继续跳到数据库站点，交给系统浏览器完成。
+    if(isSchoolURL(url)&&!isLibraryAuthorizationURL(url)){
       void schoolWindows.open(url).catch(()=>dialog.showErrorBox('学校页面暂时无法打开',platform==='darwin'?'请检查校园网或 WebVPN；可通过菜单栏的「页面」菜单在系统浏览器中打开。'
         :'请检查校园网或 WebVPN；可通过学校窗口菜单在系统浏览器中打开。'));
       return;

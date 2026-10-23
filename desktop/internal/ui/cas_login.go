@@ -298,7 +298,7 @@ func (s *Server) writeSchoolReadError(w http.ResponseWriter, used *ehallClient, 
 // 所以「清除统一身份认证登录」不需要额外动 Cookie，反之亦然。
 func writeSchoolClientError(w http.ResponseWriter, err error) {
 	if errors.Is(err, credential.ErrSessionNotFound) {
-		writeAPIError(w, 409, errors.New("还没有学校系统登录状态：请先在上方用学号密码登录统一身份认证"))
+		writeAPIError(w, 409, errors.New("还没有学校系统登录状态：请在学校原页登录并读取登录，或使用统一身份认证入口"))
 		return
 	}
 	writeSessionLoadError(w, err)

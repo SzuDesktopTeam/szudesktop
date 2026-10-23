@@ -1,7 +1,7 @@
 import {academicCookies,isSchoolURL,schoolTargets} from './school-policy.mjs';
 import {isNavigationAbort} from './window-policy.mjs';
 
-// No persist: prefix: school cookies/cache disappear when the app exits.
+// The isolated persistent profile keeps official sign-ins on this computer.
 // getToken 返回 sidecar 交来的本次运行凭据：主进程调本机服务不经过页面 Cookie，要自己带请求头。
 // electron 的 BrowserWindow/Menu/dialog/session/shell 由 main.mjs 注入（经 official-windows.mjs），检查脚本用假对象代替。
 // onWindowMenu(win,submenu)：macOS 没有窗口菜单栏，把同一份菜单项交给应用菜单的「页面」一栏（app-menu.mjs）；其他平台缺省什么也不做。
@@ -90,7 +90,7 @@ export function createSchoolWindows(getBaseURL,getToken,{BrowserWindow,Menu,dial
     dialog.showErrorBox('学校页面暂时无法打开',`请检查校园网或 WebVPN；也可通过${menuHint}在系统浏览器中打开。`+code);
   }
   async function sync(business){
-    if(!Object.hasOwn(schoolTargets,business)&&business!=='sport')throw Error('请选择课表、成绩或体育场馆业务');
+    if(!['undergrad','graduate','undergrad-scores','graduate-scores','sport','catalog-timetable','catalog-program'].includes(business))throw Error('这个入口只在学校原页办理，暂不支持读取到本机');
     const cookies=academicCookies(await profile.cookies.get({}));
     // An empty browser session also replaces the selected account. Let Go clear
     // its previous session before reporting that the user needs to log in.

@@ -141,4 +141,52 @@ await check('picking 教务部 from the prompt is asked again next launch, and t
  const relaunched=createNoticesUI(config);await relaunched.enter();assert.match(relaunched.card(),/先选你的学院/,'重启后仍会再问（与提示里写的一致）');
  const filled=createNoticesUI({...config,getProfile:()=>({college:'教务部'})});await filled.enter();assert.doesNotMatch(filled.card(),/先选你的学院/,'按提示在设置里填了「教务部」就不再问');assert.match(filled.card(),/教务部 · 读取于/);
 });
+const officialSources=sources.map(s=>({...s,search_mode:s.readable?'official':'unavailable'}));
+const officialResult=(id,q='通知',page=1,scope='title')=>({source_id:id,source:sources.find(s=>s.id===id).name,url:sources.find(s=>s.id===id).url,query:q,scope,range:'column',range_label:'所选学院当前栏目',page,page_size:12,total:25,fetched_at:'2026-10-24T03:00:00Z',items:[{title:`${q} 第${page}页 <script>`,url:'https://law.szu.edu.cn/info/100/10.htm',date:'2026-10-24',can_read:true},{title:'官网外部文章',url:'https://mp.weixin.qq.com/s/example',date:'2026-10-23',can_read:false}]});
+await check('official search sends title or fulltext scope and exposes real totals and page controls',async()=>{
+ const paths=[];const ui=createNoticesUI({getSource:()=> 'college-law',api:async path=>{paths.push(path);if(path.endsWith('/notice-sources'))return {sources:officialSources};if(path.includes('/notices/search?')){const p=new URL('http://localhost'+path).searchParams;return officialResult(p.get('source'),p.get('q'),Number(p.get('page')),p.get('scope'))}return response('college-law')}});
+ await ui.enter();assert.match(ui.card(),/id="notice-query"/);assert.match(ui.card(),/校方搜索/);
+ ui.input({target:{id:'notice-query',value:'通知'}});await ui.change({target:{id:'notice-search-scope',value:'fulltext'}});await ui.click('notice-search');
+ const request=new URL('http://localhost'+paths.at(-1));assert.equal(request.pathname,'/api/campus/notices/search');assert.equal(request.searchParams.get('scope'),'fulltext');assert.equal(request.searchParams.get('q'),'通知');
+ assert.match(ui.card(),/所选学院当前栏目/);assert.match(ui.card(),/全文/);assert.match(ui.card(),/25 条/);assert.match(ui.card(),/第 1.*3 页/);assert.match(ui.card(),/&lt;script&gt;/);assert.doesNotMatch(ui.card(),/data-action="notice-open"[^>]*mp\.weixin/);
+ await ui.click('notice-search-next');assert.equal(new URL('http://localhost'+paths.at(-1)).searchParams.get('page'),'2');assert.match(ui.card(),/第2页/);
+ await ui.click('notice-search-prev');assert.equal(new URL('http://localhost'+paths.at(-1)).searchParams.get('page'),'1');
+});
+await check('loaded-title search filters all fetched items before paginating and never calls official search',async()=>{
+ const many={...response('undergrad'),items:Array.from({length:25},(_,i)=>({title:(i<12?'普通':'目标')+i,date:'2026-10-24',url:'https://jwb.szu.edu.cn/info/1053/'+(i+1)+'.htm'}))};const paths=[];
+ const ui=createNoticesUI({getProfile:()=>({college:'教务部'}),api:async path=>{paths.push(path);return path.endsWith('/notice-sources')?{sources}:many}});
+ await ui.enter();assert.match(ui.card(),/本次读取.*标题/);ui.input({target:{id:'notice-query',value:'目标'}});await ui.click('notice-search');
+ assert.match(ui.card(),/13 条/);assert.match(ui.card(),/25 条标题/);assert.match(ui.card(),/目标12/);assert.match(ui.card(),/目标23/);assert.doesNotMatch(ui.card(),/目标24/);assert.equal(paths.length,2);
+ await ui.click('notice-search-next');assert.match(ui.card(),/目标24/);assert.doesNotMatch(ui.card(),/>目标12</);assert.equal(paths.length,2);
+ await ui.click('notice-search-clear');assert.match(ui.card(),/普通0/);assert.doesNotMatch(ui.card(),/共 13 条/);
+});
+await check('a failed official search is explicit and cannot silently show the recent feed as complete results',async()=>{
+ const ui=createNoticesUI({getSource:()=> 'college-law',api:async path=>{if(path.endsWith('/notice-sources'))return {sources:officialSources};if(path.includes('/notices/search?'))throw Error('校方搜索暂时打不开');return response('college-law')}});
+ await ui.enter();ui.input({target:{id:'notice-query',value:'通知'}});await ui.click('notice-search');
+ assert.match(ui.card(),/校方搜索暂时打不开/);assert.match(ui.card(),/校方搜索未完成/);assert.doesNotMatch(ui.card(),/college-law 公告/);
+ await ui.click('notice-search-clear');assert.match(ui.card(),/college-law 公告/);
+});
+await check('search responses for a previous source or scope cannot replace the current selection',async()=>{
+ let finish;const ui=createNoticesUI({getSource:()=> 'college-law',api:path=>{if(path.endsWith('/notice-sources'))return Promise.resolve({sources:officialSources});if(path.includes('/notices/search?'))return new Promise(resolve=>{finish=resolve});return Promise.resolve(response(new URL('http://localhost'+path).searchParams.get('source')))}});
+ await ui.enter();ui.input({target:{id:'notice-query',value:'迟到结果'}});const old=ui.click('notice-search');await nextTurn();assert.match(ui.card(),/正在检索/);
+ await ui.change({target:{id:'feed-source',value:'college-fe'}});await nextTurn();finish(officialResult('college-law','迟到结果'));await old;
+ assert.match(ui.card(),/教育学部 · 读取于/);assert.doesNotMatch(ui.card(),/迟到结果 第/);
+ ui.input({target:{id:'notice-query',value:'旧标题'}});const previous=ui.click('notice-search');await nextTurn();await ui.change({target:{id:'notice-search-scope',value:'fulltext'}});finish(officialResult('college-fe','旧标题'));await previous;assert.doesNotMatch(ui.card(),/旧标题 第/);
+});
+await check('successful empty searches say no matches and keep their official scope',async()=>{
+ const ui=createNoticesUI({getSource:()=> 'college-law',api:async path=>path.endsWith('/notice-sources')?{sources:officialSources}:path.includes('/notices/search?')?{...officialResult('college-law'),range:'site',range_label:'法学院网站（可能包含新闻等其他栏目）',total:0,items:[]}:response('college-law')});
+ await ui.enter();ui.input({target:{id:'notice-query',value:'没有的词'}});await ui.click('notice-search');assert.match(ui.card(),/没有找到匹配/);assert.match(ui.card(),/网站（可能包含新闻等其他栏目）/);assert.doesNotMatch(ui.card(),/这个栏目本次没有可显示/);
+});
+await check('opening a search result reuses the existing detail endpoint and escapes body and attachments',async()=>{
+ const box={hidden:true,dataset:{},textContent:'',innerHTML:''};const paths=[];
+ const ui=createNoticesUI({api:async path=>{paths.push(path);return {body:'正文 <script>\n第二段',attachments:[{name:'附件 <b>.pdf',url:'https://law.szu.edu.cn/system/_content/download.jsp?wbfileid=12&owner=34'}]}}});
+ await ui.click('notice-open',{dataset:{url:'https://law.szu.edu.cn/info/100/10.htm'},parentElement:{querySelector:()=>box}});
+ assert.match(paths[0],/^\/api\/campus\/notice\?url=/);assert.match(box.innerHTML,/正文 &lt;script&gt;<br>第二段/);assert.match(box.innerHTML,/附件 &lt;b&gt;\.pdf/);assert.match(box.innerHTML,/wbfileid=12&amp;owner=34/);
+});
+await check('collapsing and reopening a pending body shares its read instead of requesting it twice',async()=>{
+ let finish,reads=0;const box={hidden:true,dataset:{},textContent:'',innerHTML:''},button={dataset:{url:'https://law.szu.edu.cn/info/100/10.htm'},parentElement:{querySelector:()=>box}};
+ const ui=createNoticesUI({api:()=>{reads++;return new Promise(resolve=>{finish=resolve})}});
+ const first=ui.click('notice-open',button);await ui.click('notice-open',button);const reopened=ui.click('notice-open',button);
+ assert.equal(reads,1,'reopening a pending body must not duplicate a public school request');finish({body:'公开正文',attachments:[]});await first;await reopened;assert.match(box.innerHTML,/公开正文/);
+});
 console.log(`${count} notice checks passed`);
