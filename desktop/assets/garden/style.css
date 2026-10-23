@@ -374,3 +374,11 @@ body[data-page=settings] .pagehead h1 { color:var(--magic); }
 .campus-notices .notice-body{margin:8px 0 4px;padding:10px 12px;border-left:3px solid var(--line);background:#f7f2e3;line-height:1.9}
 .campus-notices .notice-text{white-space:normal;overflow-wrap:anywhere}
 .campus-notices .notice-files{margin:8px 0 0;font-size:13px}
+.library-copies-btn{margin-left:8px;font-size:12px}
+.library-copies{margin-top:8px;padding:8px 10px;border-left:3px solid var(--line);background:#f7f2e3}
+.copy-list{margin:0;padding:0;list-style:none;font-size:13px}
+.copy-list li{display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.copy-list li:last-child{border-bottom:0}
+.copy-loc{flex:1 1 100%;color:var(--muted)}
+.copy-call{font-family:var(--pixel);font-size:12px}
+.copy-status{color:var(--ok,#2f7d32)}

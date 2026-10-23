@@ -473,6 +473,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/sport/commit", s.protectAPI(s.handleSportCommit, http.MethodPost))
 	// 图书馆 OPAC：搜索匿名可用，借阅要 CAS（暂未接）。
 	mux.HandleFunc("/api/library/search", s.protectAPI(s.handleLibrarySearch, http.MethodGet))
+	mux.HandleFunc("/api/library/item", s.protectAPI(s.handleLibraryItem, http.MethodGet))
 	mux.HandleFunc("/api/piano/status", s.protectAPI(s.handlePianoStatus, http.MethodGet))
 	mux.HandleFunc("/api/piano/login", s.protectAPI(s.handlePianoLogin, http.MethodPost))
 	mux.HandleFunc("/api/piano/logout", s.protectAPI(s.handlePianoLogout, http.MethodPost))

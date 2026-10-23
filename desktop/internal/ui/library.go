@@ -25,6 +25,7 @@ import (
 const librarySearchURL = "https://www.lib.szu.edu.cn/opac/searchresult.aspx"
 
 type libraryBook struct {
+	CtrlNo    string `json:"ctrl_no,omitempty"`
 	Title     string `json:"title"`
 	Author    string `json:"author"`
 	Publisher string `json:"publisher"`
@@ -106,7 +107,7 @@ func parseLibraryRows(body io.Reader) ([]libraryBook, error) {
 		if n.Type == xhtml.ElementNode && n.Data == "tr" {
 			cells := tableCells(n)
 			if len(cells) >= 3 && cells[1] != "" && cells[1] != "题名" {
-				book := libraryBook{Title: cells[1]}
+				book := libraryBook{Title: cells[1], CtrlNo: ctrlNoFromRow(n)}
 				if len(cells) > 2 {
 					book.Author = cells[2]
 				}
@@ -162,4 +163,32 @@ func (s *Server) handleLibrarySearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, out)
+}
+
+// ctrlNoFromRow 从书名的链接里取书目编号（bookinfo.aspx?ctrlno=123）。
+func ctrlNoFromRow(row *xhtml.Node) string {
+	var found string
+	var walk func(*xhtml.Node)
+	walk = func(n *xhtml.Node) {
+		if found != "" {
+			return
+		}
+		if n.Type == xhtml.ElementNode && n.Data == "a" {
+			if href := nodeAttr(n, "href"); strings.Contains(href, "ctrlno=") {
+				if i := strings.Index(href, "ctrlno="); i >= 0 {
+					v := href[i+7:]
+					if j := strings.IndexAny(v, "&#"); j >= 0 {
+						v = v[:j]
+					}
+					found = strings.TrimSpace(v)
+					return
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(row)
+	return found
 }

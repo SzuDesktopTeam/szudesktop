@@ -6,7 +6,7 @@ export function createLibraryUI({api}){
  let keyword='',items=[],busy=false,error='',message='',searched='';
 
  function content(){
-  const list=items.length?`<ul class="library-list">${items.map(b=>`<li><b>${esc(b.title)}</b><small>${esc([b.author,b.publisher].filter(Boolean).join(' · '))}</small></li>`).join('')}</ul>`:'';
+  const list=items.length?`<ul class="library-list">${items.map(b=>`<li data-ctrl="${esc(b.ctrl_no||'')}"><b>${esc(b.title)}</b><small>${esc([b.author,b.publisher].filter(Boolean).join(' · '))}</small>${b.ctrl_no?`<button type="button" class="quiet library-copies-btn" data-action="library-copies" data-ctrl="${esc(b.ctrl_no)}">查看馆藏</button><div class="library-copies" hidden></div>`:''}</li>`).join('')}</ul>`:'';
   return `<div class="card-head"><h2 class="icon-heading tone-info">图书馆</h2><span class="badge" data-tone="info">馆藏检索</span></div>
   <p>查馆藏。搜索结果来自学校图书馆 OPAC，借还要去原页。</p>
   <div class="grid"><div><label for="library-q">检索词</label><input id="library-q" value="${esc(keyword)}" placeholder="书名、作者或主题"></div></div>
@@ -18,7 +18,22 @@ export function createLibraryUI({api}){
 
  function paint(){const el=document.getElementById('library-panel');if(el)el.innerHTML=content()}
 
- async function click(a){
+ async function click(a,el){
+  if(a==='library-copies'){
+   const ctrl=el?.dataset?.ctrl, box=el?.parentElement?.querySelector('.library-copies');
+   if(!ctrl||!box)return true;
+   if(!box.hidden){box.hidden=true;el.textContent='查看馆藏';return true}
+   box.hidden=false;el.textContent='收起';
+   if(box.dataset.loaded)return true;
+   box.textContent='正在读取馆藏…';
+   try{
+    const d=await api('/api/library/item?ctrlno='+encodeURIComponent(ctrl));
+    const rows=(d.copies||[]).map(c=>`<li><span class="copy-loc">${esc(c.location)}</span><span class="copy-call">${esc(c.call_no)}</span><span class="copy-status">${esc(c.status)}</span></li>`).join('');
+    box.innerHTML=`<ul class="copy-list">${rows}</ul>`;
+    box.dataset.loaded='1';
+   }catch(e){box.textContent=e.message||'馆藏读取失败，请到图书馆原页查看。'}
+   return true;
+  }
   if(a!=='library-search')return false;
   if(busy)return true;
   const q=(document.getElementById('library-q')?.value||keyword).trim();
