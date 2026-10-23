@@ -367,3 +367,10 @@ body[data-page=settings] .pagehead h1 { color:var(--magic); }
 .library-list li{padding:9px 0;border-bottom:1px solid var(--line)}
 .library-list li:last-child{border-bottom:0}
 .library-list small{display:block;color:var(--muted);font-size:12px}
+
+/* 公告：标题可点开正文 */
+.campus-notices .notice-title{padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.campus-notices .notice-src{margin-left:8px;font-size:12px;white-space:nowrap}
+.campus-notices .notice-body{margin:8px 0 4px;padding:10px 12px;border-left:3px solid var(--line);background:#f7f2e3;line-height:1.9}
+.campus-notices .notice-text{white-space:normal;overflow-wrap:anywhere}
+.campus-notices .notice-files{margin:8px 0 0;font-size:13px}

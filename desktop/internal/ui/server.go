@@ -439,6 +439,7 @@ func (s *Server) routes(mux *http.ServeMux, static fs.FS) {
 	mux.HandleFunc("/api/campus/status", s.protectAPI(s.handleCampusStatus, http.MethodGet))
 	mux.HandleFunc("/api/campus/notice-sources", s.protectAPI(s.handleCampusNoticeSources, http.MethodGet))
 	mux.HandleFunc("/api/campus/notices", s.protectAPI(s.handleCampusNotices, http.MethodGet))
+	mux.HandleFunc("/api/campus/notice", s.protectAPI(s.handleNoticeDetail, http.MethodGet))
 	mux.HandleFunc("/api/campus/calendar", s.protectAPI(s.handleCalendar, http.MethodGet))
 	// 学校系统（ehall）会话与个人业务。
 	// 会话本身是敏感凭据，读写都走 POST/DELETE，状态查询只回报长度不回报内容。

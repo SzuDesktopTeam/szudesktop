@@ -45,7 +45,7 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
   if(error)return `<p role="status" class="notice error">${esc(error)}</p>`;
   if(!feed)return '<p class="muted">正在准备所选学院的公告，也可以直接查看原页。</p>';
   const sorted=[...feed.items].sort((a,b)=>b.date.localeCompare(a.date)),stale=staleNote(sorted,now());
-  return `${stale?`<p class="notice" data-tone="info">${esc(stale)}</p>`:''}<p class="notice">${esc(feed.source)} · ${feed.stale?'上次读取的内容':'读取于 '+esc(new Date(feed.fetched_at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${feed.message?' · '+esc(feed.message):''}</p>${sorted.length?'':'<p class="empty" role="status">这个栏目本次没有可显示的公告。可以查看原页确认最新通知。</p>'}<ul class="campus-notices">${sorted.slice(0,12).map(x=>`<li><time>${esc(x.date)}</time><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a></li>`).join('')}</ul>`;
+  return `${stale?`<p class="notice" data-tone="info">${esc(stale)}</p>`:''}<p class="notice">${esc(feed.source)} · ${feed.stale?'上次读取的内容':'读取于 '+esc(new Date(feed.fetched_at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${feed.message?' · '+esc(feed.message):''}</p>${sorted.length?'':'<p class="empty" role="status">这个栏目本次没有可显示的公告。可以查看原页确认最新通知。</p>'}<ul class="campus-notices">${sorted.slice(0,12).map((x,i)=>`<li data-index="${i}"><time>${esc(x.date)}</time><button type="button" class="notice-title" data-action="notice-open" data-url="${esc(x.url)}">${esc(x.title)}</button><a class="notice-src" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">原文 ↗</a><div class="notice-body" hidden></div></li>`).join('')}</ul>`;
  }
  function content(){
   const chosen=current();
@@ -85,7 +85,25 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
   catch(e){if(version===requestVersion)error=e.message}
   finally{if(version===requestVersion){loading=false;paint()}}
  }
- async function click(action){if(action==='notice-read'){await read();return true}if(action==='notice-sources'){await load();return true}return false}
+ async function click(action,el){
+  if(action==='notice-read'){await read();return true}
+  if(action==='notice-sources'){await load();return true}
+  if(action==='notice-open'){
+   const url=el?.dataset?.url, box=el?.parentElement?.querySelector('.notice-body');
+   if(!url||!box)return true;
+   if(!box.hidden){box.hidden=true;return true}
+   box.hidden=false;
+   if(box.dataset.loaded)return true;
+   box.textContent='正在读取正文…';
+   try{
+    const d=await api('/api/campus/notice?url='+encodeURIComponent(url));
+    const attach=(d.attachments||[]).map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.name)}</a>`).join('');
+    box.innerHTML=`<div class="notice-text">${esc(d.body||'').replace(/\n/g,'<br>')}</div>${attach?`<p class="notice-files">附件：${attach}</p>`:''}`;
+    box.dataset.loaded='1';
+   }catch(e){box.textContent=e.message||'正文读取失败，请点原文查看。'}
+   return true;
+  }
+  return false}
  async function change(e){
   if(e.target.id!=='feed-source')return false;
   if(!sources.some(s=>s.id===e.target.value))return true;

@@ -135,7 +135,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render,workspa
  async function click(action,b){
   if(await booking.click(action,b))return true;
   if(await venueRules.click(action))return true;
-  if(await notices.click(action))return true;
+  if(await notices.click(action,b))return true;
   if(!action.startsWith('campus-'))return false;
   const a=action.slice(7);
   if(a==='session-check'||a==='online-score')syncStudentLevel();
