@@ -21,7 +21,10 @@ import (
 // 来自调研笔记，实际取值要以真实会话实测为准；没实测过的解析都先按「宽松读取」写，
 // 字段缺失时返回空而不是瞎猜。
 
-const sportAppPath = "/qljfwapp/sys/sportVenue"
+const sportAppPath = "/qljfwapp/sys/lwSzuCgyy/sportVenue"
+
+// 应用首页。ehall 的 .do 接口要先打开它建立应用上下文，否则一律 403。
+const sportAppIndex = "/qljfwapp/sys/lwSzuCgyy/index.do"
 
 type sportService struct{}
 
@@ -100,6 +103,9 @@ func (s *Server) sportVenues(ctx context.Context) ([]sportRoom, error) {
 	if err != nil {
 		return nil, err
 	}
+	if _, err := c.getContext(ctx, sportAppIndex); err != nil {
+		return nil, err
+	}
 	body, err := c.postFormContext(ctx, sportAppPath+"/getSportVenueData.do", url.Values{})
 	if err != nil {
 		return nil, err
@@ -107,45 +113,37 @@ func (s *Server) sportVenues(ctx context.Context) ([]sportRoom, error) {
 	return parseSportVenues(body)
 }
 
-// parseSportVenues 宽松解析：字段名没实测过，常见写法都试一遍。
+// parseSportVenues 读运动项目。真实响应是平铺的，没有 data 包装：
+//
+//	{"campusList":[{"XQDM":"1","XQDM_DISPLAY":"粤海校区"}],
+//	 "xmList":[{"XMDM":"..","XMMC":"..","XQDM":"..","DCFS":".."}], ...}
+//
+// 空列表要报错：会话过期时学校常返回空数组，直接说"没有场地"会误导。
 func parseSportVenues(body []byte) ([]sportRoom, error) {
 	var root struct {
-		Data json.RawMessage `json:"data"`
+		XMList []map[string]json.RawMessage `json:"xmList"`
+		Code   json.RawMessage              `json:"code"`
 	}
 	if err := json.Unmarshal(body, &root); err != nil {
 		return nil, fmt.Errorf("学校场馆数据不是 JSON：%w", err)
 	}
-	// data 为空或 null 不能当成"零个场地"：会话过期时常见这种响应，
-	// 报"没有场地"会让用户以为真的没得约。
-	if len(root.Data) == 0 || string(root.Data) == "null" {
-		return nil, errors.New("学校没有返回场馆数据（可能登录状态已过期）")
-	}
-	var rows []map[string]json.RawMessage
-	// 先试 data 是对象（data.list / data.rows）
-	var m map[string]json.RawMessage
-	if json.Unmarshal(root.Data, &m) == nil {
-		for _, key := range []string{"list", "rows", "data"} {
-			if raw, ok := m[key]; ok && len(raw) > 0 && string(raw) != "null" {
-				if json.Unmarshal(raw, &rows) == nil {
-					break
-				}
-			}
+	if len(root.XMList) == 0 {
+		if len(root.Code) > 0 {
+			return nil, fmt.Errorf("学校返回 %s（多半是登录状态已过期）", string(root.Code))
 		}
+		return nil, errors.New("学校没有返回运动项目（可能登录状态已过期）")
 	}
-	// 不行就当 data 直接是数组
-	if rows == nil {
-		if json.Unmarshal(root.Data, &rows) != nil {
-			return nil, errors.New("没找到场地列表字段（data.list / rows / 直接数组都不存在）")
+	out := make([]sportRoom, 0, len(root.XMList))
+	for _, m := range root.XMList {
+		room := sportRoom{
+			ID:     pickStr(m, "XMDM"),
+			Name:   pickStr(m, "XMMC"),
+			Campus: pickStr(m, "XQDM"),
+			Kind:   pickStr(m, "DCFS"),
 		}
-	}
-	out := []sportRoom{}
-	for _, m := range rows {
-		out = append(out, sportRoom{
-			ID:     pickStr(m, "XMDM", "ID", "id", "DM"),
-			Name:   pickStr(m, "XMMC", "NAME", "name", "CDMC"),
-			Campus: pickStr(m, "XQDM", "XQWID", "XQ"),
-			Kind:   pickStr(m, "YYLX", "LXDM"),
-		})
+		if room.Name != "" {
+			out = append(out, room)
+		}
 	}
 	return out, nil
 }

@@ -111,6 +111,44 @@ func newEhallClient(cookie string, timeout time.Duration) *ehallClient {
 
 // postFormContext 向 ehall 发一个表单 POST，返回响应体。
 // 调用方必须传入本地请求的 context：渲染端断开时学校请求要一并取消。
+// getContext 发一个 GET 请求。
+//
+// ehall 的应用要先打开首页（index.do）建立应用上下文，之后同一会话里的
+// 接口才会认；跳过这一步直接调 .do 会拿到 403。
+func (c *ehallClient) getContext(ctx context.Context, path string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if !c.usesJar && strings.TrimSpace(c.cookie) == "" {
+		return nil, errors.New("还没有学校系统的登录状态")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", ehallUserAgent)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
+	if !c.usesJar {
+		req.Header.Set("Cookie", c.cookie)
+	}
+	res, err := c.http.Do(req)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		return nil, errSessionExpired
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("学校页面返回 %d", res.StatusCode)
+	}
+	return io.ReadAll(io.LimitReader(res.Body, 8<<20))
+}
+
 func (c *ehallClient) postFormContext(ctx context.Context, path string, form url.Values) ([]byte, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -190,6 +228,11 @@ func (c *ehallClient) postFormContext(ctx context.Context, path string, form url
 }
 
 func ehallPathAllowed(path string) bool {
+	// 体育馆应用的页面和接口都在这个前缀下；它和成绩、课表同域，
+// 走同一个会话，重定向到这儿不是越权。
+	if strings.HasPrefix(path, "/qljfwapp/sys/lwSzuCgyy/") {
+		return true
+	}
 	return path == undergradScorePath || path == gradScorePath || path == undergradTimetablePath || path == undergradTermPath
 }
 

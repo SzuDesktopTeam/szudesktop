@@ -37,6 +37,10 @@ func validateBrowserSession(ctx context.Context, client *http.Client, business s
 	if business == "sport" {
 		// 体育场馆和教务同域，用同一个 ehall 会话。能读到场地列表就算登录有效。
 		c := &ehallClient{usesJar: true, base: ehallBaseURL, http: client}
+		// 必须先打开应用首页建立上下文，否则接口一律 403。
+		if _, err := c.getContext(ctx, sportAppIndex); err != nil {
+			return err
+		}
 		body, err := c.postFormContext(ctx, sportAppPath+"/getSportVenueData.do", url.Values{})
 		if err != nil {
 			return err

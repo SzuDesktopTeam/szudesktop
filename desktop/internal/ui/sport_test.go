@@ -6,28 +6,23 @@ import (
 	"testing"
 )
 
-// 这些测试不碰真实学校：只验证"字段猜错时不会崩、不会把失败当成没场地"。
-// 真实字段要等有会话之后拿 raw_sample 对齐。
+// 这些测试不碰真实学校：只验证解析对得上真实结构、字段缺失时不崩。
 
-func TestParseSportVenuesAcceptsCommonShapes(t *testing.T) {
-	cases := []struct {
-		name string
-		body string
-		want int
-	}{
-		{"data.list", `{"data":{"list":[{"XMDM":"1","XMMC":"羽毛球1号"},{"XMDM":"2","XMMC":"羽毛球2号"}]}}`, 2},
-		{"data.rows", `{"data":{"rows":[{"id":"3","name":"篮球场"}]}}`, 1},
-		{"data array", `{"data":[{"XMDM":"4","XMMC":"网球场"}]}`, 1},
-		{"empty list", `{"data":{"list":[]}}`, 0},
+func TestParseSportVenuesReadsXMList(t *testing.T) {
+	// 真实响应是平铺的，没有 data 包装。
+	body := `{"campusList":[{"XQDM":"1","XQDM_DISPLAY":"粤海校区"}],
+	 "xmList":[{"XMDM":"001","XMMC":"羽毛球","XQDM":"1","DCFS":"1.0"},
+	           {"XMDM":"002","XMMC":"足球","XQDM":"1","DCFS":"2.0"}],
+	 "code":"ok"}`
+	got, err := parseSportVenues([]byte(body))
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, tc := range cases {
-		got, err := parseSportVenues([]byte(tc.body))
-		if err != nil {
-			t.Fatalf("%s: %v", tc.name, err)
-		}
-		if len(got) != tc.want {
-			t.Fatalf("%s: 得到 %d 个场地，期望 %d", tc.name, len(got), tc.want)
-		}
+	if len(got) != 2 {
+		t.Fatalf("得到 %d 个项目，期望 2", len(got))
+	}
+	if got[0].Name != "羽毛球" || got[0].ID != "001" || got[0].Campus != "1" {
+		t.Fatalf("字段错位: %+v", got[0])
 	}
 }
 
@@ -37,8 +32,31 @@ func TestParseSportVenuesRejectsNonJSON(t *testing.T) {
 	if _, err := parseSportVenues([]byte("<html>请登录</html>")); err == nil {
 		t.Fatal("登录页 HTML 必须报错，不能当成空列表")
 	}
-	if _, err := parseSportVenues([]byte(`{"data":null}`)); err == nil {
-		t.Fatal("data 为 null 必须报错")
+}
+
+func TestParseSportVenuesRejectsEmptyList(t *testing.T) {
+	for _, body := range []string{`{"xmList":[]}`, `{"xmList":[],"code":"401"}`} {
+		if _, err := parseSportVenues([]byte(body)); err == nil {
+			t.Fatalf("%s 应该报错，不能静默返回空列表", body)
+		}
+	}
+}
+
+func TestParseSportVenuesSkipsRowsWithoutName(t *testing.T) {
+	body := `{"xmList":[{"XMDM":"001"},{"XMDM":"002","XMMC":"足球"}]}`
+	got, err := parseSportVenues([]byte(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Name != "足球" {
+		t.Fatalf("没有名字的行应被跳过，实际: %+v", got)
+	}
+}
+
+// 少了 lwSzuCgyy 这一段会 403/404，这是实测踩过的坑。
+func TestSportAppPathIncludesAppSegment(t *testing.T) {
+	if !strings.Contains(sportAppPath, "/lwSzuCgyy/") {
+		t.Fatalf("场馆接口路径必须包含应用段 lwSzuCgyy，当前是 %q", sportAppPath)
 	}
 }
 
