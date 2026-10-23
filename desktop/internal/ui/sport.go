@@ -44,6 +44,7 @@ type sportSlot struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 	Free  bool   `json:"free"`
+	Note  string `json:"note,omitempty"` // 不可约时的原因：已过期 / 无开放场地
 }
 
 type sportDay struct {
@@ -168,44 +169,58 @@ func (s *Server) sportTimes(ctx context.Context, roomID, date string) (*sportDay
 }
 
 func parseSportTimes(body []byte, roomID, date string) (*sportDay, error) {
-	var root struct {
-		Data json.RawMessage `json:"data"`
+	// 真实响应是直接数组，每个时段带 CODE（"08:00-09:00"）和 disabled/text：
+	//
+	//	[{"WID":"..","CODE":"08:00-09:00","disabled":true,"text":"已过期"}, ...]
+	//
+	// disabled 为 true 时 text 说明原因（"已过期" / "无开放场地"）。
+	var rows []struct {
+		Code     string `json:"CODE"`
+		Name     string `json:"NAME"`
+		Disabled bool   `json:"disabled"`
+		Text     string `json:"text"`
 	}
-	if err := json.Unmarshal(body, &root); err != nil {
+	if err := json.Unmarshal(body, &rows); err != nil {
+		// 可能是 {code,msg} 形式的错误对象，或是登录页 HTML。
+		var errObj struct {
+			Code string `json:"code"`
+			Msg  string `json:"msg"`
+		}
+		if json.Unmarshal(body, &errObj) == nil && errObj.Code != "" {
+			return nil, fmt.Errorf("学校返回 %s：%s", errObj.Code, strings.TrimSpace(errObj.Msg))
+		}
 		return nil, fmt.Errorf("学校时段数据不是 JSON：%w", err)
 	}
-	if len(root.Data) == 0 || string(root.Data) == "null" {
-		return nil, errors.New("学校没有返回时段数据（可能登录状态已过期）")
-	}
-	var rows []map[string]json.RawMessage
-	var m map[string]json.RawMessage
-	if json.Unmarshal(root.Data, &m) == nil {
-		for _, key := range []string{"list", "rows", "getTimeList"} {
-			if raw, ok := m[key]; ok && len(raw) > 0 && string(raw) != "null" {
-				if json.Unmarshal(raw, &rows) == nil {
-					break
-				}
-			}
-		}
-	}
-	if rows == nil {
-		_ = json.Unmarshal(root.Data, &rows) // 当数组直接试，失败也只是空
-	}
-	out := &sportDay{Date: date, Slots: []sportSlot{}, FetchedAt: time.Now().UTC()}
+
+	out := &sportDay{Date: date, Room: sportRoom{ID: roomID}, Slots: []sportSlot{}, FetchedAt: time.Now().UTC()}
 	if len(body) > 400 {
 		out.Raw = string(body[:400])
 	} else {
 		out.Raw = string(body)
 	}
-	for i, m := range rows {
-		out.Slots = append(out.Slots, sportSlot{
-			Index: i,
-			Start: pickStr(m, "KSSJ", "SJS", "START"),
-			End:   pickStr(m, "JSSJ", "SJE", "END"),
-			Free:  pickStr(m, "KYYSJD", "KY", "STATE") == "1",
-		})
+	for i, r := range rows {
+		start, end := splitSlotCode(r.Code, r.Name)
+		slot := sportSlot{Index: i, Start: start, End: end, Free: !r.Disabled}
+		if r.Disabled {
+			slot.Note = strings.TrimSpace(r.Text)
+		}
+		out.Slots = append(out.Slots, slot)
 	}
 	return out, nil
+}
+
+// splitSlotCode 把 "08:00-09:00" 拆成起止时间；拆不开就原样返回。
+func splitSlotCode(code, name string) (string, string) {
+	text := strings.TrimSpace(code)
+	if text == "" {
+		text = strings.TrimSpace(name)
+	}
+	for _, sep := range []string{"-", "—", "~", "至"} {
+		if i := strings.Index(text, sep); i > 0 {
+			return strings.TrimSpace(text[:i]), strings.TrimSpace(text[i+len(sep):])
+		}
+	}
+	return text, ""
 }
 
 // ---- 提交（两步式） ------------------------------------------------------

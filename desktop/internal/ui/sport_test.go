@@ -60,27 +60,45 @@ func TestSportAppPathIncludesAppSegment(t *testing.T) {
 	}
 }
 
-func TestParseSportTimesKeepsIndexAndRaw(t *testing.T) {
-	body := `{"data":{"list":[
-		{"KSSJ":"09:00","JSSJ":"10:00","KYYSJD":"1"},
-		{"KSSJ":"10:00","JSSJ":"11:00","KYYSJD":"0"}
-	]}}`
-	day, err := parseSportTimes([]byte(body), "1", "2026-10-21")
+func TestParseSportTimesUsesCodeAndDisabled(t *testing.T) {
+	// 真实响应：直接数组，CODE 是 "HH:mm-HH:mm"，disabled 表示不可约。
+	body := `[
+		{"CODE":"08:00-09:00","disabled":true,"text":"已过期"},
+		{"CODE":"10:00-11:00","disabled":false,"text":null}
+	]`
+	day, err := parseSportTimes([]byte(body), "001", "2026-10-24")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(day.Slots) != 2 {
 		t.Fatalf("时段数 %d", len(day.Slots))
 	}
+	if day.Slots[0].Start != "08:00" || day.Slots[0].End != "09:00" {
+		t.Fatalf("时段没拆开: %+v", day.Slots[0])
+	}
+	if day.Slots[0].Free {
+		t.Fatal("disabled 的时段不该标成可约")
+	}
+	if day.Slots[0].Note != "已过期" {
+		t.Fatalf("不可约原因没带上: %q", day.Slots[0].Note)
+	}
+	if !day.Slots[1].Free {
+		t.Fatal("未 disabled 的时段应可约")
+	}
 	// Index 必须递增：否则前端 data-index 全是 0，点哪格都选中第一格。
 	if day.Slots[0].Index != 0 || day.Slots[1].Index != 1 {
 		t.Fatalf("Index 没按顺序赋值: %+v", day.Slots)
 	}
-	if !day.Slots[0].Free || day.Slots[1].Free {
-		t.Fatalf("空闲状态解析错: %+v", day.Slots)
-	}
 	if day.Raw == "" {
-		t.Fatal("raw_sample 必须带回原始响应，字段猜错时才有得对齐")
+		t.Fatal("raw_sample 必须带回原始响应")
+	}
+}
+
+// 学校返回 {code,msg} 时要把它带到错误里，别只说「解析失败」。
+func TestParseSportTimesSurfacesServerCode(t *testing.T) {
+	_, err := parseSportTimes([]byte(`{"code":"0011","msg":" 不存在该预约时段"}`), "001", "2026-10-24")
+	if err == nil || !strings.Contains(err.Error(), "0011") {
+		t.Fatalf("应带上学校返回的错误码，实际: %v", err)
 	}
 }
 
