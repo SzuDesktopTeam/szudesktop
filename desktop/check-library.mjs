@@ -39,6 +39,28 @@ try{
   assert.doesNotMatch(ui.section(),/过期结果|检索中…/);
   assert.match(ui.section(),/value="新检索"/);
  });
+ await check('a focused-input change during submit repaint cannot discard the successful query',async()=>{
+  const originalDocument=globalThis.document;
+  try{
+   for(const keyword of ['合成图书','  合成图书  ']){
+    let html='',blurred=false,finish,ui;
+    const focused={id:'library-q',value:keyword};
+    const livePanel={get innerHTML(){return html},set innerHTML(value){
+     // Chromium emits change synchronously when submit replaces the edited,
+     // still-focused input. The new loading markup is then installed.
+     if(value.includes('检索中…')&&!blurred){blurred=true;ui.change({target:focused})}
+     html=value;
+    }};
+    globalThis.document={getElementById:id=>id==='library-panel'?livePanel:id==='library-q'?focused:null};
+    ui=createLibraryUI({api:()=>new Promise(resolve=>{finish=resolve})});
+    ui.input({target:focused});const pending=ui.submit({id:'library-search-form'});
+    assert.equal(blurred,true);
+    finish({page:1,items:[{title:'合成图书检索结果',ctrl_no:'123'}]});await pending;
+    assert.match(livePanel.innerHTML,/合成图书检索结果/);
+    assert.doesNotMatch(livePanel.innerHTML,/检索中…|正在读取图书馆/);
+   }
+  }finally{globalThis.document=originalDocument}
+ });
  await check('empty holdings are explained without claiming unavailable books',async()=>{
   const ui=createLibraryUI({api:async()=>({copies:[]})});
   const box={hidden:true,dataset:{},textContent:'',innerHTML:''};

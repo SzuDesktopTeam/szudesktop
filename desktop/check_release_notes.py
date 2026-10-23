@@ -754,4 +754,30 @@ def test_windows_note():
 check("下载清单第一行写清 Windows 下载 Setup、Mac 按芯片选 DMG，不出现「Electron」", test_download_guide_first_line)
 check("Windows 说明写明系统要求、浏览器「保留」和 SmartScreen「更多信息 → 仍要运行」", test_windows_note)
 
+
+def test_portable_download_versions():
+    for version in ("beta0.9.9", "beta0.9.10", "v1.0.0"):
+        semver = ".".join(release_notes.version_parts(version))
+        out = release_notes.render("## %s\n\n- 正文\n" % version, version)
+        name = "szuDesktop-%s-portable.exe" % semver
+        line = next((line for line in out.splitlines() if name in line), "")
+        assert line and ".sha256" in line, version + " 缺少便携 EXE 或校验文件说明"
+        assert "不用安装" in line and "自带窗口" in line, "应说明它与旧浏览器便携版的区别"
+        assert "szudesktop-%s-windows-amd64.zip" % version in out, "旧便携 ZIP 仍随版本发布"
+    old = release_notes.render("## beta0.9.8\n\n- 正文\n", "beta0.9.8")
+    assert "-portable.exe" not in old, "beta0.9.9 之前没有这个附件"
+
+
+def test_portable_release_files():
+    workflow = read_repo(".github", "workflows", "release.yml")
+    job = release_job(workflow)
+    assert "name: szudesktop-electron-windows" in job, "release 必须下载 Windows 安装与便携包产物"
+    patterns = release_files(job)
+    for name in ("szuDesktop-0.9.10-portable.exe", "szuDesktop-0.9.10-portable.exe.sha256"):
+        assert any(fnmatch.fnmatchcase("dist/" + name, pattern) for pattern in patterns), "release 不会上传 " + name
+
+
+check("beta0.9.9 起列出自带窗口的便携 EXE 与校验文件，旧版本不虚构附件", test_portable_download_versions)
+check("release 同时发布便携 EXE 与同名校验文件", test_portable_release_files)
+
 print("%d release-notes checks passed" % count)

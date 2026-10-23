@@ -37,6 +37,8 @@ VERSION_PATTERN = r"(beta|v)(\d+)\.(\d+)\.(\d+)"
 LEGACY_PATTERN = r"beta0\.[0-7]"
 # 安装版从 beta0.8.0 开始分发。
 INSTALLER_SINCE = (0, 8, 0)
+# 自带窗口的单文件便携版从 beta0.9.9 开始分发，旧的浏览器便携版仍保留。
+PORTABLE_SINCE = (0, 9, 9)
 
 # 附件名与 CI 实际上传的一致（release.yml 的 build-cli + make_release.py）。
 # 按 beta0.7.1 的真实附件列表核对过，别凭印象写。说明写给同学看：说清是什么、该不该选，不写内部用的技术名词。
@@ -47,10 +49,11 @@ DOWNLOADS = """### 下载
 - 命令行版 `szunet`（只连校园网，在终端里用）：`szunet-windows-amd64.exe`、`szunet-darwin-amd64`、`szunet-darwin-arm64`、`szunet-linux-amd64`、`szunet-linux-arm64`__CLI_SUM__
 """
 
-# 下载清单第一行：发布页上平铺着二十个附件，同学只想知道该点哪一个。有 DMG 的版本才提 Mac。
+# 下载清单第一行：发布页上附件很多，同学只想知道该点哪一个。有 DMG 的版本才提 Mac。
 CHOOSE = "**Windows 下载 Setup 安装包。** 大多数同学只需要这一个文件，其余是便携版、命令行版和校验文件。\n\n"
 CHOOSE_MAC = "**Windows 下载 Setup 安装包，Mac 按芯片选 DMG。** 大多数同学只需要其中一个文件，其余是便携版、命令行版和校验文件。\n\n"
 ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版：自带窗口，不用另装浏览器，大多数同学选这个；旁边是同名 `.sha256` 校验文件\n"
+PORTABLE_DOWNLOAD = "- `szuDesktop-__SEMVER__-portable.exe` — Windows 单文件便携版：不用安装，自带窗口、桌面伙伴和托盘；旁边是同名 `.sha256` 校验文件\n"
 # 没有签名，浏览器和 SmartScreen 都会拦一下；不写清怎么放行，同学只会以为下错了或中了毒。
 # 系统要求按 Electron 上游的支持范围（Windows 10 及以上）和本项目只出 x64 包核对；Go 引擎同样要求 Windows 10 起。
 WINDOWS_NOTE = (
@@ -188,6 +191,8 @@ def render(text, version, release=False):
         # 两个 DMG 紧跟在 Windows 安装包之后：都是带窗口的安装版，按系统挑一个。
         if mac:
             installer += MAC_DOWNLOADS.replace("__SEMVER__", semver)
+        if numbers >= PORTABLE_SINCE:
+            installer += PORTABLE_DOWNLOAD.replace("__SEMVER__", semver)
         downloads = downloads.replace("### 下载\n\n", "### 下载\n\n" + installer) + WINDOWS_NOTE
     if mac:
         downloads += MAC_NOTE

@@ -61,7 +61,10 @@ export function startupApprovedEnabled(output) {
 // The OS is the source of truth. Reading never creates or rewrites a login item.
 export function createLoginItemControl(app,{platform=process.platform,executable=process.execPath,name=APP_USER_MODEL_ID,query=queryRegistryValue}={}) {
   if(platform==='darwin')return macLoginItemControl(app);
-  const supported=loginItemSupported(platform,app.isPackaged);
+  // electron-builder 的 NSIS portable 启动器设置这个变量；process.execPath 是它临时解压的程序，退出后会被删除。
+  // 便携版不能登记该路径，也不能把安装版已有的同名 Run 值自动修成它。
+  const portable=platform==='win32'&&Boolean(process.env.PORTABLE_EXECUTABLE_FILE);
+  const supported=loginItemSupported(platform,app.isPackaged)&&!portable;
   const options=loginItemOptions(executable);
   const get=()=>{
     if(!supported)return false;

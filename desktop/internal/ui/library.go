@@ -102,11 +102,18 @@ func parseLibraryRows(body io.Reader) ([]libraryBook, error) {
 		return nil, errors.New("图书馆页面结构异常，未能解析")
 	}
 	var out []libraryBook
+	resultTables := map[*xhtml.Node]bool{}
 	var walk func(*xhtml.Node)
 	walk = func(n *xhtml.Node) {
 		if n.Type == xhtml.ElementNode && n.Data == "tr" {
 			cells := tableCells(n)
-			if len(cells) >= 3 && cells[1] != "" && cells[1] != "题名" {
+			table := n.Parent
+			for table != nil && (table.Type != xhtml.ElementNode || table.Data != "table") {
+				table = table.Parent
+			}
+			if len(cells) >= 3 && cells[1] == "题名" {
+				resultTables[table] = true
+			} else if resultTables[table] && len(cells) >= 3 && cells[1] != "" {
 				book := libraryBook{Title: cells[1], CtrlNo: ctrlNoFromRow(n)}
 				if len(cells) > 2 {
 					book.Author = cells[2]

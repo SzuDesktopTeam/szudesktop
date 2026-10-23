@@ -69,7 +69,12 @@ export function createLibraryUI({api}){
   if(button){button.disabled=false;button.textContent='检索'}
   return true;
  }
- function change(event){return input(event)}
+ function change(event){
+  // Replacing a focused search field can emit change during submit's paint.
+  // The same query (including trimmed outer spaces) must not cancel its read.
+  if(event.target.id==='library-q'&&event.target.value.trim()===keyword.trim())return true;
+  return input(event);
+ }
  async function submit(form){if(form.id!=='library-search-form')return false;await search();return true}
  function section(){return `<section class="card" id="library-panel">${content()}</section>`}
  return {section,click,change,input,submit};

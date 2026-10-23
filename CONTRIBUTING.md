@@ -39,7 +39,7 @@ node desktop/run-checks.mjs                     # 改完跑全部检查
 **本地试用界面**：任何系统上都可以按[第一次贡献](#第一次贡献)用 `go run ./desktop/cmd/szudesktop` 在浏览器里预览
 （桌面服务入口是 `desktop/cmd/szudesktop`；macOS 已实测，Linux 只有 CI 的编译与测试，Linux 桌面端也不在发布范围内，
 见[范围与非目标](#范围与非目标)）。在 Windows 上跑完 `python desktop/build-windows.py` 后，也可以直接运行
-`dist/szudesktop-windows-amd64.exe`（就是便携版里的 `szudesktop.exe`，用本机 Edge / Chrome 开窗）。
+`dist/szudesktop-windows-amd64.exe`（就是轻量浏览器版 ZIP 里的 `szudesktop.exe`，用本机 Edge / Chrome 开窗）。
 macOS 的开发模式与打包见[macOS 桌面版](#macos-桌面版)。
 
 ## 界面资源的规矩
@@ -108,7 +108,7 @@ go test ./...
 再校验本次运行随机生成的凭据（没有返回 401）。只有两个接口不要凭据：只报版本的 `/api/health`，
 以及在请求体里自带同一份凭据的 `/api/instance`。Electron 主进程发请求时带 `X-SZU-Token` 头；
 页面第一次打开时用一次性的 `/?launch=<凭据>` 换成 HttpOnly、SameSite=Strict 的会话 Cookie，
-随即跳回不带凭据的地址，地址栏不留凭据（便携版打开浏览器也走这条路）。
+随即跳回不带凭据的地址，地址栏不留凭据（轻量浏览器版打开浏览器也走这条路）。
 
 桌面引擎的启动参数：`szudesktop.exe --no-open` 只启动 Go 服务、不开窗口，Electron 外壳就是这样拉起 sidecar 的；
 `--no-auto-login` 关闭启动时用已记住的账号自动认证。外壳在「启动时自动连接校园网」关闭时、以及冒烟时都会带上它
@@ -119,14 +119,17 @@ go test ./...
 ```text
 python desktop/build-windows.py      # 构建（含图标与版本信息）
 python desktop/smoke_windows.py      # 整机冒烟
-node desktop/electron/build.mjs      # 构建 Electron 安装包（先在 desktop/electron 下 npm ci）
-python desktop/make_release.py       # 生成便携 ZIP（只在真的要发布时跑，会覆盖同名本地产物，见「发布」）
+node desktop/electron/build.mjs      # 构建 Electron 安装包与便携 EXE（先在 desktop/electron 下 npm ci）
+python desktop/make_release.py       # 生成轻量浏览器版 ZIP（只在真的要发布时跑，会覆盖同名本地产物，见「发布」）
 ```
 
-`build-windows.py` 产出的 `dist/szudesktop-windows-amd64.exe` 既是便携 ZIP 里的 `szudesktop.exe`，
-也是 Electron 安装包里的 Go sidecar（`electron-builder.yml` 的 `extraResources`）。`build.mjs` 默认先调用
+`build-windows.py` 产出的 `dist/szudesktop-windows-amd64.exe` 既是轻量浏览器版 ZIP 里的 `szudesktop.exe`，
+也是 Electron 安装包与便携 EXE 里的 Go sidecar（`electron-builder.yml` 的 `extraResources`）。`build.mjs` 默认先调用
 `build-windows.py` 重编这份引擎，加 `--skip-sidecar` 则直接用已有产物（CI 就这样复用冒烟通过的那份）；
-安装包和同名 `.sha256` 输出到 `desktop/electron/release/`。
+`szuDesktop-Setup-<版本号>.exe`、`szuDesktop-<版本号>-portable.exe` 及各自的 `.sha256` 输出到 `desktop/electron/release/`。
+便携 EXE 包含完整 Electron 外壳，有独立桌面伙伴和托盘；运行时临时解压，数据仍使用用户目录中的 `.szunet` 与 `%APPDATA%\szuDesktop`。
+便携 EXE 不支持开机自启，不读取、登记或修复安装版的系统自启项；用 `PORTABLE_EXECUTABLE_FILE` 区分该运行形态，不能把临时 `process.execPath` 登记进 Windows Run 项。
+旧的轻量浏览器版 ZIP / Go 单文件不含 Electron、独立桌面伙伴或托盘，其后台自启走自己的入口。两种便携形态在用户文档中必须分开命名。
 NSIS 安装包关掉了差分打包（`electron-builder.yml` 的 `nsis.differentialPackage: false`）：改用整体压缩，
 安装包约小 10MB，也不再生成 `.blockmap`，代价是打包慢一些。项目没有接自动更新，用不上差分包；以后真接自动更新时再评估要不要改回
 （`check-packaging.mjs` 锁着这一行，改回时一起改断言）。
@@ -183,7 +186,7 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
 - `python3 desktop/smoke_macos.py --arch arm64|amd64`：引擎冒烟。签名与架构、与 `smoke_windows.py` 相同的接口检查、
   2KB 学校会话只在钥匙串留密钥（密文在 `session.enc`，0600）、SIGTERM 优雅退出、launchd 默认 PATH 下的开机自启状态。
 - `python3 desktop/electron/smoke_dmg.py --arch arm64|x64 [--dmg <路径>]`：DMG 安装版冒烟。挂载、复制、静态核对，
-  真启动四次（首次打开、重开、真实的 quit Apple Event、复用便携引擎），最后删掉复制出来的 .app 并核对数据不动。
+  真启动四次（首次打开、重开、真实的 quit Apple Event、复用轻量浏览器版引擎），最后删掉复制出来的 .app 并核对数据不动。
 - 两个脚本默认只在一次性的 GitHub macOS runner 上运行；开发机上必须显式加 `--local`，否则什么都不做就退出。
   它们只用临时目录里的配置，钥匙串只会建带 `-test-<配置目录哈希>` 的条目、结束时删掉，并核对真实
   `szunet` / `szunet-session` 条目的修改时间不变。`smoke_dmg.py --local` 另外会：先 `defaults export` 备份
@@ -202,7 +205,7 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
   （[STATUS 68.4](docs/STATUS.md#s68-4)）；B 类仍要逐项做，全部通过之前每一版的发布说明都带预览版说明，
   由 `desktop/release_notes.py` 的 `MAC_PREVIEW` 开关把关（见[发布](#发布)）。
 - CI 只覆盖 macOS 26（arm64）和 macOS 15（Intel）；GitHub 已不提供 macOS 13 和 14 的镜像，发布前在虚拟机里人工抽测（B8）。
-- DMG 升级基线固定为已发布 beta0.9.6 的两个 DMG，版本、Electron 与 SHA-256 的唯一来源是
+- DMG 升级基线使用已公开发布的两个 DMG，具体版本、Electron 与 SHA-256 的唯一来源是
   `desktop/electron/mac_upgrade.py`。CI 按组合摘要恢复缓存，每次仍核对包与校验文件；损坏或缺失时才下载。
   `smoke_dmg.py` 在 runner 上必须有该基线：实际运行固定旧包里的引擎，写合成工作区、课程笔记与隔离钥匙串凭据，
   原路径替换为候选应用，核对配置字节未被安装操作修改，再验证新版读写、重开后保留与合成凭据解密。
@@ -246,7 +249,7 @@ make desktop-mac-dev                      # 等于 build-macos.py --dev
 
 ## 存档兼容
 
-庭院存档 `workspace-v1.json` 是同学手里唯一的一份记录，旧版本和新版本常常混用（便携版、单文件版和安装版共用 `~/.szunet`）。
+庭院存档 `workspace-v1.json` 是同学手里唯一的一份记录，旧版本和新版本常常混用（安装版、Electron 便携 EXE 与轻量浏览器版共用 `~/.szunet`）。
 `engine.mjs` 的 `normalize` 只留下本版本认识的键和取值，所以：
 
 - 存档里只要会出现新的键或取值（新作物、装饰、建设、成就、伙伴、台词情境、纪念物、风景，或新的字段），就把 `engine.mjs` 的
@@ -312,7 +315,7 @@ node desktop/electron/check-pet-view.mjs
 - vendor 文件的上游版本和 sha256 记在 `desktop/assets/garden/vendor/SOURCE.json`；
   根目录的 `THIRD_PARTY_NOTICES.md` 写来源和改动。
 - 安装版把项目 `LICENSE`、`THIRD_PARTY_NOTICES.md` 和上面各许可文件放进 `resources/licenses/`
-  （`electron-builder.yml` 的 `extraResources`），便携 ZIP 放在解压目录（`make_release.py`）；
+  （`electron-builder.yml` 的 `extraResources`，便携 EXE 也随包携带），轻量浏览器版 ZIP 放在解压目录（`make_release.py`）；
   Electron 与 Chromium 自带的许可留在安装目录。macOS 的 .app 放在 `Contents/Resources/licenses/`：DMG 里只有 .app，
   所以 `mac-electron-licenses.cjs` 在打包时把 Electron 与 Chromium 的许可也复制进同一目录。
 - `check_licenses.py` 核对许可源文件存在、两种包的配置都带上了它们、vendor 文件与 `SOURCE.json` 的哈希一致；
@@ -343,22 +346,21 @@ node desktop/electron/check-pet-view.mjs
 
 ## 文档与截图
 
-- **用户文档**：根目录 `README.md`、英文版 `docs/README_en.md`、使用指南 `docs/guide/`，以及便携 ZIP 里的
+- **用户文档**：根目录 `README.md`、英文版 `docs/README_en.md`、使用指南 `docs/guide/`，以及轻量浏览器版 ZIP 里的
   `README-快速开始.txt`（由 `desktop/make_release.py` 里的 `README` 模板生成）。它们写给不写代码的同学：
   只把真实验收过的功能写成可用，限制集中写在「已知限制」和各指南页末尾；不写内部编号、PR / CI 链接、
   提交哈希或测试过程，需要佐证时链接 STATUS 的显式锚点。
 - **状态和待办只在 STATUS.md**：`docs/guide/` 属于用户文档，和 README 一样随版本更新，不是另一套维护清单；
   指南里不列任务。
-- **版本号**：README 里只出现在标题区、下载区和更新日志段落。发布成功后（不是发版准备时：
-  标签构建成功之前，这些链接指向的附件还不存在）同步中英两版 README 的这三处：标题区的三个下载按钮（Windows 安装版，
-  以及 macOS 预览版 Apple 芯片、Intel 两个 DMG 的直链）和按钮下方的版本说明行（版本号和「预发布，按计划是 1.0 正式版前的
-  最后一个测试版」这句，发正式版时改成正式版的说法）；下载区开头的「当前版本」一句（版本、日期、发布页链接）和下面各条的
-  直链、文件名与下载大小（Windows 安装版、便携 ZIP、两个 DMG，大小照发布页附件的字节数四舍五入）；「更新日志」段。
-  其余段落不写具体版本号：要指向发布页就用不带标签的 `releases` 地址，或者链到「下载」一节。
+- **版本与下载**：发布成功并核对附件后，同步中英两版 README 的版本说明与下载入口：Windows 安装版、Electron 便携 EXE、macOS Apple 芯片和 Intel 两个 DMG。
+  发版准备阶段保留上一公开版的链接，或链接到不带标签的 `releases`；标签构建成功前不能把候选附件写成已经可下载。
+  版本说明按 Release 实际状态写「预发布」或「正式版」，不承诺是「最后一个测试版」。版本历史链接到 `CHANGELOG.md`，不要求在 README 再维护一份日志。
+  如展示下载大小，使用已核对附件的实际字节数；轻量浏览器版 ZIP / 单文件与 Electron 便携 EXE 的文件名、功能和自启边界不能混写。
+  其余段落避免写具体版本号：要指向发布页就用不带标签的 `releases` 地址，或者链到「下载」一节。
   `docs/guide/` 里一律用 `<版本号>` / `<发布标签>` 占位，不写具体版本，发版时不用改。
-  另外核对便携 ZIP 的 `README-快速开始.txt` 模板与当前界面一致：它只留十来行（打开方式、第一次该做什么、数据存哪、
+  另外核对轻量浏览器版 ZIP 的 `README-快速开始.txt` 模板与当前界面一致：它只留十来行（打开方式、第一次该做什么、数据存哪、
   密码怎么存、提交边界、测试版边界），细节链接到使用指南，`make_release.py` 打包前用 `quickstart_problems()` 自检，`check_licenses.py` 在 `run-checks.mjs` 里也调用它。
-  使用指南里的下载大小写的是近几个版本的大致数字，变化不大时不用每版改。
+  使用指南的下载大小可以省略，让读者以发布页为准。
 - **链接 STATUS**：一律指向标题前的显式锚点 `<a id="sNN"></a>`（如 `docs/STATUS.md#s65`），不要用标题生成的锚点；
   需要新的外部链接时，先在 STATUS 目标标题前补一行锚点（STATUS 开头「标题与链接」的约定）。
   指南页之间、README 到指南页只链到文件，不带 `#片段`。
@@ -374,7 +376,7 @@ node desktop/electron/check-pet-view.mjs
 
 提 PR 前先确认改动在当前范围内（依据 [STATUS 1.1 节](docs/STATUS.md#s1-1)和 [第 50.2 节](docs/STATUS.md#s50-2)）：
 
-- 1.0 先完成 Windows 桌面版（安装版与便携版）。macOS 桌面版（按芯片两个 DMG）从 beta0.9.5 起以预览版随版本发布，
+- 1.0 先完成 Windows 桌面版，验收范围以 STATUS 为准。Windows 当前提供安装版、Electron 便携 EXE 与轻量浏览器版。macOS 桌面版（按芯片两个 DMG）从 beta0.9.5 起以预览版随版本发布，
   B1–B9 真机验收仍待做（[STATUS 68.4](docs/STATUS.md#s68-4)）；Linux 仍只发命令行 `szunet`，桌面端是 X06 的剩余部分。
 - 暂不部署校内后端、Docker 或服务器发布流程；云同步与好友庭院、内容和素材热更新、自动下载安装更新、
   整机 VPN、图书馆选座、余额与流量都已延期，方案保留在 STATUS 原章节。
@@ -418,7 +420,7 @@ node desktop/electron/check-pet-view.mjs
     与 `build-desktop-windows` 开始。后者在 Windows 上构建引擎，再跑 `go vet`、`go test`、
     `run-checks.mjs`、整机冒烟和打包——Windows 专属的 Go 测试只有这里会运行。
   - `build-desktop-electron-windows` 等 `build-desktop-windows` 通过后，**直接用它上传的那份引擎**
-    打 NSIS 安装包（不重新编译），并核对安装包里的引擎与冒烟通过的字节一致，
+    打 NSIS 安装包与 Electron 便携 EXE（不重新编译引擎），并核对安装包里的引擎与冒烟通过的字节一致，
     再从最新公开版安装、升级、重开、卸载一遍；其间还按安装版自己登记的开机自启命令（含 `--autostart`）启动一次，
     确认主窗口在冒烟主动打开之前保持隐藏。
   - macOS 这条线与 Windows 并行：`test` 通过后，`build-desktop-macos`（arm64 runner）编两个架构的引擎并 ad-hoc 签名，
@@ -472,7 +474,8 @@ node desktop/electron/check-pet-view.mjs
   CI 探针只覆盖 `security` 本身的行为，文档里不要写成「已在真机验证」。
 - **不要在未发布的改动上跑 `python desktop/make_release.py`**：它会覆盖
   与 GitHub Release 对应的本地包，导致线上附件没法再和本地产物逐字节核对。
-- 发布后要核对附件：`sha256sum -c *.sha256`（每个附件都有同名校验文件）、ZIP 内 exe 与独立 exe
+- 发布后要核对 **11 个程序 / 压缩包及各自的 `.sha256`，共 22 个附件**：Windows 安装版、Electron 便携 EXE、轻量浏览器版 ZIP 与单文件、两个 macOS DMG、五个平台的 `szunet`。
+  核对 `sha256sum -c *.sha256`（每个程序附件都有同名校验文件）、轻量浏览器版 ZIP 内 exe 与独立 exe
   是否逐字节一致、程序自报版本和 exe 属性里的版本是否等于 VERSION 文件、
   **Release 正文是否真的是你写的那一节**。核对结果写进 STATUS.md。
 - 发布后把安装升级验收的基线挪到刚发布的版本，放在把 VERSION 升到下一版的同一个 PR 里（或在它合入之后；
@@ -499,13 +502,13 @@ node desktop/electron/check-pet-view.mjs
 - **v1.0.0 发版清单**。beta0.9.7 是首轮试用构建，也按这份清单彩排一次，只是标签用 `beta` 前缀、Release 自动标为预发布。
   1. 上一条的 1.0 门槛都已达到；这期间合入的 Electron 升级都按上面的要求在合并前跑过真 Intel。
   2. 发版 PR：`internal/version/VERSION` 改成 `v1.0.0`，CHANGELOG 把 `## 未发布` 改成 `## v1.0.0` 并写给同学看。
-     确认 Windows（`smoke_installer.py`）与 Mac（`mac_upgrade.py` 和 `check_dmg_upgrade.py`，连同 `release.yml` 里写着基线版本号的步骤名）的升级基线已是上一公开版
-     （届时应是 beta0.9.7），没挪的话在这个 PR 里挪，哈希取发布页上的附件，基线不能与候选版相同。
+     确认 Windows（`smoke_installer.py`）与 Mac（`mac_upgrade.py` 和 `check_dmg_upgrade.py`，连同 `release.yml` 里写着基线版本号的步骤名）的升级基线已是上一公开版；
+     没挪的话在这个 PR 里挪，哈希取发布页上的附件，基线不能与候选版相同。
      本地先跑 `python desktop/release_notes.py v1.0.0 --release` 预检。README 的下载直链这时仍指向上一公开版。
   3. 发版 PR squash 合并后，等 main 上这次提交的运行全部通过，并确认 `smoke-desktop-electron-macos-intel` 真正运行并通过（不是被跳过），
      再在这个提交上打标签：`git tag v1.0.0 <这次提交>`、`git push origin v1.0.0`。不用手动选预发布：`release.yml` 按 `v` 前缀
      发成正式版，GitHub 会把它标为 Latest，设置页「仅正式版」渠道从这时起才有结果。
-  4. 发布后按上面「发布后要核对附件」逐项复核：10 个程序及各自的 `.sha256`（共 20 个附件）、Release 没有标成 Pre-release、
+  4. 发布后按上面「发布后要核对附件」逐项复核：11 个程序 / 压缩包及各自的 `.sha256`（共 22 个附件）、Release 没有标成 Pre-release、
      正文是 `## v1.0.0` 那一节；结果写进 STATUS。
   5. 复核通过后，再开一个文档 PR，按[文档与截图](#文档与截图)里「版本号」一条同步 README（含英文版）：下载直链切到 `v1.0.0`，
      标题区按钮下方的版本说明行改成正式版的说法；同时改掉指南里「目前的版本都是测试版」这类说法。
