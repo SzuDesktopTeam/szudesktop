@@ -43,6 +43,23 @@ assert.match(empty.section(),/没有记录/);
 assert.doesNotMatch(empty.section(),/>0\s*kWh/);
 assert.ok(calls.find(c=>c.path==='/api/electricity/query'&&c.data.building_id==='1001'&&!('entry_url' in c.data)));
 
+// Keep the rendered output observable after input: section() renders from state
+// and would conceal a stale node that remains in the existing page.
+const previousPanel=panel;
+panel={innerHTML:'',querySelectorAll(selector){
+ if(selector==='button')return [];
+ const attribute=/^\[([^=]+)="([^"]+)"\]$/.exec(selector);
+ if(!attribute)throw Error('unsupported selector '+selector);
+ return [...this.innerHTML.matchAll(/<(section|p)\b([^>]*)>[\s\S]*?<\/\1>/g)]
+  .filter(([,tag,attrs])=>attrs.includes(`${attribute[1]}="${attribute[2]}"`))
+  .map(([html])=>({remove:()=>{this.innerHTML=this.innerHTML.replace(html,'')}}));
+}};
+await empty.click('electricity-query');
+assert.match(panel.innerHTML,/这段日期内没有记录/);
+empty.input({target:{id:'electricity-from',value:'2026-10-01'}});
+assert.doesNotMatch(panel.innerHTML,/这段日期内没有记录/,'editing the dates must clear the previous empty result in the live panel');
+panel=previousPanel;
+
 const menuWait=pending();
 const switching=createElectricityUI({api:async path=>path==='/api/electricity/settings'?{configured:true}:path.includes('zone-b')?menuWait.promise:{client:'zone-a',campuses:[{value:'zone-a',name:'甲校区'},{value:'zone-b',name:'乙校区'}],buildings:[{value:'1001',name:'第一栋'}]}});
 await switching.click('electricity-options');

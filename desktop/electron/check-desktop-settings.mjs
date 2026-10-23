@@ -63,6 +63,28 @@ for(const app of [{...fakeApp,isPackaged:false},fakeApp]) {
   const unsupported=createLoginItemControl(app,{platform});
   assert.equal(unsupported.supported,false);assert.equal(unsupported.get(),false);assert.throws(()=>unsupported.set(true));
 }
+// NSIS portable 解压到临时目录，退出后删除。它不能把安装版已有的同名 Run 值修成临时路径。
+{
+  const actions=[];
+  const portableApp={isPackaged:true,
+    getLoginItemSettings:()=>{actions.push('get');return {openAtLogin:false,executableWillLaunchAtLogin:false};},
+    setLoginItemSettings:options=>actions.push(['set',options]),
+  };
+  const query=async key=>{actions.push(['query',key]);return key===RUN_KEY?'com.szudesktop.app REG_SZ "C:/Installed/szuDesktop.exe" --autostart':null;};
+  const saved=process.env.PORTABLE_EXECUTABLE_FILE;
+  process.env.PORTABLE_EXECUTABLE_FILE='D:/下载/szuDesktop-0.9.10-portable.exe';
+  try{
+    const portable=createLoginItemControl(portableApp,{platform:'win32',executable:'C:/Temp/nsz123/app/szuDesktop.exe',query});
+    assert.equal(await portable.repair(),false,'portable startup must never rewrite the installed app login entry');
+    assert.equal(portable.supported,false,'portable startup control is disabled');
+    assert.equal(portable.get(),false,'portable must not display the installed app login setting');
+    for(const enabled of [true,false])assert.throws(()=>portable.set(enabled),/仅支持已安装/);
+    assert.deepEqual(actions,[],'portable must not read or write the installed app login entry');
+  }finally{
+    if(saved===undefined)delete process.env.PORTABLE_EXECUTABLE_FILE;
+    else process.env.PORTABLE_EXECUTABLE_FILE=saved;
+  }
+}
 assert.equal(isQuietStartup(['app.exe','--autostart']),true);
 assert.equal(isQuietStartup(['app.exe']),false);
 

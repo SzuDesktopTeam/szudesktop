@@ -486,7 +486,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
           key: ${{ steps.dmg-baseline.outputs.key }}
-      - name: 核对并准备 beta0.9.8 DMG 升级基线
+      - name: 核对并准备 beta0.9.9 DMG 升级基线
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -574,7 +574,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/szu-dmg-upgrade-baseline
           key: ${{ steps.dmg-baseline.outputs.key }}
-      - name: 核对并准备 beta0.9.8 x64 DMG 升级基线
+      - name: 核对并准备 beta0.9.9 x64 DMG 升级基线
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -653,6 +653,8 @@ jobs:
           files: |
             dist/szuDesktop-Setup-*.exe
             dist/szuDesktop-Setup-*.exe.sha256
+            dist/szuDesktop-*-portable.exe
+            dist/szuDesktop-*-portable.exe.sha256
             dist/szudesktop-windows-amd64.exe
             dist/szudesktop-windows-amd64.exe.sha256
             dist/szudesktop-${{ github.ref_name }}-windows-amd64.zip

@@ -4,216 +4,167 @@
 
 **A little piece of Shenzhen University, on your desktop.**
 
-Made and maintained by Shenzhen University students · Not affiliated with Shenzhen University
+Catch up on campus notices, take class notes, then come back from a focus session to harvest a radish.<br>
+A free, open-source desktop app for SZU students, with a pixel companion to keep you company.
 
-![desktop platform](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-2f7d32?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=c9a227)
+![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
 [简体中文](../README.md) · **English**
 
-![szuDesktop · Lychee Garden: Libao and Chestnut stand in a pixel-art lakeside campus under the tagline “A little piece of Shenzhen University, on your desktop.”](readme-hero.jpg)
+**[Download](#download)**　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)　·　[User guide](guide/README.md)　·　[Feedback](guide/feedback.md)
 
-Choose a pixel companion, focus for a while, and come back to harvest a radish.<br>
-Class notes, the official school calendar and campus network diagnostics are here too.
+![The szuDesktop home screen, with a campus scene, today's tasks and study shortcuts](readme-home.png)
 
-A computer app for Windows 10 / 11 (64-bit) or macOS 13 and later, with **no phone version**.<br>
-If you are reading this on a phone, open this page on a computer to download it.
-
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-Setup-0.9.9.exe"><img alt="Download the Windows installer" width="224" src="https://img.shields.io/badge/Download-Windows%20installer-a3485d?style=flat-square&labelColor=6e1f35"></a>
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-arm64.dmg"><img alt="Download the macOS preview (Apple silicon)" width="315" src="https://img.shields.io/badge/Download-macOS%20preview%20%C2%B7%20Apple%20silicon-326b3b?style=flat-square&labelColor=234a29"></a>
-<a href="https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-x64.dmg"><img alt="Download the macOS preview (Intel)" width="257" src="https://img.shields.io/badge/Download-macOS%20preview%20%C2%B7%20Intel-326b3b?style=flat-square&labelColor=234a29"></a>
-
-**beta0.9.9** · Pre-release, planned as the last test version before 1.0 · Free and open source · Interface in Chinese<br>
-Your system will block it the first time you open it; see [Download](#download) for how to allow it
-
-▶ One-minute promo video (in Chinese): [Bilibili](https://www.bilibili.com/video/BV1wZpA66EVd/) · [Douyin](https://v.douyin.com/B47JYZ3oDTU/) · [Xiaohongshu](https://www.xiaohongshu.com/discovery/item/6ac514ab000000001402f08e?xsec_token=ABDDZO2ECkdAnJHuJuryd-K5E-n2N9TScBRz4FcAdYTQA=&xsec_source=pc_share)
-
-[Download](#download) · [Getting started](#getting-started) · [Features](#features) · [Known limitations](#known-limitations) · [FAQ](#faq) · [Privacy and security](#privacy-and-security) · [User guide (Chinese)](guide/README.md) · [Feedback (Chinese)](guide/feedback.md)
+<sub>Actual app interface. A student-made, unofficial project with no affiliation with or endorsement by Shenzhen University.</sub>
 
 </div>
 
-## What you can do today
+## A place for classes, and the time between them
 
-- **A companion on your desktop.** Cheerful, always-smiling Libao (荔宝), Chestnut (栗栗) the chestnut-coloured kitten guarding an empty cardboard box, Xiaobai (小白) the egret from Wenshan Lake and more: pick one to keep you company in a corner of your desktop. Click it to chat, pat its head or feed it, drag it anywhere, and scroll to resize it from 40% to 200%. Each companion keeps its own name and growth, and you can switch at any time. The desktop companion needs the Windows installer or the macOS app.
-- **Focus earns rewards.** Write down one small task and start a 5, 25 or 45-minute focus session, or set your own length; every minute you complete and claim earns 1 garden coin (荔枝币) and 1 growth point.
-- **Grow a small plot by the lake.** Radishes, strawberries, blueberries and lychees keep growing while you are away; use the harvest for companion requests or to build the lakeside picnic corner, and when you want a break, play a round of 2048 at the companion table. No purchases and no leaderboards.
-- **Class notes stay on your computer.** Organised by course, with templates, search, Markdown and a page outline; select a sentence to turn it into a todo.
-- **Fewer trips for small school errands.** Search the library catalogue online without signing in, read the official school calendar and college notices (17 colleges and faculties; the rest link to the official site), and open common school services from one place. When the campus network won't connect, diagnostics tell you which step is failing.
+- **Start with a note.** Open a class record from the home screen, organise pages by course, and turn a sentence you want to revisit into a todo.
+- **Keep campus errands together.** Browse college notices, library locations, the school calendar and venue information. Sign in on the school's own page when a service needs your account.
+- **Give yourself something to come back to.** Choose Libao (荔宝), Chestnut (栗栗) or Xiaobai (小白), earn garden coins through focus sessions, then spend a break growing crops, fulfilling companion requests or playing 2048.
 
-The garden, todos, focus and course notes need no school account and work offline. Your data stays on your own computer, with no telemetry, and the code is open source under the MIT licence. Personal school services such as timetables, grades and bookings, and campus network sign-in, are still being tested; see [Known limitations](#known-limitations).
+The garden, todos, focus timer and course notes **work offline without a school account**. Campus queries need an internet connection, and personal school services have testing limits; see [Known limitations](#known-limitations).
 
-<table>
-<tr><td width="50%"><img src="readme-desktop-companion.jpg" alt="Illustration of the desktop companion: Libao stands beside the szuDesktop main window, with a speech bubble saying “Hi, I'm Libao. Which small thing shall we do first today?”"><br><b>Desktop companion</b>: Libao waits beside the main window; click it to chat or pat its head, and drag it anywhere (illustration)</td>
-<td width="50%"><img src="readme-farm-harvest.jpg" alt="My farm: six small plots by the lake with Libao at the edge of the field; the notice at the bottom reads “Harvested into storage · Radish +2 · Libao growth +1”"><br><b>My farm</b>: harvest ripe radishes into storage while Libao helps at the edge of the field; crops keep growing while you are away</td></tr>
-<tr><td width="50%"><img src="readme-arcade-2048.jpg" alt="2048 at the companion table: the top-left tile on the board is “Libao's harvest gift 2048”; on the right are partner Libao and the “Save a seed for the garden” card"><br><b>2048 at the companion table</b>: merge seed bags all the way up to Libao's harvest gift (荔宝丰收礼); reach 128 or more in a day and you can also claim a seed gift</td>
-<td width="50%"><img src="readme-scene-bookshop.jpg" alt="The After-rain Bookshop scene: a toon-shaded bookshop front with a striped awning, a bench and potted plants"><br><b>After-rain Bookshop</b>: one of the toon-shaded scenes built into the app; you can also switch to Lakeside Daylight, Blue-hour Terrace or Pixel Courtyard, and every page changes with it</td></tr>
-<tr><td width="50%"><img src="readme-course-notes.jpg" alt="Course notes: the course bookshelf on the left; on the right, the note page “Chapter 3 · Limits of functions” with its page outline"><br><b>Course notes</b>: one shelf per course, with Markdown, templates, search and a page outline; notes are stored only on your computer</td>
-<td width="50%"><img src="readme-network-diagnosis.jpg" alt="Campus network page: two status cards, “Internet unavailable” and “Campus sign-in”, and a line of diagnostic conclusions (demo data)"><br><b>Campus network diagnostics</b>: see which zone you are in, whether the sign-in portal is reachable and what to do next (demo data shown; campus network sign-in is still being verified on site)</td></tr>
-</table>
-
-The app and the full [user guide](guide/README.md) are in Chinese only. In this README, interface labels give the English meaning followed by the Chinese text, and links to Chinese pages are marked (Chinese).
-
-If something feels awkward or there is a feature you would like, [tell us](guide/feedback.md) (Chinese). Feedback currently goes through GitHub Issues, which needs a GitHub account (free to sign up); a channel that needs no account is being prepared. Just say what you were trying to do and where you got stuck; please leave out passwords, cookies and personal grades. If the network or a school service is failing, you can attach the diagnostic report copied from **Settings → About and updates → Feedback and suggestions** (设置 → 关于与更新 → 反馈与建议): it contains only structure, with no account, grades or timetable, and you can preview it before copying.
+The app, video and linked user guides are currently in Chinese. This English README includes Chinese interface labels where you need them.
 
 ## Download
 
-szuDesktop is a computer app: if you are reading this on a phone, open this page on a computer to download it. Every file is on the GitHub [release page](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.9); the current version is **beta0.9.9** (released 2026-10-23, pre-release).
+**Windows 10 / 11 (64-bit) and macOS 13 or later; no mobile app.** macOS is a preview release. Linux has the campus-network command-line tool.
 
-- **Windows 10 / 11 (64-bit) · installer (recommended)**: [download `szuDesktop-Setup-0.9.9.exe`](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-Setup-0.9.9.exe) (about 98 MB), run it and follow the prompts to install, then open szuDesktop. It brings its own window, so you do not need to install a browser or developer tools, and it has the desktop companion and the tray icon.
-- **Windows · without installing**: [download `szuDesktop-0.9.9-portable.exe`](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-portable.exe) (about 94 MB) and double-click it. No installation, registry changes or administrator account are needed; records stay in your user directory and are shared with the installer edition.
-- **Mac (preview, macOS 13 or later)**: for Apple silicon (M1 and later) download the [arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-arm64.dmg) (about 123 MB), and for an Intel processor the [x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.9/szuDesktop-0.9.9-mac-x64.dmg) (about 130 MB); if you are not sure, check whether **Apple menu → About This Mac** lists a “Chip” or a “Processor”. Open the DMG, drag szuDesktop into Applications, then open it; it has the desktop companion, with a menu bar icon at the top of the screen instead of the tray.
-- **Linux, or just the campus network**: use the [szunet command line](#command-line-szunet), which has no window and only handles campus network sign-in and diagnostics; there is no desktop version for Linux yet.
+**beta0.9.10 · Campus tools and a more useful home.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.10). This is a prerelease; the verified scope of school services is described below.
 
-**Expect your system to block it the first time you open it**: the installer is not code-signed yet, and the Mac app is not notarised by Apple.
-- **Windows**: if the browser says the file is not commonly downloaded, choose **Keep** (保留) in the download list (in Edge, click **…** next to the file first); if “Windows protected your PC” appears on first run, click **More info** (更多信息) and then **Run anyway** (仍要运行). Some antivirus software may warn you too.
-- **Mac**: on macOS 15 and later, open it once, and after it is blocked go to **System Settings → Privacy & Security** and click **Open Anyway** near the bottom; on macOS 13 and 14, Control-click szuDesktop in Applications and choose **Open**. You need to allow it again after every update.
-- Only allow files downloaded from this repository's release page, and don't dismiss every security warning as a false positive. Every file has a matching `.sha256` for checking that the download is complete, but it does not replace a publisher signature; the code is open source, so you can also read it, or build it yourself and compare.
+| Your computer | Choose this | To open it |
+| :-- | :-- | :-- |
+| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-Setup-0.9.10.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
+| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-portable.exe) | Run the file; shares local records with the installer edition |
+| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-arm64.dmg) | Open it and drag the app into Applications |
+| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-x64.dmg) | Open it and drag the app into Applications |
 
-**Updates are manual**: there are no automatic updates; you can check for a new version by hand in **Settings → About and updates** (设置 → 关于与更新). Before upgrading, click **Export garden and todos** (导出庭院与待办) and **Back up course notes** (备份课程笔记) under **Settings → Backups and privacy** (设置 → 存档与隐私). On Windows, just run the new installer: the garden, study records, the encrypted account configuration and desktop companion settings are all kept, and the installer and portable editions share the same local records. On the Mac, quit with ⌘Q first, drag the new version into Applications to replace the old one, and allow it once more; your saves, notes and the account in the Keychain are not affected. Checksum steps, uninstalling, opening and quitting, launch at login and other details are in [Download, install and update](guide/install.md) (Chinese).
+Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the older browser-based portable edition and the command-line tool, see the [installation guide](guide/install.md).
+
+<details>
+<summary><b>Blocked on first launch? How to open and update the app</b></summary>
+
+The packages are not code-signed, and the Mac app is not notarised by Apple, so your system may block the first launch.
+
+- **Windows:** after confirming the file came from this repository's release page, choose **More info → Run anyway** in SmartScreen. Browser download warnings are covered in the [installation guide](guide/install.md).
+- **Mac:** try opening the app once, then choose **Open Anyway** under **System Settings → Privacy & Security**. On macOS 13 / 14, you can also Control-click the app in Applications and choose **Open**.
+- **Updates:** check manually under **Settings → About and updates** (设置 → 关于与更新); there is no automatic download or installation. Export the garden and todos and back up course notes separately before upgrading. On Mac, fully quit the app before replacing it.
+- Release assets have matching `.sha256` files. These check download integrity, not the publisher's identity; do not assume every security warning is a false positive.
+
+</details>
 
 ## Getting started
 
-1. **Choose a companion**: a welcome guide appears the first time you open the app; to see it again later, click **Welcome guide** (欢迎引导) at the bottom of the page. Click **Meet my companion →** (去认识我的伙伴 →) and choose one in the companion room; in the Windows installer and the macOS app the desktop companion switches too. On the day you start, the **Who keeps you company today?** (今天谁陪你？) bar on the home page is open as well, so you can switch there too.
-2. **Focus for 5 minutes**: back on the home page, click **Start 5 minutes** (开始 5 分钟) and a focus session starts right away; **Focus for 5 minutes first** (先专注 5 分钟) in the welcome guide does the same. When time is up, click **Complete and claim the reward** (完成并领取奖励) in **Study bookshop → Focus and tasks** (学习书屋 → 专注与小事) to get 5 garden coins and 5 growth points.
-3. **Harvest your first radish**: the home page's **Next step** (下一步) points to your first radish, which ripens in about a minute. Harvest it in **Lychee Garden → My farm** (荔枝庭院 → 我的农田) for 2 radishes and 1 growth point.
-4. **Connect to the campus network when you need it**: open **Campus network** (校园网), enter your campus card number and unified identity password, and click **Sign in to the campus network** (登录校园网); if it fails, click **Run network diagnostics** (运行网络诊断). Off campus, the **Campus sign-in** (校园认证) row shows a grey note, which is normal. Signing in to school services is separate from campus network sign-in; handle each when you need it.
+1. **Pick a companion.** In the welcome guide, choose **Meet my companion →** (去认识我的伙伴 →). Switch whenever you like; each companion keeps its own name and growth.
+2. **Start your first class page.** Choose **New class record** (新开课堂记录) on the home screen. Next time, choose **Continue writing →** (继续写笔记 →). Notes save automatically on your computer.
+3. **Focus for five minutes.** Choose **Start 5 minutes** (开始 5 分钟), then claim 5 garden coins and 5 growth points when the session ends. Your first radish takes about one minute to ripen; collect it under **Lychee Garden → My farm** (荔枝庭院 → 我的农田).
 
-None of the first three steps needs a school account, and all of them work offline; the full walkthrough is in [Getting started](guide/getting-started.md) (Chinese). To start with class notes, click **New classroom note** (新开课堂记录) on the home page, write a few lines and leave; back on the home page, click **Continue writing →** (继续写笔记 →) to pick up where you left off. Notes save automatically on your computer, and **Save and reopen** (保存并重新打开) in Settings saves before reloading the page. If saving fails, keep the page open and retry or export a notes backup; see the [desktop first-minute guide](guide/desktop-first-minute.md) (Chinese).
+Sign in when you need a campus service. **Campus-network authentication and school-service sign-in are separate**, and access to one service does not grant access to another. See the [getting-started guide](guide/getting-started.md) for the full walkthrough.
 
 ## Features
 
-This table is the reference for whether each feature is available, partial or still being tested; click a feature name to open its page in the user guide (Chinese).
+### A desk for your courses
 
-**The table also describes current source changes. Rows marked “unreleased”, including notice search, dormitory electricity, class timetables and curricula, are not included in the public beta0.9.9 packages.** Implementation and acceptance evidence are recorded in [STATUS section 76](STATUS.md) (Chinese).
+![Actual course-notes interface, with a course bookshelf, example note and page outline](readme-notes.png)
 
-| Capability | Status | Notes |
+Give each course its own shelf. Start from a template, write Markdown, search your notes and navigate by the page outline. Turn a sentence into a todo for your next revision session.
+
+Notes have a recycle bin and import/export. Todos can be dated, edited and archived. Focus sessions can run for 5, 25 or 45 minutes, or a custom duration; every completed and claimed minute earns 1 garden coin and 1 growth point. Feishu course documents can be imported with permission as read-only local copies; there is no two-way sync. [Study guide →](guide/study.md)
+
+### Four kinds of campus errands, in one place
+
+![Actual campus-services interface, showing the library catalogue](readme-campus.png)
+
+| Area | What you can do | Scope |
 | :-- | :-- | :-- |
-| [Lychee Garden](guide/garden.md) | ✅ Available | Companion care, four crops, 2048 at the companion table, requests, the market, garden construction, visit stories and postcards, all running offline; no purchases or real-money trading |
-| [Companions](guide/garden.md) | ✅ Available | Five companions for new saves plus A-Qing (阿青), who stays under “Old friends” (老朋友) in older saves; 648 animation frames and 1,656 dialogue lines (in Chinese). Switch in the companion room or from the desktop companion menu |
-| [Desktop companion](guide/garden.md) | ✅ Available (Windows) · 🧪 Testing (macOS) | Windows installer: transparent window, left/right-click menu for care and switching companions, 40%–200% wheel scaling, dragging, hiding and a tray icon; size and position are restored after restart. The macOS app has the same features, with a menu bar icon instead of the tray; everyday checks on a real Mac are not finished yet (see the “macOS desktop app” row) |
-| [Environments](guide/garden.md) | ✅ Available | Pixel Courtyard, Lakeside Daylight, After-rain Bookshop and Blue-hour Terrace; every page shares the chosen scene. With animation off it shows a still frame, and without 3D support it falls back to Pixel Courtyard |
-| [Todos and focus](guide/study.md) | ✅ Available | Todos can be edited, dated, archived and restored; focus sessions last 5 / 25 / 45 minutes or a custom 1–120 minutes and can be linked to a todo. Each completed and claimed minute gives 1 garden coin and 1 growth point |
-| [Focus completion notifications](guide/study.md) | 🧪 Testing | Windows installer and macOS app: turn on focus completion reminders and **Do not disturb** (勿扰). On the Mac, if a notification cannot be delivered, the desktop companion reminds you with a speech bubble instead |
-| [Course notes](guide/study.md) | ✅ Available | Local text notes: courses created by hand, templates, search, Markdown, trash, page outline, turning a selected sentence into a todo, import/export and whole-notebook backup |
-| [Feishu course documents](guide/study.md) | 🧪 Testing | Each course can link to one Feishu document you have permission to access and open the original page; you can also import a read-only local copy with your own lark-cli. This is not two-way sync |
-| [College notices](guide/campus.md) | 🟡 Partial | Of 28 colleges and faculties, 17 can be read in the app (with dates and original links) and the rest link to the official site; notices from Academic Affairs and the Graduate School can also be read in the app. The first visit asks you to choose your college, or you can fill in your college in Settings |
-| [Notice bodies and attachments](guide/campus.md) | 🟡 Source available, unreleased | Expand a title to read its body and school-hosted attachments; unreadable pages and external links keep their original-page entry |
-| [Notice keyword search](guide/campus.md) | 🟡 Partial, unreleased | 18 sources use the school's title/full-text search and pagination, labelled as a notice column or the unit's whole website. The College of Materials searches only the titles fetched this time, excluding bodies and complete history |
-| [Official calendar and teaching week](guide/campus.md) | ✅ Available | Checks the school's calendar page daily and reads new images with the text recognition built into the system (both the Windows and macOS apps); the teaching week can be adjusted by hand, and a failed read keeps the cache and explains why |
-| [School login](guide/campus.md) | 🧪 Testing | Sign in on the official school page, then read the selected business session. Its separate browser profile keeps login data on this computer after closing or quitting; clear the school login explicitly when needed |
-| [Timetable](guide/campus.md) | 🧪 Testing | Reads the undergraduate or graduate timetable according to your programme level; shown only for the current run |
-| [Class timetables and published curricula](guide/campus.md) | 🧪 Implemented, unreleased | Query classes by term and inspect their schedules, or browse published plans, modules and courses. Each needs the corresponding school permission; real-account acceptance is not complete |
-| [Academic completion and lectures](guide/campus.md) | 🟡 Official pages only, unreleased | Open your own academic-completion or Innovation Leadership lecture page; these records are not synced locally, and curriculum requirements are not personal earned credits |
-| [Grades and GPA](guide/campus.md) | 🟡 Partial | Paste or import CSV / TSV grades and calculate GPA locally. Online reading after login is still being tested and is not added to GPA automatically; PDF, image and XLSX files are not parsed |
-| [Room availability (read-only)](guide/campus.md) | 🟡 Partial | Read-only view of community rooms and half-hour availability; this computer must reach the school's internal services directly (usually on the campus network) |
-| [Community-room booking entry](guide/campus.md) | 🧪 Testing | Open the official booking page in a separate school window or browser, choose a slot and submit it there. The community-room module does not submit bookings or automatically grab slots |
-| [Sports venues](guide/campus.md) | 🟡 Queries available | Read venues and time slots after school sign-in. User-confirmed booking submission has code, but actual booking acceptance remains unverified |
-| [Dormitory electricity](guide/campus.md) | 🧪 Implemented, unreleased | Configure a separate local school entry, read anonymous campus/building menus, and query your own room. Remaining and cumulative quantities are kWh, not a money balance; real-room readings have not been verified |
-| [Library catalogue](guide/campus.md) | ✅ Available | Online title, author or subject searches without signing in |
-| [Copy locations and call numbers](guide/campus.md) | 🟡 Source available, unreleased | Expand a book to read copy locations, call numbers and availability; internet access is required |
-| [Personal borrowing](guide/campus.md) | 🟡 Official page only, unreleased | Sign in on the library's own page; borrowing records are not synced locally, and the app does not renew or reserve books |
-| [CNKI and Wanfang](guide/campus.md) | 🟡 School entry links, unreleased | Open the library's institutional access links and search on the provider's page. There is no built-in literature search, and opening a link does not confirm institutional authorisation |
-| [College piano rooms](guide/campus.md) | 🧪 Testing | Read-only view of rooms and your own reservations with that system's own account; the login is kept in memory only |
-| [Study reminders](guide/campus.md) | ✅ Available | Add reminders by hand and export a standard ICS calendar file that alerts you 15 minutes before the start; a reminder is not a booking |
-| [Common contacts](guide/campus.md) | 🟡 Partial | Only numbers published on the university library's official website; other offices link to their official pages |
-| [Campus network sign-in](guide/network.md) | 🧪 Testing | Detects the teaching area (SRun, 深澜) or the dormitory area (Dr.COM) and signs in; you can also sign out or choose the zone by hand |
-| [Access point ID (`ac_id`)](guide/network.md) | 🟡 Partial | Picks the ID in this order: set by hand → a successful local record → the school gateway redirect → trying IDs one by one, labelling guesses. If detection fails you can enter the ID by hand |
-| [Connection diagnostics](guide/network.md) | ✅ Available | Separates Internet access, campus authentication, portal reachability, protocol fingerprints and school-domain proxy clues, in both the desktop app and the command line. An unknown authentication result is never shown as confirmed online |
-| [Connect to the campus network at startup](guide/network.md) | 🧪 Testing | Signs in at most once at startup with the remembered account, skipping when already online or when no sign-in portal is found; can be turned off |
-| [Command line szunet](guide/network.md) | 🧪 Testing | Single-file binaries for Windows, macOS and Linux that sign in, sign out, show status, detect the zone, run diagnostics and save the account (in the Keychain on macOS, in Secret Service on Linux) |
-| [Credential storage](guide/data-and-privacy.md) | ✅ Available (Windows) · 🧪 Testing (macOS) | The Windows desktop app encrypts the campus network account and password with DPAPI, and the macOS app stores them in the system Keychain (saving and reading a real account and the authorisation prompts have not been verified on a real Mac yet). It saves them only after a successful sign-in with **Remember account and password after successful sign-in** (认证成功后记住账号密码) ticked; without a system secure store it refuses to save and never writes plain text |
-| [Saves and backups](guide/data-and-privacy.md) | ✅ Available | The garden and notes are saved separately on this computer, and a damaged save is restored from the previous copy automatically; daily backups of the last 3 days you used the app are kept as well. Export and import are available, and multiple windows do not overwrite each other; exported saves contain no campus network account or password |
-| [Feedback and diagnostic report](guide/data-and-privacy.md) | ✅ Available | Copy your version and system details, or a diagnostic report that contains only structure (zone, portals, which fields school services returned); preview it before copying, nothing is uploaded. **Send feedback** (提交反馈) in the app opens the [feedback page](guide/feedback.md) (Chinese); feedback currently goes through GitHub Issues and needs a GitHub account |
-| [Launch at login](guide/install.md) | 🧪 Testing | The Windows installer registers it only when you turn it on in Settings (uninstalling removes it), and the portable edition and `szunet autostart` can also set it. On the Mac it is **Launch when signing in to Mac** (登录 Mac 时启动), which needs the app in the Applications folder |
-| [Automatic updates](guide/install.md) | — Not supported | Nothing is downloaded or installed automatically; check for a new version by hand in **Settings → About and updates** (设置 → 关于与更新) and open the download page |
-| [macOS desktop app](guide/install.md) | 🧪 Testing | Preview: one DMG each for Apple silicon and Intel, macOS 13 or later. Same features as the Windows installer, with a menu bar icon instead of the tray. Not notarised by Apple, so you allow it by hand the first time you open it. Everyday checks on a real Mac are not finished yet; the behaviour still to be confirmed is listed under [Known limitations](#known-limitations) |
-| [Linux desktop](guide/install.md) | — Not supported | Only the command-line szunet; a Linux desktop version is on the roadmap as a low-priority to-do |
+| **School notices** | Browse by college, expand articles and attachments, search titles or full text | In-app reading for 17 colleges, plus Academic Affairs and the Graduate School; 18 sources use official search and pagination. Materials Science filters only loaded titles; other colleges link to their sites |
+| **Academic studies** | Check the official calendar and personal timetable; query class timetables and published study programmes; import grades to calculate GPA locally | Personal services require your own permissions. Online grades do not automatically enter local GPA calculations; class timetables and study programmes still need real-account acceptance testing |
+| **Campus life** | View sports venues and times, check study-space availability and dorm electricity, export study reminders | Internal services need the appropriate network. Electricity needs a locally configured endpoint and reports kWh, not a money balance; real-room readings and sports-booking submission remain unverified |
+| **Library** | Search by title, author or subject; expand locations, call numbers and availability | Catalogue queries need no sign-in. Personal loans, CNKI and Wanfang open official school entry points |
 
-Legend: ✅ Available · 🟡 Partial (covers only part of the scope, or has clear prerequisites) · 🧪 Testing (implemented, not yet verified in real use) · — Not supported. The specific gaps behind Partial and Testing are listed under [Known limitations](#known-limitations).
+Queries show their source and scope, with the original page available when reading fails. Degree progress, Innovation Leadership Lectures and personal loans are not synced locally. A study programme's requirements are not your earned credits, and a database link does not establish institutional access. [Campus services and sign-in guide →](guide/campus.md)
+
+### A little time by the lake
+
+![Actual Lychee Garden interface, with a companion and lakeside farm](readme-garden.png)
+
+Libao is cheerful, Chestnut guards a cardboard box, and Xiaobai comes from Wenshan Lake. Click your companion, pat its head or offer a snack. The Windows installer and macOS app can also keep it in a corner of your desktop; drag it around or scroll to resize it.
+
+Grow radishes, strawberries, blueberries and lychees; crops keep growing while the app is closed. Use the harvest for companion requests and garden building, or play 2048 at the companion table during a break. There are no purchases, leaderboards or online check-in requirements.
+
+Change the view between Pixel Courtyard, Lakeside Daylight, After-rain Bookshop and Blue-hour Terrace. [Garden and companions guide →](guide/garden.md)
+
+### When the campus network will not connect
+
+The campus-network page separates internet connectivity, campus authentication and portal reachability, with clues about your network zone, protocol and proxy. An unknown state is not reported as online; internet access alone does not prove campus authentication succeeded.
+
+It supports sign-in and sign-out for the teaching-zone Srun and dormitory Dr.COM services. If detection fails, enter the zone and access-point ID manually. Optional startup authentication runs at most once, with no periodic reconnection. For problems involving a proxy, router or VPN, run diagnostics first and follow the [network guide](guide/network.md).
 
 ## Known limitations
 
-- **Source changes are separate from downloads**: notice search, dormitory electricity, class timetables, curricula and resource links from this round are not in beta0.9.9. Real-room electricity and real-account class/plan queries still need acceptance. Completion, lectures and borrowing remain official-page entries, and CNKI/Wanfang have no built-in search.
-- **Personal school services are still being tested**: undergraduate timetables, graduate timetables with scheduled classes, online grades, the installer's school-login handoff and signing in again after expiry, the complete in-app booking flow and college piano rooms have not been verified with real accounts yet, so reads may fail or be incomplete; the school's own systems are authoritative. Room availability requires this computer to reach the school's internal services directly (usually on the campus network). Acceptance details are in [STATUS](STATUS.md#s50-2) (Chinese).
-- **Campus network sign-in is still being verified on site**: full sign-in, error messages, sign-out and reconnection in the teaching and dormitory areas have not been verified item by item on site, and automatic access point ID discovery behind a router before sign-in has not been tested either. If detection fails, enter the ID by hand under **Advanced settings** (高级设置) in the sign-in form. Connecting at startup and the szunet command line use the same sign-in, so they share this status.
-- **The macOS app is a preview**: everyday checks on a real Mac are not finished yet. Still to be confirmed: first-open approval, the menu bar icon and the Dock, closing windows and full screen, saving before every way of quitting, the **Page** (页面) menu and copy and paste in the school and Feishu windows, Control-clicking the desktop companion and multiple displays, system notifications, signing out and launch at login, saving and reading the account in the Keychain, macOS 13 and 14, and whether a “Local Network” permission prompt appears on the campus network; progress is in [STATUS](STATUS.md#s68-2) (Chinese). Hiding the app with ⌘H hides the desktop companion too; click **Show companion** (显示伙伴) in the menu bar icon to bring back just the companion. When both the main window and the companion are hidden, focus reminders may arrive slightly late. Upgrading from the previous version has only been verified in automated tests, not yet on a real Mac. If something goes wrong, tell us as described on the [feedback page](guide/feedback.md) (Chinese), with your macOS version, chip (Apple silicon or Intel) and the step where you got stuck.
-- **No desktop app on Linux**: only the command-line szunet, which needs Secret Service (`secret-tool`) to save the account and refuses to save without it. On macOS the command line stores the account in the Keychain, and the full save-then-read path has not been verified on a real Mac.
-- **Unsigned, not notarised, no automatic updates, no cloud sync**: the Windows edition may show a security warning on first run and the macOS app must be allowed by hand; new versions are downloaded by hand. Data stays on this computer; the project runs no backend.
-- **Notes and Feishu**: course notes are text only, with no image attachments, slide parsing, formulas or AI summaries. The local Feishu copy is never written back, so this is not two-way sync; real authorisation, document import and multi-user collaboration are not verified.
-- **Desktop behaviour awaiting real tests**: on Windows, whether focus completion notifications actually appear, whether the app really starts after you sign in again with **Launch when signing in to Windows** (登录 Windows 时启动) turned on, and behaviour with multiple displays, over long runs (resource use) and after sleep and wake.
-- **Not integrated yet**: campus network balance, data usage, time and plans. Notices from 11 colleges are official-site links only. New calendar images depend on the text recognition built into the system, and recognition on Windows with an English system language still needs rechecking.
-- **The garden's pacing will still change**: it has not had a long trial with real students yet, so growth pacing and long-term content will be adjusted based on your feedback.
+This is a pre-release project. **You can start with the local features; check personal school information against the school's own pages.**
 
-All open items are listed in [STATUS: current open items](STATUS.md#s1-1) (Chinese).
+- **On-site acceptance is incomplete.** Personal timetables, grades, class timetables and study programmes still need real-account validation, as do real-room electricity readings, sports-booking submission and some campus-network scenarios. Some macOS behaviour still needs physical-device testing.
+- **Bookings and school records have limits.** Community-space bookings happen on official school pages. Sports submission is still being tested, with no automatic slot grabbing. Degree progress, lectures and personal loans currently provide official links only, without local sync, renewals or automatic course enrolment.
+- **No cross-device sync.** Back up the garden and notes separately; Feishu import is read-only. There is no Linux desktop or mobile app. The experimental VPN module is excluded from default releases.
 
-## FAQ
-
-- **Is it official? Does it cost anything?** It is not official: szuDesktop is made and maintained by Shenzhen University students and is not affiliated with Shenzhen University. It is free to download, the code is open source under the MIT licence, and the app has no purchases or real-money trading.
-- **Does it work on a phone, a Mac or Linux?** There is no phone version. On a Mac you can use the macOS preview (macOS 13 or later), with the desktop companion and a menu bar icon; allow it the first time you open it as described under [Download](#download), and note that some behaviour has not been verified on a real Mac yet. Linux has only the command-line szunet, for campus network sign-in and diagnostics.
-- **Browser blocking the download, or antivirus or SmartScreen warning you?** The installer and programs have no code signature, so they get blocked once; the steps to allow them are under [Download](#download). Only allow files downloaded from the release page and checked against the matching `.sha256`.
-- **Does it keep running after I close the window?** In the Windows installer the desktop companion and tray keep running; quit fully with **Quit app** (退出应用) from the desktop companion menu or Settings, or **Exit** (退出) from the tray. In the macOS app the desktop companion and menu bar icon keep running; click the Dock icon to bring the main window back and press ⌘Q to quit fully. The portable edition exits about 10 seconds after all its windows close.
-- **Does it reconnect to the campus network on its own in the background?** Not on a timer: the only automatic attempt is a single sign-in at startup with the remembered account, and you can turn that off too.
-- **Sign-in fails once I plug in my own router?** The access point ID (`ac_id`) belongs to the wall port, not to the router; if detection fails, enter it under **Advanced settings** (高级设置) in the sign-in form, or use `--ac-id` on the command line.
-- **Why does the status change with a router or VPN?** Internet access, campus authentication and access to internal services can use different exits. WebVPN does not connect the whole computer to the campus network. Click **Refresh status** (刷新状态), then compare the [connection types](guide/network.md#不同连接方式) (Chinese); Internet access alone is not a reason to sign in repeatedly.
-- **Campus network connection fails after clicking connect, or school systems won't open with a proxy running?** Fake-IP only shows that a proxy handles the domain's DNS; it does not prove a connection failure. HTTP direct settings cannot bypass TUN routing. If school services work, keep your settings. If access actually fails, follow [proxy troubleshooting](guide/network.md#开着代理软件时) (Chinese) to check school domain rules while preserving your existing configuration. Save ongoing work first; turning off the global proxy or switching TUN is not the default troubleshooting step.
-- **Can't connect to the campus network and want to troubleshoot it yourself?** First click **Run network diagnostics** (运行网络诊断) in the app. For the original error messages and what they mean, plan and proxy problems and how to report a fault to the university, see the [Shenzhen University campus network troubleshooting guide](深圳大学校园网连不上排查指南.md) (Chinese) and the [campus network guide](guide/network.md) (Chinese).
-- **Anything else?** Where your account and password are stored, moving to a new computer, a warning that the background engine is outdated and more are answered on the [FAQ page](guide/faq.md) (Chinese); if you can't find your answer, ask as described on the [feedback page](guide/feedback.md) (Chinese).
+See [development status](STATUS.md#s1-1) for individual implementation and acceptance records, and [STATUS section 76](STATUS.md) for this round of campus-module evidence.
 
 ## Privacy and security
 
-- **Personal records stay on this computer**: the garden save `workspace-v1.json` and course notes `notebook-v1.json` are separate, unencrypted files in your user directory's `.szunet` folder; export both when moving computers. Campus network credentials and school sessions saved by hand use the system secure store. School-window cookies and web storage live in a separate local browser profile and require explicit clearing; they are not part of a garden backup.
-- **Queries go to their respective school services**: notice keywords go to the selected public school search; filtering fetched titles stays local. Library searches need internet access. Electricity uses a separate anonymous connection and stores only its entry in `electricity.json`; room inputs and readings remain in the current view's memory and do not borrow teaching-system cookies.
-- **No telemetry or analytics**: to check for internet access and identify the access point ID, the program requests public connectivity-check addresses (such as Xiaomi's connect.rom.miui.com and Microsoft's www.msftconnecttest.com) without any account information; see the [data guide](guide/data-and-privacy.md#程序会联网做什么) (Chinese). It contacts GitHub only when you check for updates yourself. When you open official school or Feishu pages, those services handle your data.
-- **Campus network passwords are encrypted**: Windows uses DPAPI (it cannot be decrypted on another machine or under another user), macOS the Keychain and Linux Secret Service. Without a system secure store the app refuses to save and explains why, never writing a plain-text file. You can click **Delete saved credentials** (删除已保存凭据) under **Settings → Backups and privacy** at any time.
-- **Transactions follow the relevant page's instructions**: community-room bookings, course selection and payments happen on official pages. Sports venues also have a two-confirmation submission flow whose real booking acceptance is unverified; the app does not automatically grab slots. This round's notices, electricity, class-timetable and curriculum queries are read-only, with restricted sources rather than a general-purpose web proxy.
-- **The local service listens on this computer only**: it binds to `127.0.0.1`, rejects requests from other web pages, and its API also requires a random credential generated for each run. Other Windows users on the same computer cannot read your notes, saves or grades even if they find the port.
-- **Dormitory-area sign-in is plain text**: the school's Dr.COM gateway uses HTTP, which is how the school's protocol works today; the teaching-area SRun portal uses HTTPS and keeps certificate verification.
-- **Nothing that bypasses billing or shares your connection.** Please follow your university's network rules.
+- **Records stay on your computer.** Garden data, todos and course notes live under `.szunet` in your user directory and can be exported separately. Record files and exported backups are not encrypted; keep them somewhere safe.
+- **Saved credentials use system security.** Windows uses DPAPI, macOS uses Keychain, and the Linux campus-network CLI uses Secret Service. Saving is refused when secure storage is unavailable. School-window cookies stay in a separate local browser profile; closing the window does not clear them, but you can remove the saved login state.
+- **No telemetry or analytics.** Campus queries contact the relevant school services. Network checks contact public connectivity-test endpoints; manual update checks contact GitHub. Diagnostic reports can be previewed and copied, and are not uploaded automatically.
+- **Authentication protocols differ.** Teaching-zone Srun uses HTTPS; dormitory Dr.COM uses the school's existing HTTP protocol. The project does not offer billing bypasses or shared internet access.
 
-Details are in [Data, privacy and security](guide/data-and-privacy.md) (Chinese).
+Electricity queries do not reuse academic-service cookies. Room numbers and results stay in the current interface's memory. See [data, privacy and security](guide/data-and-privacy.md) for network activity, backups and deletion.
 
-## Command line szunet
+## FAQ
 
-For when you don't want a window, or want campus network sign-in in a script. Download the single file for your system from the assets of the newest release on the [release page](https://github.com/SzuDesktopTeam/szudesktop/releases): `szunet-windows-amd64.exe` on Windows, `szunet-darwin-arm64` (Apple silicon) or `szunet-darwin-amd64` (Intel) on macOS, and `szunet-linux-amd64` or `szunet-linux-arm64` on Linux.
+<details>
+<summary><b>Trouble opening or quitting, moving computers, or using a school service?</b></summary>
+
+Start with [installation and updates](guide/install.md), the [FAQ](guide/faq.md) or the [campus-network troubleshooting guide](深圳大学校园网连不上排查指南.md). Before moving computers, export the garden and todos and back up course notes separately. Neither backup transfers saved credentials or school sessions.
+
+Still stuck? [Send feedback](guide/feedback.md) with what you were trying to do and where it stopped. You can attach a report after previewing it under **Settings → About and updates → Feedback and suggestions** (设置 → 关于与更新 → 反馈与建议). Leave out passwords, cookies and personal grades. Feedback currently uses GitHub Issues and requires a GitHub account.
+
+</details>
+
+## Command-line szunet
+
+<details>
+<summary><b>For campus-network access and scripts on Windows, macOS or Linux</b></summary>
+
+Download the `szunet` binary for your system from [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases). Replace `szunet` below with the actual filename, usually prefixed with `./` on macOS / Linux:
 
 ```text
-szunet config set    # save the account first: interactive, the password is not echoed
-szunet login         # sign in with the saved account; detects the teaching or dorm area
-szunet status        # show the current zone and online state
-szunet diag          # run this first when you can't connect, then follow its conclusion
-szunet logout        # sign out
+szunet config set    # Save credentials interactively; password input is hidden
+szunet login         # Detect the zone and sign in
+szunet status        # Show the current zone and status
+szunet diag          # Diagnose connection problems
+szunet logout        # Sign out
 ```
 
-This tool is a third-party work, not affiliated with Shenzhen University. Don't use it alongside the official client, or they will sign each other out. Never put real credentials in shared scripts or logs. Replace `szunet` in the examples with the file you downloaded (such as `./szunet-darwin-arm64`); first-run steps on macOS / Linux, and all subcommands, flags and scripting usage, are in [Campus network and the szunet command line](guide/network.md) (Chinese).
+Do not authenticate with the official client at the same time, or put passwords in shared scripts. See the [command-line guide](guide/network.md) for first-run steps and all options.
 
-## Contributing
+</details>
 
-Issues and pull requests are welcome. The build environment, pre-commit checks, the release process and the project's ground rules are in [CONTRIBUTING.md](../CONTRIBUTING.md) (Chinese); development progress and open items are in [docs/STATUS.md](STATUS.md#s1-1) (Chinese). Report security issues as described in [SECURITY.md](../SECURITY.md) (Chinese), and do not post exploitable details in a public issue.
+## Help make it better
 
-## Changelog
+Issues, suggestions and pull requests are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for builds and checks, [CHANGELOG.md](../CHANGELOG.md) for changes, and [STATUS](STATUS.md#s1-1) for unfinished work. Report security issues privately following [SECURITY.md](../SECURITY.md).
 
-**Unreleased source updates** add school title/full-text notice search with pagination, separate dormitory electricity queries, class timetables and published curriculum details, plus official resource entries and repaired service navigation. Anonymous notice searches have been exercised against public school services; real-room electricity and real-account class/plan acceptance are still pending. Completion, lecture and borrowing records remain on official pages, and CNKI/Wanfang provide access links rather than built-in search. **These changes are not included in public beta0.9.9 packages.** See [STATUS section 76](STATUS.md) (Chinese).
+### Acknowledgements and licence
 
-The current public version, **beta0.9.9** (2026-10-23), adds anonymous library catalogue searches and sports venues, keeps school-window login on this computer, and provides a Windows portable executable. The preceding beta0.9.8 fixed campus network waiting and misleading states around proxies, routers and network changes, and revised typography and control states. The full version history is in [CHANGELOG.md](../CHANGELOG.md) (Chinese), and downloads are on [Releases](https://github.com/SzuDesktopTeam/szudesktop/releases). No new package was published for this source update.
+Project code uses the [MIT License](../LICENSE). Third-party components retain their own licences; full notices ship with the app in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-## Acknowledgements
+- [LoveSzu](https://github.com/teleostnacl/LoveSzu): factual reference for undergraduate timetable endpoints; independently implemented without copying its source.
+- [SZU CLI](https://github.com/AwesomeHou/szu-cli): endpoint and parsing reference/adaptation for class timetables, study programmes and other services; MIT, Copyright (c) 2026 SZU CLI contributors.
+- [tools4szu](https://github.com/MattDong123/tools4szu): used with author Matt's permission for interface research; reimplemented from endpoint facts. Its repository declares no open-source licence, and this project does not copy or redistribute its code.
+- [SZU-login](https://github.com/Sleepstars/SZU-login): source of the Srun xEncode derivative implementation; original copyright notices remain in [LICENSE](../LICENSE).
+- [Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font): TakWolf, SIL OFL 1.1; [Three.js](https://www.npmjs.com/package/three/v/0.180.0): MIT; [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81): Kenton Wang's toon-rendering modules, MIT; [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc): Gabriele Cirulli's movement and merging rules, MIT.
+- [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) and [FZU Helper](https://github.com/west2-online/fzuhelper-app): references for visual hierarchy and campus-service organisation. Electron and Chromium licences remain in the installation directory.
 
-- [teleostnacl/LoveSzu](https://github.com/teleostnacl/LoveSzu): reference for undergraduate personal timetable endpoint paths and fields; implemented independently from those facts without copying its source code.
-- [AwesomeHou/szu-cli](https://github.com/AwesomeHou/szu-cli): endpoint, field and parser reference for class timetables and published curricula; MIT, Copyright (c) 2026 SZU CLI contributors. Complete copyright and permission text ships in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) and is also retained in the adapted Go source.
-- [Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font): by TakWolf, SIL Open Font License 1.1; the notice ships with the package as `FONT-LICENSE-OFL.txt`.
-- [Sleepstars/SZU-login](https://github.com/Sleepstars/SZU-login): attribution for the SRun xEncode implementation is kept in [LICENSE](../LICENSE).
-- [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) and [FZU Helper](https://github.com/west2-online/fzuhelper-app): references for interface hierarchy and how campus services are organised.
-- [MattDong123/tools4szu](https://github.com/MattDong123/tools4szu): by Matt, used with the author's permission as research into the university's own system endpoints. No code was copied: the endpoint paths, dataset names and field names it documents were re-implemented in Go with explicit session-expiry detection. That repository declares no open-source licence, so this is an attribution of facts only and not a redistribution of its code.
-
-## Licence
-
-This project is released under the MIT licence; see [LICENSE](../LICENSE). Third-party components keep their own licences, which this project's MIT licence does not replace. Full notices are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) (Chinese):
-
-- Fusion Pixel Font: SIL Open Font License 1.1
-- [Three.js 0.180.0](https://www.npmjs.com/package/three/v/0.180.0): MIT, Copyright © 2010-2025 three.js authors
-- Toon-rendering modules adapted from [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81): MIT, Copyright (c) 2026 Kenton Wang
-- Move and merge rules adapted from [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc): MIT, Copyright (c) 2014 Gabriele Cirulli
-- Electron and Chromium (installer edition only): their licences stay in the install directory
-
-The installer puts the licence files for this project, the font, 2048, Three.js and Sakura Crossing in `resources/licenses/`; the portable ZIP keeps them in the extracted folder. The experimental VPN module's third-party provenance and licensing scope are still being verified, and default desktop builds do not include it. Names such as EasyConnect remain the property of their respective owners.
-
-Pingu and Skipper from *Madagascar* are fan pixel characters drawn by this project, and the rights to the characters belong to their respective owners. This project's MIT licence does not cover these characters and does not imply official authorisation or endorsement.
+Pingu and Skipper from *Madagascar* are fan pixel-art depictions drawn for this project. Character rights remain with their respective owners; this project's MIT licence does not cover those characters or imply official permission or endorsement. The experimental VPN module's third-party provenance and permissions remain under review, and it is excluded from default release builds.

@@ -133,7 +133,7 @@ body[data-home-skin] .campus-home,body[data-home-skin] .home-landscape { border-
 body[data-home-skin] .home-letter,body[data-home-skin] .campus-home.is-scenic .home-letter { background:var(--world-paper); }
 body[data-home-skin] .home-letter h1 { color:var(--world-ink); }
 body[data-home-skin] .home-focus { background:var(--world-soft); }
-body[data-home-skin] .home-shortcuts button { background:var(--world-paper); border-color:var(--world-line); }
+body[data-home-skin] .home-tool { background:var(--world-paper); border-color:var(--world-line); }
 
 @media(min-width:1221px) and (max-width:1290px) { body[data-home-skin] .mast,body[data-home-skin] .shell { margin-left:24px;margin-right:24px; } }
 @media(max-width:850px) {

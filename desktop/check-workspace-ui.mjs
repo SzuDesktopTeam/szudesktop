@@ -10,6 +10,7 @@ import {reservedStock,sellableStock} from './assets/garden/garden-loop.mjs';
 import {cropPurpose,readyOrders} from './assets/garden/garden-path.mjs';
 import {projectScene} from './assets/garden/garden-loop-ui.mjs';
 import {homeSkinPicker} from './assets/garden/home-skins.mjs';
+import {homeToolbox,homeToolResults} from './assets/garden/home-tools.mjs';
 import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
 import {readRoute,routeHash} from './assets/garden/routes.mjs';
@@ -134,6 +135,38 @@ await check('page repaints reattach the actual notebook editor with draft, selec
  assert.deepEqual([editor.selectionStart,editor.selectionEnd,editor.selectionDirection,editor.scrollTop],[3,9,'backward',67]);
  assert.equal(mounts.length,3);assert.ok(mounts.every(host=>host===noteHost));
  assert.equal(focusCalls.length,3);assert.ok(focusCalls.every(options=>options.preventScroll===true));
+});
+await check('a pet save keeps the active home search node and selection typed while saving',async()=>{
+ const state=createState(),nodes=new Map(),listeners={},body={dataset:{}};
+ let visibleSearch,release;
+ const input=value=>({id:'home-tool-search',value,isConnected:true,selectionStart:value.length,selectionEnd:value.length,selectionDirection:'none',
+  focus(){assert.ok(this.isConnected);context.document.activeElement=this;this.selectionStart=this.selectionEnd=this.value.length},
+  setSelectionRange(start,end,direction){this.selectionStart=start;this.selectionEnd=end;this.selectionDirection=direction},
+  replaceWith(original){this.isConnected=false;original.isConnected=true;visibleSearch=original},
+ });
+ const main={set innerHTML(html){
+  if(visibleSearch)visibleSearch.isConnected=false;
+  context.document.activeElement=body;
+  const value=/<input[^>]*id="home-tool-search"[^>]*value="([^"]*)"/.exec(html);
+  assert.ok(value,'the rendered home must contain its search input');visibleSearch=input(value[1]);
+ }};
+ const context=vm.createContext({state,revision:1,normalize,homeToolQuery:'',page:'home',studyTab:'notes',serviceTab:'spaces',pages:{home:'今日'},pageIcons:{},Date,
+  homeToolResults,sprite:()=>'',pageHTML:()=>homeToolbox({query:context.homeToolQuery}),paintCompanionDialog(){},clocks(){},mountGardenPlayers(){},focusKey,restoreFocus,refreshDraft,
+  api:()=>new Promise(resolve=>{release=resolve}),
+  document:{body,activeElement:body,querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(type,handler)=>{listeners[type]=handler},getElementById:id=>id==='main'?main:id==='home-tool-search'?visibleSearch:null},
+  $:selector=>selector==='#main'?main:nodes.get(selector)||nodes.set(selector,{}).get(selector),
+ });
+ vm.runInContext(section('function render(){','function pageHTML(')+section('function renderPetCare(','// 引导里')+
+  section("document.addEventListener('input'","document.addEventListener('change'"),bindCommit(context));
+ context.render();const original=visibleSearch;
+ const save=context.commit(structuredClone(state),undefined,()=>context.renderPetCare());
+ original.focus();original.value='查书馆';original.setSelectionRange(1,3,'backward');
+ listeners.input({target:original,isComposing:true});
+ release({revision:2});await save;
+ assert.equal(visibleSearch,original,'the pending save must reattach the search node that the user is editing');
+ assert.equal(context.document.activeElement,original);assert.equal(original.value,'查书馆');
+ assert.deepEqual([original.selectionStart,original.selectionEnd,original.selectionDirection],[1,3,'backward']);
+ assert.equal(context.homeToolQuery,'查书馆');
 });
 await check('home repaints and successful task saves keep the same scene and canvas',async()=>{
  const f=sceneFixture();f.render();await sceneTick();const host=f.host(),canvas=host.canvas;
@@ -785,7 +818,7 @@ await check('a degraded workspace never lets the puzzle write over the unreadabl
 // O3：「看过引导」不等于「回访」。首访当天（或第一次重启前）关掉引导后，首页仍是首访标题、展开的伙伴栏，主按钮直接开始 5 分钟专注。
 function homeFixture(state,{firstSession=false}={}){
  const context=vm.createContext({state,firstSession,net:null,settle,activePet,petSprite,PETS,PET_SPRITES,level,esc,homeSkinPicker,homeSkinDetails,projectScene,campusSceneLinks,cropIcon,gardenNextStep,networkSummaryHTML,isReturningVisit,
-  notebookUI:{summaryHTML:()=>''},todoHTML:()=>'',Date});
+  homeToolbox,homeToolQuery:'',notebookUI:{summaryHTML:()=>''},todoHTML:()=>'',Date});
  vm.runInContext(section('const pageIcons=','const pageTips=')+section('const sprite=','let petPlayer=')+section('const btn=','function paintGardenPath(')+section('function companionRoster(','function renderStudyProgress(')+section('function home(){','function network(){'),context);
  const html=context.home(),letter=/<div class="home-letter">[\s\S]*?<p class="home-local">/.exec(html)?.[0]||'';
  return {html,title:/<h1 id="home-title">([\s\S]*?)<\/h1>/.exec(html)?.[1]||'',primary:/<div class="actions">([\s\S]*?)<\/div>/.exec(letter)?.[1]||'',companions:/<details class="home-companions" id="home-companions" ?(open)?>/.exec(html)};

@@ -12,7 +12,7 @@ export function createElectricityUI({api}){
  const quantity=value=>typeof value==='number'&&Number.isFinite(value)?`${esc(value)} kWh`:'未提供';
  function readings(){
   if(!result)return '';
-  if(!result.recorded_at)return '<p role="status" class="notice">这段日期内没有记录，未把它当成零电量。可以调整日期后再查。</p>';
+  if(!result.recorded_at)return '<section aria-label="电量查询结果"><p role="status" class="notice">这段日期内没有记录，未把它当成零电量。可以调整日期后再查。</p></section>';
   return `<section aria-label="电量查询结果"><h3>剩余电量：${quantity(result.remaining_kwh)}</h3><p>学校记录时间：${esc(result.recorded_at)}</p><p>累计用电：${quantity(result.total_used_kwh)} · 累计购电：${quantity(result.total_purchased_kwh)}</p><p class="muted">累计值来自电表历史，不能当作所选日期内的用电量。学校更新可能有延迟。</p></section>`;
  }
  function content(){

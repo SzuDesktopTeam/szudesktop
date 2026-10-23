@@ -31,7 +31,7 @@ export function campusRoomHeader({page,title,description='',skin='pixel',right='
 export function campusSceneLinks({sprite=()=>''}={}){
  return `<div class="campus-scene-links" role="group" aria-label="庭院里的去处">
   <button type="button" class="campus-scene-link scene-link-study" data-action="navigate" data-page="study" data-tab="notes"><span class="scene-link-icon">${sprite('i-book')}</span><span><strong>去书屋写笔记</strong><small>课程 · 笔记 · 共学</small></span><span class="scene-link-arrow" aria-hidden="true">↗</span></button>
-  <button type="button" class="campus-scene-link scene-link-services" data-action="navigate" data-page="services"><span class="scene-link-icon">${sprite('i-sign')}</span><span><strong>看看告示板</strong><small>学校公告与空间</small></span><span class="scene-link-arrow" aria-hidden="true">↗</span></button>
+  <button type="button" class="campus-scene-link scene-link-services" data-action="navigate" data-page="services" data-tab="notices"><span class="scene-link-icon">${sprite('i-sign')}</span><span><strong>看看告示板</strong><small>学校公告与空间</small></span><span class="scene-link-arrow" aria-hidden="true">↗</span></button>
   <button type="button" class="campus-scene-link scene-link-garden" data-action="navigate" data-page="garden" data-tab="farm"><span class="scene-link-icon">${sprite('i-water')}</span><span><strong>去后院转转</strong><small>伙伴和小菜畦</small></span><span class="scene-link-arrow" aria-hidden="true">↗</span></button>
  </div>`;
 }

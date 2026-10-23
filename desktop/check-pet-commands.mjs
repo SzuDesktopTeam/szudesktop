@@ -216,14 +216,14 @@ await check('pet selection refreshes the name field instead of keeping the previ
  const f=fixture();let replaced=false;
  const oldForm={id:'pet-name-form'},newForm={replaceWith(){replaced=true}};
  f.context.document.querySelectorAll=selector=>selector==='#main form[id]'?[oldForm]:f.controls;
- f.context.document.getElementById=()=>newForm;
+ f.context.document.getElementById=id=>id==='pet-name-form'?newForm:null;
  await f.command('switchPet:1');assert.equal(f.results[0].ok,true);assert.equal(replaced,false);
 });
 await check('a care conflict that changes companion cannot attach the previous name draft',async()=>{
  const f=fixture(),latest=createState();latest.game.active=2;let restored=false;
  f.context.page='garden';
  f.context.document.querySelectorAll=selector=>selector==='#main form[id]'?[{id:'pet-name-form'}]:f.controls;
- f.context.document.getElementById=()=>({replaceWith(){restored=true}});
+ f.context.document.getElementById=id=>id==='pet-name-form'?{replaceWith(){restored=true}}:null;
  f.context.api=async(_path,body)=>{if(body)throw Object.assign(Error('conflict'),{code:409});return {revision:5,data:latest}};
  await f.command('feed');
  assert.equal(f.context.state.game.active,2);assert.equal(restored,false);assert.equal(f.results[0].ok,false);
@@ -256,7 +256,7 @@ await check('care keeps the original form node, latest draft, focus, and selecti
   const originalForm={id:'todo-form',input,secret};let currentForm=originalForm;
   f.context.document.activeElement=input;
   f.context.document.querySelectorAll=selector=>selector==='#main form[id]'?[currentForm]:f.controls;
-  f.context.document.getElementById=()=>currentForm;
+  f.context.document.getElementById=id=>id==='todo-form'?currentForm:null;
   f.context.render=()=>{
    input.isConnected=false;f.context.document.activeElement=null;
    currentForm={replaceWith(node){currentForm=node;input.isConnected=true}};
