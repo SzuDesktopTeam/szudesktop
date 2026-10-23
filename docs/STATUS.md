@@ -3780,6 +3780,6 @@ README 中英两版的下载按钮、DMG 直链、「当前版本」一行（含
 - [x] 真实页面检查：首页、笔记、图书馆、庭院；本机临时独立档案，示例笔记明确标注，OPAC 为匿名真实书目。四张截图写入 `docs/readme-{home,notes,campus,garden}.png`。
 - [x] 中英 README 改为产品介绍、下载、上手和四模块范围；安装指南区分 Electron 便携版和浏览器轻量版。
 - [x] 本地验证与独立审查：`go test ./... -count=1`、`go vet ./...`、模块链接与全部 62 项 JS／6 项 Python 检查通过；独立审查未发现本批发布阻断问题。隔离真实 Windows GUI 引擎的 19 项新模块调用检查通过。首页在 320、420、600、901 像素宽无横向溢出，快捷入口和告示板跳转正确。最终重编译引擎中，图书馆 requestSubmit 查询「计算机」和 Enter 查询「数学」各返回 20 条真实书目，按钮正常恢复。
-- [ ] GitHub 交付：PR 必需检查后合并；同一 main 提交的发布前检查通过后打 beta0.9.10 标签，由 CI 发布安装包并核对附件。交付状态以本版发布页和 GitHub 检查记录为准。
+- **GitHub 交付记录**：[PR #53](https://github.com/SzuDesktopTeam/szudesktop/pull/53) 汇总本批源码、截图与 CI；[beta0.9.10 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.10) 提供实际安装包与校验文件。发布顺序为 PR 必需检查后合并、同一 main 提交通过发布前检查、再打标签由 CI 发布；实际合并和附件状态以这两处记录为准。
 
 仍然保留第 76 节的验收边界：真实房间电量、全校课表与培养方案、学校预约全流程没有因这次界面和发布检查自动通过；CAMP01–CAMP04、R01–R07 继续按原任务记录处理。宿舍电量查询的是 kWh；学业完成、讲座和个人借阅仍为官方入口。
