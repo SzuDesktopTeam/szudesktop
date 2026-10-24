@@ -2,38 +2,155 @@
 
 # szuDesktop · Lychee Garden
 
-**A little piece of Shenzhen University, on your desktop.**
+**A campus toolkit for Shenzhen University students, with course notes, a focus timer and pixel desktop companions.**
 
-Catch up on campus notices, take class notes, then come back from a focus session to harvest a radish.<br>
-A free, open-source desktop app for SZU students, with a pixel companion to keep you company.
+Find college notices and library books, then turn your class notes into a revision plan.<br>
+Earn garden coins through focused study and use them to grow crops, care for a companion and build a garden by the lake.
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-[简体中文](../README.md) · **English**
+**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-Setup-0.9.10.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
-**[Download](#download)**　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)　·　[User guide](guide/README.md)　·　[Feedback](guide/feedback.md)
-
-![The szuDesktop home screen, with a campus scene, today's tasks and study shortcuts](readme-home.png)
-
-<sub>Actual app interface. A student-made, unofficial project with no affiliation with or endorsement by Shenzhen University.</sub>
+[简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Report a problem](guide/feedback.md)
 
 </div>
 
-## A place for classes, and the time between them
+## What can I do with it?
 
-- **Start with a note.** Open a class record from the home screen, organise pages by course, and turn a sentence you want to revisit into a todo.
-- **Keep campus errands together.** Browse college notices, library locations, the school calendar and venue information. Sign in on the school's own page when a service needs your account.
-- **Give yourself something to come back to.** Choose Libao (荔宝), Chestnut (栗栗) or Xiaobai (小白), earn garden coins through focus sessions, then spend a break growing crops, fulfilling companion requests or playing 2048.
+- **Find school notices.** Choose your college, search by keyword, and read articles and attachments without browsing each college website separately.
+- **Find a library book.** Search by title or author, then check its location, call number and availability before heading to the library.
+- **Organise a course.** Take notes by course and search their full text. Select a sentence you need to revisit, turn it into a todo and start a focus session.
+- **Check academic and campus information.** View the official calendar and import a grade table to calculate GPA. Timetables, venue schedules and electricity queries are also available to try, within the testing limits below.
+- **Connect to the campus network.** Sign in on the teaching-zone or dormitory network. When it fails, check internet access, campus authentication and portal reachability separately.
+- **Keep a companion on your desktop.** Open its menu to pat it, feed it or choose another character. Focus rewards support planting and building in the garden.
 
-The garden, todos, focus timer and course notes **work offline without a school account**. Campus queries need an internet connection, and personal school services have testing limits; see [Known limitations](#known-limitations).
+**Free and open source, with no ads or purchases.** Notes, todos, focus and the garden work offline without a school account. Notices and library searches need an internet connection; personal school services require your own permissions, and some are still being tested. This is a student-made project with no affiliation with or endorsement by Shenzhen University.
 
-The app, video and linked user guides are currently in Chinese. This English README includes Chinese interface labels where you need them.
+**The app interface, video and linked user guides are currently in Chinese.** This README includes the Chinese labels for key actions.
+
+![Actual home screen, with notes, focus and six campus-tool shortcuts on one page](readme-home.png)
+
+*Search the home screen for “查书” (library), “公告” (notices) or “GPA” to find a tool, or continue your last note. This is the actual interface in the current version.*
+
+[School notices](#school-notices-find-updates-from-your-college) · [Timetables and grades](#academic-tools-timetables-calendars-study-programmes-and-gpa) · [Library](#library-find-a-book-and-where-to-pick-it-up) · [Spaces and electricity](#campus-life-spaces-sports-and-dorm-electricity) · [Course notes](#course-notes-from-class-records-to-revision-plans) · [Companions and garden](#desktop-companions-and-the-garden)
+
+## School notices: find updates from your college
+
+**Looking for a scholarship, course-registration, thesis-defence or lecture notice? Choose a source, search for a keyword, then open the article and attachments.**
+
+- **Browse by college.** Read notices from 17 colleges inside the app, plus Academic Affairs and the Graduate School. Listings show the title, date and source.
+- **Search older notices.** Eighteen sources use the school's title or full-text search, with pagination. Results identify whether the search covers a notice section or the unit's whole website.
+- **Read the details.** Expand an article and open its attachments. The original school page remains available for checking.
+
+For example, select your college and search for “奖学金” (scholarship) to find application requirements and attachments. Materials Science currently filters only the titles already loaded; colleges without an integration link to their official websites. [Notices and campus-services guide →](guide/campus.md)
+
+## Academic tools: timetables, calendars, study programmes and GPA
+
+**Ready to use: check the teaching week, and turn your grade table into credit and GPA statistics.**
+
+- **Official calendar.** Read the school calendar to see the semester and teaching week. If an update fails, the previous calendar stays available. Check special arrangements against school notices, or adjust the week manually.
+- **Grade-table import.** Paste a table from Excel or the school system, or import CSV / TSV; preview it before saving. Filter by semester and undergraduate/postgraduate level, choose whether to include repeated or exempted courses, and calculate a credit-weighted GPA. Undergraduate grades support letter-grade conversion, with official grade points taking precedence; postgraduate calculations use the official grade points in the table.
+
+**The following online queries have been implemented but still need testing with real school accounts:**
+
+| What you want to check | How the app is designed to show it |
+| :-- | :-- |
+| My timetable | Choose undergraduate or postgraduate, sign in through the school window, then manually load course arrangements, times and locations |
+| Online grades | Read the grades returned by the school; keep them separate from local imports, without automatically adding them to GPA calculations |
+| Class timetables | Search by semester, class, year, college or major, then view scheduled classes, timetable changes, practical classes and unscheduled courses |
+| Study programmes | Search published programmes and expand module requirements and course details; these requirements are not your earned credits |
+
+The Windows installer, portable EXE and Mac app open the school's own sign-in page. Sign in there, then return to the app to load the data; **you do not need to copy cookies from developer tools**. The school controls permissions for each service separately. Degree progress and Innovation Leadership Lectures currently open the official pages. [Timetables, grades and sign-in steps →](guide/campus.md)
+
+## Library: find a book and where to pick it up
+
+**Check where a book is and whether it is available before you leave for the library. No sign-in required.**
+
+Enter a title, author or subject → choose a catalogue record → expand **View holdings** (查看馆藏). Each copy shows its **location, call number and availability**. Search results support pagination, and the original school catalogue page remains available. The library's records determine actual borrowing availability.
+
+![Actual library results, with a record expanded to show locations, call numbers and availability](readme-campus.png)
+
+*The screenshot shows records and holdings returned by a real query. Use the location and call number to find the book.*
+
+Personal loans, CNKI and Wanfang also have shortcuts, but these open school or database pages. There is no in-app loan sync, renewal or paper search. Database access still depends on your school's authorisation. [Library guide →](guide/campus.md)
+
+## Campus life: spaces, sports and dorm electricity
+
+**Planning a study session, meeting friends for sports, or checking how much electricity is left in your dorm? Start here.**
+
+- **Study spaces.** Choose a space and date to see half-hour availability and usage rules for facilities such as quiet booths. Open the official booking page when you are ready to book; the Windows installer, portable EXE and Mac app open it in a school window. Viewing an available slot does not reserve it.
+- **Sports venues.** Query activities, venues and available times. The app includes a **Review → Confirm submission** flow, but **submission has not yet been validated with a real booking**. Check the result on the official page.
+- **Study reminders.** After booking through the school, manually enter the location and time, then export a calendar file and import it into your calendar. The calendar can remind you 15 minutes before the session starts.
+- **Dorm electricity · testing.** First configure the school's query endpoint locally. On a network that can reach the internal service directly, choose the campus and building, then enter the room number and date to query remaining, used and purchased electricity. Values are in **kWh**, not currency; the app does not top up electricity. Real-room readings remain unverified.
+- **College piano rooms · testing.** If you have access to that system, you can try loading the room list and your bookings. In-app booking, cancellation and door unlocking are not available.
+
+Each service determines its own sign-in, network and access requirements. The app does not automatically compete for booking slots. [Spaces, electricity and reminders guide →](guide/campus.md)
+
+## Course notes: from class records to revision plans
+
+**Keep each course's notes together. Write during class, then turn anything you need to revisit into a todo.**
+
+![Actual notes interface, with courses on the left, an example note in the centre and its outline on the right](readme-notes.png)
+
+*Example: create a page for Linear Algebra, use the outline to find “Eigenvalues and eigenvectors”, then add a revision task. The course and note shown are demonstration content.*
+
+1. **Write.** Create a course or topic and start from a class, reading or research-meeting template. Write Markdown, read the formatted page and navigate its outline in one window.
+2. **Find it again.** Search titles and body text, or continue the most recent page from the home screen. Notes save automatically on your computer; recover deleted pages from the recycle bin, import Markdown / TXT, export individual pages or back up the whole notebook.
+3. **Follow through.** Turn a selected sentence into a dated todo. Start a linked focus session for 5, 25 or 45 minutes, or choose your own duration. Mark the task complete yourself and review the last seven days of focus records.
+
+**Want to write with classmates?** Each course can link to a Feishu Docx or Wiki document for collaborative editing on Feishu's own page. After installing, configuring and authorising `lark-cli` yourself, you can also import a read-only local copy. This integration is still being tested, provides no two-way sync and does not require sending your local notes to the developer.
+
+Notes are currently text-based, with **no AI writing, slide/PDF parsing or audio transcription**. [Study features and backup guide →](guide/study.md)
+
+## Desktop companions and the garden
+
+**Close the main window and your companion can stay in a corner of your desktop.** Click it to open a menu for chatting, patting, feeding, playing or resting. Drag it to a new spot, scroll to resize it, hide it, keep it on top or choose another companion. The desktop and garden share growth records; each character keeps its own name and growth.
+
+| Original companion | Personality | An action to look for |
+| :-- | :-- | :-- |
+| **Libao (荔宝)** | Cheerful, eager to help and a little clumsy | Holds up a small sign to cheer you on |
+| **Chestnut (栗栗)** | Takes guarding a cardboard box very seriously, oblivious to its own peculiar looks | Inspects the box, then solemnly sits inside |
+| **Xiaobai (小白)** | A quiet egret from Wenshan Lake who notices small changes | Pauses to preen its feathers |
+
+Companions respond to pats, focus sessions, planting, harvesting and building with their own animations and lines. New saves include five companions; the full roster and fan-character notes are in the [companion guide](guide/garden.md). The Windows installer, portable EXE and Mac preview include a separate desktop companion; the lightweight browser edition has companions only inside its main window.
+
+![Actual garden interface, with the current companion beside the lakeside farm](readme-garden.png)
+
+*The garden suggests a next step based on your progress: harvest a crop, fulfil a companion request or prepare the next building project.*
+
+### Focus, farming and 2048 contribute to the same garden
+
+**Finish a focus session → claim coins and growth → buy seeds and plant → use harvests for requests and building → collect decorations and keepsakes.**
+
+- **Focus earns rewards.** Each completed and claimed minute gives 1 garden coin and 1 growth point. Completing todos can also help your companion grow.
+- **Crops keep growing.** Plant radishes, strawberries, blueberries and lychees. Watering shortens the wait, and crops continue growing while the app is closed. Feed the harvest to companions, fulfil requests, sell it or save it for building.
+- **See what you have built.** Use harvests and coins to add a lakeside picnic corner, seedling shelves and a lamp-lit path to the garden scene. Visits and requests can also leave keepsakes.
+- **2048 supplies seeds.** Merge tiles depicting seeds, crops and harvest baskets. Reach a tile of 128 or higher in a game that day to claim one seed supply, prioritising crops missing from requests and the next building project. The game also saves your board, offers a one-move undo and awards milestone stickers.
+- **Make a postcard.** Export a PNG with your current companion, campus background and garden progress, and decide for yourself whether to share it.
+
+There is no daily streak requirement, no purchases, no leaderboard and no real-time competition. You can build the garden just through focusing and farming. [Garden gameplay and companion controls →](guide/garden.md)
+
+### Four campus scenes to study in
+
+Alongside the default **Pixel Courtyard**, choose **Lakeside Daylight, After-rain Bookshop or Blue-hour Terrace**. The three additional environments use actual 3D scenes with toon rendering. Changing the view does not reset your notes, companions or farm.
+
+![After-rain Bookshop scene, with shelving, a bicycle, a bench and tree shadows](readme-scene-bookshop.jpg)
+
+*The After-rain Bookshop environment inside the app. It is a campus-inspired scene, not a measured reconstruction of an SZU building.*
+
+## Campus network: connect and diagnose
+
+Sign in and out of the teaching-zone Srun and dormitory Dr.COM networks, with manual zone selection if detection fails. Optional startup authentication runs at most once and can be turned off.
+
+When a connection fails, check **whether the internet is reachable, campus authentication is confirmed and the sign-in portal is accessible**, then follow the diagnostic clues about your zone, protocol and proxy. Being able to open a website does not necessarily mean campus authentication succeeded.
+
+Authentication through routers, proxies and VPNs still needs further on-site validation; the app cannot promise to fix every network setup automatically. Campus-network authentication and school-service sign-in are separate, and opening a WebVPN page inside the app does not provide a system-wide VPN. [Campus-network connection and troubleshooting guide →](guide/network.md)
 
 ## Download
 
 **Windows 10 / 11 (64-bit) and macOS 13 or later; no mobile app.** macOS is a preview release. Linux has the campus-network command-line tool.
 
-**beta0.9.10 · Campus tools and a more useful home.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.10). This is a prerelease; the verified scope of school services is described below.
+**beta0.9.10 · Campus tools and home-screen improvements.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.10). This is a pre-release; the testing limits for personal school services are listed below.
 
 | Your computer | Choose this | To open it |
 | :-- | :-- | :-- |
@@ -42,12 +159,12 @@ The app, video and linked user guides are currently in Chinese. This English REA
 | **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-arm64.dmg) | Open it and drag the app into Applications |
 | **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-x64.dmg) | Open it and drag the app into Applications |
 
-Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the older browser-based portable edition and the command-line tool, see the [installation guide](guide/install.md).
+Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
 
 <details>
 <summary><b>Blocked on first launch? How to open and update the app</b></summary>
 
-The packages are not code-signed, and the Mac app is not notarised by Apple, so your system may block the first launch.
+The Windows packages are not code-signed, and the Mac app is not notarised by Apple, so your system may block the first launch.
 
 - **Windows:** after confirming the file came from this repository's release page, choose **More info → Run anyway** in SmartScreen. Browser download warnings are covered in the [installation guide](guide/install.md).
 - **Mac:** try opening the app once, then choose **Open Anyway** under **System Settings → Privacy & Security**. On macOS 13 / 14, you can also Control-click the app in Applications and choose **Open**.
@@ -56,62 +173,26 @@ The packages are not code-signed, and the Mac app is not notarised by Apple, so 
 
 </details>
 
-## Getting started
+## Start with something you need today
 
-1. **Pick a companion.** In the welcome guide, choose **Meet my companion →** (去认识我的伙伴 →). Switch whenever you like; each companion keeps its own name and growth.
-2. **Start your first class page.** Choose **New class record** (新开课堂记录) on the home screen. Next time, choose **Continue writing →** (继续写笔记 →). Notes save automatically on your computer.
-3. **Focus for five minutes.** Choose **Start 5 minutes** (开始 5 分钟), then claim 5 garden coins and 5 growth points when the session ends. Your first radish takes about one minute to ripen; collect it under **Lychee Garden → My farm** (荔枝庭院 → 我的农田).
+| What you want to do first | Where to start |
+| :-- | :-- |
+| **Find a book or a notice** | Search the home screen for “查书” (library) or “公告” (notices), then enter your keyword. No school account needed |
+| **Take notes for this class** | Choose **New class record** (新开课堂记录), create a course and write a page. Continue it from the home screen next time |
+| **Study with a companion** | Choose a companion, start a five-minute focus session, claim the rewards and visit your first radish in the garden |
 
-Sign in when you need a campus service. **Campus-network authentication and school-service sign-in are separate**, and access to one service does not grant access to another. See the [getting-started guide](guide/getting-started.md) for the full walkthrough.
+When you need timetables, grades or bookings, follow the relevant page's steps to sign in with your own school account. [Full getting-started guide →](guide/getting-started.md)
 
-## Features
+## What to know before using it
 
-### A desk for your courses
+This is a pre-release project. **You can start with notices, library searches, local notes, todos, focus and the garden. Personal school services are still being validated individually.**
 
-![Actual course-notes interface, with a course bookshelf, example note and page outline](readme-notes.png)
+- **Further real-account testing is needed:** personal timetables and online grades, class timetables and study programmes, real-room electricity readings, sports-booking submission, college piano rooms and authorised Feishu import. A working entry point or interface does not mean a service has passed full acceptance testing.
+- **Features that open official pages:** degree progress, lecture records, personal loans, CNKI and Wanfang. Community-space bookings also happen on school pages. There is no automatic course enrolment, slot grabbing or full-text paper download.
+- **Local data does not sync across devices.** Back up the garden and todos separately from course notes. Feishu import is read-only. Notes do not support image attachments or mathematical typesetting.
+- **Platform limits:** Mac is a preview with outstanding physical-device checks. There is no mobile app, and Linux only has the campus-network CLI. The experimental VPN module is excluded from default releases.
 
-Give each course its own shelf. Start from a template, write Markdown, search your notes and navigate by the page outline. Turn a sentence into a todo for your next revision session.
-
-Notes have a recycle bin and import/export. Todos can be dated, edited and archived. Focus sessions can run for 5, 25 or 45 minutes, or a custom duration; every completed and claimed minute earns 1 garden coin and 1 growth point. Feishu course documents can be imported with permission as read-only local copies; there is no two-way sync. [Study guide →](guide/study.md)
-
-### Four kinds of campus errands, in one place
-
-![Actual campus-services interface, showing the library catalogue](readme-campus.png)
-
-| Area | What you can do | Scope |
-| :-- | :-- | :-- |
-| **School notices** | Browse by college, expand articles and attachments, search titles or full text | In-app reading for 17 colleges, plus Academic Affairs and the Graduate School; 18 sources use official search and pagination. Materials Science filters only loaded titles; other colleges link to their sites |
-| **Academic studies** | Check the official calendar and personal timetable; query class timetables and published study programmes; import grades to calculate GPA locally | Personal services require your own permissions. Online grades do not automatically enter local GPA calculations; class timetables and study programmes still need real-account acceptance testing |
-| **Campus life** | View sports venues and times, check study-space availability and dorm electricity, export study reminders | Internal services need the appropriate network. Electricity needs a locally configured endpoint and reports kWh, not a money balance; real-room readings and sports-booking submission remain unverified |
-| **Library** | Search by title, author or subject; expand locations, call numbers and availability | Catalogue queries need no sign-in. Personal loans, CNKI and Wanfang open official school entry points |
-
-Queries show their source and scope, with the original page available when reading fails. Degree progress, Innovation Leadership Lectures and personal loans are not synced locally. A study programme's requirements are not your earned credits, and a database link does not establish institutional access. [Campus services and sign-in guide →](guide/campus.md)
-
-### A little time by the lake
-
-![Actual Lychee Garden interface, with a companion and lakeside farm](readme-garden.png)
-
-Libao is cheerful, Chestnut guards a cardboard box, and Xiaobai comes from Wenshan Lake. Click your companion, pat its head or offer a snack. The Windows installer and macOS app can also keep it in a corner of your desktop; drag it around or scroll to resize it.
-
-Grow radishes, strawberries, blueberries and lychees; crops keep growing while the app is closed. Use the harvest for companion requests and garden building, or play 2048 at the companion table during a break. There are no purchases, leaderboards or online check-in requirements.
-
-Change the view between Pixel Courtyard, Lakeside Daylight, After-rain Bookshop and Blue-hour Terrace. [Garden and companions guide →](guide/garden.md)
-
-### When the campus network will not connect
-
-The campus-network page separates internet connectivity, campus authentication and portal reachability, with clues about your network zone, protocol and proxy. An unknown state is not reported as online; internet access alone does not prove campus authentication succeeded.
-
-It supports sign-in and sign-out for the teaching-zone Srun and dormitory Dr.COM services. If detection fails, enter the zone and access-point ID manually. Optional startup authentication runs at most once, with no periodic reconnection. For problems involving a proxy, router or VPN, run diagnostics first and follow the [network guide](guide/network.md).
-
-## Known limitations
-
-This is a pre-release project. **You can start with the local features; check personal school information against the school's own pages.**
-
-- **On-site acceptance is incomplete.** Personal timetables, grades, class timetables and study programmes still need real-account validation, as do real-room electricity readings, sports-booking submission and some campus-network scenarios. Some macOS behaviour still needs physical-device testing.
-- **Bookings and school records have limits.** Community-space bookings happen on official school pages. Sports submission is still being tested, with no automatic slot grabbing. Degree progress, lectures and personal loans currently provide official links only, without local sync, renewals or automatic course enrolment.
-- **No cross-device sync.** Back up the garden and notes separately; Feishu import is read-only. There is no Linux desktop or mobile app. The experimental VPN module is excluded from default releases.
-
-See [development status](STATUS.md#s1-1) for individual implementation and acceptance records, and [STATUS section 76](STATUS.md) for this round of campus-module evidence.
+[Progress and remaining validation](STATUS.md#s1-1) · [Campus-module implementation record](STATUS.md#s76)
 
 ## Privacy and security
 
