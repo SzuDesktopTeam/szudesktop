@@ -9,7 +9,7 @@ Earn garden coins through focused study and use them to grow crops, care for a c
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-Setup-0.9.10.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.11/szuDesktop-Setup-0.9.11.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 [简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Report a problem](guide/feedback.md)
 
@@ -150,14 +150,14 @@ Authentication through routers, proxies and VPNs still needs further on-site val
 
 **Windows 10 / 11 (64-bit) and macOS 13 or later; no mobile app.** macOS is a preview release. Linux has the campus-network command-line tool.
 
-**beta0.9.10 · Campus tools and home-screen improvements.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.10). This is a pre-release; the testing limits for personal school services are listed below.
+**beta0.9.11 · Sports selection and confirmation fixes.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.11). This is a pre-release; the testing limits for personal school services are listed below.
 
 | Your computer | Choose this | To open it |
 | :-- | :-- | :-- |
-| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-Setup-0.9.10.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
-| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-portable.exe) | Run the file; shares local records with the installer edition |
-| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-arm64.dmg) | Open it and drag the app into Applications |
-| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.10/szuDesktop-0.9.10-mac-x64.dmg) | Open it and drag the app into Applications |
+| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.11/szuDesktop-Setup-0.9.11.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
+| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.11/szuDesktop-0.9.11-portable.exe) | Run the file; shares local records with the installer edition |
+| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.11/szuDesktop-0.9.11-mac-arm64.dmg) | Open it and drag the app into Applications |
+| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.11/szuDesktop-0.9.11-mac-x64.dmg) | Open it and drag the app into Applications |
 
 Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
 
