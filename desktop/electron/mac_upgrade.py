@@ -12,16 +12,16 @@ import threading
 import time
 from urllib.parse import urlsplit
 
-BASELINE_VERSION = "beta0.9.9"
+BASELINE_VERSION = "beta0.9.10"
 BASELINE_ELECTRON = "44.5.1"
 BASELINE_DIGESTS = {
-    "arm64": "665cda0d9f9e57385b476c0c31cb4597606607e430ed4d78aa796996f5a503a6",
-    "x64": "2bd0b63d0b972a296b8b24397c7afffb8d121b7e01eb7a913e0d42e15c8c20b5",
+    "arm64": "f99c882e3aa3e60e4effe8bb4a59d9b7be779e926c5c939ebd0140e153c8030c",
+    "x64": "a56f33c892918afc383107025e705a6ed4214c0fe608ad319d07eb206db3d3e0",
 }
 
 
 def baseline_name(arch):
-    return "szuDesktop-0.9.9-mac-%s.dmg" % arch
+    return "szuDesktop-0.9.10-mac-%s.dmg" % arch
 
 
 def cache_key():
