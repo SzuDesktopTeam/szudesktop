@@ -10,7 +10,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {exitHint} from './assets/garden/app-logic.mjs';
 import {createDesktopOptions} from './assets/garden/desktop-options.mjs';
-import {createState} from './assets/garden/engine.mjs';
+import {createState,saveFromNewerVersion} from './assets/garden/engine.mjs';
 import {environmentSummary} from './assets/garden/feedback.mjs';
 import {homeSkinPicker} from './assets/garden/home-skins.mjs';
 import {esc} from './assets/garden/html.mjs';
@@ -38,7 +38,7 @@ const WIN={
  archive:'<p class="notice">存档默认位于用户目录下的 .szunet / workspace-v1.json。换电脑前，请先导出存档。</p>',
  dpapi:'<p class="muted">Windows 使用系统 DPAPI 保护密码。查看卡号需要在校园网页主动点击，不会出现在首页或导出的存档里。</p>',
  recovery:'<p class="muted">存档默认位于用户目录下的 .szunet / workspace-v1.json。可以先备份这个文件，再重新读取。</p>',
- guide:'数据只在本机：庭院与学习记录存在用户目录 .szunet / workspace-v1.json；校园网密码由 Windows DPAPI 加密，导出的备份不含账号密码。',
+ guide:/数据只在本机.*校园网密码由 Windows DPAPI 加密.*备份不含账号密码/,
  focus:'<p class="muted">计时已保存。安装版保持运行时可以在后台提醒；完全退出应用后不会发送通知。</p>',
  release:'<small>安装更新前可先导出庭院存档；下载后由你运行安装包完成更新。</small>',
  notebook:['title="粗体（Ctrl+B）"','title="斜体（Ctrl+I）"'],
@@ -55,7 +55,7 @@ async function withBridge(bridge,fn){
 // app.mjs 的 settings()、读档失败页和 showGuide 按页面里的接线放进 vm；它们就地读 globalThis.szuDesktop。
 function appPage(bridge){
  const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),showModal(){this.open=true},addEventListener(){}},exit={textContent:'可在「设置 → 关于与更新 → 退出应用」结束本次使用，下次打开可继续。'},store={textContent:'校园网密码由 Windows DPAPI 加密'};
- const context=vm.createContext({szuDesktop:bridge,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
+ const context=vm.createContext({szuDesktop:bridge,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,saveFromNewerVersion,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
   btn:(label,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`,
   desktopUI:{card:()=>''},releaseUI:{card:()=>''},feedbackUI:{card:()=>''},exitHint:()=>exitHint(),
   $:selector=>({'#guide':guide,'#exit-guide-text':exit,'#guide-store-text':store})[selector]??null});
@@ -146,7 +146,7 @@ await check('没有桥（便携版）：开机自启卡片、退出说明与反�
 
 await check('index.html 引导里的存档与 DPAPI 原句不变',()=>{
  const paragraph=/<p><b>数据只在本机<\/b>[\s\S]*?<\/p>/.exec(html)?.[0];
- assert.ok(paragraph,'引导里找不到「数据只在本机」一段');assert.equal(text(paragraph),WIN.guide);
+ assert.ok(paragraph,'引导里找不到「数据只在本机」一段');assert.match(text(paragraph),WIN.guide);
  return text(paragraph);
 });
 

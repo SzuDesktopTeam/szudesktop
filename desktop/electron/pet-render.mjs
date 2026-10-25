@@ -43,10 +43,8 @@ function setScale(value) {
 
 const reduceMotion = () => !motion||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// 镜像庭院 say() 语义：主进程已截到 60 字，这里再兜底一次；
-// prefers-reduced-motion 下不加 .pop 弹出动画，直接显示。
-function say(text) {
-  const line = String(text).slice(0, 60);
+// 主进程统一处理文本长度；prefers-reduced-motion 下直接显示气泡。
+function say(line) {
   if (!line) return;
   document.getElementById('bubble-text').textContent = line;
   bubble.title = line;

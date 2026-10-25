@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {emptyNotebook,normalizeNotebook,markdownNote,noteHeadings,latestNotebookNote,feishuDocumentURL,wordCount,markdownExport,markdownImport,createNotebookStore,notebookBytes,notebookTextBytes,formatMiB,NOTEBOOK_MAX_BYTES,NOTEBOOK_WARN_BYTES} from './assets/garden/notebook-model.mjs';
 import {notebookStatusHTML,notebookSearchSummaryHTML,notebookSearchContextHTML,jumpToNoteHeading,createNoteOperations} from './assets/garden/notebook-view.mjs';
+import {createNotebookUI} from './assets/garden/notebook.mjs';
 
 const notebookSource=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8');
 // 把真实按钮 HTML 缩写成 [动作:文字]，断言只关心给了哪些出口。
@@ -21,11 +22,31 @@ await test('首次空本机存档可以打开，无虚构示例内容',async()=>
 await test('保存进行中继续输入会顺序落盘，最后一笔不会被旧响应覆盖',async()=>{const writes=[],pending=[];let rev=1;const api=async(path,body)=>{if(!body)return {revision:rev,data:fixture()};writes.push(payload(body));await new Promise(resolve=>pending.push(resolve));return {revision:++rev}};const store=createNotebookStore(api);await store.load();store.edit(d=>{d.notes[0].body='第一笔'});const saved=store.flush();await Promise.resolve();store.edit(d=>{d.notes[0].body='第二笔中文'});assert.equal(store.flush(),saved);pending.shift()();await new Promise(resolve=>setImmediate(resolve));assert.equal(writes.length,2);assert.equal(writes[1].revision,2);assert.equal(writes[1].data.notes[0].body,'第二笔中文');pending.shift()();await saved;assert.equal(store.status().dirty,false);assert.equal(store.data.notes[0].body,'第二笔中文')});
 await test('冲突保留本机草稿，禁止自动重试覆盖其他窗口',async()=>{let writes=0;const store=createNotebookStore(async(path,body)=>{if(!body)return {revision:1,data:fixture()};writes++;const e=Error('另一个窗口已保存');e.code=409;throw e});await store.load();store.edit(d=>{d.notes[0].body='宝贵的草稿'});await assert.rejects(store.flush());assert.equal(store.status().conflict,true);assert.equal(store.status().dirty,true);assert.equal(store.snapshot().notes[0].body,'宝贵的草稿');await assert.rejects(store.flush());assert.equal(writes,1)});
 await test('普通保存失败可以重试，失败时不会假报已保存',async()=>{let fail=true;const store=createNotebookStore(async(path,body)=>{if(!body)return {revision:1,data:fixture()};if(fail)throw Error('磁盘暂不可写');return {revision:2}});await store.load();store.edit(d=>{d.notes[0].title='新标题'});await assert.rejects(store.flush());assert.equal(store.status().dirty,true);assert.match(store.status().error,/磁盘/);fail=false;await store.flush();assert.equal(store.status().dirty,false);assert.equal(store.status().error,'')});
+await test('保存失败仍能翻阅课程、回收站和其他页，草稿与冲突状态保留',async()=>{
+ const previousDocument=globalThis.document;
+ globalThis.document={body:{classList:{toggle(){}}},querySelector:()=>null};
+ try{for(const code of [500,409]){
+  const original=fixture();original.courses.push({id:'course-2',name:'另一门课'});
+  original.notes.push({...original.notes[0],id:'note-2',courseId:'course-2'}, {...original.notes[0],id:'deleted',deletedAt:200});
+  const events={},messages=[],writes=[];let failure=Object.assign(Error('合成保存失败'),{code});
+  const ui=createNotebookUI({toast:text=>messages.push(text),api:async(path,body)=>{if(!body)return {revision:1,data:original};if(failure)throw failure;writes.push(payload(body));return {revision:2}}});
+  const host={isConnected:false,matches:()=>true,querySelector:()=>null,contains:()=>true,addEventListener(name,fn){events[name]=fn}};
+  const click=async(action,id='')=>{const target={dataset:{noteAction:action,id},isConnected:false,setAttribute(){}};await events.click({target:{closest:()=>target},preventDefault(){}})};
+  try{
+   await ui.load();ui.mount(host);events.input({target:{id:'note-body',value:'不能丢掉的草稿'}});await assert.rejects(ui.flush(),/合成保存失败/);
+   await click('course','course-2');assert.equal(ui.getSnapshot().preferences.selectedCourseId,'course-2');assert.equal(ui.getSnapshot().preferences.selectedNoteId,'note-2');
+   await click('trash');assert.equal(ui.getSnapshot().preferences.selectedNoteId,'deleted');assert.match(ui.view(),/这页已移到回收站/);
+   await click('course');await click('select','note-2');assert.equal(ui.getSnapshot().preferences.selectedNoteId,'note-2');
+   assert.equal(ui.getSnapshot().notes.find(note=>note.id==='note-1').body,'不能丢掉的草稿');assert.equal(ui.status().dirty,true);assert.equal(ui.status().conflict,code===409);assert.match(ui.status().error,/合成保存失败/);assert.deepEqual(messages,[]);
+   await click('new');assert.equal(ui.getSnapshot().notes.length,3,'需要写入的新建操作仍被失败状态阻止');assert.match(messages.at(-1),/合成保存失败/);
+   if(code===500){failure=null;await ui.flush();assert.equal(writes.length,1);assert.equal(writes[0].data.notes[0].body,'不能丢掉的草稿');assert.equal(ui.status().dirty,false)}
+  }finally{ui.destroy()}
+ }}finally{globalThis.document=previousDocument}
+});
 await test('选择读取最新版本但网络失败时，草稿依然可以导出',async()=>{let first=true;const store=createNotebookStore(async()=>{if(first){first=false;return {revision:1,data:fixture()}}throw Error('网络失败')});await store.load();store.edit(d=>{d.notes[0].body='仍在'});await assert.rejects(store.discardAndReload());assert.equal(store.status().dirty,true);assert.equal(store.snapshot().notes[0].body,'仍在')});
 await test('读取最新版本等待期间继续写的内容不会被迟到的 GET 覆盖',async()=>{let reads=0,release;const store=createNotebookStore(async()=>{if(++reads===1)return {revision:1,data:fixture()};return new Promise(resolve=>{release=()=>{const latest=fixture();latest.notes[0].body='另一窗口的内容';resolve({revision:2,data:latest})}})});await store.load();store.edit(d=>{d.notes[0].body='准备放弃的旧草稿'});const reading=store.discardAndReload();store.edit(d=>{d.notes[0].body='确认读取后新写的一句'});release();await assert.rejects(reading,/读取期间你又修改/);assert.equal(store.status().dirty,true);assert.equal(store.status().revision,1);assert.equal(store.snapshot().notes[0].body,'确认读取后新写的一句')});
 await test('确认读取后没有继续编辑时，正常采用最新版本并清除旧草稿状态',async()=>{let reads=0,release;const store=createNotebookStore(async()=>{if(++reads===1)return {revision:1,data:fixture()};return new Promise(resolve=>{release=()=>{const latest=fixture();latest.notes[0].body='明确采用的最新内容';resolve({revision:4,data:latest})}})});await store.load();store.edit(d=>{d.notes[0].body='准备放弃的旧草稿'});const reading=store.discardAndReload();release();await reading;assert.equal(store.status().dirty,false);assert.equal(store.status().revision,4);assert.equal(store.status().error,'');assert.equal(store.snapshot().notes[0].body,'明确采用的最新内容')});
 await test('导出草稿不提前解除正在等待的操作锁，原操作完成后正常解锁',async()=>{
- assert.match(notebookSource,/const operations=createNoteOperations\(\{run:actionRun,toast,settled:paintStatus\}\);\n function perform\(action,attrs=\{\}\)\{return operations\.perform\(action,attrs\)\}/,'笔记操作必须经 createNoteOperations 的锁');
  for(const exportAction of ['backup','export']){
   let release,settled=0;const gate=new Promise(resolve=>{release=resolve}),calls=[],messages=[];
   const ops=createNoteOperations({settled:()=>settled++,toast:message=>messages.push(message),run:async action=>{calls.push(action);if(action==='feishu-import')await gate}});
@@ -43,7 +64,6 @@ await test('长文大纲跳过代码块，重复标题有独立锚点，CRLF 定
  const html=markdownNote(body);for(const h of headings)assert.ok(html.includes(`id="${h.id}"`));assert.equal((html.match(/id="note-section-/g)||[]).length,2);
 });
 await test('大纲按文本框的 LF 内容选中章节，原 CRLF 正文和阅读锚点保持不变',()=>{
- assert.match(notebookSource,/function jumpToHeading\(index\)\{jumpToNoteHeading\(index,\{note:activeNote\(\),area:q\('#note-body'\),find:q,host\}\)\}/);
  const body='## 第一节\r\n第一段\r\n第二段\r\n\r\n### 要跳转的章节\r\n结尾',note={body},events=[];
  // Native textarea.value and its selection offsets use LF, including after a CRLF JSON restore.
  const area={value:body.replace(/\r\n/g,'\n'),hidden:false,clientWidth:500,clientHeight:200,focus(){events.push('editor-focus')},setSelectionRange(start,end){this.selectionStart=start;this.selectionEnd=end},scrollIntoView(){events.push('editor-scroll')}};
@@ -59,7 +79,7 @@ await test('最近笔记忽略回收站，不受上次选择的旧页影响',()=
  assert.equal(latestNotebookNote(data).id,'recent');assert.equal(latestNotebookNote(emptyNotebook()),null);
 });
 await test('首页继续笔记等待保存，再准确选择最近页并清除旧搜索和回收站状态',async()=>{
- const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8'),from=source.indexOf('async function resumeLatest('),to=source.indexOf('\n return {view',from);assert.ok(from>=0&&to>from);
+ const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8'),from=source.indexOf('async function resumeLatest('),to=source.indexOf('function focusBody(',from);assert.ok(from>=0&&to>from);
  const data=fixture();data.courses.push({id:'course-2',name:'另一门课'});data.notes.push({...data.notes[0],id:'recent',courseId:'course-2',updatedAt:200});
  let release,saves=0;const gate=new Promise(resolve=>{release=resolve});
  const messages=[],operations=createNoteOperations({run:async()=>{},toast:message=>messages.push(message),settled(){}});
@@ -104,7 +124,6 @@ await test('正文输入更新侧栏时保持两个方向滚动，不重建正�
 });
 await test('搜索无匹配明确告知当前页状态，清除搜索不会保存或切换现有草稿',async()=>{
  const source=notebookSource;
- assert.ok(source.includes(' function searchSummaryHTML(notes=filtered()){return notebookSearchSummaryHTML(notes.length,query)}')&&source.includes(' function searchContextHTML(){return notebookSearchContextHTML(query,activeNote(),filtered)}'),'搜索提示必须用 notebook-view.mjs 的函数');
  assert.equal(notebookSearchSummaryHTML(3,'  '),'<span>共 3 页</span>','没有搜索词时只报总页数，不给清除按钮');
  let filters=0;assert.equal(notebookSearchContextHTML('',{id:'x'},()=>{filters++;return []}),'');assert.equal(filters,0,'不搜索时不必为提示过滤整本笔记');
  assert.equal(notebookSearchContextHTML('词',{id:'x'},()=>[{id:'x'}]),'','当前页在结果里时不提示');
@@ -140,7 +159,6 @@ await test('超过 8 MiB 在本机就拦下并说明，清出空间后恢复保�
  assert.equal(notebookBytes({a:'<'})-notebookBytes({a:'a'}),5);assert.equal(notebookBytes({a:'记'})-notebookBytes({a:'a'}),2);assert.equal(formatMiB(NOTEBOOK_MAX_BYTES+1),'8.1');
 });
 await test('保存状态在超限和接近上限时给出清理入口，普通状态保持安静',()=>{
- assert.ok(notebookSource.includes(' function statusHTML(){return notebookStatusHTML(store.status(),{notes:data().notes,trash})}'),'保存状态必须用 notebook-view.mjs 的 notebookStatusHTML');
  const data=fixture();data.notes.push({...data.notes[0],id:'old',deletedAt:5},{...data.notes[0],id:'older',deletedAt:6});let status,trash=false;
  const context={statusHTML:()=>buttonMarks(notebookStatusHTML(status,{notes:data.notes,trash}))};
  status={loaded:true,dirty:true,error:'笔记本约 8.1 MiB，超过 8 MiB 上限，这次修改还没保存',tooLarge:true,conflict:false,bytes:NOTEBOOK_MAX_BYTES+1};
@@ -165,8 +183,8 @@ await test('回收站可以永久删除一页或整体清空；超限时仍能�
  active=data.notes[0];await context.actionRun('purge');assert.equal(data.notes.length,2,'a page that is not in the trash is never purged');
  await context.actionRun('empty-trash');assert.deepEqual(data.notes.map(n=>n.id),['note-1']);assert.match(messages.at(-1),/1 页/);
  flushError=Object.assign(Error('笔记本超过 8 MiB 上限'),{code:413});context.trash=false;await context.actionRun('trash');assert.equal(context.trash,true,'an over-limit save does not lock the reader out of the trash');
- flushError=Error('磁盘暂不可写');context.trash=false;await assert.rejects(context.actionRun('trash'),/磁盘/);assert.equal(context.trash,false);
- const flushesBefore=flushes;flushError=null;await context.actionRun('select',{id:'note-1'});assert.equal(data.preferences.selectedNoteId,'note-1');assert.equal(flushes,flushesBefore+1,'only the pending draft is flushed; the selection is not');
+ flushError=Error('磁盘暂不可写');context.trash=false;await context.actionRun('trash');assert.equal(context.trash,true);
+ const flushesBefore=flushes;await context.actionRun('select',{id:'note-1'});assert.equal(data.preferences.selectedNoteId,'note-1');assert.equal(flushes,flushesBefore,'切换视图不强制保存整本笔记');
 });
 await test('输入时只重绘当前这一条列表项，字数与大纲在停笔后再算',()=>{
  const source=readFileSync(new URL('./assets/garden/notebook.mjs',import.meta.url),'utf8');

@@ -588,11 +588,6 @@ const (
 	onlineStateNotQueried  = "not_queried"      // 校外不通或判不出区，没有查询门户
 )
 
-// noCampusPortalNote 是中性说明的字面量。接口实际返回的是 portal.NoCampusPortalNote（命令行同一句），
-// 这里留一份字面量，是因为页面在旧版接口没有 online_note 时兜底用同一句，check-network-ui.mjs
-// 按这一行核对；与 portal 的一致由 TestStatusNoCampusPortalNoteMatchesPortal 锁住。
-const noCampusPortalNote = "外网可用；校园网认证状态暂未确认"
-
 type loginResp struct {
 	OK      bool   `json:"ok"`
 	Zone    string `json:"zone"`

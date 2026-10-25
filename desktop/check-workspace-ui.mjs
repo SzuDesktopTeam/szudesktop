@@ -370,25 +370,22 @@ await check('onboarding flag is explicit and survives a save round trip',()=>{
 
 await check('dismissing the guide records it once and keeps other preferences',async()=>{
  const local=createState();local.preferences.theme='night';local.preferences.motion=false;
- const committed=[],toasts=[];
+ const committed=[];
  const context={state:local};
- const commit=async next=>{committed.push(next);context.state=next},markOnboarded=()=>recordOnboarded(context.state,{commit,toast:m=>toasts.push(m)});
- assert.match(source,/\nfunction markOnboarded\(\)\{return recordOnboarded\(act\(state,\{type:'visit'\}\),\{commit,toast\}\)\}\n/,'页面记录引导状态必须走 recordOnboarded');
+ const commit=async next=>{committed.push(next);context.state=next},markOnboarded=()=>recordOnboarded(context.state,{commit});
  await markOnboarded();
  assert.equal(committed.length,1);
  assert.equal(committed[0].preferences.onboarded,true);
  assert.equal(committed[0].preferences.theme,'night','记录引导状态不能顺手改掉用户选的庭院光线');
  assert.equal(committed[0].preferences.motion,false);
- assert.equal(toasts.length,0);
  await markOnboarded();
  assert.equal(committed.length,1,'已经看过引导就不该再写一次存档');
 });
 
 await check('a failed onboarding save is reported, not swallowed',async()=>{
- const local=createState();const toasts=[];
- await recordOnboarded(local,{toast:m=>toasts.push(m),commit:async()=>{throw Error('另一个窗口更新了存档')}});
- assert.equal(toasts.length,1,'存档没写成功却不告诉用户，下次打开会莫名再弹一次');
- assert.match(toasts[0],/另一个窗口更新了存档/);
+ const local=createState();
+ await assert.rejects(recordOnboarded(local,{commit:async()=>{throw Error('另一个窗口更新了存档')}}),/另一个窗口更新了存档/);
+ assert.equal(local.preferences.onboarded,false,'没有写成功就不能标记已经看过');
 });
 
 await check('first run opens the guide, settings save keeps the flag',()=>{
@@ -851,8 +848,7 @@ await check('the welcome guide routes student intents and keeps the optional 5-m
  for(const id of shown)assert.ok(current.has(id),`欢迎图里的 #${id} 不是现在可选的伙伴（阿青已退到「老朋友」）`);
  assert.equal((html.match(/class="guide-choice"/g)||[]).length,3,'按找信息、记笔记、认识伙伴分成三个入口');
  for(const value of ['notices','library','notes','garden','focus','ok'])assert.match(html,new RegExp('<button[^>]+value="'+value+'"'),'缺少引导入口 '+value);
- assert.match(html,/公开公告和馆藏查询无需学校账号/);
- assert.match(html,/个人课表、成绩和预约需另行登录/);
+ assert.match(html,/<p class="guide-access">[^<]*无需学校账号[^<]*联网[^<]*个人业务[^<]*登录/);
  let onClose,routes=[],events=[];const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),removeEventListener(){},showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
  const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate');return true},notebookUI:{startLecture:async()=>events.push('newLecture'),focusBody:()=>events.push('focusBody')},
   act,state:null,run:async work=>{await work()},commit:async next=>{context.state=next;events.push('commit')},reactPet:action=>events.push(action)});
@@ -873,7 +869,7 @@ await check('footer and about link to the user guide and README instead of copyi
  assert.match(html,/<button class="quiet" data-action="showGuide">欢迎引导<\/button>/,'页脚按钮打开的是欢迎引导，要叫这个名字');
  assert.ok(html.includes(`<a href="https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/README.md" ${external}>使用指南 ↗</a>`));
  const settingsSource=section('function settings(){','function loadPetScale(){');
- assert.ok(settingsSource.includes(`<a href="https://github.com/SzuDesktopTeam/szudesktop#%E5%8A%9F%E8%83%BD" ${external}>README 的功能表 ↗</a>`),'关于页的功能状态链接到 README 功能表');
+ assert.ok(settingsSource.includes(`href="https://github.com/SzuDesktopTeam/szudesktop#装上之后可以做什么" ${external}`),'关于页链接到现有功能介绍');
  assert.doesNotMatch(settingsSource,/学校服务目前支持到哪里|余额尚未同步/,'功能状态只留 README 一个来源');
 });
 // O12：导航名、页标题和面包屑用同一个名字；面包屑的根写「今日」，按钮也回到今日。

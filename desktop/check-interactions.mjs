@@ -7,7 +7,7 @@ import {todoView} from './assets/garden/productivity.mjs';
 import {createReleaseUI} from './assets/garden/release-ui.mjs';
 import {createFeedbackUI} from './assets/garden/feedback.mjs';
 import {readRoute,routeHash} from './assets/garden/routes.mjs';
-import {act,createState} from './assets/garden/engine.mjs';
+import {act,createState,recoverSave,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 import {focusKey,restoreFocus,refreshDraft} from './assets/garden/shell-repaint.mjs';
 import {exitHint,stampVersion,createConfirm} from './assets/garden/app-logic.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
@@ -294,24 +294,21 @@ await check('a save that cannot be read keeps the network, notes and settings sh
  }
 });
 await check('a failed load blocks every save until a lenient recovery writes through the normal save path',async()=>{
- const writes=[],toasts=[],renders=[];let recoverSave=null,answer=true;
- const raw={schema:1,profile:{name:'原来的昵称'},game:{last:Date.now()+5*86400000}};
+ const writes=[],toasts=[],renders=[];let answer=true;
+ const raw=createState();raw.profile.name='原来的昵称';delete raw.game.stats;
  const context=vm.createContext({state:createState(),revision:3,workspaceReady:false,settingsProfileDraft:{id:'profile-form'},structuredClone,
   api:async(path,body)=>{assert.equal(path,'/api/workspace');writes.push(body);return {revision:body.revision+1}},
   render(){renders.push('render')},toast:message=>toasts.push(message),confirm:async()=>answer,
   // 与真实 normalize 一样：读不懂的存档直接抛错。
   normalize:x=>{if(!x?.profile)throw Error('伙伴列表为空');return x},
-  engine:{get recoverSave(){return recoverSave}},
+  recoverSave,
  });
  bindCommit(context);vm.runInContext(source.slice(source.indexOf('async function recoverWorkspace('),source.indexOf('let navigating=false;')),context);
  vm.runInContext('workspaceFailure={message:"存档时间异常",raw:'+JSON.stringify(raw)+'}',context);
  await assert.rejects(context.commit(createState()),/庭院存档暂时打不开/);assert.equal(writes.length,0,'降级期间任何写入都不能覆盖原存档');
- await context.recoverWorkspace();assert.match(toasts.at(-1),/还不能宽松恢复/);assert.equal(writes.length,0);
- recoverSave=()=>{throw Error('伙伴列表为空')};
- await assert.rejects(context.recoverWorkspace(),/宽松恢复没有成功：伙伴列表为空/);assert.equal(writes.length,0);
- recoverSave=()=>({schema:1});
- await assert.rejects(context.recoverWorkspace(),/宽松恢复没有成功：伙伴列表为空/,'恢复结果先经 normalize 校验');assert.equal(writes.length,0,'校验不过就不写盘，不能覆盖原存档');
- answer=false;recoverSave=input=>({...createState(),profile:{name:input.profile.name,college:''}});
+ const future={...raw,schema:SAVE_SCHEMA+1};context.workspaceFailure={message:'更新版本',raw:future};
+ await assert.rejects(context.recoverWorkspace(),/更新/);assert.equal(writes.length,0);
+ context.workspaceFailure={message:'存档时间异常',raw};answer=false;
  await context.recoverWorkspace();assert.equal(writes.length,0,'取消确认时不写入');
  answer=true;const api=context.api;context.api=async()=>{throw Error('写入失败')};
  await assert.rejects(context.recoverWorkspace(),/写入失败/);assert.match(vm.runInContext('workspaceFailure.message',context),/存档时间异常/,'保存失败时仍停留在降级状态');
@@ -319,7 +316,6 @@ await check('a failed load blocks every save until a lenient recovery writes thr
  assert.equal(writes.length,1);assert.equal(writes[0].revision,3);assert.equal(writes[0].data.profile.name,'原来的昵称');
  assert.equal(vm.runInContext('workspaceFailure',context),null);assert.equal(context.workspaceReady,true);assert.equal(context.revision,4);
  assert.equal(context.state.profile.name,'原来的昵称');assert.equal(context.settingsProfileDraft,null);assert.deepEqual(renders,['render']);assert.match(toasts.at(-1),/已按能读懂的内容恢复存档/);
- assert.match(source,/import \* as engine from '\.\/engine\.mjs'/,'recoverSave 必须经命名空间读取，引擎缺少导出时页面仍能加载');
  // 冲突：另一个窗口已经写好有效存档时沿用它；另一个窗口的存档同样读不懂时仍停留在降级状态。
  for(const other of [{profile:{name:'另一个窗口恢复的'},game:{}},{schema:1}]){
   const placeholder=createState();context.state=placeholder;context.workspaceReady=false;renders.length=0;

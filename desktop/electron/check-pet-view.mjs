@@ -120,6 +120,8 @@ assert.ok(settings.includes('min="0.4"')&&settings.includes('max="2"'),'滑杆�
   assert.ok(Math.abs(action.mood-companion.mood)<0.01&&Math.abs(action.energy-companion.energy)<0.01,'主进程必须推送真实心情和精力');
   assert.equal(action.focus,true);assert.equal(action.motion,false);assert.equal(action.sleeping,false);
   assert.equal(pwc.last('pet:say'),'我是栗栗。点击我打开菜单，拖动我换个位置。');
+  pet.say('荔'.repeat(90));assert.equal(pwc.last('pet:say'),'荔'.repeat(60),'主进程在发送气泡 IPC 前统一限制长度');
+  pet.say(2026);assert.equal(pwc.last('pet:say'),'2026','主进程统一把气泡内容转成文本');
   // 缩放按窗口实际尺寸取较小值，保证小屏上也放得下。
   const fit=bounds=>Math.min(pet.scale(),bounds.width/PET_WIDTH,bounds.height/PET_HEIGHT);
   assert.equal(pwc.last('pet:scale'),fit(petWin.getBounds()),'主进程必须推送适合当前屏幕的缩放');

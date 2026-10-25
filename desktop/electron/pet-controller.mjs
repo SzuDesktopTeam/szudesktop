@@ -20,7 +20,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
   let petMenuPending=false,petPress=0,petPressEnded=-Infinity,petMenuPress=null;
 
   function sendPet(channel,payload){
-    if(petWin&&!petWin.isDestroyed())petWin.webContents.send(channel,payload);
+    if(petWin&&!petWin.isDestroyed())petWin.webContents.send(channel,channel==='pet:say'?petSay(payload):payload);
   }
   // 透明宠物窗默认让点击穿过去；立绘报告指针进出、拖动和菜单状态变化时再切换。
   function syncPetMouse(){
@@ -51,7 +51,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
       if(!petGreeted){
         petGreeted=true;
         const name=pet.name||'伙伴';
-        sendPet('pet:say',petSay(`我是${name}。点击我打开菜单，拖动我换个位置。`));
+        sendPet('pet:say',`我是${name}。点击我打开菜单，拖动我换个位置。`);
       }
     }catch{}
   }
@@ -233,7 +233,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
   // 主窗执行完宠物指令后的回执：先按存档刷新，再说结果、播放对应动作。
   async function showResult(result){
     await pushPetState();
-    sendPet('pet:say',petSay(result.message));
+    sendPet('pet:say',result.message);
     if(result.ok&&typeof result.action==='string')sendPet('pet:react',result.action);
   }
   function destroy(){
@@ -245,7 +245,7 @@ export function createPetController({BrowserWindow,Menu,screen,dialog,platform,h
     stepScale:direction=>changePetSize(petScale+direction*0.1),openMenu:openPetMenu,sizeMenu:petSizeMenu,
     applyPreferences,watchDisplays,setHit,drag,showResult,destroy,
     // 主进程主动让宠物说一句（例如 macOS 上系统通知发不出去时）。
-    say:text=>sendPet('pet:say',petSay(text)),
+    say:text=>sendPet('pet:say',text),
     // 启动时恢复上次保存的大小与位置。
     restore:({scale,position})=>{petScale=scale;petPosition=position||null;},
     isSender:event=>Boolean(petHtmlUrl)&&isPetSender(event,petWin,petHtmlUrl),

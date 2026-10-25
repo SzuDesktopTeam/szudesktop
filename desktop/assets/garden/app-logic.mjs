@@ -23,7 +23,7 @@ export function autostartView(st,installed){let text=st?(st.detail||'状态未�
 export function isReturningVisit(state,{now=Date.now(),freshSession=false}={}){if(!state?.preferences?.onboarded||freshSession)return false;const created=state.game?.created;return !(Number.isFinite(created)&&dayKey(created)===dayKey(now))}
 
 // 记下已经看过新手引导：只改 onboarded 这一项，已记录过就不再写存档；写入失败要告诉用户。
-export async function recordOnboarded(state,{commit,toast}){if(!state||state.preferences.onboarded)return;const next=structuredClone(state);next.preferences={...next.preferences,onboarded:true};try{await commit(next)}catch(e){toast('引导状态没能保存，下次打开还会看到：'+e.message)}}
+export async function recordOnboarded(state,{commit}){if(!state||state.preferences.onboarded)return;const next=structuredClone(state);next.preferences={...next.preferences,onboarded:true};await commit(next)}
 
 // 把服务端报告的版本写到页面上。版本没变时不重挂设置卡片；先记下新版本再重画卡片，卡片读到的就是新版本。
 export function stampVersion(v,{getVersion,setVersion,document,cards}){if(!v)return;const changed=getVersion()!==v;setVersion(v);const meta=document.querySelector('meta[name=app-version]');if(meta)meta.content=v;const badge=document.querySelector('#app-badge');if(badge)badge.textContent=v;const about=document.querySelector('#about-version');if(about)about.textContent='szuDesktop '+v+' · 荔枝庭院';if(changed){for(const [id,ui] of cards){const card=document.getElementById(id);if(card)card.outerHTML=ui.card()}}}
