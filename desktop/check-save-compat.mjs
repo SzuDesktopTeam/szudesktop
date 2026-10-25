@@ -24,6 +24,8 @@ function richSave(){
  const s=createState(NOW),g=s.game,today=dayKey(NOW);
  s.profile={name:'小荔',college:'计算机与软件学院'};s.semester='2026-09-01';
  s.todos=[{id:'t1',text:'复习线性代数',done:true,rewarded:true,date:today,createdAt:NOW-DAY,completedAt:NOW,archived:true}];
+ s.todos[0].source={type:'note',noteId:'note-1',title:'线性代数'};
+ s.todos.push({...s.todos[0],id:'t2',source:{type:'notice',url:'https://jwb.szu.edu.cn/info/1.htm',title:'讲座通知'}});
  s.courses=[{name:'高等数学',credit:4,point:3.7,term:'2026 秋',code:'MATH101',level:'undergrad',grade:'A',source:'手动录入',included:true}];
  s.reminders=[{id:'r1',place:'琴房 101',start:NOW,end:NOW+3600000}];
  g.discovered=Object.keys(CROPS);g.decor=[...Object.keys(DECOR),...Object.keys(PROJECTS)];g.equipped=[...g.decor];
@@ -52,6 +54,7 @@ function vocabulary(){
  add('achievement',achievementList(createState(NOW).game).map(a=>a.id));add('journey',JOURNEY.map(c=>c.id));
  add('quest',Object.keys(QUESTS));add('pet',Object.keys(PETS));add('keepsake',ORDER_KEEPSAKES.map(k=>k.id));add('milestone',PUZZLE_MILESTONES);
  add('homeSkin',Object.keys(HOME_SKIN_DETAILS).filter(id=>{const s=createState(NOW);s.preferences.homeSkin=id;return normalize(s,NOW).preferences.homeSkin===id}));
+ add('todoSource',['note','notice']);
  return [...out].sort();
 }
 
@@ -102,6 +105,52 @@ key:todos[].text
 milestone:1024 milestone:128 milestone:2048 milestone:256 milestone:512
 pet:chestnut pet:egret pet:libao pet:pingu pet:skipper pet:turtle
 quest:care quest:focus quest:harvest quest:plant
+`,
+ 4:`
+achievement:collection achievement:focus achievement:friend achievement:gardener achievement:harvest achievement:land
+crop:blueberry crop:lychee crop:radish crop:strawberry
+decor:flower decor:lakeLights decor:lantern decor:picnic decor:scarf decor:seedrack
+homeSkin:bookshop homeSkin:lake homeSkin:pixel homeSkin:terrace
+journey:basket journey:books journey:hello journey:home journey:lake journey:rain journey:shade
+keepsake:first-basket keepsake:full-table keepsake:garden-helper keepsake:picnic-note
+key:courses key:courses[].code key:courses[].credit key:courses[].grade key:courses[].included key:courses[].level key:courses[].name
+key:courses[].point key:courses[].source key:courses[].term
+key:game key:game.achievements key:game.active key:game.coins key:game.created key:game.daily key:game.daily.care key:game.daily.claimed
+key:game.daily.day key:game.daily.focus key:game.daily.gift key:game.daily.harvest key:game.daily.pats key:game.daily.plant key:game.daily.todoRewards
+key:game.decor key:game.discovered key:game.equipped key:game.focus key:game.focus.duration key:game.focus.end key:game.focus.startedAt
+key:game.focus.task key:game.focus.todoId key:game.focusHistory key:game.focusHistory[].endedAt key:game.focusHistory[].minutes
+key:game.focusHistory[].startedAt key:game.focusHistory[].task key:game.focusHistory[].todoId key:game.food key:game.gardenLevel key:game.journey
+key:game.journey.claimed key:game.journey.days key:game.last key:game.log key:game.log[].text key:game.log[].time key:game.orders
+key:game.orders.completed key:game.orders.day key:game.orders.keepsakes key:game.orders.offers key:game.orders.offers[].bonus
+key:game.orders.offers[].coins key:game.orders.offers[].id key:game.orders.offers[].needs key:game.orders.offers[].needs.*
+key:game.orders.offers[].pet key:game.orders.offers[].text key:game.orders.offers[].title key:game.orders.total key:game.pets key:game.pets[].bond
+key:game.pets[].dialogue key:game.pets[].dialogue.build key:game.pets[].dialogue.feed key:game.pets[].dialogue.focus
+key:game.pets[].dialogue.focusStart key:game.pets[].dialogue.gameLose key:game.pets[].dialogue.gameWin key:game.pets[].dialogue.greet
+key:game.pets[].dialogue.harvest key:game.pets[].dialogue.hungry key:game.pets[].dialogue.idle key:game.pets[].dialogue.morning
+key:game.pets[].dialogue.night key:game.pets[].dialogue.order key:game.pets[].dialogue.pat key:game.pets[].dialogue.plant
+key:game.pets[].dialogue.play key:game.pets[].dialogue.signature key:game.pets[].dialogue.sleep key:game.pets[].dialogue.supply
+key:game.pets[].dialogue.task key:game.pets[].dialogue.tired key:game.pets[].dialogue.wake key:game.pets[].dialogue.water key:game.pets[].energy
+key:game.pets[].hunger key:game.pets[].lastPat key:game.pets[].lastPlay key:game.pets[].mood key:game.pets[].name key:game.pets[].saidAt
+key:game.pets[].say key:game.pets[].sleeping key:game.pets[].species key:game.pets[].xp key:game.plots key:game.plots[].crop key:game.plots[].planted
+key:game.plots[].ready key:game.plots[].watered key:game.puzzle key:game.puzzle.best key:game.puzzle.board key:game.puzzle.earnedDay
+key:game.puzzle.milestones key:game.puzzle.moves key:game.puzzle.over key:game.puzzle.qualifiedDay key:game.puzzle.rng key:game.puzzle.score
+key:game.puzzle.supplyClaim key:game.puzzle.supplyClaim.crop key:game.puzzle.supplyClaim.day key:game.puzzle.supplyClaim.quantity key:game.puzzle.undo
+key:game.puzzle.undo.board key:game.puzzle.undo.moves key:game.puzzle.undo.over key:game.puzzle.undo.rng key:game.puzzle.undo.score
+key:game.puzzle.undo.won key:game.puzzle.won key:game.seeds key:game.seeds.blueberry key:game.seeds.lychee key:game.seeds.radish
+key:game.seeds.strawberry key:game.stats key:game.stats.focus key:game.stats.harvest key:game.stats.minutes key:game.stats.planted
+key:game.stats.tasks key:game.stock key:game.stock.blueberry key:game.stock.lychee key:game.stock.radish key:game.stock.strawberry
+key:preferences key:preferences.homeSkin key:preferences.motion key:preferences.noticeSource key:preferences.onboarded key:preferences.studentLevel
+key:preferences.theme
+key:profile key:profile.college key:profile.name
+key:reminders key:reminders[].end key:reminders[].id key:reminders[].place key:reminders[].start
+key:schema
+key:semester
+key:todos key:todos[].archived key:todos[].completedAt key:todos[].createdAt key:todos[].date key:todos[].done key:todos[].id key:todos[].rewarded
+key:todos[].source key:todos[].source.noteId key:todos[].source.title key:todos[].source.type key:todos[].source.url key:todos[].text
+milestone:1024 milestone:128 milestone:2048 milestone:256 milestone:512
+pet:chestnut pet:egret pet:libao pet:pingu pet:skipper pet:turtle
+quest:care quest:focus quest:harvest quest:plant
+todoSource:note todoSource:notice
 `,
 };
 

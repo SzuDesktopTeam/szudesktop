@@ -4,6 +4,7 @@ import {PET_CONTEXTS,pickPetDialogue} from './pet-dialogue.mjs';
 import {createPuzzle,normalizePuzzle,movePuzzle,restartPuzzle,undoPuzzle} from './puzzle2048.mjs';
 import {createOrders,normalizeOrders,dailyOrders,deliverOrder} from './garden-orders.mjs';
 import {CROPS,PROJECTS,projectStatus,sellableStock,puzzleSupply} from './garden-loop.mjs';
+import {normalizeTodoSource} from './todo-source.mjs';
 export {PETS,DEFAULT_PET,AVAILABLE_PETS,petSprite,petViewBox} from './pet-catalog.mjs';
 // 作物表只有一份，定义在 garden-loop.mjs；这里照旧以 CROPS 导出。
 export {CROPS};
@@ -52,10 +53,10 @@ const dailyState=now=>({day:dayKey(now),gift:false,...Object.fromEntries(Object.
 const STAT_KEYS=['harvest','focus','minutes','planted','tasks'];
 // 存档结构版本。normalize 只留下本版本认识的键和取值，旧版本读到新版本多出来的作物、装饰、成就或字段会直接丢掉，
 // 下次自动保存就写回磁盘。所以存档里只要会出现新的键或取值，就把它加一，并在 normalize 里继续接受旧版本：
-// 已经发布的各版本都只认 2 和 3，读到更高的版本会拒读、进入只读的存档失败页，不会覆盖原文件。
+// 旧版只认存档格式 2 和 3，读到更高的版本会拒读、进入只读的存档失败页，不会覆盖原文件。
 // 用它而不另加字段，正是因为这些已发布的版本不认识新字段，只会把它和其他新数据一起丢掉。
 // desktop/check-save-compat.mjs 登记了每个版本的键和取值，改了却没加版本号时会失败。
-export const SAVE_SCHEMA=3;
+export const SAVE_SCHEMA=4; // 待办来源回链；旧待办原样升级，不补造来源。
 // 更新版本写的存档。读成本版本认识的样子再保存，新版本的内容就没了，所以宁可拒读。
 export const saveFromNewerVersion=raw=>!!raw&&typeof raw==='object'&&Number.isInteger(raw.schema)&&raw.schema>SAVE_SCHEMA;
 export function createState(now=Date.now()){
@@ -136,7 +137,7 @@ export function normalize(input,now=Date.now()){
 
  s.profile={name:limitedText(s.profile?.name,20),college:limitedText(s.profile?.college,40)};
  s.preferences={theme:s.preferences?.theme==='night'?'night':'day',homeSkin:['pixel','lake','bookshop','terrace'].includes(s.preferences?.homeSkin)?s.preferences.homeSkin:'pixel',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'undergrad',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
- s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,500).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>({id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded,date:validDate(x.date)?x.date:'',createdAt:timeValue(x.createdAt),completedAt:x.done?timeValue(x.completedAt):0,archived:!!x.archived&&!!x.done}));
+ s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,500).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>{const source=normalizeTodoSource(x.source);return {id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded,date:validDate(x.date)?x.date:'',createdAt:timeValue(x.createdAt),completedAt:x.done?timeValue(x.completedAt):0,archived:!!x.archived&&!!x.done,...(source?{source}:{})}});
 	s.courses=(Array.isArray(s.courses)?s.courses:[]).slice(0,300).filter(x=>x&&Number.isFinite(x.credit)&&Number.isFinite(x.point)&&x.credit>0&&x.credit<=100&&x.point>=0&&x.point<=5).map(x=>({name:limitedText(x.name,100,'课程')||'课程',credit:x.credit,point:x.point,term:limitedText(x.term,40),code:limitedText(x.code,40),level:['undergrad','graduate'].includes(x.level)?x.level:'',grade:limitedText(x.grade,20),source:limitedText(x.source,30,'手动录入')||'手动录入',included:x.included!==false}));
  s.reminders=(Array.isArray(s.reminders)?s.reminders:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.place==='string'&&Number.isFinite(x.start)&&Number.isFinite(x.end)&&x.end>x.start&&x.end-x.start<=86400000).slice(0,50).map(x=>({id:x.id.slice(0,80),place:x.place.slice(0,80),start:x.start,end:x.end}));
  s.semester=/^\d{4}-\d{2}-\d{2}$/.test(s.semester||'')?s.semester:'';
@@ -265,7 +266,7 @@ export function act(state,a,now=Date.now()){
  case 'focusStart':{check(!g.focus,'请先完成或取消当前专注');check(Number.isInteger(a.minutes)&&a.minutes>=1&&a.minutes<=120,'专注时长请输入 1–120 的整数分钟');const todo=a.todoId?s.todos.find(t=>t.id===a.todoId):null;check(!a.todoId||(todo&&!todo.done&&!todo.archived),'请选择一件未完成的事项');g.focus={startedAt:now,end:now+a.minutes*60000,duration:a.minutes,todoId:todo?.id||'',task:todo?.text||''};say(p,companionLine(g,p,p.sleeping?'sleep':'focusStart'),now);break;}
  case 'focusCancel':g.focus=null;break;
  case 'focusClaim':check(g.focus&&now>=g.focus.end,'专注还没结束');g.stats.minutes+=g.focus.duration;g.stats.focus++;g.daily.focus++;g.coins+=g.focus.duration;p.xp+=g.focus.duration;p.mood=clamp(p.mood+10,0,100);g.focusHistory.unshift({startedAt:g.focus.startedAt,endedAt:g.focus.end,minutes:g.focus.duration,todoId:g.focus.todoId,task:g.focus.task});g.focusHistory=g.focusHistory.slice(0,365);say(p,companionLine(g,p,'focus'),now);note(g,'完成 '+g.focus.duration+' 分钟专注，获得等量荔枝币与成长。',now);g.focus=null;break;
- case 'todoAdd':{const text=String(a.text||'').trim(),id=String(a.id||'').slice(0,60);check(text,'先写下一件小事');check(id&&!s.todos.some(t=>t.id===id),'事项标识重复，请重新添加');check(s.todos.filter(t=>!t.archived).length<100&&s.todos.length<500,'清单已满，请先归档或清理已完成事项');s.todos.push({id,text:text.slice(0,120),done:false,rewarded:false,date:todoDate(a.date===undefined?dayKey(now):a.date),createdAt:now,completedAt:0,archived:false});break;}
+ case 'todoAdd':{const text=String(a.text||'').trim(),id=String(a.id||'').slice(0,60),source=normalizeTodoSource(a.source);check(text,'先写下一件小事');check(id&&!s.todos.some(t=>t.id===id),'事项标识重复，请重新添加');check(s.todos.filter(t=>!t.archived).length<100&&s.todos.length<500,'清单已满，请先归档或清理已完成事项');s.todos.push({id,text:text.slice(0,120),done:false,rewarded:false,date:todoDate(a.date===undefined?dayKey(now):a.date),createdAt:now,completedAt:0,archived:false,...(source?{source}:{})});break;}
  case 'todoEdit':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');if(a.text!==undefined){const text=String(a.text).trim();check(text,'事项不能留空');t.text=text.slice(0,120)}if(a.date!==undefined)t.date=todoDate(a.date);break;}
  case 'todoToggle':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');check(!t.archived,'请先从归档中恢复事项');t.done=!t.done;t.completedAt=t.done?now:0;if(t.done&&!t.rewarded){t.rewarded=true;g.stats.tasks++;if(g.daily.todoRewards<TODO_REWARD_LIMIT){g.daily.todoRewards++;p.xp+=2;}}if(t.done)say(p,companionLine(g,p,'task'),now);break;}
  case 'todoArchive':{const t=s.todos.find(x=>x.id===a.id);check(t,'没有找到事项');const archive=a.archived!==false;check(!archive||t.done,'完成后再归档这件小事');check(archive||!t.archived||s.todos.filter(x=>!x.archived).length<100,'未归档事项已满，请先整理');t.archived=archive;break;}

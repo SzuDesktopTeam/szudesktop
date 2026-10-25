@@ -374,6 +374,15 @@ body[data-page=settings] .pagehead h1 { color:var(--magic); }
 .campus-notices .notice-body{margin:8px 0 4px;padding:10px 12px;border-left:3px solid var(--line);background:#f7f2e3;line-height:1.9}
 .campus-notices .notice-text{white-space:normal;overflow-wrap:anywhere}
 .campus-notices .notice-files{margin:8px 0 0;font-size:13px}
+.campus-notices .notice-actions{grid-column:2;display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.campus-notices .notice-actions .notice-src{margin-left:0}
+.campus-notices .notice-todo{padding:5px 10px;font-size:13px}
+.campus-notices .notice-body{grid-column:2;min-width:0}
+.todo-source-dialog{width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+.todo-source-dialog form{display:grid;gap:12px}
+.todo-source-dialog input{width:100%;min-width:0}
+.todo-source-preview{overflow-wrap:anywhere;color:var(--muted);font-size:13px}
+@media(max-width:620px){.campus-notices .notice-actions,.campus-notices .notice-body{grid-column:1}}
 .library-copies-btn{margin-left:8px;font-size:12px}
 .library-copies{margin-top:8px;padding:8px 10px;border-left:3px solid var(--line);background:#f7f2e3}
 .copy-list{margin:0;padding:0;list-style:none;font-size:13px}

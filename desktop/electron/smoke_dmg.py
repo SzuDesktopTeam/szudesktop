@@ -485,7 +485,8 @@ class Smoke:
         # defect fixed in beta0.9.6). Candidate UI checks below remain complete and unchanged.
         with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, mac_upgrade.BASELINE_VERSION,
                                       self.evidence / "baseline-data.log", smoke_macos, stop_group) as engine:
-            self.upgrade_data = mac_upgrade.seed(engine, lambda: mac_upgrade.initial_workspace(engine, self.root / "baseline-js"))
+            baseline_state = mac_upgrade.initial_workspace(engine, self.root / "baseline-js")
+            self.upgrade_data = mac_upgrade.seed(engine, lambda: baseline_state)
         mac_upgrade.seed_shell_settings(self.cfg)
         (self.evidence / "baseline-data.json").write_text(json.dumps({
             "version": mac_upgrade.BASELINE_VERSION, "baseline_sha256": digest,
@@ -511,6 +512,12 @@ class Smoke:
             mac_upgrade.verify_data(engine, self.upgrade_data,
                                     lambda: mac_upgrade.read_synthetic_credential(self.cfg, self.root), write=write)
         check("upgrade preserves old data and synthetic credential; candidate read/write succeeds", True)
+
+    def verify_schema_downgrade(self):
+        with mac_upgrade.engine_probe(self.app / ENGINE_IN_APP, self.cfg, self.version,
+                                      self.evidence / "schema-downgrade.log", smoke_macos, stop_group) as engine:
+            return mac_upgrade.verify_schema_downgrade(
+                engine, self.cfg, self.root / "baseline-js", self.root / "candidate-js")
 
     def uninstall(self):
         """用户卸载就是把 .app 拖进废纸篓：工作区与宠物设置在配置目录里，必须原封不动。"""
@@ -671,6 +678,7 @@ def main():
             smoke.coexist_with_portable()
             if baseline is not None:
                 smoke.verify_upgrade(None)
+                summary["schema_downgrade"] = smoke.verify_schema_downgrade()
                 summary.update(cross_version_upgrade_preserved_data=True, candidate_read_write=True, synthetic_credential_decrypts=True)
             smoke.uninstall()
             summary.update(version=smoke.version, electron=first["electron"], mac=first["mac"], resource_baseline="resource-baseline.json",

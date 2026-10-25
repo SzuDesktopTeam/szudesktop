@@ -6,13 +6,13 @@ import {gpa} from './engine.mjs';
 import {esc} from './html.mjs';
 
 // workspaceUnavailable：庭院存档读档失败时为真，这时 getState() 只是占位状态，存档里的提醒不能当真显示。
-export function createCampusUI({getState,commit,toast,confirm,api,render,workspaceUnavailable=()=>false}) {
+export function createCampusUI({getState,commit,toast,confirm,api,render,workspaceUnavailable=()=>false,onNoticeTask}) {
  // 「学校场地列表」是两张卡片共用的同一次只读请求，共享一份带短 TTL 的结果。
  const loadRooms=createRoomsLoader(api);
  const booking=createBookingUI({api,loadRooms});
  const venueRules=createVenueRulesUI({api,loadRooms});
  // 公告来源：存过的选择优先，其次是设置里的学院、培养层次（研究生默认研究生院）；都没有时第一次进公告页先请同学选学院。
- const notices=createNoticesUI({api,getSource:()=>getState()?.preferences?.noticeSource,getProfile:()=>({college:getState()?.profile?.college,level:getState()?.preferences?.studentLevel}),setSource:async noticeSource=>{const state=getState();await commit({...state,preferences:{...state.preferences,noticeSource}},undefined,()=>{})}});
+ const notices=createNoticesUI({api,onTask:onNoticeTask,getSource:()=>getState()?.preferences?.noticeSource,getProfile:()=>({college:getState()?.profile?.college,level:getState()?.preferences?.studentLevel}),setSource:async noticeSource=>{const state=getState();await commit({...state,preferences:{...state.preferences,noticeSource}},undefined,()=>{})}});
  const link=(url,label,cls='button')=>`<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label} ↗</a>`;
  const itemIcons={'reminder-ics':'i-calendar',feed:'i-bell','session-save':'i-chest','session-check':'i-shield','session-clear':'i-key','online-score':'i-medal',preview:'i-scroll',template:'i-scroll',import:'i-chest'};
  const button=(label,action,extra='')=>`<button data-action="campus-${action}" ${extra}>${itemIcons[action]?`<svg class="item-icon" aria-hidden="true"><use href="#${itemIcons[action]}"></use></svg>`:''}${label}</button>`;

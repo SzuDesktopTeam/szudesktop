@@ -67,9 +67,9 @@ class Notification extends EventEmitter {static isSupported(){return childRun;}c
 const child=new EventEmitter();
 const handle={baseUrl:'http://127.0.0.1:5',token:'0123456789abcdef'.repeat(4),owned:true,child,
   stop:async()=>{log.push('engine.stop:'+windows.map(win=>win.isDestroyed()).join(','));}};
-const sidecarCalls=[];
+const sidecarCalls=[],externalCalls=[];
 globalThis.__szuFakeElectron={app,BrowserWindow:FakeWindow,dialog,ipcMain,Menu,Notification,screen,Tray,nativeImage,
-  session:{fromPartition:()=>new FakeSession()},shell:{openExternal:async()=>{}},
+  session:{fromPartition:()=>new FakeSession()},shell:{openExternal:async url=>{externalCalls.push(url)}},
   startSidecar:async command=>{sidecarCalls.push(command);return handle;}};
 // 引擎与存档读取都不走网络：庭院存档暂时不可读，宠物和专注提醒按失败处理。
 globalThis.fetch=async()=>({ok:false,json:async()=>({})});
@@ -117,6 +117,11 @@ assert.equal(child.listenerCount('exit'),1,'boot wires engine.watch(handle)');
 
 // szu:* 只认主窗口里本机页面的主 frame：isTrusted 必须接到 isTrustedSender(主窗口, handle.baseUrl)。
 const wc=mainWin.webContents;
+const feedbackMail='mailto:alakazama@qq.com?subject=szuDesktop%20feedback&body=Basketball%20query';
+assert.deepEqual(wc.openHandler({url:feedbackMail}),{action:'deny'},'feedback uses the system mail application, not an Electron navigation');
+assert.deepEqual(externalCalls,[feedbackMail],'the real main-window → official-window routing passes the explicit mail draft to the OS');
+wc.openHandler({url:'mailto:someone@example.com'});wc.openHandler({url:'mailto:alakazama@qq.com?bcc=someone@example.com'});
+assert.deepEqual(externalCalls,[feedbackMail],'arbitrary recipients and added headers are still rejected');
 wc.mainFrame.url=handle.baseUrl+'/';
 const trusted={sender:wc,senderFrame:wc.mainFrame};
 petWin.webContents.mainFrame.url=handle.baseUrl+'/';

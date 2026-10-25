@@ -395,7 +395,7 @@ await check('first run opens the guide, settings save keeps the flag',()=>{
  assert.match(source,/if\(workspaceReady&&!state\.preferences\.onboarded\)showGuide\(\)/,'启动时没有按存档状态决定是否展示引导；读档失败时不展示');
  assert.match(source,/next\.preferences=\{\.\.\.next\.preferences,theme:d\.theme,motion:!!d\.motion\}/,'保存设置会把「已看过引导」丢掉，用户每次打开都会被再教一遍');
  const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
- assert.match(html,/<dialog id="guide"><form method="dialog">/);
+ assert.match(html,/<dialog id="guide" aria-labelledby="guide-title" aria-describedby="guide-intro"><form method="dialog">/);
  assert.match(html,/数据只在本机/);
  assert.match(html,/Esc 关掉/,'必须写明可以跳过，否则用户以为每次打开都会弹');
 });
@@ -843,21 +843,25 @@ await check('closing the guide on the first day keeps the first-visit home; the 
  assert.match(source,/companions\.open=companionsOpen/,'同学自己收起伙伴栏后，照料带来的重绘不能又把它展开');
  assert.match(readFileSync(new URL('./assets/garden/productivity.css',import.meta.url),'utf8'),/\n\.home-companions\{display:block;/,'展开的伙伴栏是 <details>，不能靠 flex 排版，否则名册挤成一列');
 });
-await check('the welcome guide shows current companions and its second choice starts a 5-minute focus',async()=>{
+await check('the welcome guide routes student intents and keeps the optional 5-minute focus',async()=>{
  const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
  const scene=/<div class="guide-scene" aria-hidden="true">([\s\S]*?)<\/div>/.exec(html)?.[1]||'',shown=[...scene.matchAll(/<use href="#([\w-]+)">/g)].map(m=>m[1]);
  const current=new Set(AVAILABLE_PETS.flatMap(id=>[PETS[id].sprite,...['normal','happy','sad','sleep'].map(mood=>PETS[id].sprite+'-'+mood)]));
  assert.ok(shown.length>=3&&shown.length<=4,'欢迎图放 3–4 位伙伴');
  for(const id of shown)assert.ok(current.has(id),`欢迎图里的 #${id} 不是现在可选的伙伴（阿青已退到「老朋友」）`);
- assert.match(html,/<div class="guide-choices"><button class="primary" value="garden">去认识我的伙伴 →<\/button><button value="focus">先专注 5 分钟<\/button><\/div>/);
+ assert.equal((html.match(/class="guide-choice"/g)||[]).length,3,'按找信息、记笔记、认识伙伴分成三个入口');
+ for(const value of ['notices','library','notes','garden','focus','ok'])assert.match(html,new RegExp('<button[^>]+value="'+value+'"'),'缺少引导入口 '+value);
+ assert.match(html,/公开公告和馆藏查询无需学校账号/);
+ assert.match(html,/个人课表、成绩和预约需另行登录/);
  let onClose,routes=[],events=[];const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),removeEventListener(){},showModal(){this.open=true},addEventListener:(type,fn)=>{if(type==='close')onClose=fn}};
- const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate')},
+ const context=vm.createContext({$:selector=>selector==='#guide'?guide:null,exitHint:()=>'',markOnboarded:async()=>{},navigate:(...args)=>{routes.push(args);events.push('navigate');return true},notebookUI:{startLecture:async()=>events.push('newLecture'),focusBody:()=>events.push('focusBody')},
   act,state:null,run:async work=>{await work()},commit:async next=>{context.state=next;events.push('commit')},reactPet:action=>events.push(action)});
  vm.runInContext(section('function showGuide(){','function markOnboarded('),context);
- for(const [value,expected] of [['focus',[['study','focus']]],['garden',[['garden','pet']]],['ok',[]],['',[]]]){guide.open=false;routes=[];events=[];context.state=createState();context.showGuide();guide.returnValue=value;await onClose();assert.deepEqual(routes,expected,value);
+ for(const [value,expected] of [['notices',[['services','notices']]],['library',[['services','library']]],['notes',[['study','notes']]],['focus',[['study','focus']]],['garden',[['garden','pet']]],['ok',[]],['',[]]]){guide.open=false;routes=[];events=[];context.state=createState();context.showGuide();guide.returnValue=value;await onClose();assert.deepEqual(routes,expected,value);
   // 按钮写的是「先专注 5 分钟」：和首页主按钮一样真的开始 5 分钟，再打开专注页；其余选项不开始专注。
   if(value==='focus'){assert.equal(context.state.game.focus?.duration,5,'「先专注 5 分钟」要真的开始 5 分钟');assert.deepEqual(events,['commit','focusStart','navigate'],'先开始专注再打开专注页')}
   else assert.equal(context.state.game.focus,null,value+' 不能开始专注');
+  if(value==='notes')assert.deepEqual(events,['newLecture','navigate','focusBody'],'新课堂记录保存后进入编辑并聚焦正文');
  }
  const focusing=createState();focusing.game.focus={startedAt:Date.now(),end:Date.now()+1500000,duration:25,todoId:'',task:''};
  guide.open=false;routes=[];events=[];context.state=focusing;context.showGuide();guide.returnValue='focus';await onClose();

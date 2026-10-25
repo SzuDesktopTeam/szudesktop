@@ -3,7 +3,7 @@
 // 失败时打印缩小后的最小反例与种子。公共小件见 desktop/property-testing.mjs。
 // 文末带 “（修复前失败）” 的用例是随机测试找到、经人工复核确认的真实问题的最小回归用例。
 import assert from 'node:assert/strict';
-import {act,createState,normalize,recoverSave,settle,dayKey,level,gardenLevel,gpa,CROPS,QUESTS,DECOR,JOURNEY,PETS,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT} from './assets/garden/engine.mjs';
+import {act,createState,normalize,recoverSave,settle,dayKey,level,gardenLevel,gpa,CROPS,QUESTS,DECOR,JOURNEY,PETS,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 import {PET_LIMIT} from './assets/garden/pet-catalog.mjs';
 import {createPuzzle,normalizePuzzle,movePuzzle,undoPuzzle,restartPuzzle,puzzleCanMove,PUZZLE_MILESTONES} from './assets/garden/puzzle2048.mjs';
 import {createOrders,normalizeOrders,dailyOrders,deliverOrder,ORDER_KEEPSAKES} from './assets/garden/garden-orders.mjs';
@@ -118,7 +118,7 @@ function assertOrders(o,label='orders'){
 // 一份“合法状态”应满足的全部不变量：normalize、recoverSave、settle、act 的输出都要过这一关。
 function assertValidState(s,label='state'){
   assert.equal(firstUnserializable(s),null,`${label} 里出现 NaN/Infinity/undefined`);
-  assert.equal(s.schema,3);
+  assert.equal(s.schema,SAVE_SCHEMA);
   const g=s.game;
   assert.equal(g.plots.length,6,`${label}.plots 长度`);
   for(const p of g.plots)if(p!==null&&p!=='locked')assert.ok(isPlainObject(p)&&Object.hasOwn(CROPS,p.crop)&&Number.isFinite(p.planted)&&Number.isFinite(p.ready),`${label}.plots 作物`);

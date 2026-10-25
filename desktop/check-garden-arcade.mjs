@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {act,createState,normalize,settle,dayKey} from './assets/garden/engine.mjs';
+import {act,createState,normalize,settle,dayKey,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 
 const now=new Date(2026,8,27,12).getTime(),day=dayKey(now);
 const roundTrip=(state,time=now)=>normalize(JSON.parse(JSON.stringify(state)),time);
@@ -12,11 +12,11 @@ let checks=0;
 function test(name,work){work();checks++;console.log('PASS',name)}
 
 test('schema 3 saves gain a playable board, frozen orders and independent dialogue cursors',()=>{
- const old=createState(now);delete old.game.puzzle;delete old.game.orders;
+ const old=createState(now);old.schema=3;delete old.game.puzzle;delete old.game.orders;
  old.game.pets.forEach(p=>delete p.dialogue);
  old.game.coins=73;old.game.stock.radish=5;old.game.active=1;old.game.pets[1].name='老朋友';
  const state=roundTrip(old);
- assert.equal(state.schema,3);assert.equal(state.game.puzzle.board.filter(Boolean).length,2);
+ assert.equal(state.schema,SAVE_SCHEMA);assert.equal(state.game.puzzle.board.filter(Boolean).length,2);
  assert.equal(state.game.orders.offers.length,3);assert.equal(state.game.orders.day,day);
  assert.equal(state.game.coins,73);assert.equal(state.game.stock.radish,5);
  assert.equal(state.game.active,1);assert.equal(state.game.pets[1].name,'老朋友');

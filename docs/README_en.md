@@ -41,6 +41,7 @@ Earn garden coins through focused study and use them to grow crops, care for a c
 - **Browse by college.** Read notices from 17 colleges inside the app, plus Academic Affairs and the Graduate School. Listings show the title, date and source.
 - **Search older notices.** Eighteen sources use the school's title or full-text search, with pagination. Results identify whether the search covers a notice section or the unit's whole website.
 - **Read the details.** Expand an article and open its attachments. The original school page remains available for checking.
+- **Turn it into a task.** Add a school notice to your todos, edit the action and choose your own date. Reopen its original page from the todo when you need the requirements or attachments.
 
 For example, select your college and search for “奖学金” (scholarship) to find application requirements and attachments. Materials Science currently filters only the titles already loaded; colleges without an integration link to their official websites. [Notices and campus-services guide →](guide/campus.md)
 
@@ -96,7 +97,7 @@ Each service determines its own sign-in, network and access requirements. The ap
 
 1. **Write.** Create a course or topic and start from a class, reading or research-meeting template. Write Markdown, read the formatted page and navigate its outline in one window.
 2. **Find it again.** Search titles and body text, or continue the most recent page from the home screen. Notes save automatically on your computer; recover deleted pages from the recycle bin, import Markdown / TXT, export individual pages or back up the whole notebook.
-3. **Follow through.** Turn a selected sentence into a dated todo. Start a linked focus session for 5, 25 or 45 minutes, or choose your own duration. Mark the task complete yourself and review the last seven days of focus records.
+3. **Follow through.** Turn a selected sentence into a todo and return to its original note whenever you need the context, even after renaming or moving it. Start a linked focus session for 5, 25 or 45 minutes, or choose your own duration. Mark the task complete yourself.
 
 **Want to write with classmates?** Each course can link to a Feishu Docx or Wiki document for collaborative editing on Feishu's own page. After installing, configuring and authorising `lark-cli` yourself, you can also import a read-only local copy. This integration is still being tested, provides no two-way sync and does not require sending your local notes to the developer.
 
@@ -175,11 +176,15 @@ The Windows packages are not code-signed, and the Mac app is not notarised by Ap
 
 ## Start with something you need today
 
+The welcome screen offers three starting points without requiring a school login. You can reopen it from the footer at any time.
+
+![Actual welcome screen with starting points for campus information, class notes and companions](readme-welcome.png)
+
 | What you want to do first | Where to start |
 | :-- | :-- |
-| **Find a book or a notice** | Search the home screen for “查书” (library) or “公告” (notices), then enter your keyword. No school account needed |
-| **Take notes for this class** | Choose **New class record** (新开课堂记录), create a course and write a page. Continue it from the home screen next time |
-| **Study with a companion** | Choose a companion, start a five-minute focus session, claim the rewards and visit your first radish in the garden |
+| **Find a book or a notice** | Open notices or the library directly from the welcome screen, then choose a college or enter a book title |
+| **Take notes for this class** | Create a class record from the welcome screen and start writing in its template. Continue it from the home screen next time |
+| **Study with a companion** | Go straight to the companion page; a five-minute focus session is also available from the welcome screen |
 
 When you need timetables, grades or bookings, follow the relevant page's steps to sign in with your own school account. [Full getting-started guide →](guide/getting-started.md)
 
@@ -210,7 +215,7 @@ Electricity queries do not reuse academic-service cookies. Room numbers and resu
 
 Start with [installation and updates](guide/install.md), the [FAQ](guide/faq.md) or the [campus-network troubleshooting guide](深圳大学校园网连不上排查指南.md). Before moving computers, export the garden and todos and back up course notes separately. Neither backup transfers saved credentials or school sessions.
 
-Still stuck? [Send feedback](guide/feedback.md) with what you were trying to do and where it stopped. You can attach a report after previewing it under **Settings → About and updates → Feedback and suggestions** (设置 → 关于与更新 → 反馈与建议). Leave out passwords, cookies and personal grades. Feedback currently uses GitHub Issues and requires a GitHub account.
+Still stuck? Email **[alakazama@qq.com](mailto:alakazama@qq.com)** without a GitHub account, or [open an Issue](https://github.com/SzuDesktopTeam/szudesktop/issues/new/choose). Under **Settings → About and updates → Feedback and suggestions** (设置 → 关于与更新 → 反馈与建议), describe the expected and actual behavior, preview it, then open an email draft, copy the text or export a TXT file. Diagnostics are optional; the app never sends a report automatically. [Feedback guide →](guide/feedback.md)
 
 </details>
 

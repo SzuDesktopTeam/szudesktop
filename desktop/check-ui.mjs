@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
-import {createState,act,settle,normalize,gpa,activePet,petSprite,PETS,AVAILABLE_PETS} from './assets/garden/engine.mjs';
+import {createState,act,settle,normalize,gpa,activePet,petSprite,PETS,AVAILABLE_PETS,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 import {esc} from './assets/garden/html.mjs';
 let checks=0;function test(name,fn){fn();checks++;console.log('PASS',name)}
 const now=new Date('2026-09-18T10:00:00').getTime();
@@ -37,7 +37,7 @@ test('pets: old single-cat and two-pet saves keep names, progress, state and act
  old.game.pet={...old.game.pets[1],name:'团团',xp:123,bond:64,hunger:47,energy:36,mood:28,sleeping:true,lastPat:now-1000,say:'晚安',saidAt:now};
  delete old.game.pets;delete old.game.active;
  const migrated=normalize(old,now);
- assert.equal(migrated.schema,3);
+ assert.equal(migrated.schema,SAVE_SCHEMA);
  assert.deepEqual(activePet(migrated.game),old.game.pet);
  assert.deepEqual(migrated.game.pets.map(p=>p.species),['chestnut','libao','egret','pingu','skipper']);
  const two=createState(now);two.game.pets=two.game.pets.slice(0,2);two.game.active=1;

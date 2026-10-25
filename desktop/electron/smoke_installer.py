@@ -23,6 +23,7 @@ import threading
 import time
 import uuid
 from urllib.parse import urlsplit
+import mac_upgrade
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -44,14 +45,14 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.10"
-# Checked against the beta0.9.10 tag: desktop/electron/package-lock.json
+BASELINE_VERSION = "beta0.9.11"
+# Checked against the beta0.9.11 tag: desktop/electron/package-lock.json
 # pins electron 44.5.1, and the release asset digest reported by GitHub for
-# szuDesktop-Setup-0.9.10.exe equals this SHA-256.
+# szuDesktop-Setup-0.9.11.exe equals this SHA-256.
 BASELINE_ELECTRON = "44.5.1"
-BASELINE_SHA256 = "694b81ac3c45556c5f6bfcec554c654801ebae7cc2715969015f74ae004f4193"
+BASELINE_SHA256 = "16e901d12890ab75b6bd7b989df76363601544144d750bdd20fd5c1d2fc75c9f"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
-# A fresh beta0.9.10 save carries exactly these companions, in this order (its
+# A fresh beta0.9.11 save carries exactly these companions, in this order (its
 # pet-catalog.mjs AVAILABLE_PETS, same five as beta0.9.3); the turtle
 # is retired to the "old friends" of saves that already had it.
 BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "pingu", "skipper"]
@@ -583,6 +584,7 @@ def main():
             launch(exe, cfg, BASELINE_VERSION, "baseline-open", initial_scale=1, runtime=BASELINE_ELECTRON)
             with running_engine(sidecar, cfg, BASELINE_VERSION, "baseline-data") as (engine, _):
                 expected = seed_upgrade_data(engine)
+                mac_upgrade.initial_workspace(engine, test_root / "baseline-js")
             preserved = {file: file.read_bytes() for file in preserved_files}
             check("test account is not stored in plaintext", b"synthetic-local-only-password" not in preserved[cfg / "credentials.json"])
             obsolete = install_dir / "resources" / "obsolete-upgrade-smoke.txt"
@@ -616,9 +618,13 @@ def main():
             seed_autostart(exe)
             launch_as_registered(exe, cfg, version)
             assert_user_data(json.loads(workspace.read_bytes())["data"], expected["data"])
+            with running_engine(sidecar, cfg, version, "schema-downgrade") as (engine, _):
+                schema_downgrade = mac_upgrade.verify_schema_downgrade(
+                    engine, cfg, test_root / "baseline-js", test_root / "candidate-js")
             (EVIDENCE / "summary.json").write_text(json.dumps({
                 "version": version, "electron": first["electron"], "installer_sha256": digest,
                 "upgrade_from": BASELINE_VERSION, "baseline_sha256": BASELINE_SHA256,
+                "schema_downgrade": schema_downgrade,
                 "installed": True, "rendered": True, "reopened": True,
                 "portable_engine_coexistence": True,
                 "cross_version_upgrade_preserved_data": True, "obsolete_program_files_removed": True,
