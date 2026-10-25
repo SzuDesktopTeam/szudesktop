@@ -86,7 +86,7 @@ export function createPetCommands({click,replies,until}){
 // field in the comparison so accepting new fields cannot hide lost user data.
 function personalAfterMigration(data){
   return {...data,
-    preferences:{noticeSource:'undergrad',studentLevel:'undergrad',...data.preferences},
+    preferences:{noticeSource:'auto',studentLevel:'undergrad',...data.preferences},
     todos:data.todos.map(todo=>({date:'',createdAt:0,completedAt:0,archived:false,...todo})),
   };
 }

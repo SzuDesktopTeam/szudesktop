@@ -256,7 +256,7 @@ def verify_data(engine, expected, read_credential, write=False):
     for key in ("profile", "courses", "semester", "reminders"):
         if data[key] != original[key]:
             raise AssertionError("Upgrade lost workspace " + key)
-    preferences = {"noticeSource": "undergrad", "studentLevel": "undergrad", "homeSkin": "pixel", **original["preferences"]}
+    preferences = {"noticeSource": "auto", "studentLevel": "undergrad", "homeSkin": "pixel", **original["preferences"]}
     todos = [{"date": "", "createdAt": 0, "completedAt": 0, "archived": False, **item} for item in original["todos"]]
     if data["preferences"] not in (original["preferences"], preferences) or data["todos"] not in (original["todos"], todos):
         raise AssertionError("Upgrade lost preferences or todos")
