@@ -152,7 +152,7 @@ test('new fields have explicit save whitelists and sane legacy defaults',()=>{
  assert.equal(JSON.stringify(s).includes('cookie'),false);
  assert.equal(s.todos[0].date,'');assert.deepEqual(roundTrip(s),s);
  s.preferences.noticeSource={};s.preferences.studentLevel='other';s=roundTrip(s);
- assert.equal(s.preferences.noticeSource,'undergrad');assert.equal(s.preferences.studentLevel,'undergrad');
+ assert.equal(s.preferences.noticeSource,'auto');assert.equal(s.preferences.studentLevel,'undergrad');
 });
 
 test('libao has distinct mood and sleep sprites without changing the original companion',()=>{
@@ -292,11 +292,10 @@ test('after a clock correction, cooldowns, focus and crops keep their remaining 
  assert.equal(settle(t,next+86400000).game.daily.gift,false,'the following real day starts fresh');
 });
 
-test('lenient recovery keeps what it can from a damaged save and never throws',()=>{
- for(const raw of [undefined,null,42,'save',[],{},{schema:9},{game:null},{schema:3,game:{plots:'x',coins:-1}}]){
-  const s=recoverSave(raw,now);assert.equal(s.schema,SAVE_SCHEMA);assert.deepEqual(roundTrip(s),s);
- }
- const cyclic={schema:3};cyclic.self=cyclic;assert.equal(recoverSave(cyclic,now).schema,SAVE_SCHEMA);
+test('lenient recovery only salvages supported saves and preserves their valid content',()=>{
+ for(const raw of [null,42,'save',[],{},{schema:SAVE_SCHEMA+1},{game:null}])assert.throws(()=>recoverSave(raw,now));
+ const broken={schema:3,game:{plots:'x',coins:-1}};
+ const restored=recoverSave(broken,now);assert.equal(restored.schema,SAVE_SCHEMA);assert.deepEqual(roundTrip(restored),restored);
  let good=act(act(createState(now),{type:'gift'},now),{type:'todoAdd',id:'keep',text:'保留的待办'},now);
  good.game.coins=321;good.game.daily.harvest=1;good.game.pets[0].name='团团';good.game.pets[0].xp=140;good.game.plots[3]=null;
  const damaged=JSON.parse(JSON.stringify(good));
@@ -314,6 +313,10 @@ test('lenient recovery keeps what it can from a damaged save and never throws',(
  const legacy=structuredClone(RELEASED_SAVES['beta0.7.3']);legacy.game.coins=-5;
  assert.throws(()=>normalize(legacy,now));
  const migrated=recoverSave(legacy,now);assert.equal(migrated.game.pets[0].name,'小团');assert.equal(migrated.game.pets[0].species,'chestnut');assert.equal(migrated.game.coins,40);
+ const tail=createState(now),pet={...tail.game.pets[0],name:'尾部伙伴',xp:123};
+ tail.game.pets=[...Array(20).fill(null),pet];
+ const kept=recoverSave(tail,now).game.pets.find(p=>p.name==='尾部伙伴');
+ assert.equal(kept?.xp,123,'损坏条目不能挤掉后面的有效伙伴');
 });
 
 test('a malformed daily date starts today afresh instead of blocking the save',()=>{

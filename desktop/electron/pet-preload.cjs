@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('szuPet', Object.freeze({
   },
   onSay: (cb) => {
     if (typeof cb !== 'function') return;
-    ipcRenderer.on('pet:say', (_event, text) => cb(String(text).slice(0, 60)));
+    ipcRenderer.on('pet:say', (_event, text) => cb(text));
   },
   // 主进程推送当前伙伴与学习/动画设置，两个窗口共用同一个逐帧播放器。
   onAction: (cb) => {

@@ -9,7 +9,7 @@
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-Setup-0.9.12.exe)**　·　[Mac / 其他下载](#下载)　·　[一分钟视频](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe)**　·　[Mac / 其他下载](#下载)　·　[一分钟视频](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 **简体中文** · [English](docs/README_en.md) · [使用指南](docs/guide/README.md) · [反馈问题](docs/guide/feedback.md)
 
@@ -28,7 +28,7 @@
 
 ![首页真实界面：笔记、专注和六个校园工具入口集中在一页](docs/readme-home.png)
 
-*首页可以直接搜「查书」「公告」「GPA」找工具，也能接着写上次的笔记。上图为当前版本真实界面。*
+*首页可以直接搜「查书」「公告」「GPA」找工具，也能接着写上次的笔记。*
 
 [学校公告](#学校公告找到自己学院的通知) · [课表与成绩](#学业课表校历培养方案与绩点) · [图书馆](#图书馆查到书也查到去哪里拿) · [场地与电量](#校园生活场地时段预约与宿舍电量) · [课程笔记](#课程笔记从课堂记录到复习计划) · [桌宠与庭院](#桌宠与庭院学习之后有一点看得见的变化)
 
@@ -99,7 +99,7 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 
 **想和同学一起写？** 每门课可以绑定一份飞书 Docx 或 Wiki 文档，打开飞书原页共同编辑。自行安装、配置并授权 `lark-cli` 后，还能只读导入一份本机副本；这条接入仍在测试，不是双向同步，也不要求把本地笔记交给开发者。
 
-笔记目前是文本工具，**没有 AI 代写、课件／PDF 解析或录音转写**。[学习功能与备份指南 →](docs/guide/study.md)
+[学习功能与备份指南 →](docs/guide/study.md)
 
 ## 桌宠与庭院：学习之后，有一点看得见的变化
 
@@ -127,7 +127,7 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 - **2048 帮你备种**：棋子是种子、作物与丰收篮。当天实际合出 128 或以上，可领一次种子补给，优先补委托和下一项建设缺的作物，再回农田播种。也有自动续盘、悔一步和里程碑贴纸。
 - **留张明信片**：把当前伙伴、校园背景与自己的庭院进度导出为一张 PNG，自己决定是否分享。
 
-不需要每天连续签到；没有充值、排行榜或实时对战。只喜欢专注和种菜，也能把庭院建起来。[庭院玩法与伙伴操作 →](docs/guide/garden.md)
+按自己的节奏专注、种菜，慢慢把庭院建起来。[庭院玩法与伙伴操作 →](docs/guide/garden.md)
 
 ### 四种校园风景，换一个学习环境
 
@@ -135,7 +135,7 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 
 ![雨后书屋三渲二场景：书架、自行车、长椅与树影](docs/readme-scene-bookshop.jpg)
 
-*应用内「雨后书屋」的场景画面。校园主题创作，不是深大建筑的测绘复原。*
+*应用内「雨后书屋」：书架、自行车和长椅藏在树影里。*
 
 ## 校园网：连接与排查，放在同一页
 
@@ -149,14 +149,14 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 
 **Windows 10 / 11（64 位）与 macOS 13 起；没有手机版。** macOS 目前为预览版，Linux 提供校园网命令行。
 
-**beta0.9.12 · 从第一步到下一件事：公告待办、笔记回链与邮件反馈。** [查看本版更新与全部附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.12)。仍为预发布版本，学校个人业务的验证范围见下文。
+**beta0.9.13 · 日常操作更顺畅：阅读不中断，公告记得住，存档更安心。** [查看本版更新与全部附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.13)。仍为预发布版本，学校个人业务的验证范围见下文。
 
 | 你的电脑 | 选这个 | 打开方式 |
 | :-- | :-- | :-- |
-| **Windows · 推荐** | [下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-Setup-0.9.12.exe) | 按提示安装，自带窗口、桌面伙伴与托盘 |
-| Windows · 免安装 | [下载便携 EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-portable.exe) | 双击运行；本机记录与安装版共用 |
-| **Mac · Apple 芯片** | [下载 arm64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-mac-arm64.dmg) | 打开后拖入「应用程序」 |
-| **Mac · Intel** | [下载 x64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-mac-x64.dmg) | 打开后拖入「应用程序」 |
+| **Windows · 推荐** | [下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe) | 按提示安装，自带窗口、桌面伙伴与托盘 |
+| Windows · 免安装 | [下载便携 EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-portable.exe) | 双击运行；本机记录与安装版共用 |
+| **Mac · Apple 芯片** | [下载 arm64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-arm64.dmg) | 打开后拖入「应用程序」 |
+| **Mac · Intel** | [下载 x64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-x64.dmg) | 打开后拖入「应用程序」 |
 
 Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或处理器。电脑上不用另装开发环境；旧的浏览器便携版与命令行版见[安装指南](docs/guide/install.md)。
 

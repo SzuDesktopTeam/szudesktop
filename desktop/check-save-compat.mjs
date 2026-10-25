@@ -9,12 +9,13 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {createState,normalize,achievementList,dayKey,JOURNEY,QUESTS,DECOR,CROPS,PETS,SAVE_SCHEMA,saveFromNewerVersion} from './assets/garden/engine.mjs';
+import {createState,normalize,recoverSave,achievementList,dayKey,JOURNEY,QUESTS,DECOR,CROPS,PETS,SAVE_SCHEMA,saveFromNewerVersion} from './assets/garden/engine.mjs';
 import {PROJECTS} from './assets/garden/garden-loop.mjs';
 import {PET_CONTEXTS} from './assets/garden/pet-dialogue.mjs';
 import {ORDER_KEEPSAKES} from './assets/garden/garden-orders.mjs';
 import {PUZZLE_MILESTONES} from './assets/garden/puzzle2048.mjs';
 import {HOME_SKIN_DETAILS} from './assets/garden/home-skins.mjs';
+import {esc} from './assets/garden/html.mjs';
 
 const NOW=new Date(2026,8,27,12).getTime();
 const DAY=86400000;
@@ -207,6 +208,23 @@ await check('a save written by a newer version is refused with a clear message i
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const startupAt=source.lastIndexOf("try{let snapshot=null;try{snapshot=await api('/api/workspace')");
 const failureHelpers=source.slice(source.indexOf('function enterWorkspaceFailure('),source.indexOf('async function recoverWorkspace('));
+await check('recovery refuses newer saves instead of discarding their unknown data',()=>{
+ const future=richSave();future.schema=SAVE_SCHEMA+1;future.wishlist=['new content'];
+ const before=JSON.stringify(future);
+ assert.throws(()=>recoverSave(future,NOW),/更新/);
+ assert.equal(JSON.stringify(future),before);
+});
+await check('a newer save offers export and update, not destructive recovery',()=>{
+ const future=richSave();future.schema=SAVE_SCHEMA+1;
+ const context=vm.createContext({workspaceFailure:{raw:future,message:'请更新应用'},page:'home',saveFromNewerVersion,esc,
+  btn:(label,action)=>`<button data-action="${action}">${label}</button>`});
+ const start=source.indexOf('function workspaceFailureHTML('),end=source.indexOf('function enterWorkspaceFailure(',start);
+ vm.runInContext(source.slice(start,end),context);
+ const html=context.workspaceFailureHTML();
+ assert.match(html,/data-action="workspaceExportRaw"/);
+ assert.match(html,/href="https:\/\/github.com\/SzuDesktopTeam\/szudesktop\/releases"/);
+ assert.doesNotMatch(html,/data-action="workspaceRecover"/);
+});
 await check('opening a newer save shows the read-only failure page with the update hint and never writes',async()=>{
  assert.ok(startupAt>=0&&failureHelpers.length>0,'app.mjs 的启动读档流程变了，同步这里');
  const future=richSave();future.schema=SAVE_SCHEMA+1;future.game.decor.push('future-decor');

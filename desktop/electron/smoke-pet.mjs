@@ -86,7 +86,7 @@ export function createPetCommands({click,replies,until}){
 // field in the comparison so accepting new fields cannot hide lost user data.
 function personalAfterMigration(data){
   return {...data,
-    preferences:{noticeSource:'undergrad',studentLevel:'undergrad',...data.preferences},
+    preferences:{noticeSource:'auto',studentLevel:'undergrad',...data.preferences},
     todos:data.todos.map(todo=>({date:'',createdAt:0,completedAt:0,archived:false,...todo})),
   };
 }
@@ -447,7 +447,10 @@ async function checkNotebookReload({mainWin,main,api,evidenceDir,userData}){
   await main('(()=>{const area=document.querySelector("#note-body");area.value='+JSON.stringify(body)+';area.dispatchEvent(new Event("input",{bubbles:true}));})()');
   // Navigate immediately, before the autosave timer, then use the user's reload button.
   await main('document.querySelector("[data-action=navigate][data-page=settings]").click()');
+  await until(()=>main('Boolean(document.querySelector("[data-action=settingsTab][data-tab=about]:not(:disabled)"))'),'about settings navigation is not ready');
+  await main('document.querySelector("[data-action=settingsTab][data-tab=about]").click()');
   await until(()=>main('Boolean(document.querySelector("[data-action=reload]"))'),'safe reload entry missing');
+  await main('document.querySelector("[data-action=reload]").closest("details").querySelector("summary").click()');
   const reloaded=new Promise((resolve,reject)=>{
     const timer=setTimeout(()=>{mainWin.webContents.removeListener('did-finish-load',done);reject(Error('safe reload timed out'));},15000);
     const done=()=>{clearTimeout(timer);resolve();};

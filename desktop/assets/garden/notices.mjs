@@ -21,7 +21,7 @@ export function staleNote(items,now=Date.now()){
  return months>=1?`这个栏目最新一条发布于 ${months} 个月前（${latest}），可能不常更新；可以换一个学院或部门看看。`:'';
 }
 // getProfile 返回设置里的学院和培养层次 {college,level}。
-export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getProfile=()=>({}),now=()=>Date.now(),onTask}){
+export function createNoticesUI({api,getSource=()=> 'auto',setSource,getProfile=()=>({}),now=()=>Date.now(),onTask}){
  // source 为空表示还没选：第一次进公告页时先请同学选学院，不自动读默认栏目。
  // picked 表示本次打开里同学亲手选过，之后不再按设置重新推断。
  let sources=[],source='',picked=false,unmatched='',catalogLoading=false,catalogError='',feed=null,error='',loading=false,requestVersion=0,preferenceError='',entered=false,initialRead=false;
@@ -40,12 +40,11 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
   const pages=Math.max(1,Math.ceil(search.total/search.page_size)),scope=search.scope==='fulltext'?'全文（标题和正文）':'标题';
   return `<p class="notice">${esc(search.range_label)} · ${scope} · 关键词「${esc(search.query)}」 · 共 ${search.total} 条 · 读取于 ${esc(new Date(search.fetched_at).toLocaleString('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${search.stale?' · 上次读取的内容':''}</p>${search.items.length?'':`<p class="empty" role="status">${search.total===0?'没有找到匹配的公告。可以换个关键词或查看原页。':'这一页没有可安全展示的结果，请翻页或查看原页。'}</p>`}${noticeList(search.items)}<div class="actions"><button type="button" class="quiet" data-action="notice-search-prev" ${search.page<=1?'disabled':''}>上一页</button><span>第 ${search.page} / ${pages} 页</span><button type="button" class="quiet" data-action="notice-search-next" ${search.page>=pages?'disabled':''}>下一页</button></div>`;
  }
- // 存档里的默认值 undergrad 分不清「选过教务部」还是「从没选过」，而教务部的通知栏目多是写给各单位和老师、停更已久的旧通知。
- // 所以：存过别的来源就用它；设置里填了学院就直接用；研究生跟随培养层次用研究生院；都没有就先请同学自己选。
+ // 已选来源优先；auto 才按学院和培养层次推荐，没有线索就请同学选择。
  function resolve(){
   const saved=getSource(),profile=getProfile()||{},has=id=>sources.some(s=>s.id===id);
   unmatched='';
-  if(saved&&saved!=='undergrad'&&has(saved))return saved;
+  if(saved&&saved!=='auto')return has(saved)?saved:'';
   const college=matchCollege(sources,profile.college);
   if(college)return college;
   if(profile.level==='graduate'&&has('graduate'))return 'graduate';
@@ -68,8 +67,7 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
  function content(){
   const chosen=current();
   const options=[['university','全校通知'],['college','学院与学部']].map(([group,label])=>`<optgroup label="${label}">${sources.filter(s=>s.group===group).map(s=>`<option value="${esc(s.id)}" ${s.id===source?'selected':''}>${esc(s.name)}${s.readable?'':' · 官网查看'}</option>`).join('')}</optgroup>`).join('');
-  // 教务部（undergrad）也是存档的默认值，选了分不清是不是亲手选的，下次还会再问；提示里要如实说，不能笼统承诺「会记住」。
-  const choose=`<div class="notice notice-first-choice" data-tone="info" role="status"><strong>先选你的学院</strong><p>选好后会记在本机，下次打开直接显示它的公告；在「设置 → 风景与偏好」填写学院也可以。部分学院的网站暂时只能打开官网查看；教务部、研究生院在「全校通知」里。只有教务部记不住：想每次直接看它，在设置里把学院填成「教务部」。</p>${unmatched?`<p class="muted">设置里填写的「${esc(unmatched)}」没有对上公告来源，请在下面选一下。</p>`:''}</div><div class="actions"><div class="notice-source"><label for="feed-source">学院／部门</label><select id="feed-source"><option value="" selected disabled>请选择学院或部门</option>${options}</select></div>${link(directory,'学校院系目录')}</div>`;
+  const choose=`<div class="notice notice-first-choice" data-tone="info" role="status"><strong>先选你的学院</strong><p>选好后会记在本机，下次打开直接显示它的公告；在「设置 → 风景与偏好」填写学院也可以。部分学院的网站暂时只能打开官网查看；教务部、研究生院在「全校通知」里。</p>${unmatched?`<p class="muted">设置里填写的「${esc(unmatched)}」没有对上公告来源，请在下面选一下。</p>`:''}</div><div class="actions"><div class="notice-source"><label for="feed-source">学院／部门</label><select id="feed-source"><option value="" selected disabled>请选择学院或部门</option>${options}</select></div>${link(directory,'学校院系目录')}</div>`;
   return `<div class="card-head"><h2 class="icon-heading tone-warning">${pixelIcon('i-bell','heading-icon')}学校公告</h2><span class="badge" data-tone="info">按学院查看</span></div><p class="muted">按发布单位查看公开通知，不包含需要登录的校内公告。所选学院会记在本机。</p>${preferenceError?`<p role="status" class="notice error">${esc(preferenceError)}</p>`:''}
   ${catalogLoading?'<p role="status">正在准备学院列表…</p>':catalogError?`<p role="status" class="notice error">${esc(catalogError)}</p><div class="actions"><button data-action="notice-sources">重新加载学院列表</button>${link(directory,'学校院系目录')}</div>`:sources.length&&!source?choose:chosen?`<div class="actions"><div class="notice-source"><label for="feed-source">学院／部门</label><select id="feed-source">${options}</select></div>${chosen.readable?`<button data-action="notice-read" ${loading?'disabled':''}>${pixelIcon('i-bell')}刷新公告</button>`:''}${link(chosen.url,chosen.readable?'查看原页':'打开学院官网')}</div>${chosen.readable&&chosen.note?`<p class="muted">当前栏目：${esc(chosen.note)}</p>`:''}${searchControls()}<div id="campus-feed-content" aria-live="polite">${feedHTML()}</div>${chosen.readable&&!search&&!searching&&!searchError?'<small>当前栏目首页最多展示 12 条，10 分钟内复用。仅收录可核对日期的本站公告，更多通知请查看原页。</small>':''}`:'<p role="status">正在准备学院列表…</p>'}`;
  }

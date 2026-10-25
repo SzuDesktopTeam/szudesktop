@@ -74,12 +74,12 @@ export function createNotebookUI({api,toast=()=>{},confirm=async()=>false,onChan
   if(action==='feishu-status'){feishu=await api('/api/feishu/status');paintFeishu();return}
   if(action==='feishu-login'){const result=await api('/api/feishu/login',{action:'start'});let url='';try{const u=new URL(result.verificationUrl);if(u.protocol==='https:'&&/(^|\.)(feishu\.cn|larksuite\.com|larkoffice\.com)$/i.test(u.hostname))url=result.verificationUrl}catch{}if(!url)throw Error(result.message||'暂时无法获取飞书官方授权链接');authURL=url;feishu={...feishu,message:result.message};paintFeishu();return}
   if(action==='feishu-finish'){const result=await api('/api/feishu/login',{action:'finish'});feishu={...feishu,...result};if(result.connected)authURL='';paintFeishu();return}
-  // Structural changes flush first; typed text is never lost to a failed navigation/save.
-  // An over-limit notebook still lets the reader open the trash and delete pages to fit.
-  await flush().catch(e=>{if(e?.code!==413)throw e});
+  // Browsing changes only view preferences; all drafts stay in the same store.
   if(action==='course'){trash=false;query='';prefer(d=>{d.preferences.selectedCourseId=attrs.id||'';chooseVisible()});paint({resetList:true});return}
   if(action==='trash'){trash=true;query='';prefer(d=>{d.preferences.selectedCourseId='';chooseVisible()});paint({resetList:true});return}
   if(action==='select'){prefer(d=>{d.preferences.selectedNoteId=attrs.id});paint();return}
+  // Structural changes save first. Over-limit notebooks can still delete old pages to fit.
+  await flush().catch(e=>{if(e?.code!==413)throw e});
   if(action==='course-create'){const name=q('#note-course-new')?.value.trim();if(!name)throw Error('先给课程或主题起个名字');edit(d=>{const c={id:uuid(),name};d.courses.push(c);d.preferences.selectedCourseId=c.id;d.preferences.selectedNoteId=''});trash=false;query='';courseForm=false;paint({resetList:true});q('.note-course-list .selected')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});return}
   if(action==='move-course'){const note=activeNote(),target=attrs.courseId||'';if(!note||note.deletedAt)return;if(target&&!data().courses.some(c=>c.id===target))throw Error('这门课程已不存在，请重新选择');if(note.courseId===target)return;edit(d=>{note.courseId=target;note.updatedAt=Date.now();d.preferences.selectedCourseId=target;d.preferences.selectedNoteId=note.id});query='';paint({resetList:true});await flush();toast(target?'已移到 '+course().name:'已移到未分类笔记');return}if(action==='course-rename'){const name=q('#note-course-name')?.value.trim();if(!name)throw Error('课程名称不能为空');edit(()=>{course().name=name});paint();return}
   if(action==='course-link'){const value=q('#note-course-url')?.value.trim()||'',url=value?feishuDocumentURL(value):'';if(value&&!url)throw Error('请填写 https://团队.feishu.cn/docx/… 或 /wiki/… 的文档链接');edit(()=>{course().sharedUrl=url});paint();await flush();return}

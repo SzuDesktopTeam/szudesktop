@@ -182,19 +182,15 @@ forAll('normalize 对损坏存档：要么以友好的 Error 拒绝，要么产�
   assert.deepEqual(rt(out,NOW),out,'normalize 应幂等');
 });
 
-forAll('recoverSave 对任意 JSON 值都不抛错，输出满足不变量、可再次通过 normalize 且幂等',(rng,size)=>rng.weighted([[3,()=>genCorruptSave(rng,size)],[2,()=>rng.json(4,{keys:SAVE_KEYS,allowSpecial:true})],[1,()=>({schema:rng.pick([2,3,4,'3']),game:rng.json(3,{keys:SAVE_KEYS,allowSpecial:true})})]]),raw=>{
-  let out;assert.doesNotThrow(()=>{out=recoverSave(raw,NOW)},'recoverSave 承诺不抛错');
+forAll('recoverSave 只恢复已支持版本的 JSON 存档，输出可再次读取且不修改原数据',(rng,size)=>rng.weighted([[3,()=>genCorruptSave(rng,size)],[2,()=>rng.json(4,{keys:SAVE_KEYS,allowSpecial:true})],[1,()=>({schema:rng.pick([2,3,4,'3',SAVE_SCHEMA+1]),game:rng.json(3,{keys:SAVE_KEYS,allowSpecial:true})})]]),raw=>{
+  raw=clone(raw); // 按磁盘读档方式进入：原型和非 JSON 数值不属于存档内容。
+  const supported=raw&&typeof raw==='object'&&!Array.isArray(raw)&&Number.isInteger(raw.schema)&&raw.schema>=2&&raw.schema<=SAVE_SCHEMA;
+  if(!supported){assert.throws(()=>recoverSave(raw,NOW));return}
+  const before=structuredClone(raw),out=recoverSave(raw,NOW);
+  assert.deepEqual(raw,before,'恢复不得修改原存档');
   assertValidState(out,'recoverSave');
-  assert.deepEqual(rt(out,NOW),out,'recoverSave 的返回值应已是 normalize 的定点');
+  assert.deepEqual(rt(out,NOW),out,'恢复结果可再次通过 normalize');
 },{cases:400});
-
-test('recoverSave 对非 JSON 的原始值（undefined、函数、BigInt、循环引用、Symbol、Proxy）也不抛错',()=>{
-  const cyclic={schema:3,game:{plots:[]}};cyclic.self=cyclic;
-  const hostile=new Proxy({},{get(){throw Error('boom')},ownKeys(){throw Error('boom')}});
-  for(const raw of [undefined,null,()=>1,Symbol('x'),10n,cyclic,hostile,new Map(),new Date(NaN),[1,2n],{schema:3,game:{plots:Array(6).fill(null),coins:10n}}]){
-    let out;assert.doesNotThrow(()=>{out=recoverSave(raw,NOW)});assertValidState(out,'recoverSave(原始值)');
-  }
-});
 
 const RECOVER_KEYS=['coins','food','seeds','stock','stats','daily','journey','focusHistory','log','puzzle','orders','discovered','decor','equipped','achievements','plots','focus'];
 forAll('recoverSave 只丢弃损坏的那一项：把可达存档的某个字段整项换成垃圾后，其余字段与严格读档结果一致',(rng,size)=>({steps:genSteps(rng,size,80),key:rng.pick(RECOVER_KEYS),garbage:rng.pick([null,'x',-1,[],{},[1],{a:1},1e9,true])}),({steps,key,garbage})=>{

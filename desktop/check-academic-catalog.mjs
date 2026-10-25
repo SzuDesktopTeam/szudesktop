@@ -14,9 +14,9 @@ const edit=(ui,field,value)=>ui.change({target:{id:'academic-catalog-'+field,val
 
 await test('both new catalog businesses retain the real-account acceptance warning',async()=>{
  const ui=createAcademicCatalogUI({api:async()=>planList});
- for(const mode of ['timetable','program'])assert.match(ui.section(mode),/还没用真实账号验收过/);
+ for(const mode of ['timetable','program'])assert.match(ui.section(mode),/title="[^"]*未[^"]*真实账号[^"]*(验证|验收)[^"]*学校系统[^"]*"/);
  ui.section('program');await ui.click('academic-catalog-query');
- assert.match(ui.section('program'),/还没用真实账号验收过/);
+ assert.match(ui.section('program'),/title="[^"]*未[^"]*真实账号[^"]*(验证|验收)[^"]*学校系统[^"]*"/);
 });
 
 await test('unread views contain no fabricated results and retain official entry',async()=>{

@@ -1,12 +1,12 @@
 // macOS 桌面版的页面文案：preload 给出 platform==='darwin' 时，各处换成 Mac 的说法
-// （菜单栏图标、⌘Q、程序坞、钥匙串、登录 Mac 时启动、.dmg 拖进「应用程序」、⌘B），并且不再出现托盘、Windows、DPAPI、安装包。
+// （菜单栏图标、⌘Q、程序坞、钥匙串、登录 Mac 时启动、.dmg 拖进「应用程序」、⌘B），并且不再出现托盘、Windows、DPAPI 或 .exe。
 // Windows 原文由 check-windows-copy.mjs 逐字锁定；本文件只看 Mac 分支。每个用例都在 finally 里还原 globalThis.szuDesktop。
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {exitHint} from './assets/garden/app-logic.mjs';
 import {createDesktopOptions} from './assets/garden/desktop-options.mjs';
-import {createState} from './assets/garden/engine.mjs';
+import {createState,saveFromNewerVersion} from './assets/garden/engine.mjs';
 import {createFeedbackUI,environmentSummary} from './assets/garden/feedback.mjs';
 import {homeSkinPicker} from './assets/garden/home-skins.mjs';
 import {esc} from './assets/garden/html.mjs';
@@ -21,7 +21,7 @@ const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'ut
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const section=(start,end)=>{const from=source.indexOf(start),to=source.indexOf(end,from);assert.ok(from>=0&&to>from,`app.mjs 里找不到 ${start}`);return source.slice(from,to)};
 const pageSource=section('function showGuide(){','function markOnboarded(')+section('function sectionNav(','function servicesPage(')+section('function settings(){','function loadPetScale(){')+section('function workspaceFailureHTML(){','function enterWorkspaceFailure(');
-const clean=(value,where)=>assert.doesNotMatch(value,/托盘|Windows|DPAPI|安装包/,`${where}在 macOS 上仍有 Windows 文案`);
+const clean=(value,where)=>assert.doesNotMatch(value,/托盘|Windows|DPAPI|\.exe\b/i,`${where}在 macOS 上仍有 Windows 文案`);
 const MAC_EXIT=/菜单栏/;
 
 async function withBridge(bridge,fn){
@@ -79,7 +79,7 @@ await check('登录项按快照原因提示：不在「应用程序」里置灰�
 // app.mjs 的设置页、读档失败页和引导按页面里的接线放进 vm；它们就地读 globalThis.szuDesktop，卡片用真实模块渲染。
 function appPage(){
  const guide={open:false,returnValue:'',querySelector:()=>({querySelectorAll:()=>[],addEventListener(){},removeEventListener(){}}),showModal(){this.open=true},addEventListener(){}},exit={textContent:''},store={textContent:'校园网密码由 Windows DPAPI 加密'};
- const context=vm.createContext({szuDesktop:MAC,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
+ const context=vm.createContext({szuDesktop:MAC,state:createState(NOW),saved:true,appVersion:VERSION,page:'settings',settingsTab:'desktop',workspaceFailure:null,saveFromNewerVersion,head:()=>'',sprite:()=>'',esc,homeSkinPicker,
   btn:(label,action,extra='',cls='')=>`<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`,
   desktopUI:createDesktopOptions({toast(){}}),releaseUI:createReleaseUI({api:()=>assert.fail('打开设置页不应自动检查更新'),getVersion:()=>VERSION}),
   feedbackUI:createFeedbackUI({getVersion:()=>VERSION,getMode:()=>'electron',toast(){}}),exitHint:()=>exitHint(),

@@ -60,7 +60,7 @@ export const SAVE_SCHEMA=4; // 待办来源回链；旧待办原样升级，不�
 // 更新版本写的存档。读成本版本认识的样子再保存，新版本的内容就没了，所以宁可拒读。
 export const saveFromNewerVersion=raw=>!!raw&&typeof raw==='object'&&Number.isInteger(raw.schema)&&raw.schema>SAVE_SCHEMA;
 export function createState(now=Date.now()){
- return {schema:SAVE_SCHEMA,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'undergrad',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
+ return {schema:SAVE_SCHEMA,profile:{name:'',college:''},preferences:{theme:'day',homeSkin:'pixel',motion:true,onboarded:false,noticeSource:'auto',studentLevel:'undergrad'},todos:[],courses:[],reminders:[],semester:'',
  game:{created:now,last:now,coins:40,food:3,seeds:cropBag({radish:4,strawberry:2}),stock:cropBag(),
  plots:[{crop:'radish',planted:now,ready:now+60000,watered:false},null,null,'locked','locked','locked'],
  pets:AVAILABLE_PETS.map(species=>createPet(species,now)),active:0,puzzle:createPuzzle(now),orders:createOrders(),
@@ -136,7 +136,7 @@ export function normalize(input,now=Date.now()){
  const validAchievements=new Set(achievementList(g).map(item=>item.id));g.achievements=g.achievements.filter(id=>validAchievements.has(id));
 
  s.profile={name:limitedText(s.profile?.name,20),college:limitedText(s.profile?.college,40)};
- s.preferences={theme:s.preferences?.theme==='night'?'night':'day',homeSkin:['pixel','lake','bookshop','terrace'].includes(s.preferences?.homeSkin)?s.preferences.homeSkin:'pixel',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'undergrad',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
+ s.preferences={theme:s.preferences?.theme==='night'?'night':'day',homeSkin:['pixel','lake','bookshop','terrace'].includes(s.preferences?.homeSkin)?s.preferences.homeSkin:'pixel',motion:s.preferences?.motion!==false,onboarded:s.preferences?.onboarded===true,noticeSource:typeof s.preferences?.noticeSource==='string'&&/^[a-z][a-z0-9_-]{0,63}$/.test(s.preferences.noticeSource)?s.preferences.noticeSource:'auto',studentLevel:s.preferences?.studentLevel==='graduate'?'graduate':'undergrad'};
  s.todos=(Array.isArray(s.todos)?s.todos:[]).slice(0,500).filter(x=>x&&typeof x.id==='string'&&typeof x.text==='string').map(x=>{const source=normalizeTodoSource(x.source);return {id:x.id.slice(0,60),text:x.text.slice(0,120),done:!!x.done,rewarded:!!x.rewarded,date:validDate(x.date)?x.date:'',createdAt:timeValue(x.createdAt),completedAt:x.done?timeValue(x.completedAt):0,archived:!!x.archived&&!!x.done,...(source?{source}:{})}});
 	s.courses=(Array.isArray(s.courses)?s.courses:[]).slice(0,300).filter(x=>x&&Number.isFinite(x.credit)&&Number.isFinite(x.point)&&x.credit>0&&x.credit<=100&&x.point>=0&&x.point<=5).map(x=>({name:limitedText(x.name,100,'课程')||'课程',credit:x.credit,point:x.point,term:limitedText(x.term,40),code:limitedText(x.code,40),level:['undergrad','graduate'].includes(x.level)?x.level:'',grade:limitedText(x.grade,20),source:limitedText(x.source,30,'手动录入')||'手动录入',included:x.included!==false}));
  s.reminders=(Array.isArray(s.reminders)?s.reminders:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.place==='string'&&Number.isFinite(x.start)&&Number.isFinite(x.end)&&x.end>x.start&&x.end-x.start<=86400000).slice(0,50).map(x=>({id:x.id.slice(0,80),place:x.place.slice(0,80),start:x.start,end:x.end}));
@@ -154,17 +154,16 @@ export function normalize(input,now=Date.now()){
  return settled;
 }
 const plainObject=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
-// 每次试读都要完整 normalize 一遍。正常存档最多试九十来次，上限留足余量，损坏得再离谱也很快结束。
-const RECOVER_ATTEMPTS=200;
-// 宽松恢复：严格读档失败时的补救入口，对任何输入都不抛错。原存档的字段逐项放进一份新存档里试读，
-// 通过校验的保留，通不过的子项退回默认值；返回值已经过 normalize，可以直接使用和保存。
+// 只恢复已支持版本的 JSON 存档。按固定字段尝试保留内容，损坏项回到默认值。
+// 新版存档必须更新应用后读取；恢复结果已经通过 normalize。
 export function recoverSave(raw,now=Date.now()){
- let src=null;try{src=JSON.parse(JSON.stringify(raw??null))}catch{}
+ if(saveFromNewerVersion(raw))throw Error('这份存档来自更新版本，请先更新应用，不能用宽松恢复降级。');
+ check(plainObject(raw)&&Number.isInteger(raw.schema)&&raw.schema>=2&&raw.schema<=SAVE_SCHEMA,'无法识别这份存档，请从备份恢复。');
+ const src=raw;
  try{return normalize(src,now)}catch{}
- if(!plainObject(src))return normalize(createState(now),now);
  const game=plainObject(src.game)?src.game:{},valid=candidate=>{try{normalize(candidate,now);return true}catch{return false}};
- let kept=createState(now),tries=0;
- const attempt=change=>{if(++tries>RECOVER_ATTEMPTS)return false;const next=structuredClone(kept);change(next);if(!valid(next))return false;kept=next;return true};
+ let kept=createState(now);
+ const attempt=change=>{const next=structuredClone(kept);change(next);if(!valid(next))return false;kept=next;return true};
  for(const key of ['profile','preferences','todos','courses','reminders','semester'])if(Object.hasOwn(src,key))attempt(s=>{s[key]=src[key]});
  for(const key of Object.keys(kept.game)){
   if(key==='pets'||key==='active'||!Object.hasOwn(game,key)||attempt(s=>{s.game[key]=game[key]}))continue;
@@ -176,9 +175,13 @@ export function recoverSave(raw,now=Date.now()){
  }
  // 伙伴逐只保留；不认识的种类被跳过，一只都留不下时使用新存档的伙伴。schema 2 的单伙伴照常迁移。
  const pets=Array.isArray(game.pets)?game.pets:plainObject(game.pet)?[{...game.pet,species:'chestnut'}]:[],saved=[];
- for(const pet of pets){if(saved.length>=PET_LIMIT||tries>=RECOVER_ATTEMPTS)break;if(attempt(s=>{s.game.pets=[...saved,pet];s.game.active=0}))saved.push(pet)}
+ for(const pet of pets){
+  if(saved.length>=PET_LIMIT)break;
+  if(!plainObject(pet)||typeof pet.species!=='string'||!Object.hasOwn(PETS,pet.species))continue;
+  if(attempt(s=>{s.game.pets=[...saved,pet];s.game.active=0}))saved.push(pet);
+ }
  if(saved.includes(pets[game.active]))attempt(s=>{s.game.active=saved.indexOf(pets[game.active])});
- try{return normalize(kept,now)}catch{return normalize(createState(now),now)}
+ return normalize(kept,now);
 }
 // 时钟校正：系统时间调快后又改回，存档里会留下比现在更晚的时间戳。把进行中的计时整体平移到
 // 当前时钟，剩余的生长、专注和冷却时间保持不变，庭院不会因此被冻结。

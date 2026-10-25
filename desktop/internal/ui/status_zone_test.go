@@ -54,11 +54,3 @@ func TestStatusShowsConfirmedZoneWhenOnline(t *testing.T) {
 		})
 	}
 }
-
-// 中性说明在接口里取自 portal（命令行 status 打印的是同一句），server.go 里另有一份字面量供
-// check-network-ui.mjs 核对页面的兜底文字，三处只能一起改。
-func TestStatusNoCampusPortalNoteMatchesPortal(t *testing.T) {
-	if got := portal.NoCampusPortalNote(&portal.DetectResult{Zone: portal.ZoneOnline, InternetOK: true}); got != noCampusPortalNote {
-		t.Fatalf("portal 的中性说明 %q 与 server.go 的 noCampusPortalNote %q 不一致", got, noCampusPortalNote)
-	}
-}

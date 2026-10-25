@@ -61,8 +61,7 @@ await check('entering while catalog is loading shares that request and waits to 
 });
 await check('a failed first read remains explicit until a user retries',async()=>{
  let failed=true,reads=0;
- // O15：没有线索时第一次进入不再自动读教务部；这里改成设置里填了「教务部」的同学，其余步骤不变。
- const first=createNoticesUI({getProfile:()=>({college:'教务部'}),api:async path=>{if(path.endsWith('/notice-sources'))return {sources};reads++;if(failed)throw Error('学校网站暂时无法读取');return response('undergrad')}});
+ const first=createNoticesUI({getSource:()=> 'undergrad',api:async path=>{if(path.endsWith('/notice-sources'))return {sources};reads++;if(failed)throw Error('学校网站暂时无法读取');return response('undergrad')}});
  await first.enter();assert.match(first.card(),/学校网站暂时无法读取/);
  await first.enter();assert.equal(reads,1,'rendering an error cannot start a retry loop');
  failed=false;await first.click('notice-read');assert.equal(reads,2);assert.match(first.card(),/教务部 · 读取于/);
@@ -75,8 +74,7 @@ await check('a saved unsupported college stays an official link without an autom
 });
 
 await check('an empty successful feed explains its scope and keeps the original page available',async()=>{
- // O15：同上，由设置里的「教务部」选定栏目。
- const empty=createNoticesUI({getProfile:()=>({college:'教务部'}),api:async path=>path.endsWith('/notice-sources')?{sources}:{...response('undergrad'),items:[]}});
+ const empty=createNoticesUI({getSource:()=> 'undergrad',api:async path=>path.endsWith('/notice-sources')?{sources}:{...response('undergrad'),items:[]}});
  await empty.enter();
  assert.match(empty.card(),/这个栏目本次没有可显示的公告/);assert.match(empty.card(),/查看原页确认最新通知/);
  assert.match(empty.card(),/href="https:\/\/jwb.szu.edu.cn\/index\/jwtz.htm"/);
@@ -105,13 +103,13 @@ await check('the college saved in settings is used directly; an unmatched one is
  await other.enter();assert.match(other.card(),/先选你的学院/);assert.match(other.card(),/&lt;b&gt;计软&lt;\/b&gt;/);assert.doesNotMatch(other.card(),/<b>计软/);
 });
 await check('graduate students default to the graduate school; a saved choice and the settings college still win',async()=>{
- const requests=[];let level='graduate',saved='undergrad',college='';
+ const requests=[];let level='graduate',saved='auto',college='';
  const api=async path=>{requests.push(path);if(path.endsWith('/notice-sources'))return {sources:graduateSources};return feedFor(new URL('http://localhost'+path).searchParams.get('source'))};
  const graduate=createNoticesUI({api,getSource:()=>saved,getProfile:()=>({college,level})});
  await graduate.enter();assert.match(requests.at(-1),/source=graduate/);assert.match(graduate.card(),/研究生院 · 读取于/);
  saved='college-fe';const chosen=createNoticesUI({api,getSource:()=>saved,getProfile:()=>({college,level})});
  await chosen.enter();assert.match(requests.at(-1),/source=college-fe/,'存过的学院优先于培养层次');
- saved='undergrad';college='法学院';const fromSettings=createNoticesUI({api,getSource:()=>saved,getProfile:()=>({college,level})});
+ saved='auto';college='法学院';const fromSettings=createNoticesUI({api,getSource:()=>saved,getProfile:()=>({college,level})});
  await fromSettings.enter();assert.match(requests.at(-1),/source=college-law/,'设置里的学院优先于培养层次');
  college='';level='undergrad';const later=createNoticesUI({api,getSource:()=>saved,getProfile:()=>({college,level})});
  await later.enter();assert.match(later.card(),/先选你的学院/);
@@ -128,18 +126,17 @@ await check('a feed whose newest item is a month old says so above the list',asy
  const now=new Date('2026-09-29T10:00:00').getTime();
  assert.equal(staleNote([{date:'2026-06-08'},{date:'2026-04-20'}],now),'这个栏目最新一条发布于 3 个月前（2026-06-08），可能不常更新；可以换一个学院或部门看看。');
  assert.equal(staleNote([{date:'2026-09-20'}],now),'');assert.equal(staleNote([{date:''}],now),'');
- const ui=createNoticesUI({getProfile:()=>({college:'教务部'}),now:()=>now,api:async path=>path.endsWith('/notice-sources')?{sources}:{...response('undergrad'),items:[{title:'旧通知',date:'2026-06-08',url:'https://jwb.szu.edu.cn/a.htm'}]}});
+ const ui=createNoticesUI({getSource:()=> 'undergrad',now:()=>now,api:async path=>path.endsWith('/notice-sources')?{sources}:{...response('undergrad'),items:[{title:'旧通知',date:'2026-06-08',url:'https://jwb.szu.edu.cn/a.htm'}]}});
  await ui.enter();assert.match(ui.card(),/最新一条发布于 3 个月前/);
 });
-// 存档里的 undergrad 分不清「亲手选了教务部」和「从没选过」，所以选了教务部下次还会再问。提示不能笼统承诺「会记住」，要说清楚怎么让它记住。
-await check('picking 教务部 from the prompt is asked again next launch, and the prompt says so instead of promising to remember',async()=>{
- let saved='undergrad';const config={api:async path=>path.endsWith('/notice-sources')?{sources}:response('undergrad'),getSource:()=>saved,setSource:async id=>{saved=id}};
+await check('an explicit 教务部 choice survives reopening and takes priority over the profile',async()=>{
+ let saved='auto';const config={api:async path=>path.endsWith('/notice-sources')?{sources}:response('undergrad'),getSource:()=>saved,setSource:async id=>{saved=id}};
  const first=createNoticesUI(config);await first.enter();
  const prompt=/<div class="notice notice-first-choice"[\s\S]*?<\/div>/.exec(first.card())?.[0]||'';
- assert.match(prompt,/选好后会记在本机/);assert.match(prompt,/只有教务部记不住：想每次直接看它，在设置里把学院填成「教务部」/,'承诺会记住的同一段里要写明教务部例外');
+ assert.match(prompt,/选好后会记在本机/);assert.doesNotMatch(prompt,/教务部记不住|学院填成/);
  await first.change({target:{id:'feed-source',value:'undergrad'}});await nextTurn();assert.equal(saved,'undergrad');assert.doesNotMatch(first.card(),/先选你的学院/);
- const relaunched=createNoticesUI(config);await relaunched.enter();assert.match(relaunched.card(),/先选你的学院/,'重启后仍会再问（与提示里写的一致）');
- const filled=createNoticesUI({...config,getProfile:()=>({college:'教务部'})});await filled.enter();assert.doesNotMatch(filled.card(),/先选你的学院/,'按提示在设置里填了「教务部」就不再问');assert.match(filled.card(),/教务部 · 读取于/);
+ const relaunched=createNoticesUI(config);await relaunched.enter();assert.doesNotMatch(relaunched.card(),/先选你的学院/);assert.match(relaunched.card(),/教务部 · 读取于/);
+ const existing=createNoticesUI({...config,getProfile:()=>({college:'法学院',level:'graduate'})});await existing.enter();assert.match(existing.card(),/教务部 · 读取于/,'现有存档的 undergrad 也是有效选择，不被学院或培养层次覆盖');
 });
 const officialSources=sources.map(s=>({...s,search_mode:s.readable?'official':'unavailable'}));
 const officialResult=(id,q='通知',page=1,scope='title')=>({source_id:id,source:sources.find(s=>s.id===id).name,url:sources.find(s=>s.id===id).url,query:q,scope,range:'column',range_label:'所选学院当前栏目',page,page_size:12,total:25,fetched_at:'2026-10-24T03:00:00Z',items:[{title:`${q} 第${page}页 <script>`,url:'https://law.szu.edu.cn/info/100/10.htm',date:'2026-10-24',can_read:true},{title:'官网外部文章',url:'https://mp.weixin.qq.com/s/example',date:'2026-10-23',can_read:false}]});
@@ -154,7 +151,7 @@ await check('official search sends title or fulltext scope and exposes real tota
 });
 await check('loaded-title search filters all fetched items before paginating and never calls official search',async()=>{
  const many={...response('undergrad'),items:Array.from({length:25},(_,i)=>({title:(i<12?'普通':'目标')+i,date:'2026-10-24',url:'https://jwb.szu.edu.cn/info/1053/'+(i+1)+'.htm'}))};const paths=[];
- const ui=createNoticesUI({getProfile:()=>({college:'教务部'}),api:async path=>{paths.push(path);return path.endsWith('/notice-sources')?{sources}:many}});
+ const ui=createNoticesUI({getSource:()=> 'undergrad',api:async path=>{paths.push(path);return path.endsWith('/notice-sources')?{sources}:many}});
  await ui.enter();assert.match(ui.card(),/本次读取.*标题/);ui.input({target:{id:'notice-query',value:'目标'}});await ui.click('notice-search');
  assert.match(ui.card(),/13 条/);assert.match(ui.card(),/25 条标题/);assert.match(ui.card(),/目标12/);assert.match(ui.card(),/目标23/);assert.doesNotMatch(ui.card(),/目标24/);assert.equal(paths.length,2);
  await ui.click('notice-search-next');assert.match(ui.card(),/目标24/);assert.doesNotMatch(ui.card(),/>目标12</);assert.equal(paths.length,2);

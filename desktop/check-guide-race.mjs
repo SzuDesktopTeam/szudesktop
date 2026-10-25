@@ -5,7 +5,8 @@ import {createState,act,normalize} from './assets/garden/engine.mjs';
 import {recordOnboarded} from './assets/garden/app-logic.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 const source=fs.readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
-const code=source.slice(source.indexOf('function showGuide(){'),source.indexOf('function todoHTML(){'));
+const from=source.search(/\bfunction\s+showGuide\s*\(/),to=source.search(/\bfunction\s+todoHTML\s*\(/);
+assert.ok(from>=0&&to>from);const code=source.slice(from,to);
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function fixture(){
  const formEvents={},events={},buttons=Array.from({length:6},()=>({disabled:false})),status={hidden:true,textContent:''},messages=[],writes=[],routes=[],noteEvents=[];
@@ -20,7 +21,13 @@ function fixture(){
  return {context,guide,status,buttons,messages,writes,routes,noteEvents,failNote:e=>noteFail=e,open:()=>context.showGuide(),submit:(choice='ok')=>formEvents.submit({preventDefault(){},submitter:{value:choice}}),cancel:()=>events.cancel({preventDefault(){}}),hold:()=>hold=true,release:()=>{hold=false;release()},fail:e=>fail=e,server:()=>server,updateExternal(){server.data.profile.name='合成另一窗口';server.revision++}};
 }
 const delayed=fixture();delayed.hold();delayed.open();delayed.submit();await tick();assert.equal(delayed.guide.open,true);assert.equal(delayed.context.busy,true);assert.ok(delayed.buttons.every(b=>b.disabled));assert.match(delayed.status.textContent,/正在收好/);assert.equal(delayed.writes.length,1);assert.equal(delayed.writes[0].data.preferences.onboarded,true);assert.ok(delayed.writes[0].data.game.journey.days.includes(delayed.writes[0].data.game.daily.day));delayed.submit();delayed.cancel();assert.equal(delayed.writes.length,1);delayed.release();await tick();assert.equal(delayed.guide.open,false);assert.equal(delayed.context.busy,false);assert.ok(delayed.buttons.every(b=>!b.disabled));await delayed.context.commit(act(delayed.context.state,{type:'pat'}));assert.ok(delayed.server().data.game.pets[0].lastPat>0);
-const failed=fixture();failed.fail(Object.assign(Error('synthetic outage'),{code:500}));failed.open();failed.submit();await tick();assert.equal(failed.guide.open,true);assert.equal(failed.context.state.preferences.onboarded,false);assert.match(failed.status.textContent,/请稍后重试/);assert.match(failed.messages.at(-1),/synthetic outage/);assert.ok(failed.buttons.every(b=>!b.disabled));failed.fail(null);failed.cancel();await tick();assert.equal(failed.guide.open,false);assert.equal(failed.server().data.preferences.onboarded,true);
+for(const dismiss of ['skip','escape']){
+ const failed=fixture();failed.fail(Object.assign(Error('synthetic outage'),{code:500}));failed.open();
+ if(dismiss==='skip')failed.submit();else failed.cancel();
+ await tick();assert.equal(failed.guide.open,false,'保存引导标记失败不能阻止关闭');assert.equal(failed.context.state.preferences.onboarded,false);
+ assert.match(failed.messages.at(-1),/synthetic outage/);assert.match(failed.messages.at(-1),/下次/);assert.deepEqual(failed.routes,[]);assert.equal(failed.writes.length,0);assert.ok(failed.buttons.every(b=>!b.disabled));
+ failed.fail(null);failed.open();failed.cancel();await tick();assert.equal(failed.guide.open,false);assert.equal(failed.server().data.preferences.onboarded,true);
+}
 const other=fixture();other.hold();other.open();other.submit();await tick();other.updateExternal();other.release();await tick();await assert.rejects(other.context.commit(act(other.context.state,{type:'pat'})),/本次操作尚未保存/);assert.equal(other.context.state.profile.name,'合成另一窗口');assert.equal(other.server().data.profile.name,'合成另一窗口');assert.equal(other.server().data.game.pets[0].lastPat,0);await other.context.commit(act(other.context.state,{type:'pat'}));assert.ok(other.server().data.game.pets[0].lastPat>0);assert.equal(other.server().data.profile.name,'合成另一窗口');
 for(const [choice,route] of [['notices',['services','notices']],['library',['services','library']],['garden',['garden','pet']],['notes',['study','notes']]]){
  const routed=fixture();routed.hold();routed.open();routed.submit(choice);await tick();
@@ -30,5 +37,8 @@ for(const [choice,route] of [['notices',['services','notices']],['library',['ser
  if(choice==='notes')assert.deepEqual(routed.noteEvents,['startLecture','navigate','focusBody']);
 }
 const intentFailure=fixture();intentFailure.fail(Object.assign(Error('synthetic save failure'),{code:500}));intentFailure.open();intentFailure.submit('notes');await tick();assert.equal(intentFailure.guide.open,true);assert.equal(intentFailure.noteEvents.length,0);assert.equal(intentFailure.routes.length,0);intentFailure.fail(null);intentFailure.submit('notes');await tick();assert.deepEqual(intentFailure.noteEvents,['startLecture','navigate','focusBody']);assert.deepEqual(intentFailure.routes,[['study','notes']]);
+const skipAfterFailure=fixture();skipAfterFailure.fail(Error('synthetic save failure'));skipAfterFailure.open();skipAfterFailure.submit('library');await tick();assert.equal(skipAfterFailure.guide.open,true);assert.match(skipAfterFailure.status.textContent,/synthetic save failure/);skipAfterFailure.cancel();await tick();assert.equal(skipAfterFailure.guide.open,false);assert.deepEqual(skipAfterFailure.routes,[]);
 const noteFailure=fixture();noteFailure.failNote(Error('合成笔记保存失败'));noteFailure.open();noteFailure.submit('notes');await tick();assert.equal(noteFailure.guide.open,false);assert.equal(noteFailure.server().data.preferences.onboarded,true);assert.equal(noteFailure.routes.length,0,'笔记创建失败不能导航后伪装成新建成功');assert.match(noteFailure.messages.at(-1),/笔记保存失败/);assert.equal(noteFailure.context.busy,false);
+const focusFailure=fixture();focusFailure.context.state.preferences.onboarded=true;focusFailure.fail(Error('合成专注保存失败'));focusFailure.open();focusFailure.submit('focus');await tick();assert.equal(focusFailure.context.state.game.focus,null);assert.deepEqual(focusFailure.routes,[],'专注创建失败不能继续跳转');assert.match(focusFailure.messages.at(-1),/专注保存失败/);assert.equal(focusFailure.context.busy,false);
+const focusSuccess=fixture();focusSuccess.open();focusSuccess.submit('focus');await tick();assert.equal(focusSuccess.server().data.game.focus.duration,5);assert.deepEqual(focusSuccess.routes,[['study','focus']]);assert.equal(focusSuccess.writes.length,2,'先保存引导，再保存五分钟专注');focusSuccess.open();focusSuccess.submit('focus');await tick();assert.equal(focusSuccess.writes.length,2,'已有专注时直接打开，不重复创建');assert.equal(focusSuccess.routes.length,2);
 console.log('Guide race checks passed: atomic visit, modal save gate, duplicate submit, failure/retry, Esc, delayed response, external409 preservation, intent routes and notebook failure');

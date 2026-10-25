@@ -9,23 +9,12 @@ export const networkTone=status=>!status?'muted':status.internet_ok?'success':'e
 export const networkLoginHint=status=>!status?'连接状态待确认，可展开检查账号':status.internet_ok?'当前外网可用，按需展开':'填写账号，连接校园网络';
 const row=(tone,icon,title,detail)=>`<div class="network-line" data-tone="${tone}">${pixelIcon(icon)}<div><strong>${title}</strong>${detail?`<span>${esc(detail)}</span>`:''}</div></div>`;
 
-// 校园认证这一栏按 /api/status 的 online_state 分（与 desktop/internal/ui/server.go 的 onlineState* 一致）：
-// online / offline 已查明；no_campus_portal 只说明外网可用、校园认证未确认，不能据此断言门户不存在或本机已认证。
-// not_queried 是没判到教学区或宿舍区、没去查。
-// 这两种都用灰色的中性说明。只有 unconfirmed（判定在教学区或宿舍区，门户却查不到）才保留琥珀色和诊断引导。
-// 旧版接口没有 online_state 时，按「外网正常、判区为已联网、没查明」自己判断中性状态，其余照旧按待确认处理。
-export const OFF_CAMPUS_NOTE='外网可用；校园网认证状态暂未确认';
-export function authState(status){
-  if(status.online_known)return status.online?'online':'offline';
-  if(['no_campus_portal','not_queried','unconfirmed'].includes(status.online_state))return status.online_state;
-  return status.internet_ok===true&&status.zone==='online'?'no_campus_portal':'unconfirmed';
-}
-
+// 外网连通与校园认证独立显示；认证状态和中性说明由同版 /api/status 提供。
 export function networkSummaryHTML(status,error='') {
   if(!status)return row('muted','i-compass','状态未确认',error||'网络状态尚未确认，请刷新后重试。');
-  const connection=row(networkTone(status),status.internet_ok?'i-signal':'i-disconnect',networkBadge(status),status.zone_label),auth=authState(status);
-  if(auth==='online'||auth==='offline')return connection+row(status.online?'success':'warning','i-shield','校园认证',status.online?'当前网络出口已在线。':'门户未检测到在线会话。');
-  if(auth==='no_campus_portal')return connection+row('muted','i-compass','校园认证',status.online_note||OFF_CAMPUS_NOTE);
+  const connection=row(networkTone(status),status.internet_ok?'i-signal':'i-disconnect',networkBadge(status),status.zone_label),auth=status.online_state;
+  if(auth==='online'||auth==='offline')return connection+row(auth==='online'?'success':'warning','i-shield','校园认证',auth==='online'?'当前网络出口已在线。':'门户未检测到在线会话。');
+  if(auth==='no_campus_portal')return connection+row('muted','i-compass','校园认证',status.online_note);
   if(auth==='not_queried')return connection+row('muted','i-compass','校园认证','没有判定在教学区或宿舍区，没有查询认证状态。');
   return connection+row('warning','i-compass','校园认证待确认',status.online_error?'暂未查明：'+status.online_error:'当前网络未确认校园认证状态。');
 }

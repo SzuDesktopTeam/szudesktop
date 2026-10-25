@@ -16,9 +16,7 @@ import {createElectricityUI} from './electricity.mjs';
 import {createAcademicCatalogUI} from './academic-catalog.mjs';
 import {createPianoUI} from './piano.mjs';
 import {createSchoolWindowUI} from './school-window.mjs';
-import {CROPS,DECOR,QUESTS,createState,normalize,settle,act,level,gardenLevel,dayKey,journeyKeepsakes,achievementList,activePet,petSprite,PETS,plotUnlockCost} from './engine.mjs';
-// 宽松恢复 recoverSave 由庭院引擎提供；用命名空间读取，引擎暂未提供时页面也能照常加载。
-import * as engine from './engine.mjs';
+import {CROPS,DECOR,QUESTS,createState,normalize,recoverSave,saveFromNewerVersion,settle,act,level,gardenLevel,dayKey,journeyKeepsakes,achievementList,activePet,petSprite,PETS,plotUnlockCost} from './engine.mjs';
 import {PET_SYMBOLS} from './pet-art.mjs';
 import {PET_SPRITES} from './pet-catalog.mjs';
 import {createPetPlayer,petReaction} from './pet-player.mjs';
@@ -291,13 +289,29 @@ function showGuide(){
  const d=$('#guide');if(!d||d.open)return;const hint=$('#exit-guide-text');if(hint)hint.textContent=exitHint();const store=$('#guide-store-text');if(store&&globalThis.szuDesktop?.platform==='darwin')store.textContent='校园网密码存进 macOS 钥匙串';d.returnValue='';d.showModal();
  const form=d.querySelector('form'),status=$('#guide-save-status');if(status)status.hidden=true;let saving=false;
  // Keep the guide modal until its write settles, so the first pet click uses the saved revision.
- async function finish(choice){if(saving)return;saving=true;const buttons=[...form.querySelectorAll('button')].map(b=>[b,b.disabled]);buttons.forEach(([b])=>b.disabled=true);d.setAttribute('aria-busy','true');if(status){status.hidden=false;status.textContent='正在收好首次设置…'}try{await run(()=>markOnboarded(),false);if(state.preferences.onboarded)d.close(choice);else if(status)status.textContent='首次设置还没保存，请稍后重试。原存档已保留。'}finally{saving=false;d.removeAttribute('aria-busy');buttons.forEach(([b,disabled])=>b.disabled=disabled)}}
+ async function finish(choice){
+  if(saving)return;saving=true;
+  const buttons=[...form.querySelectorAll('button')].map(b=>[b,b.disabled]);buttons.forEach(([b])=>b.disabled=true);d.setAttribute('aria-busy','true');
+  if(status){status.hidden=false;status.textContent='正在收好首次设置…'}
+  let close=false;
+  try{
+   await run(async()=>{
+    try{await markOnboarded();close=true}
+    catch(e){
+     const message='首次设置没能保存：'+e.message;
+     if(!choice||choice==='ok'){close=true;toast(message+'。下次打开还会看到引导。')}
+     else if(status)status.textContent=message+'。可以重试，或先随便逛逛。';
+    }
+   },false);
+   if(close)d.close(choice);
+  }finally{saving=false;d.removeAttribute('aria-busy');buttons.forEach(([b,disabled])=>b.disabled=disabled)}
+ }
  const submit=e=>{e.preventDefault();void finish(e.submitter?.value||'')};
  const cancel=e=>{e.preventDefault();void finish('')};
  form.addEventListener('submit',submit);d.addEventListener('cancel',cancel);
- d.addEventListener('close',async()=>{form.removeEventListener('submit',submit);d.removeEventListener('cancel',cancel);const choice=d.returnValue,route={notices:['services','notices'],library:['services','library'],garden:['garden','pet'],focus:['study','focus']}[choice];if(choice==='notes'){await run(async()=>{await notebookUI.startLecture();if(await navigate('study','notes'))notebookUI.focusBody()});return}if(choice==='focus'&&!state.game.focus)await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart')});if(route)navigate(...route)},{once:true});
+ d.addEventListener('close',async()=>{form.removeEventListener('submit',submit);d.removeEventListener('cancel',cancel);const choice=d.returnValue,route={notices:['services','notices'],library:['services','library'],garden:['garden','pet'],focus:['study','focus']}[choice];if(choice==='notes'){await run(async()=>{await notebookUI.startLecture();if(await navigate('study','notes'))notebookUI.focusBody()});return}if(choice==='focus'&&!state.game.focus){await run(async()=>{await commit(act(state,{type:'focusStart',minutes:5}),undefined,()=>{});reactPet('focusStart');await navigate(...route)});return}if(route)navigate(...route)},{once:true});
 }
-function markOnboarded(){return recordOnboarded(act(state,{type:'visit'}),{commit,toast})}
+function markOnboarded(){return recordOnboarded(act(state,{type:'visit'}),{commit})}
 function todoHTML(){return todoView(state,todoFilter)}
 function companionRoster(g,compact=false){
  const draw=legacy=>g.pets.map((p,index)=>({p,index})).filter(({p})=>!PETS[p.species].available===legacy).map(({p,index})=>{
@@ -410,10 +424,10 @@ function settings(){
  // 读档失败时只把存档卡换成恢复说明；从备份恢复、课程笔记备份和删除凭据都与庭院存档无关，照常可用。
  const data=`${workspaceFailure?workspaceFailureHTML():''}<div class="settings-layout"><section class="card"><h2 class="icon-heading tone-warning">${sprite('i-satchel','heading-icon')}存档与备份</h2><p class="muted">${workspaceFailure?'庭院存档暂时打不开，可以用以前导出的备份替换它。课程笔记独立保存，照常可以备份。':'庭院、待办、绩点和个人展示都保存在本机。更新程序不会清空存档。课程笔记独立保存，请另外导出笔记备份。导出文件不包含校园网账号密码。'}</p><div class="actions">${workspaceFailure?'':btn('导出庭院与待办','export')}${btn('备份课程笔记','notebookBackup','','quiet')}</div><label for="import-file">从备份恢复</label><input id="import-file" type="file" accept="application/json,.json"><small>这里导入会替换庭院、待办与绩点，不会替换课程笔记；确认前会校验文件。</small><p class="notice">${mac?'存档默认位于 ~/.szunet/workspace-v1.json（在 Finder 中按 ⌘⇧. 可显示隐藏文件夹）。':'存档默认位于用户目录下的 .szunet / workspace-v1.json。'}换电脑前，请先导出存档。</p></section><section class="card"><h2 class="icon-heading tone-success">${sprite('i-shield','heading-icon')}账号隐私</h2><p>${saved?'本机已保存校园网凭据。默认不显示卡号。':'本机没有保存校园网凭据。'}</p><p class="muted">${mac?'macOS 把密码存进系统钥匙串（Keychain）。':'Windows 使用系统 DPAPI 保护密码。'}查看卡号需要在校园网页主动点击，不会出现在首页或导出的存档里。</p>${btn('删除已保存凭据','forget',saved?'':'disabled','danger')}</section></div>`;
  // 功能状态只留 README 功能表一个来源，这里只放一句话和链接，免得两处各写一份又对不上。
- const about=`<div class="settings-layout">${releaseUI.card()}${feedbackUI.card()}<section class="card settings-about"><h2 class="icon-heading">${sprite('i-cottage','heading-icon')}关于荔枝庭院</h2><p><strong id="about-version">szuDesktop ${appVersion||'版本未知'}</strong></p><p class="muted">把学校里的小事安顿好，也给每天留一点好玩的时间。</p><p class="muted">各项功能现在是可用、测试中还是部分可用，以 <a href="https://github.com/SzuDesktopTeam/szudesktop#%E5%8A%9F%E8%83%BD" target="_blank" rel="noopener noreferrer">README 的功能表 ↗</a> 为准。</p><div class="actions">${btn('退出应用','shutdown','','danger')}</div><small>${exitHint()}</small></section></div>`;
+ const about=`<div class="settings-layout">${releaseUI.card()}${feedbackUI.card()}<section class="card settings-about"><h2 class="icon-heading">${sprite('i-cottage','heading-icon')}关于荔枝庭院</h2><p><strong id="about-version">szuDesktop ${appVersion||'版本未知'}</strong></p><p class="muted">把学校里的小事安顿好，也给每天留一点好玩的时间。</p><p><a href="https://github.com/SzuDesktopTeam/szudesktop#装上之后可以做什么" target="_blank" rel="noopener noreferrer">功能介绍 ↗</a></p><div class="actions">${btn('退出应用','shutdown','','danger')}</div><small>${exitHint()}</small></section><details class="card"><summary>帮助与排障</summary><p>先保存当前内容，再刷新页面。</p><button data-action="reload">保存并刷新页面</button></details></div>`;
  return head('设置','收好回忆，让这里更像自己。')
  +sectionNav({appearance:'风景与偏好',desktop:'桌面陪伴',data:'存档与隐私',about:'关于与更新'},settingsTab,'settingsTab','设置分区')
- +(workspaceFailure&&settingsTab==='appearance'?workspaceFailureHTML():({appearance,desktop,data,about})[settingsTab])+`<section class="card"><h2>重新打开工作区</h2><p>先保存课程笔记和 2048 进度，再重新读取当前工作区；保存失败时保留草稿。不会重启桌面引擎或学校登录窗口。</p><button data-action="reload">保存并重新打开</button></section>`;
+ +(workspaceFailure&&settingsTab==='appearance'?workspaceFailureHTML():({appearance,desktop,data,about})[settingsTab]);
 }
 function loadPetScale(){
  const input=$('#pet-scale');if(!input||!globalThis.szuDesktop?.setPetScale)return;
@@ -443,7 +457,7 @@ function render(){if(!state)return;document.body.dataset.theme=state.preferences
 // 也不打断 clocks() 等后续刷新。存档与其它页面不受影响。
 function pageHTML(){try{if(workspaceFailure&&(page==='home'||page==='garden'))return workspaceFailureHTML();return ({home,network,services:servicesPage,garden,study,settings})[page]()}catch(e){return `<section class="card"><h1>这个页面没能显示</h1><p class="notice error">${esc(e&&e.message||'渲染异常')}</p><p>你的存档和其他页面不受影响。可以切换到别的页面，或重新打开程序。</p><button data-action="navigate" data-page="home">回到今日</button></section>`}}
 // 读档失败时依赖庭院存档的页面显示这张卡片；页头、分区和其他页面照常可用。
-function workspaceFailureHTML(){const hasRaw=workspaceFailure.raw!==null&&workspaceFailure.raw!==undefined,mac=globalThis.szuDesktop?.platform==='darwin';return `<section class="card workspace-failure" id="workspace-failure"><h1>庭院存档暂时打不开</h1><p class="notice error">${esc(workspaceFailure.message)}</p><p>原存档不会被覆盖。校园网、课程笔记和设置仍然可用。</p>${hasRaw?`<p class="muted">宽松恢复会尽量保留能读懂的伙伴、作物、待办和设置，其余恢复为初始值，再保存为本机存档。恢复前建议先导出原始存档。</p><div class="actions">${btn('导出原始存档','workspaceExportRaw','','quiet')}${btn('尝试宽松恢复','workspaceRecover','','primary')}</div>`:mac?'<p class="muted">存档默认位于 ~/.szunet/workspace-v1.json（在 Finder 中按 ⌘⇧. 可显示隐藏文件夹）。可以先备份这个文件，再重新读取。</p>':'<p class="muted">存档默认位于用户目录下的 .szunet / workspace-v1.json。可以先备份这个文件，再重新读取。</p>'}<div class="actions">${btn('重新读取','reload','','quiet')}${page==='settings'&&settingsTab==='data'?'':btn('从备份恢复','navigate','data-page="settings" data-tab="data"')}${btn('去连接校园网','navigate','data-page="network"')}${btn('打开课程笔记','navigate','data-page="study" data-tab="notes"')}</div></section>`}
+function workspaceFailureHTML(){const hasRaw=workspaceFailure.raw!==null&&workspaceFailure.raw!==undefined,newer=saveFromNewerVersion(workspaceFailure.raw),mac=globalThis.szuDesktop?.platform==='darwin';return `<section class="card workspace-failure" id="workspace-failure"><h1>庭院存档暂时打不开</h1><p class="notice error">${esc(workspaceFailure.message)}</p><p>原存档不会被覆盖。校园网、课程笔记和设置仍然可用。</p>${hasRaw&&newer?`<div class="actions">${btn('导出原始存档','workspaceExportRaw','','quiet')}<a class="button primary" href="https://github.com/SzuDesktopTeam/szudesktop/releases" target="_blank" rel="noopener noreferrer">下载新版应用 ↗</a></div>`:hasRaw?`<p class="muted">宽松恢复会尽量保留能读懂的伙伴、作物、待办和设置，其余恢复为初始值，再保存为本机存档。恢复前建议先导出原始存档。</p><div class="actions">${btn('导出原始存档','workspaceExportRaw','','quiet')}${btn('尝试宽松恢复','workspaceRecover','','primary')}</div>`:mac?'<p class="muted">存档默认位于 ~/.szunet/workspace-v1.json（在 Finder 中按 ⌘⇧. 可显示隐藏文件夹）。可以先备份这个文件，再重新读取。</p>':'<p class="muted">存档默认位于用户目录下的 .szunet / workspace-v1.json。可以先备份这个文件，再重新读取。</p>'}<div class="actions">${btn('重新读取','reload','','quiet')}${page==='settings'&&settingsTab==='data'?'':btn('从备份恢复','navigate','data-page="settings" data-tab="data"')}${btn('去连接校园网','navigate','data-page="network"')}${btn('打开课程笔记','navigate','data-page="study" data-tab="notes"')}</div></section>`}
 function enterWorkspaceFailure(error,raw){
  workspaceFailure={message:error?.message||'存档读取失败',raw:raw??null};
  // 占位状态只用于渲染不依赖存档的页面；commit 会拒绝写入，不会覆盖原存档。
@@ -451,10 +465,8 @@ function enterWorkspaceFailure(error,raw){
 }
 async function recoverWorkspace(){
  const failure=workspaceFailure;if(!failure||failure.raw===null)return;
- if(typeof engine.recoverSave!=='function'){toast('当前版本还不能宽松恢复这份存档。请先导出原始存档，更新应用后再试。');return}
  if(!await confirm('尝试宽松恢复存档？','会尽量保留能读懂的伙伴、作物、待办和设置，其余恢复为初始值，并保存为本机存档。建议先导出原始存档。')||workspaceFailure!==failure)return;
- // 写盘前再用 normalize 校验：校验不过就不写，免得覆盖原存档后下次启动仍然打不开。
- let next;try{next=normalize(engine.recoverSave(structuredClone(failure.raw),Date.now()))}catch(e){throw Error('宽松恢复没有成功：'+(e.message||'存档无法读取'))}
+ const next=recoverSave(failure.raw,Date.now());
  await replaceFailedWorkspace(next,'已按能读懂的内容恢复存档，并保存到本机');
 }
 // 降级状态下用一份已通过 normalize 校验的存档替换打不开的原存档：解除写入拦截，走正常保存。

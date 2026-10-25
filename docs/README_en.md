@@ -9,7 +9,7 @@ Earn garden coins through focused study and use them to grow crops, care for a c
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-Setup-0.9.12.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 [简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Report a problem](guide/feedback.md)
 
@@ -101,7 +101,7 @@ Each service determines its own sign-in, network and access requirements. The ap
 
 **Want to write with classmates?** Each course can link to a Feishu Docx or Wiki document for collaborative editing on Feishu's own page. After installing, configuring and authorising `lark-cli` yourself, you can also import a read-only local copy. This integration is still being tested, provides no two-way sync and does not require sending your local notes to the developer.
 
-Notes are currently text-based, with **no AI writing, slide/PDF parsing or audio transcription**. [Study features and backup guide →](guide/study.md)
+[Study features and backup guide →](guide/study.md)
 
 ## Desktop companions and the garden
 
@@ -129,7 +129,7 @@ Companions respond to pats, focus sessions, planting, harvesting and building wi
 - **2048 supplies seeds.** Merge tiles depicting seeds, crops and harvest baskets. Reach a tile of 128 or higher in a game that day to claim one seed supply, prioritising crops missing from requests and the next building project. The game also saves your board, offers a one-move undo and awards milestone stickers.
 - **Make a postcard.** Export a PNG with your current companion, campus background and garden progress, and decide for yourself whether to share it.
 
-There is no daily streak requirement, no purchases, no leaderboard and no real-time competition. You can build the garden just through focusing and farming. [Garden gameplay and companion controls →](guide/garden.md)
+Focus and farm at your own pace as you build the garden. [Garden gameplay and companion controls →](guide/garden.md)
 
 ### Four campus scenes to study in
 
@@ -137,7 +137,7 @@ Alongside the default **Pixel Courtyard**, choose **Lakeside Daylight, After-rai
 
 ![After-rain Bookshop scene, with shelving, a bicycle, a bench and tree shadows](readme-scene-bookshop.jpg)
 
-*The After-rain Bookshop environment inside the app. It is a campus-inspired scene, not a measured reconstruction of an SZU building.*
+*After-rain Bookshop: shelves, a bicycle and a bench under the trees.*
 
 ## Campus network: connect and diagnose
 
@@ -151,14 +151,14 @@ Authentication through routers, proxies and VPNs still needs further on-site val
 
 **Windows 10 / 11 (64-bit) and macOS 13 or later; no mobile app.** macOS is a preview release. Linux has the campus-network command-line tool.
 
-**beta0.9.12 · First-use journeys, notice todos, note backlinks and email feedback.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.12). This is a pre-release; the testing limits for personal school services are listed below.
+**beta0.9.13 · Smoother reading, remembered notice choices and safer save recovery.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.13). This is a pre-release; the testing limits for personal school services are listed below.
 
 | Your computer | Choose this | To open it |
 | :-- | :-- | :-- |
-| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-Setup-0.9.12.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
-| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-portable.exe) | Run the file; shares local records with the installer edition |
-| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-mac-arm64.dmg) | Open it and drag the app into Applications |
-| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.12/szuDesktop-0.9.12-mac-x64.dmg) | Open it and drag the app into Applications |
+| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
+| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-portable.exe) | Run the file; shares local records with the installer edition |
+| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-arm64.dmg) | Open it and drag the app into Applications |
+| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-x64.dmg) | Open it and drag the app into Applications |
 
 Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
 
