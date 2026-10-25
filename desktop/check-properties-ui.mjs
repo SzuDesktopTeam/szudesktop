@@ -9,7 +9,7 @@ import {countdown,remaining,shouldPollNetwork,autostartView,exitHint} from './as
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 import {createApi} from './assets/garden/api-client.mjs';
 import {PET_CONTEXTS,PET_DIALOGUE,pickPetDialogue} from './assets/garden/pet-dialogue.mjs';
-import {createState,normalize} from './assets/garden/engine.mjs';
+import {createState,normalize,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 import {Rng,forAll,forAllAsync,test,testAsync,report,clone,PROTO_KEYS} from './property-testing.mjs';
 
 const NOW=new Date(2026,8,27,12).getTime();
@@ -180,7 +180,7 @@ await forAllAsync('commit：成功时先记修订号再换存档并重绘；失�
   assert.ok(error instanceof Error,'失败必须抛错');
   const revChanged=h.calls.some(c=>c[0]==='rev'),stateChanged=h.calls.some(c=>c[0]==='state');
   assert.equal(revChanged,stateChanged,`修订号与存档必须一起变：${JSON.stringify(h.calls)}（${outcome}）`);
-  if(stateChanged){assert.equal(h.revision,9);assert.equal(h.state.schema,3);assert.ok(h.state.game,'换上的必须是 normalize 过的存档');assert.equal(h.calls.at(-1)[0],'paint');assert.ok(h.calls.findIndex(c=>c[0]==='rev')<h.calls.findIndex(c=>c[0]==='state'),'先记修订号再换存档')}
+  if(stateChanged){assert.equal(h.revision,9);assert.equal(h.state.schema,SAVE_SCHEMA);assert.ok(h.state.game,'换上的必须是 normalize 过的存档');assert.equal(h.calls.at(-1)[0],'paint');assert.ok(h.calls.findIndex(c=>c[0]==='rev')<h.calls.findIndex(c=>c[0]==='state'),'先记修订号再换存档')}
   else assert.equal(h.state,'S0');
   if(outcome.startsWith('conflict')&&stateChanged){
     assert.match(error.message,/本次操作尚未保存/);

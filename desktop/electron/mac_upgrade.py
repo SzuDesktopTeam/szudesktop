@@ -12,16 +12,16 @@ import threading
 import time
 from urllib.parse import urlsplit
 
-BASELINE_VERSION = "beta0.9.10"
+BASELINE_VERSION = "beta0.9.11"
 BASELINE_ELECTRON = "44.5.1"
 BASELINE_DIGESTS = {
-    "arm64": "f99c882e3aa3e60e4effe8bb4a59d9b7be779e926c5c939ebd0140e153c8030c",
-    "x64": "a56f33c892918afc383107025e705a6ed4214c0fe608ad319d07eb206db3d3e0",
+    "arm64": "935d56b1c349b46eb275206d6fcde2d4cbfa267642630333f3e33e426899f960",
+    "x64": "47f2c8610f2a93e04489319bb8cb4e849b6f9b14ad0075513744f3ea8417ce74",
 }
 
 
 def baseline_name(arch):
-    return "szuDesktop-0.9.10-mac-%s.dmg" % arch
+    return "szuDesktop-0.9.11-mac-%s.dmg" % arch
 
 
 def cache_key():
@@ -111,8 +111,8 @@ def engine_probe(binary, cfg, version, log_path, protocol, stop):
             stop(proc); reader.join(timeout=5)
 
 
-def initial_workspace(engine, directory):
-    """Use the immutable old engine's own pure garden rules, not current defaults."""
+def download_rules(engine, directory, include_app=False):
+    """Copy rules from this smoke's owned loopback engine, never from the checkout."""
     directory = Path(directory)
     directory.mkdir()  # Never reuse or overwrite an existing module directory.
     parsed = urlsplit(engine[0])
@@ -140,12 +140,58 @@ def initial_workspace(engine, directory):
                 raise AssertionError("Baseline garden rules must use flat local module imports")
             copy_module(specifier[2:])
     copy_module("engine.mjs")
+    if include_app:
+        conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=10)
+        try:
+            conn.request("GET", "/assets/garden/app.mjs", headers={"X-SZU-Token": engine[1]})
+            response = conn.getresponse()
+            source = response.read()
+            if response.status != 200:
+                raise AssertionError("Cannot read published baseline startup flow")
+            (directory / "app.mjs").write_bytes(source)
+        finally:
+            conn.close()
+    return directory
+
+
+def initial_workspace(engine, directory):
+    """Use the immutable old engine's own pure garden rules, not current defaults."""
+    directory = download_rules(engine, directory, include_app=True)
     result = subprocess.run(["node", "--input-type=module", "--eval",
                              "import {pathToFileURL} from 'node:url'; const {createState}=await import(pathToFileURL(process.argv[1]).href); console.log(JSON.stringify(createState()));",
                              str(directory / "engine.mjs")], capture_output=True, timeout=30)
     if result.returncode != 0:
         raise AssertionError("Cannot initialize state with the published baseline garden rules")
     return json.loads(result.stdout)
+
+
+
+def verify_schema_downgrade(engine, cfg, baseline_directory, candidate_directory):
+    """Run the published frontend startup against a candidate-format synthetic save.
+
+    The Go workspace API intentionally stores raw JSON. Refusal is a frontend
+    contract, tested using the rules and startup source from the actual old
+    package. No old full-shell acceptance is implied by this probe.
+    """
+    directory = download_rules(engine, candidate_directory)
+    workspace = Path(cfg) / "workspace-v1.json"
+    original = workspace.read_bytes()
+    result = subprocess.run(["node", str(Path(__file__).with_name("probe-schema-upgrade.mjs")),
+                             str(baseline_directory), str(directory), str(workspace)],
+                            capture_output=True, timeout=45)
+    if workspace.read_bytes() != original:
+        raise AssertionError("Schema downgrade probe changed the candidate workspace")
+    if result.returncode != 0:
+        raise AssertionError("Published frontend schema refusal probe failed: " + result.stderr.decode("utf-8", "replace")[-2000:])
+    report = json.loads(result.stdout)
+    if report.get("workspaceUnchanged") is not True:
+        raise AssertionError("Schema downgrade probe did not confirm the original workspace")
+    if report.get("schemaChanged"):
+        if not (report.get("candidateSchema", 0) > report.get("baselineSchema", 0)
+                and report.get("baselineFrontendRefused") is True and report.get("writes") == 0
+                and report.get("fixtureUnchanged") is True):
+            raise AssertionError("Incomplete schema downgrade rejection evidence")
+    return report
 
 
 def seed(engine, initial_state):

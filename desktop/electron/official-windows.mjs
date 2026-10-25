@@ -24,7 +24,7 @@ export function createOfficialWindows({BrowserWindow,Menu,dialog,session,shell,g
       return;
     }
     if(isSafeExternalUrl(url)) void shell.openExternal(url).catch(()=>{
-      if(!isQuitting())dialog.showErrorBox('未能打开浏览器','请检查系统默认浏览器设置后重试。');
+      if(!isQuitting())dialog.showErrorBox(url.startsWith('mailto:')?'未能打开邮件应用':'未能打开浏览器',url.startsWith('mailto:')?'请在反馈卡片复制邮箱地址和反馈全文，在常用邮箱中写信。反馈尚未发送。':'请检查系统默认浏览器设置后重试。');
     });
   }
   async function shutdown(){

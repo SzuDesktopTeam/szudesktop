@@ -25,6 +25,8 @@
 .todos input[type=checkbox]{margin-top:4px;accent-color:#56754c}.todo-copy{min-width:0}
 .todo-copy>span{display:block;overflow-wrap:anywhere;font:15px/1.6 var(--body)}
 .todo-copy small{display:block;font-size:13px;color:#7b6c55;margin-top:4px}.todos .done .todo-copy>span{color:#807965;text-decoration:line-through}
+.todo-copy .todo-source{display:inline-block;margin-top:4px;padding:3px 0;min-height:28px;border:0;background:transparent;box-shadow:none;color:var(--info);font:13px/1.6 var(--body);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.todo-copy .todo-source:hover{color:var(--ink)}
 .todo-actions{grid-column:2;display:flex;gap:4px;flex-wrap:wrap}.todo-actions button{font:13px/1.4 var(--body);padding:4px 8px;min-height:29px;box-shadow:none}
 .weekly-card{grid-column:1/-1;padding:24px 28px}.weekly-card h2{font-size:25px;color:#506746}
 .week-totals{display:flex;flex-wrap:wrap;gap:28px;margin:18px 0;color:#756749;font-size:14px}.week-totals strong{font:34px/1 var(--pixel);color:#436449;margin-right:5px}
@@ -49,3 +51,5 @@ body[data-theme=night] .home-landscape{filter:brightness(.82)}
 body[data-motion=off] .farm-landscape .soil.ready::after{animation:none}
 @media(max-width:850px){.focus-layout{grid-template-columns:1fr}.focus-studio{padding:25px}.weekly-card{padding:22px}.journey-card{padding:20px}}
 @media(max-width:550px){.workspace-tabs{gap:7px}.workspace-tabs button{flex:1 1 40%;padding:9px 10px;font-size:15px}.focus-studio .timer{font-size:58px}.todo-actions button{padding:5px 8px}.week-bars{gap:8px}.week-totals{gap:16px}.journey-feature{padding:14px;gap:12px}.journey-stamp{font-size:30px;padding:8px}.journey-feature h3{font-size:20px}.journey-feature p{font-size:14px}.setting-row{gap:12px}.returning-home .home-letter h1{font-size:30px}.student-choice small{width:100%}}
+
+.feedback-draft input:not([type=checkbox]){width:100%;min-width:0}.feedback-draft .check{display:flex;align-items:center;gap:8px;font-weight:400}.feedback-draft h3{margin:18px 0 8px}.release-download-help{margin-top:16px}.release-download-help summary{cursor:pointer}.release-download-help li{margin:9px 0;overflow-wrap:anywhere}.release-download-help code{overflow-wrap:anywhere}

@@ -65,7 +65,7 @@ export function createNotebookUI({api,toast=()=>{},confirm=async()=>false,onChan
  function perform(action,attrs={}){return operations.perform(action,attrs)}
  async function actionRun(action,attrs){
   if(action==='import-file'){await importFile(attrs.file,attrs.kind);return}
-  if(action==='clear-search'){query='';const search=q('#note-search');if(search){search.value='';search.focus({preventScroll:true})}paintList({reset:true});q('.note-list-item.selected')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});return}if(action==='outline'){jumpToHeading(Number(attrs.index));return}if(action==='task'){const area=q('#note-body'),text=area?.value.slice(area.selectionStart,area.selectionEnd).trim();if(!text)throw Error('先在正文里选中一句想跟进的话');if(text.length>120)throw Error('待办最多 120 个字符，请选中更短的一句话');await flush();await onTask?.(text);toast('已加入学习待办，可以接着写');return}if(action==='focus'){await flush();await onFocus?.(25);toast('已开始 25 分钟专注，安心写下这一页');return}if(action==='focus-mode'){setWritingFocus(!writingFocus);return}if(action==='open-shared'){if(globalThis.szuDesktop?.openFeishu)await globalThis.szuDesktop.openFeishu(course()?.sharedUrl);return}if(action==='backup'){exportBackup();return}if(action==='export'){const note=activeNote();if(note)download(markdownExport(note),filename(note.title)+'.md','text/markdown;charset=utf-8');return}
+  if(action==='clear-search'){query='';const search=q('#note-search');if(search){search.value='';search.focus({preventScroll:true})}paintList({reset:true});q('.note-list-item.selected')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});return}if(action==='outline'){jumpToHeading(Number(attrs.index));return}if(action==='task'){const area=q('#note-body'),text=area?.value.slice(area.selectionStart,area.selectionEnd).trim();if(!text)throw Error('先在正文里选中一句想跟进的话');if(text.length>120)throw Error('待办最多 120 个字符，请选中更短的一句话');await flush();const note=activeNote();await onTask?.(text,{type:'note',noteId:note.id,title:note.title});toast('已加入学习待办，可以接着写');return}if(action==='focus'){await flush();await onFocus?.(25);toast('已开始 25 分钟专注，安心写下这一页');return}if(action==='focus-mode'){setWritingFocus(!writingFocus);return}if(action==='open-shared'){if(globalThis.szuDesktop?.openFeishu)await globalThis.szuDesktop.openFeishu(course()?.sharedUrl);return}if(action==='backup'){exportBackup();return}if(action==='export'){const note=activeNote();if(note)download(markdownExport(note),filename(note.title)+'.md','text/markdown;charset=utf-8');return}
   if(action==='save'){await flush();toast('笔记已保存到本机');return}if(action==='load'){await load();return}
   if(action==='reload'){const tooLarge=store.status().tooLarge;if(!await confirm(tooLarge?'放弃这次修改？':'读取另一个窗口的最新笔记？',tooLarge?'笔记本会回到上一次成功保存的版本，之后的修改都会丢弃。请先点“导出当前草稿备份”保存副本。':'当前尚未保存的草稿会被替换。请先点“导出当前草稿备份”保存副本。'))return;await store.discardAndReload();chooseVisible();paint();return}
   if(action==='import-md'||action==='import-backup'){q(`[data-note-file="${action==='import-md'?'markdown':'backup'}"]`)?.click();return}
@@ -104,5 +104,18 @@ export function createNotebookUI({api,toast=()=>{},confirm=async()=>false,onChan
  // 首页快捷新页共用操作锁；先保存旧草稿，成功后才新建，失败仍留在当前页。
  async function startLecture(){if(operations.busy)throw Error('上一项笔记操作还在处理中，请稍候');return operations.exclusive(async()=>{if(!store.status().loaded&&!await load())throw Error(loadError||'笔记本还未读取，请稍后再试');await flush();const current=course(),title=(current?.name||'课堂记录')+' · '+new Date().toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});ensureRoom(withNote(title,NOTE_TEMPLATES.lecture.body),'新建课堂记录');newNote(title,NOTE_TEMPLATES.lecture.body);await flush()})}
  function focusBody(){const area=q('#note-body');if(area){area.focus();const first=area.value.indexOf('\n\n');area.setSelectionRange(first<0?area.value.length:first+2,first<0?area.value.length:first+2)}}
- return {view,mount,load,leave,flush,summaryHTML,resumeLatest,startLecture,focusBody,backup,getSnapshot:()=>store.snapshot(),isDirty:()=>store.status().dirty,status:()=>store.status(),destroy:()=>{setWritingFocus(false);clearTimeout(saveTimer);clearTimeout(metaTimer);globalThis.removeEventListener?.('beforeunload',beforeUnload)}};
+ async function openNote(id){
+  if(operations.busy)throw Error('上一项笔记操作还在处理中，请稍候');
+  return operations.exclusive(async()=>{
+   if(!store.status().loaded&&!await load())throw Error(loadError||'笔记本还未读取，请稍后再试');
+   await flush();
+   const note=data().notes.find(note=>note.id===id);
+   if(!note)throw Error('原笔记已被永久删除，或不在当前笔记备份中。待办内容仍然保留。');
+   trash=!!note.deletedAt;query='';mode='read';
+   prefer(d=>{d.preferences.selectedNoteId=note.id;d.preferences.selectedCourseId=note.courseId});
+   paint({resetList:true});
+   if(trash)toast('原笔记在回收站，恢复后可以继续编辑');
+  });
+ }
+ return {view,mount,load,leave,flush,summaryHTML,resumeLatest,openNote,startLecture,focusBody,backup,getSnapshot:()=>store.snapshot(),isDirty:()=>store.status().dirty,status:()=>store.status(),destroy:()=>{setWritingFocus(false);clearTimeout(saveTimer);clearTimeout(metaTimer);globalThis.removeEventListener?.('beforeunload',beforeUnload)}};
 }

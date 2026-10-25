@@ -23,12 +23,12 @@ def refuses(fn):
     raise AssertionError("Damaged upgrade evidence was accepted")
 
 
-assert upgrade.BASELINE_VERSION == "beta0.9.10"
+assert upgrade.BASELINE_VERSION == "beta0.9.11"
 assert upgrade.BASELINE_DIGESTS == {
-    "arm64": "f99c882e3aa3e60e4effe8bb4a59d9b7be779e926c5c939ebd0140e153c8030c",
-    "x64": "a56f33c892918afc383107025e705a6ed4214c0fe608ad319d07eb206db3d3e0",
+    "arm64": "935d56b1c349b46eb275206d6fcde2d4cbfa267642630333f3e33e426899f960",
+    "x64": "47f2c8610f2a93e04489319bb8cb4e849b6f9b14ad0075513744f3ea8417ce74",
 }
-assert upgrade.baseline_name("x64") == "szuDesktop-0.9.10-mac-x64.dmg"
+assert upgrade.baseline_name("x64") == "szuDesktop-0.9.11-mac-x64.dmg"
 key = upgrade.cache_key()
 with patch.dict(upgrade.BASELINE_DIGESTS, {"x64": "0" * 64}):
     assert upgrade.cache_key() != key, "A changed baseline digest must invalidate the cache"
@@ -125,4 +125,28 @@ with tempfile.TemporaryDirectory(prefix="szu-keychain-probe-check-") as tmp:
         run.return_value.stdout = b"malformed synthetic entry"
         refuses(lambda: upgrade.read_synthetic_credential(cfg, root))
 print("PASS upgrade verifies old personal records, notebook and synthetic credentials; detects losses and persists new writes")
-print("2 DMG upgrade logic checks passed")
+with tempfile.TemporaryDirectory(prefix="szu-schema-upgrade-check-") as tmp:
+    cfg = Path(tmp); workspace = cfg / "workspace-v1.json"
+    original = b'{"revision":8,"data":{"schema":4}}'; workspace.write_bytes(original)
+    good_report = {"schemaChanged": True, "baselineSchema": 3, "candidateSchema": 4,
+                   "baselineFrontendRefused": True, "writes": 0,
+                   "fixtureUnchanged": True, "workspaceUnchanged": True}
+    with patch.object(upgrade, "download_rules", return_value=cfg / "candidate-js"), patch.object(upgrade.subprocess, "run") as probe:
+        probe.return_value.returncode = 0
+        probe.return_value.stdout = json.dumps(good_report).encode()
+        probe.return_value.stderr = b""
+        assert upgrade.verify_schema_downgrade(None, cfg, cfg / "baseline-js", cfg / "candidate-js") == good_report
+        args = probe.call_args.args[0]
+        assert args[0] == "node" and Path(args[1]).name == "probe-schema-upgrade.mjs"
+        assert args[2:] == [str(cfg / "baseline-js"), str(cfg / "candidate-js"), str(workspace)]
+        for key, value in [("baselineFrontendRefused", False), ("writes", 1), ("fixtureUnchanged", False), ("workspaceUnchanged", False)]:
+            broken = {**good_report, key: value}; probe.return_value.stdout = json.dumps(broken).encode()
+            refuses(lambda: upgrade.verify_schema_downgrade(None, cfg, cfg / "baseline-js", cfg / "candidate-js"))
+        probe.return_value.stdout = json.dumps(good_report).encode()
+        def changed_file(*_args, **_kwargs):
+            workspace.write_bytes(b"changed")
+            return probe.return_value
+        probe.side_effect = changed_file
+        refuses(lambda: upgrade.verify_schema_downgrade(None, cfg, cfg / "baseline-js", cfg / "candidate-js"))
+print("PASS published frontend schema probe must report rejection, zero writes and unchanged original bytes")
+print("3 DMG upgrade logic checks passed")

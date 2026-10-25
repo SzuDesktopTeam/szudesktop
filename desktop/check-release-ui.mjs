@@ -13,10 +13,14 @@ const channel=version.startsWith('beta')?'beta':'stable',other=channel==='beta'?
 let calls=[],failure=false,response={available:true,version:newer,url:'https://github.com/SzuDesktopTeam/szudesktop/releases/tag/'+newer,prerelease:channel==='beta'};
 const ui=createReleaseUI({getVersion:()=> version,api:async path=>{calls.push(path);if(failure)throw Error('无法连接发布服务');return response}});
 assert.equal(calls.length,0);assert.match(ui.card(),/点击后才联网/);
+assert.match(ui.card(),/安装与下载帮助/);assert.match(ui.card(),/大多数 Windows 同学/);assert.doesNotMatch(ui.card(),/Apple 芯片|Intel|mac-arm64/);assert.match(ui.card(),/下载很慢或失败/);
+const previousBridge=globalThis.szuDesktop;
+try{globalThis.szuDesktop={platform:'darwin',shell:'electron'};const mac=ui.card();assert.match(mac,/Apple 芯片/);assert.match(mac,/Intel/);assert.match(mac,/mac-arm64\.dmg/);assert.doesNotMatch(mac,/Windows|Setup|portable\.exe|安装包/)}finally{if(previousBridge===undefined)delete globalThis.szuDesktop;else globalThis.szuDesktop=previousBridge}
 await ui.click('release-check');assert.equal(calls.at(-1),'/api/releases?channel='+channel);assert.match(ui.card(),/发现新版本/);
 ui.change({target:{id:'release-channel',value:other}});assert.doesNotMatch(ui.card(),/发现新版本/);assert.equal(calls.length,1);
 response={available:false,message:'这个渠道还没有发布'};await ui.click('release-check');assert.match(ui.card(),/这个渠道还没有发布/);assert.equal(calls.at(-1),'/api/releases?channel='+other);
 failure=true;await ui.click('release-check');assert.match(ui.card(),/无法连接发布服务/);assert.doesNotMatch(ui.card(),/已是此渠道最新版本/);
+assert.match(ui.card(),/href="https:\/\/github.com\/SzuDesktopTeam\/szudesktop\/releases"/,'检查失败仍提供公开发布页');assert.match(ui.card(),/\.sha256/);assert.equal(calls.length,3,'下载帮助不额外发请求');
 // 连不上 GitHub 时服务端沿用早先的结果并标 stale：页面照常给出结论，再用弱提示说明这是多久以前的结果（消息要转义）。
 failure=false;response={available:true,stale:true,version,url:`https://github.com/SzuDesktopTeam/szudesktop/releases/tag/${version}`,message:'GitHub 暂时不可用，显示的是 15 分钟前的检查结果。<b>'};
 await ui.click('release-check');assert.match(ui.card(),/已是此渠道最新版本/);assert.ok(ui.card().includes('<p class="muted">GitHub 暂时不可用，显示的是 15 分钟前的检查结果。&lt;b&gt;</p>'),ui.card());

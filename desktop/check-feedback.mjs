@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {createFeedbackUI,environmentSummary,FEEDBACK_URL} from './assets/garden/feedback.mjs';
+import {createFeedbackUI,environmentSummary,FEEDBACK_URL,FEEDBACK_EMAIL,feedbackMailto} from './assets/garden/feedback.mjs';
 import {createServiceLog,diagnosticReport,scrubAdvice,SCHOOL_SERVICES} from './assets/garden/diagnostic-report.mjs';
 const version=readFileSync(new URL('../internal/version/VERSION',import.meta.url),'utf8').trim();
 globalThis.document={getElementById:()=>null};
@@ -14,6 +14,45 @@ const ui=createFeedbackUI({getVersion:()=>environment.version,getMode:()=>enviro
 assert.equal(copied,'');await ui.click('feedback-copy');assert.equal(copied.split('\n').length,3);assert.match(toast,/已复制/);
 const fallback=createFeedbackUI({getVersion:()=>environment.version,getMode:()=>environment.mode,toast:()=>{},clipboard:null});await fallback.click('feedback-copy');assert.match(fallback.card(),/手动复制/);
 console.log('PASS environment allowlist, explicit copy and clipboard fallback');
+
+// 无需账号整理反馈：只读取主动输入，预览是复制/导出的快照，编辑后必须重新预览。
+{
+ let clip='',exported=null,diagnosticReads=0;
+ const ui=createFeedbackUI({getVersion:()=>version,getMode:()=>'browser',toast(){},clipboard:{writeText:async text=>{clip=text}},download:(text,name)=>{exported={text,name}},getDiagnostics:()=>{diagnosticReads++;return {}}});
+ assert.equal(typeof ui.input,'function');assert.equal(typeof ui.change,'function');
+ assert.equal(ui.input({target:{id:'unrelated',value:'ignored'}}),false);
+ assert.equal(ui.input({target:{id:'feedback-expected',value:'查篮球空位'}}),true);
+ ui.input({target:{id:'feedback-actual',value:'变回羽毛球 <script>alert(1)</script>'}});
+ ui.input({target:{id:'feedback-steps',value:'1. 选择篮球\n2. 点击查询'}});
+ const markup=ui.card();assert.match(markup,/查篮球空位/);assert.ok(markup.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+ assert.doesNotMatch(markup,/id="feedback-include-diagnostics"[^>]*checked/);assert.match(markup,/草稿只在本次打开期间保留/);
+ await ui.click('feedback-draft-copy');assert.equal(clip,'','未经预览不能直接复制');
+ await ui.click('feedback-preview');const readsBeforeCopy=diagnosticReads;
+ await ui.click('feedback-draft-copy');assert.match(clip,/想做什么：\n查篮球空位/);assert.match(clip,/实际发生：\n变回羽毛球 <script>alert\(1\)<\/script>/);assert.match(clip,/复现步骤：\n1\. 选择篮球\n2\. 点击查询/);
+ assert.doesNotMatch(clip,/诊断报告/,'默认不附带诊断');assert.match(clip,new RegExp('szuDesktop '+version.replaceAll('.','\\.')));
+ const snapshot=clip;await ui.click('feedback-export');assert.equal(exported.text,snapshot);assert.match(exported.name,/^szuDesktop-feedback-.*\.txt$/);
+ // 卡片重画可能生成独立的报告预览，但复制/导出文字不能随诊断变化。
+ assert.ok(diagnosticReads>=readsBeforeCopy);assert.equal(clip,snapshot);
+ ui.input({target:{id:'feedback-actual',value:'现在正确了'}});clip='';await ui.click('feedback-draft-copy');assert.equal(clip,'');
+ await ui.click('feedback-preview');await ui.click('feedback-draft-copy');assert.match(clip,/现在正确了/);
+ assert.match(ui.card(),/发邮件反馈/);assert.ok(ui.card().includes('mailto:'+FEEDBACK_EMAIL));
+ assert.equal(ui.change({target:{id:'feedback-include-diagnostics',checked:true}}),true);await ui.click('feedback-preview');await ui.click('feedback-draft-copy');assert.match(clip,/szuDesktop 诊断报告/);
+ const offline=createFeedbackUI({getVersion:()=>version,getMode:()=>'browser',toast(){},clipboard:null});offline.input({target:{id:'feedback-actual',value:'查询报错'}});await offline.click('feedback-preview');await offline.click('feedback-draft-copy');assert.match(offline.card(),/选中下方反馈全文手动复制/);
+ assert.doesNotMatch(readFileSync(new URL('./assets/garden/feedback.mjs',import.meta.url),'utf8'),/fetch\(|localStorage|sessionStorage/,'反馈不联网也不落盘');
+ console.log('PASS feedback draft survives repaint, previews exact copy/export, opts in diagnostics and keeps manual fallback');
+}
+
+{
+ assert.equal(FEEDBACK_EMAIL,'alakazama@qq.com');
+ const body='篮球 & 阅读 #1\n实际提示：你好？100% "原文"',mail=feedbackMailto(body,version),url=new URL(mail.url);
+ assert.equal(url.protocol,'mailto:');assert.equal(url.pathname,FEEDBACK_EMAIL);assert.equal(url.searchParams.get('body'),body);assert.equal(url.searchParams.get('subject'),'szuDesktop 反馈 · '+version);assert.equal(mail.bodyIncluded,true);
+ const long=feedbackMailto('说明'.repeat(2000),version);assert.ok(long.url.length<=1800);assert.equal(long.bodyIncluded,false);assert.equal(new URL(long.url).searchParams.has('body'),false,'长反馈不截断正文，交给用户粘贴或附上 TXT');
+ let clip='';const ui=createFeedbackUI({getVersion:()=>version,getMode:()=>'browser',toast(){},clipboard:{writeText:async text=>{clip=text}}});
+ assert.doesNotMatch(ui.card(),/>发邮件反馈/,'填写前不把未预览正文交给邮件应用');await ui.click('feedback-email-copy');assert.equal(clip,FEEDBACK_EMAIL);
+ const offline=createFeedbackUI({getVersion:()=>version,getMode:()=>'browser',toast(){},clipboard:null});await offline.click('feedback-email-copy');assert.match(offline.card(),/选中邮箱地址手动复制/);
+ ui.input({target:{id:'feedback-actual',value:'说明'.repeat(2000)}});await ui.click('feedback-preview');assert.match(ui.card(),/正文较长/);assert.match(ui.card(),/不会自动发送/);
+ console.log('PASS fixed public feedback email, encoded preview-only mail drafts and non-truncating long-text fallback');
+}
 
 // O2：诊断报告只输出结构。下面的替身响应故意塞满具体值（学号、姓名、成绩、IP、ac_id、Cookie、链接），报告里一个都不能出现。
 {

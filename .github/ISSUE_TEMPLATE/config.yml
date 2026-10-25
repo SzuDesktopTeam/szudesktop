@@ -2,6 +2,9 @@
 # 空白 issue 保持原来的可用状态。
 blank_issues_enabled: true
 contact_links:
+  - name: 邮件反馈（无需 GitHub 账号）
+    url: mailto:alakazama@qq.com
+    about: 可在应用设置中整理并预览反馈，也可以直接邮件说明想做什么、实际发生什么；请勿附密码或 Cookie。
   - name: 安全问题（私下报告）
     url: https://github.com/SzuDesktopTeam/szudesktop/security/advisories/new
     about: 可被利用的漏洞、可能泄露账号密码或 Cookie 的问题，请在这里私下报告，只有维护者能看到；不要开公开 issue。

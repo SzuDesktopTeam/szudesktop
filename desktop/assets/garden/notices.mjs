@@ -1,5 +1,6 @@
 import {pixelIcon} from './pixel.mjs';
 import {esc} from './html.mjs';
+import {normalizeTodoSource} from './todo-source.mjs';
 const directory='https://www.szu.edu.cn/yxjg/xbxy.htm';
 const link=(url,text)=>`<a class="button quiet" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${text} ↗</a>`;
 // 设置里「学院」一栏是自由填写的文字：写全称（或包含全称）就对上那个来源；写的是名称中的一段（至少 3 个字）时，只有唯一对上才算。
@@ -20,7 +21,7 @@ export function staleNote(items,now=Date.now()){
  return months>=1?`这个栏目最新一条发布于 ${months} 个月前（${latest}），可能不常更新；可以换一个学院或部门看看。`:'';
 }
 // getProfile 返回设置里的学院和培养层次 {college,level}。
-export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getProfile=()=>({}),now=()=>Date.now()}){
+export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getProfile=()=>({}),now=()=>Date.now(),onTask}){
  // source 为空表示还没选：第一次进公告页时先请同学选学院，不自动读默认栏目。
  // picked 表示本次打开里同学亲手选过，之后不再按设置重新推断。
  let sources=[],source='',picked=false,unmatched='',catalogLoading=false,catalogError='',feed=null,error='',loading=false,requestVersion=0,preferenceError='',entered=false,initialRead=false;
@@ -29,7 +30,7 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
  const officialSearch=()=>current()?.search_mode==='official';
  function resetSearch(){query='';searchScope='title';search=null;searchError='';searching=false;searchingQuery='';searchVersion++}
  function noticeList(items){
-  return `<ul class="campus-notices">${items.map((x,i)=>`<li data-index="${i}"><time>${esc(x.date||'')}</time>${x.can_read===false?`<a class="notice-title" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a><small>外部原页</small>`:`<button type="button" class="notice-title" data-action="notice-open" data-url="${esc(x.url)}">${esc(x.title)}</button>`}<a class="notice-src" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">原文 ↗</a><div class="notice-body" hidden></div></li>`).join('')}</ul>`;
+  return `<ul class="campus-notices">${items.map((x,i)=>`<li data-index="${i}"><time>${esc(x.date||'')}</time>${x.can_read===false?`<a class="notice-title" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a><small>外部原页</small>`:`<button type="button" class="notice-title" data-action="notice-open" data-url="${esc(x.url)}">${esc(x.title)}</button>`}<div class="notice-actions"><a class="notice-src" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>${onTask&&normalizeTodoSource({type:'notice',url:x.url,title:x.title})?`<button type="button" class="quiet notice-todo" data-action="notice-todo" data-url="${esc(x.url)}">加入待办</button>`:''}</div><div class="notice-body" hidden></div></li>`).join('')}</ul>`;
  }
  function searchControls(){
   if(!current()?.readable)return '';
@@ -122,6 +123,14 @@ export function createNoticesUI({api,getSource=()=> 'undergrad',setSource,getPro
   finally{if(version===searchVersion&&selected===source){searching=false;paint()}}
  }
  async function click(action,el){
+  if(action==='notice-todo'){
+   const item=(search?.items||feed?.items||[]).find(x=>x.url===el?.dataset?.url);
+   if(!item)throw Error('公告列表已更新，请重新选择这条公告');
+   const origin=normalizeTodoSource({type:'notice',url:item.url,title:item.title});
+   if(!origin)throw Error('这条内容请在原页查看');
+   await onTask?.({text:item.title,source:origin});
+   return true;
+  }
   if(action==='notice-read'){await read();return true}
   if(action==='notice-sources'){await load();return true}
   if(action==='notice-search'){await runSearch();return true}

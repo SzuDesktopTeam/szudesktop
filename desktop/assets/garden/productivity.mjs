@@ -3,15 +3,21 @@ import {petViewBox} from './pet-catalog.mjs';
 import {nextProject,projectStatus} from './garden-loop.mjs';
 import {esc} from './html.mjs';
 import {isMac} from './platform.mjs';
+import {normalizeTodoSource} from './todo-source.mjs';
 const button=(label,action,attrs='',cls='quiet')=>`<button class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;
 const dateLabel=value=>value?new Date(value).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}):'';
+function sourceLink(todo){
+ const source=normalizeTodoSource(todo.source);if(!source)return '';
+ const label=source.type==='note'?'返回笔记':'查看公告原文',title=esc(`${label}：${source.title}`);
+ return source.type==='note'?`<button type="button" class="todo-source" data-action="todoSource" data-id="${esc(todo.id)}" title="${title}" aria-label="${title}">${label}</button>`:`<a class="todo-source" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer" title="${title}" aria-label="${title}">${label} ↗</a>`;
+}
 
 export function todoView(state,filter='open',now=Date.now(),includeForm=true){
  const today=dayKey(now),counts={open:state.todos.filter(t=>!t.done&&!t.archived).length,done:state.todos.filter(t=>t.done&&!t.archived).length,archive:state.todos.filter(t=>t.archived).length};
  const items=state.todos.filter(t=>filter==='archive'?t.archived:!t.archived&&(filter==='done'?t.done:!t.done));
  return `${includeForm?`<form id="todo-form" class="todo-add"><label class="sr-only" for="todo-text">新增待办</label><input id="todo-text" name="todo" placeholder="留一件值得完成的小事" maxlength="120" required><label class="sr-only" for="todo-date">计划日期</label><input id="todo-date" name="date" type="date" value="${today}" aria-label="计划日期（可留空）"><button class="primary">添加</button></form>`:''}<div class="todo-state">
  <div class="todo-filters" aria-label="小事分类">${Object.entries({open:'待完成',done:'已完成',archive:'归档'}).map(([k,label])=>button(`${label} ${counts[k]}`,'todoFilter',`data-filter="${k}" aria-pressed="${filter===k}"`,filter===k?'active':'quiet')).join('')}</div>
- <ul class="todos">${items.map(t=>`<li class="${t.done?'done':''}"><input type="checkbox" aria-label="完成：${esc(t.text)}" data-action="todoToggle" data-id="${esc(t.id)}" ${t.done?'checked':''} ${t.archived?'disabled':''}><div class="todo-copy"><span>${esc(t.text)}</span><small>${t.done?(t.completedAt?'完成于 '+dateLabel(t.completedAt):'已完成 · 早期记录未记日期'):t.date?(t.date===today?'今天':t.date<today?'尚未完成 · '+esc(t.date):'计划于 '+esc(t.date)):'未指定日期'}</small></div><div class="todo-actions">${!t.archived?button('编辑','todoEditOpen',`data-id="${esc(t.id)}"`):''}${t.done||t.archived?button(t.archived?'移出归档':'归档','todoArchive',`data-id="${esc(t.id)}" data-archived="${!t.archived}"`):''}${button('删除','todoDelete',`data-id="${esc(t.id)}"`)}</div></li>`).join('')}</ul>
+ <ul class="todos">${items.map(t=>`<li class="${t.done?'done':''}"><input type="checkbox" aria-label="完成：${esc(t.text)}" data-action="todoToggle" data-id="${esc(t.id)}" ${t.done?'checked':''} ${t.archived?'disabled':''}><div class="todo-copy"><span>${esc(t.text)}</span><small>${t.done?(t.completedAt?'完成于 '+dateLabel(t.completedAt):'已完成 · 早期记录未记日期'):t.date?(t.date===today?'今天':t.date<today?'尚未完成 · '+esc(t.date):'计划于 '+esc(t.date)):'未指定日期'}</small>${sourceLink(t)}</div><div class="todo-actions">${!t.archived?button('编辑','todoEditOpen',`data-id="${esc(t.id)}"`):''}${t.done||t.archived?button(t.archived?'移出归档':'归档','todoArchive',`data-id="${esc(t.id)}" data-archived="${!t.archived}"`):''}${button('删除','todoDelete',`data-id="${esc(t.id)}"`)}</div></li>`).join('')}</ul>
  ${!items.length?`<p class="empty">${filter==='open'?'清单轻轻的。从一件小事开始。':filter==='done'?'完成的小事会留在这里。':'归档让清单整洁，记录仍然保留。'}</p>`:''}${filter==='done'&&counts.done?button('把已完成的小事归档','todoArchiveDone'):''}</div>`;
 }
 

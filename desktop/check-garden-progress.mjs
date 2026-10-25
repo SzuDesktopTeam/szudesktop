@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {act,createState,normalize,recoverSave,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,QUESTS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite,AVAILABLE_PETS,activePet,dayKey} from './assets/garden/engine.mjs';
+import {act,createState,normalize,recoverSave,settle,level,gardenLevel,achievementList,journeyList,journeyKeepsakes,JOURNEY,CROPS,QUESTS,DECOR,PAT_REWARD_LIMIT,TODO_REWARD_LIMIT,petSprite,AVAILABLE_PETS,activePet,dayKey,SAVE_SCHEMA} from './assets/garden/engine.mjs';
 import {actionReward} from './assets/garden/rewards.mjs';
 
 const now=new Date(2026,8,27,12).getTime();
@@ -214,7 +214,7 @@ const RELEASED_SAVES={"beta0.7.3":{"schema":2,"profile":{"name":"","college":""}
 test('saves from every published version load under the current crop, goal and order tables',()=>{
  for(const [version,save] of Object.entries(RELEASED_SAVES)){
   const s=normalize(structuredClone(save),now),active=s.game.pets[s.game.active];
-  assert.equal(s.schema,3,version);assert.equal(s.game.coins,save.game.coins,version);assert.equal(active.name,'小团',version);
+  assert.equal(s.schema,SAVE_SCHEMA,version);assert.equal(s.game.coins,save.game.coins,version);assert.equal(active.name,'小团',version);
   for(const crop of Object.keys(CROPS))assert.equal(s.game.seeds[crop],save.game.seeds[crop]||0,version+' '+crop);
   assert.equal(s.game.plots[1].crop,'strawberry',version);assert.equal(s.todos[0].text,'复习线性代数',version);
   assert.equal(s.game.orders.offers.length,3,version);assert.deepEqual(roundTrip(s),s,version);
@@ -294,9 +294,9 @@ test('after a clock correction, cooldowns, focus and crops keep their remaining 
 
 test('lenient recovery keeps what it can from a damaged save and never throws',()=>{
  for(const raw of [undefined,null,42,'save',[],{},{schema:9},{game:null},{schema:3,game:{plots:'x',coins:-1}}]){
-  const s=recoverSave(raw,now);assert.equal(s.schema,3);assert.deepEqual(roundTrip(s),s);
+  const s=recoverSave(raw,now);assert.equal(s.schema,SAVE_SCHEMA);assert.deepEqual(roundTrip(s),s);
  }
- const cyclic={schema:3};cyclic.self=cyclic;assert.equal(recoverSave(cyclic,now).schema,3);
+ const cyclic={schema:3};cyclic.self=cyclic;assert.equal(recoverSave(cyclic,now).schema,SAVE_SCHEMA);
  let good=act(act(createState(now),{type:'gift'},now),{type:'todoAdd',id:'keep',text:'保留的待办'},now);
  good.game.coins=321;good.game.daily.harvest=1;good.game.pets[0].name='团团';good.game.pets[0].xp=140;good.game.plots[3]=null;
  const damaged=JSON.parse(JSON.stringify(good));
