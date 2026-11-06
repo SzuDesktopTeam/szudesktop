@@ -11,7 +11,7 @@ One desktop window for Shenzhen University students: sign-in and diagnostics, no
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　**[Portable · no install, just double-click](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-Setup-0.9.15.exe)**　·　**[Portable · no install, just double-click](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-0.9.15-portable.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 [简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Architecture decisions](adr/README.md) · [Report a problem](guide/feedback.md)
 
@@ -151,14 +151,14 @@ Router, proxy and VPN setups each get their own diagnostic result and a next ste
 
 **Windows 10 / 11 (64-bit) and macOS 13 or later.** Linux has the campus-network command-line tool.
 
-**beta0.9.14 · Updated desktop runtime and dependencies; features and usage are unchanged.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14). The scope of school services is listed below.
+**beta0.9.15 · Campus-network diagnosis leads the README and the app home screen; product copy and architecture consolidated.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.15). The scope of school services is listed below.
 
 | Your computer | Choose this | To open it |
 | :-- | :-- | :-- |
-| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
-| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe) | Run the file; shares local records with the installer edition |
-| **Mac · Apple silicon** | [Download arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | Open it and drag the app into Applications |
-| **Mac · Intel** | [Download x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | Open it and drag the app into Applications |
+| **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-Setup-0.9.15.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
+| Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-0.9.15-portable.exe) | Run the file; shares local records with the installer edition |
+| **Mac · Apple silicon** | [Download arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-0.9.15-mac-arm64.dmg) | Open it and drag the app into Applications |
+| **Mac · Intel** | [Download x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.15/szuDesktop-0.9.15-mac-x64.dmg) | Open it and drag the app into Applications |
 
 Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
 

@@ -45,14 +45,14 @@ EXPECTED_LOCALES = ["en-US.pak", "zh-CN.pak"]
 # bumps internal/version/VERSION to the next version, or after that bump has
 # landed: main() requires the candidate to differ from the baseline, so moving
 # the baseline first fails every PR and main build.
-BASELINE_VERSION = "beta0.9.13"
-# Checked against the beta0.9.13 tag: desktop/electron/package-lock.json
-# pins electron 44.5.1, and the release asset digest reported by GitHub for
-# szuDesktop-Setup-0.9.13.exe equals this SHA-256.
-BASELINE_ELECTRON = "44.5.1"
-BASELINE_SHA256 = "5bf8ea9d227529278677e535331deac257068067e7290f7b2e69fb2dd1a51c2b"
+BASELINE_VERSION = "beta0.9.14"
+# Checked against the beta0.9.14 tag: desktop/electron/package-lock.json
+# pins electron 45.1.0, and the release asset digest reported by GitHub for
+# szuDesktop-Setup-0.9.14.exe equals this SHA-256.
+BASELINE_ELECTRON = "45.1.0"
+BASELINE_SHA256 = "e92019e685eda2acfec6b9b90a1954be4617e951985752218368ea6407b2a7bf"
 BASELINE_INSTALLER = "szuDesktop-Setup-" + re.sub(r"^(?:beta|v)", "", BASELINE_VERSION) + ".exe"
-# A fresh beta0.9.13 save carries exactly these companions, in this order (its
+# A fresh beta0.9.14 save carries exactly these companions, in this order (its
 # pet-catalog.mjs AVAILABLE_PETS, same five as beta0.9.3); the turtle
 # is retired to the "old friends" of saves that already had it.
 BASELINE_COMPANIONS = ["libao", "chestnut", "egret", "pingu", "skipper"]
