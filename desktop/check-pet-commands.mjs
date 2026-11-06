@@ -1,3 +1,4 @@
+import {createSection} from './source-sections.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
@@ -9,7 +10,7 @@ import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 // 标记找不到或顺序变了就直接报出是哪一段，不能切出空串或错位的代码再去执行。
-function section(start,end){const from=source.indexOf(start),to=source.indexOf(end,from);assert.ok(from>=0&&to>from,'app.mjs 里找不到这一段：'+start);return source.slice(from,to)}
+const section=createSection(source);
 const handlers=section('async function run(',"document.addEventListener('click'");
 const careSource=section('function renderPetCare(','function showGuide(');
 const companionSource=section('const sprite=','const cat=')+section('const pageTips=','const pages=')+section('function paintCompanionDialog(','function render(){');

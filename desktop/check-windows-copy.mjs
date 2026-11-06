@@ -4,6 +4,7 @@
 // 末尾打印全部 Windows 渲染结果的摘要：改文案前后各跑一次，两次摘要相同，说明不只是这些关键句，整段输出都没变。
 // 例外是按术语表统一的名字（O12）：「桌面宠物」→「桌面伙伴」、设置里的「安静陪伴」→与托盘同名的「勿扰」、「学习工具」「今日手帐」→导航里的「学习书屋」「今日」。
 // 这几处是有意改名，期望值随之更新；其余句子仍逐字不变。
+import {createSection} from './source-sections.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
@@ -22,7 +23,7 @@ import {createReleaseUI} from './assets/garden/release-ui.mjs';
 const NOW=Date.UTC(2026,8,1,4),VERSION='beta0.9.4';
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
-const section=(start,end)=>{const from=source.indexOf(start),to=source.indexOf(end,from);assert.ok(from>=0&&to>from,`app.mjs 里找不到 ${start}`);return source.slice(from,to)};
+const section=createSection(source);
 const pageSource=section('function showGuide(){','function markOnboarded(')+section('function sectionNav(','function servicesPage(')+section('function settings(){','function loadPetScale(){')+section('function workspaceFailureHTML(){','function enterWorkspaceFailure(');
 const text=value=>value.replace(/<[^>]+>/g,'');
 

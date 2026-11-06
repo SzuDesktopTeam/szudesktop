@@ -40,13 +40,32 @@ func authedRoutes(s *Server, static fs.FS) http.Handler {
 
 type registeredRoute struct{ path, guard string }
 
-// apiRoutesInSource 从 server.go 读出全部 /api 路由和各自用的保护函数，
-// 以后新增接口不用记得来这里登记，也躲不开凭据检查。
+// apiRoutesInSource 从包内生产源码读出全部 /api 路由和各自用的保护函数。
+// 路由按业务域分在 server.go 与 api_routes.go，所以扫描整个包而不是写死文件名：
+// 以后再拆文件、新增接口都不用记得来这里登记，也躲不开凭据检查。
 func apiRoutesInSource(t *testing.T) []registeredRoute {
 	t.Helper()
-	source, err := os.ReadFile("server.go")
+	entries, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatal(err)
+	}
+	var source []byte
+	files := 0
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		data, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		source = append(source, data...)
+		source = append(source, '\n')
+		files++
+	}
+	if files < 10 {
+		t.Fatalf("只扫到 %d 个生产 Go 文件，工作目录可能不对", files)
 	}
 	if !regexp.MustCompile(`unknownAPI := s\.protectAPI\(`).Match(source) {
 		t.Fatal("未知 /api 路径必须同样经过凭据检查")
@@ -56,7 +75,7 @@ func apiRoutesInSource(t *testing.T) []registeredRoute {
 		routes = append(routes, registeredRoute{string(m[1]), string(m[2])})
 	}
 	if len(routes) < 40 {
-		t.Fatalf("只从 server.go 读到 %d 条 /api 路由，正则可能失效了", len(routes))
+		t.Fatalf("只从包内源码读到 %d 条 /api 路由，正则可能失效了", len(routes))
 	}
 	return routes
 }

@@ -1,3 +1,4 @@
+import {createSection} from './source-sections.mjs';
 import {createSafeReload} from './assets/garden/reload.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
@@ -28,11 +29,7 @@ import {esc} from './assets/garden/html.mjs';
 
 // Exercise the actual page handlers with an isolated DOM and workspace API.
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
-function section(start,end){
- const from=source.indexOf(start),to=source.indexOf(end,from);
- assert.ok(from>=0&&to>from,'page handler was not found');
- return source.slice(from,to);
-}
+const section=createSection(source);
 // commit() 来自 workspace-commit.mjs；按 app.mjs 的接线绑到 vm 上下文里的 state、revision 与 workspaceFailure。
 function bindCommit(context){if(!('workspaceFailure' in context))context.workspaceFailure=null;context.commit=createWorkspaceCommit({api:(...args)=>context.api(...args),normalize:data=>context.normalize(data),read:()=>({failure:context.workspaceFailure,revision:context.revision}),setRevision:next=>{context.revision=next},setState:next=>{context.state=next},paint:()=>context.render(),byId:id=>context.document.getElementById(id)});return context}
 let checks=0;

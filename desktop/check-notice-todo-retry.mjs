@@ -1,3 +1,4 @@
+import {createSection} from './source-sections.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
@@ -5,7 +6,7 @@ import {act,createState,normalize} from './assets/garden/engine.mjs';
 import {createWorkspaceCommit} from './assets/garden/workspace-commit.mjs';
 
 const source=readFileSync(new URL('./assets/garden/app.mjs',import.meta.url),'utf8');
-const section=(from,to)=>{const start=source.indexOf(from),end=source.indexOf(to,start);assert.ok(start>=0&&end>start,'notice retry callback must exist');return source.slice(start,end)};
+const section=createSection(source);
 const code=section('async function notebookLearningAction(','const desktopUI=')+'\n'+section('async function saveNoticeTodo(','const todoComposer=');
 const action={type:'todoAdd',id:'notice-fixed-id',text:'报名讲座',date:'2026-10-29',source:{type:'notice',title:'讲座通知',url:'https://law.szu.edu.cn/info/100/101.htm'}};
 const clone=value=>structuredClone(value);
