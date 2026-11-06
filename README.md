@@ -9,7 +9,7 @@
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe)**　·　[Mac / 其他下载](#下载)　·　[一分钟视频](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　[Mac / 其他下载](#下载)　·　[一分钟视频](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 **简体中文** · [English](docs/README_en.md) · [使用指南](docs/guide/README.md) · [反馈问题](docs/guide/feedback.md)
 
@@ -149,14 +149,14 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 
 **Windows 10 / 11（64 位）与 macOS 13 起；没有手机版。** macOS 目前为预览版，Linux 提供校园网命令行。
 
-**beta0.9.13 · 日常操作更顺畅：阅读不中断，公告记得住，存档更安心。** [查看本版更新与全部附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.13)。仍为预发布版本，学校个人业务的验证范围见下文。
+**beta0.9.14 · 桌面内核与依赖更新，功能与用法不变。** [查看本版更新与全部附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14)。仍为预发布版本，学校个人业务的验证范围见下文。
 
 | 你的电脑 | 选这个 | 打开方式 |
 | :-- | :-- | :-- |
-| **Windows · 推荐** | [下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-Setup-0.9.13.exe) | 按提示安装，自带窗口、桌面伙伴与托盘 |
-| Windows · 免安装 | [下载便携 EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-portable.exe) | 双击运行；本机记录与安装版共用 |
-| **Mac · Apple 芯片** | [下载 arm64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-arm64.dmg) | 打开后拖入「应用程序」 |
-| **Mac · Intel** | [下载 x64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.13/szuDesktop-0.9.13-mac-x64.dmg) | 打开后拖入「应用程序」 |
+| **Windows · 推荐** | [下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe) | 按提示安装，自带窗口、桌面伙伴与托盘 |
+| Windows · 免安装 | [下载便携 EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe) | 双击运行；本机记录与安装版共用 |
+| **Mac · Apple 芯片** | [下载 arm64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | 打开后拖入「应用程序」 |
+| **Mac · Intel** | [下载 x64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | 打开后拖入「应用程序」 |
 
 Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或处理器。电脑上不用另装开发环境；旧的浏览器便携版与命令行版见[安装指南](docs/guide/install.md)。
 

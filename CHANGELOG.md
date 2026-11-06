@@ -28,6 +28,18 @@
 - 下载清单由脚本按版本号自动生成，不在正文重复维护。
 - 说明用户可见变化和未完成验证，不用内部任务编号代替说明。
 
+## beta0.9.14
+
+**维护更新：桌面内核和依赖跟上新版本，功能与用法不变。**
+
+- **窗口内核升级**：Electron 从 44.5.1 升到 45.1.0，Windows 安装版、免安装 EXE 和 macOS 预览版都重新打包。
+- **依赖与构建**：Go 的 x/net、x/text、x/sys 和 GitHub Actions 的四个动作更新到已验证版本；发布流水线照旧跑完整套构建、安装升级与冒烟检查。
+- **升级测试起点前移**：安装版和 macOS 的升级验收改为从 beta0.9.13 升到本版，基线校验值同步更新。
+
+**[查看功能与真实界面](https://github.com/SzuDesktopTeam/szudesktop#readme)** · [首次使用指南](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/getting-started.md) · [下载帮助](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/install.md)
+
+学校业务的验证范围没有变化。
+
 ## beta0.9.13
 
 **szuDesktop 把深大公告、图书馆查询、课程笔记和学习待办放在一个桌面里，还有陪你专注、种菜和建设庭院的像素伙伴。** 公告可以转成待办，复习待办可以回到原笔记；笔记、待办和庭院离线可用。
