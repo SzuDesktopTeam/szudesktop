@@ -11,9 +11,9 @@
 
 ## 1. 当前状态
 
-- **当前版本：beta0.9.13。** [PR #60](https://github.com/SzuDesktopTeam/szudesktop/pull/60) 已合并为 `c1d421a`，源码和发布标签对应同一提交，中英 README 与下载地址同步更新。安装包和校验文件见 [beta0.9.13 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.13)，构建状态见[标签流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/40172504137)，记录见[第 81 节](#s81)。
-- **本版维护更新。** 引导保存失败仍可跳过、笔记保存失败仍能继续阅读、公告记住手动选择；较新格式存档拒绝降级恢复，界面和指南说明同步精简。原有公告转待办、笔记回链与邮件反馈继续保留。
-- **桌面交付。** Windows 安装版、带窗口和伙伴的便携 EXE、轻量浏览器版；macOS 13+ 的 Apple 芯片和 Intel DMG 仍为预览版；Linux 仅 CLI。应发布 11 个程序或压缩包，以及对应 11 个校验文件，共 22 件附件。beta0.9.13 的升级验收起点前移至 beta0.9.12。
+- **当前版本：beta0.9.14。** 依赖维护版：Electron 45.1.0、Go 的 x/net／x/text／x/sys 与 GitHub Actions 四个动作升级，功能与用法不变。源码提交为 `7b25751`，[main 完整检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42163313086)与[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42167255520)全部通过，22 件附件见 [beta0.9.14 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14)，记录见[第 82 节](#s82)。
+- **本版维护更新。** 桌面内核升到 Electron 45.1.0，Windows 安装版、便携 EXE 与 macOS 预览版重新打包；Go 依赖与构建动作同步升级，安装／DMG 升级基线前移到 beta0.9.13 并钉死该版三份附件的 SHA-256。原有公告转待办、笔记回链与邮件反馈继续保留；没有新增学校业务的真实账号验收。
+- **桌面交付。** Windows 安装版、带窗口和伙伴的便携 EXE、轻量浏览器版；macOS 13+ 的 Apple 芯片和 Intel DMG 仍为预览版；Linux 仅 CLI。应发布 11 个程序或压缩包，以及对应 11 个校验文件，共 22 件附件。beta0.9.14 的升级验收起点前移至 beta0.9.13。
 - **可以离线使用。** 本机课程书架与 Markdown 笔记、待办、专注、五位新档伙伴、庭院种植、委托与建设、2048、三套三渲二风景；旧档阿青保留。账户和网络不是这些功能的前提。
 - **学校四模块。** 匿名公告检索、正文、OPAC 书目与馆藏位置已有实际读取证据。宿舍电量已核对匿名校区／楼栋菜单，真实房间电表尚未核对；全校课表和培养方案实现了查询、分页与明细，仍待真实权限验收。学业完成、讲座、个人借阅与文献提供官方入口，不表示已经本机同步。详见[第 76 节](#s76)。
 - **网络修补和实际验收分开。** 代理、路由器与 VPN 场景的状态、超时、接入点和学校窗口修补已随 beta0.9.8 发布。本轮不更改系统代理、TUN、DNS、路由或正在运行的安装版；真实重新认证及切换出口仍按 R01a/R01b 验收。
@@ -34,7 +34,7 @@
 | 发布 | 正式版 1.0 交付（R10） | P1 / M | 按 2026-10-05 的细化，1.0 门槛是 R01a、R10 和首轮试用达到基本标准，R01b 与 R02–R07 带「测试中」标签随 1.0 发布。R10：最终候选包完成安装、启动、退出检查，版本、截图、中英 README、支持范围、更新说明、附件与校验值逐项对应，并附本次候选包的资源基线。资源基线已接进 Windows 安装版与 DMG 冒烟（第 73 节，见 UX24 行），要在最终候选包上跑出并附上。发版步骤按 CONTRIBUTING「发布」里的 v1.0.0 发版清单，beta0.9.7 先彩排一次。R09 已改为发版流程中的一步，不再单列 | [69.2](#s69-2)、[73](#s73)、[50.2](#502-10-剩余任务暂不部署后端) |
 | 发布 | 发布者签名 | P2 / L | Windows 安装包未签名，macOS 包只有 ad-hoc 签名。可评估 SignPath Foundation 的开源免费签名，但要先核实对方条款是否接受含 Pingu、Skipper 粉丝形象的发布件；签不签由作者决定（SECURITY.md 现写不使用代码签名证书）。自动更新已移入延期行 | [69.3](#s69-3)、[50.4](#504-内容刷新与程序更新) |
 | 待负责人决定 | 账号与发布安全的剩余几项 | P1 / S | 2026-10-05 已开 Dependabot 告警、secret scanning 与推送拦截、Actions 强制 SHA 固定，必需检查扩到 7 个 job（第 73 节）。剩下要维护者处理：先确认全部组织所有者都已开启两步验证，再打开组织强制两步验证（顺序反了会把没开的人移出组织）；给 `v*`／`beta*` 标签加规则集；一把可写的部署密钥删掉或改只读；是否开 enforce_admins、不负责发版的人是否降为 write。人工约 15 分钟，建议在 1.0 宣传前完成 | [73](#s73)、[69.6](#s69-6) |
-| 学校业务 | 校园网真实认证闭环 · 教学区（R01a；1.0 门槛） | P0 / M | [74](#s74) 的代理修补已随 beta0.9.8 发布（见 CHANGELOG），本轮版本为 beta0.9.13；真实重新认证与切换出口的验收仍未关闭。维护者按 [69.4](#s69-4) 使用当前发布件和对应 `.sha256` 实测，需要输入密码。同一趟核对 `online_zone`、F21 和 macOS B9；外网在线或教务登录不能代替认证验收。F18 的校外 VPN 部分留在实验模块行 | [69.4](#s69-4)、[74](#s74)、[75](#75-界面排版升级与-beta098-发布2026-10-18) |
+| 学校业务 | 校园网真实认证闭环 · 教学区（R01a；1.0 门槛） | P0 / M | [74](#s74) 的代理修补已随 beta0.9.8 发布（见 CHANGELOG），本轮版本为 beta0.9.14；真实重新认证与切换出口的验收仍未关闭。维护者按 [69.4](#s69-4) 使用当前发布件和对应 `.sha256` 实测，需要输入密码。同一趟核对 `online_zone`、F21 和 macOS B9；外网在线或教务登录不能代替认证验收。F18 的校外 VPN 部分留在实验模块行 | [69.4](#s69-4)、[74](#s74)、[75](#75-界面排版升级与-beta098-发布2026-10-18) |
 | 学校业务 | 校园网真实认证闭环 · 宿舍区与教工区 Dr.COM（R01b） | P1 / M | 不阻断 1.0，保留「测试中」随 1.0 发布，1.0 后验收。宿舍区交给住宿舍的试用同学（试用自查清单第 2 项），顺带核对 F12 的 `online_zone=dorm`；教工区（F18 并入的部分，同样是 Dr.COM）有条件时另测一次。1.0 前有人报告失败的，小问题就修，修不了就写进 1.0 发布说明 | [69.5](#s69-5)、[73](#s73)、[50.2](#502-10-剩余任务暂不部署后端) |
 | 学校业务 | 安装版学校登录与会话接回（R02） | P1 / L | 不阻断 1.0，保留「测试中」。原页真实登录、接回个人业务及过期重登待验收：维护者先按[网络指南](guide/network.md#开着代理软件时)核对学校域名分流，再用已验证可用的研究生账号在学校窗口里复测（Windows 安装版，或 macOS 版合入后的 Mac 版）。不交给试用同学验收 | [50.2](#502-10-剩余任务暂不部署后端)、[47.3](#473-尚未通过与继续条件) |
 | 学校业务 | 本科课表、研究生非空课表、真实成绩与分页（R03–R05） | P1 / L | 不阻断 1.0。由对应的试用同学用自己的账号逐项对照，只回报「一致」或「哪个字段不一致」，另附只含结构的诊断报告；维护者不去借本科账号 | [50.2](#502-10-剩余任务暂不部署后端)、[47.3](#473-尚未通过与继续条件)、[69.5](#s69-5) |
@@ -3882,3 +3882,20 @@ PR 安装包首轮检查发现测试脚本仍在旧设置页查找刷新按钮�
 **源码交付（2026-10-25）**：[PR #60](https://github.com/SzuDesktopTeam/szudesktop/pull/60) 第三轮[七项必需检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/40171242157)全部通过后合并，提交为 `c1d421a249fd812570ef8696a66895f583e6bfba`。`beta0.9.13` 标签指向同一提交；[main 检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/40172496599)和[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/40172504137)均针对这份源码，发布任务还要求真实 Intel Mac 验收通过后才上传附件。
 
 中英 README 的四种桌面下载、应用内版本和 CHANGELOG 已统一到 beta0.9.13。所有公开产物及对应 SHA-256 以[该版 Release 附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.13)为准；本轮未安装或替换维护者当前应用，也未改变学校业务验收范围。
+
+<a id="s82"></a>
+## 82. 依赖维护与 beta0.9.14 发布（2026-11-06）
+
+写入时状态：本节记录 beta0.9.14 发布；实际下载与构建结果见第 1 节链接。
+
+| 事项 | 处理 |
+| --- | --- |
+| Electron 44.5.1 → 45.1.0 | [PR #66](https://github.com/SzuDesktopTeam/szudesktop/pull/66) 合并，Windows 与 macOS 打包、安装升级和冒烟重新验证 |
+| Go x/net 0.62 / x/text 0.43 / x/sys 0.49 | [PR #65](https://github.com/SzuDesktopTeam/szudesktop/pull/65) 合并带入；#62、#46 的目标版本已在 main，因 go.sum 冲突关闭 |
+| GitHub Actions 四个动作 | [PR #56](https://github.com/SzuDesktopTeam/szudesktop/pull/56) 合并 |
+| electron-builder 26.18.0 | [PR #64](https://github.com/SzuDesktopTeam/szudesktop/pull/64) 关闭：新版在 macOS 解压后找不到 LICENSE，项目的许可证钩子报 ENOENT；保持 26.15.3 |
+| 升级基线 | Windows Setup 与两份 DMG 从 beta0.9.12 前移到 beta0.9.13，三份 SHA-256 取自该版 Release 附件 |
+
+**验证与交付（2026-11-06）**：版本改动提交为 `7b25751`。本机 `go build`、`go vet`、发布说明严格模式预检、68 项 JS 与 6 项 Python 检查通过；本机 `go test ./...` 有两个 Windows 文件锁相关用例失败、`check-desktop-settings` 被本机安全策略拦下 reg.exe，这两类在干净 runner 上不复现。[main 完整检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42163313086) 的九项任务（含真实 Intel Mac 冒烟）全部通过后打 `beta0.9.14` 标签；[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42167255520) 的 release 任务上传 22 件附件、11 份 `.sha256`，与中英 README 的四个下载链接逐一对应。
+
+本轮没有安装或替换维护者当前应用，没有新增学校业务的真实账号验收，也没有改变 1.1 表的验收范围。
