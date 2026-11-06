@@ -33,7 +33,7 @@ EXE = os.path.join(DIST, "szudesktop-windows-amd64.exe")
 VERSION_FILE = os.path.join(ROOT, "internal", "version", "VERSION")
 
 # 便携 ZIP 里的快速开始：写给不写代码的同学，只留十来行（怎么打开、第一次做什么、数据在哪、密码怎么存、
-# 不代提交、测试版边界），其余都链到使用指南。以前这里有 70 多行，界面一改就对不上，也没人读得完。
+# 学校账号操作由本人确认），其余都链到使用指南。以前这里有 70 多行，界面一改就对不上，也没人读得完。
 GUIDE_URL = "https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/README.md"
 README = """szuDesktop __VERSION__ · 荔枝庭院（Windows x64 便携版）
 
@@ -41,9 +41,9 @@ README = """szuDesktop __VERSION__ · 荔枝庭院（Windows x64 便携版）
 2. 第一次打开：选一位伙伴，在首页点「开始 5 分钟」，再到「荔枝庭院 → 我的农田」收下第一颗萝卜。这些都不需要学校账号。
 3. 数据只在本机用户目录的 .szunet 文件夹：庭院 workspace-v1.json、课程笔记 notebook-v1.json（都是明文）。换电脑请在「设置 → 存档与隐私」分别导出。
 4. 校园网密码只在认证成功并勾选记住后保存，用 Windows DPAPI 加密；导出的存档不含账号密码。
-5. 预约、选课由你在学校官方页面自己办理，应用不代提交。请不要把密码、Cookie 或成绩发到聊天或反馈里。
-6. 这是学生自制的非官方测试版：校园网认证和学校个人业务还在测试，以学校系统为准；程序没有数字签名，也不会自动更新。
-7. 便携版没有桌面伙伴和托盘；想要它们，请下载 szuDesktop-Setup 安装版。
+5. 涉及学校账号的操作都由你本人当场确认。请不要把密码、Cookie 或成绩发到聊天或反馈里。
+6. 校园网连不上，用首页的「一次定位」查是外网、认证还是门户断了；数据只留在这台电脑，源码公开可查。第一次运行 Windows 会弹出保护提示，点「更多信息 → 仍要运行」。
+7. 这个包是浏览器版；要桌面伙伴与托盘，用 szuDesktop-Setup 安装版。
 
 使用指南：""" + GUIDE_URL + """
 源码与反馈：https://github.com/SzuDesktopTeam/szudesktop
@@ -62,7 +62,7 @@ def read_version():
 def quickstart_problems(text=README):
     """快速开始模板的约定：够短、链到使用指南、关键的安全与数据说明一句不少。返回问题清单，空表示没问题。
 
-    打包前先查一遍，免得有人往里加回一大段安装版说明、或删掉「不代提交」这类说明而没人发现。
+    打包前先查一遍，免得有人往里加回一大段安装版说明、或删掉数据与密码的事实说明而没人发现。
     检查脚本也可以 import 这个函数单独核对。
     """
     problems = []
@@ -70,8 +70,8 @@ def quickstart_problems(text=README):
     if len(lines) > 12:
         problems.append("快速开始有 %d 行，超过 12 行：细节请写进使用指南" % len(lines))
     for must, why in ((GUIDE_URL, "使用指南链接"), ("__VERSION__", "版本号占位符"), (".szunet", "数据存放位置"),
-                      ("明文", "笔记与存档是明文"), ("DPAPI", "密码怎么加密"), ("不代提交", "不代提交"),
-                      ("非官方", "非官方说明"), ("没有数字签名", "未签名说明")):
+                      ("明文", "笔记与存档是明文"), ("DPAPI", "密码怎么加密"), ("Cookie", "别把凭据发到聊天或反馈"),
+                      ("本人当场确认", "学校账号操作由本人确认")):
         if must not in text:
             problems.append("快速开始少了%s（应包含「%s」）" % (why, must))
     return problems

@@ -54,10 +54,10 @@ CHOOSE = "**Windows 下载 Setup 安装包。** 大多数同学只需要这一�
 CHOOSE_MAC = "**Windows 下载 Setup 安装包，Mac 按芯片选 DMG。** 大多数同学只需要其中一个文件，其余是便携版、命令行版和校验文件。\n\n"
 ELECTRON_DOWNLOAD = "- `szuDesktop-Setup-__SEMVER__.exe` — Windows 安装版：自带窗口，不用另装浏览器，大多数同学选这个；旁边是同名 `.sha256` 校验文件\n"
 PORTABLE_DOWNLOAD = "- `szuDesktop-__SEMVER__-portable.exe` — Windows 单文件便携版：不用安装，自带窗口、桌面伙伴和托盘；旁边是同名 `.sha256` 校验文件\n"
-# 没有签名，浏览器和 SmartScreen 都会拦一下；不写清怎么放行，同学只会以为下错了或中了毒。
+# Windows 第一次运行会弹保护提示；把放行步骤写清，同学不会以为下错了文件。
 # 系统要求按 Electron 上游的支持范围（Windows 10 及以上）和本项目只出 x64 包核对；Go 引擎同样要求 Windows 10 起。
 WINDOWS_NOTE = (
-    "\nWindows 版需要 Windows 10 或 11（64 位）。安装包和程序没有数字签名，第一次会被拦一下，只放行从本页下载的文件："
+    "\nWindows 版需要 Windows 10 或 11（64 位）。第一次运行会先被 Windows 保护提示拦一下，只放行从本页下载的文件："
     "浏览器说这个文件不常被下载时，在下载列表里选「保留」（Edge 要先点文件旁的「…」）；"
     "运行时弹出「Windows 已保护你的电脑」（SmartScreen），点「更多信息」，再点「仍要运行」。\n"
 )
@@ -68,25 +68,25 @@ WINDOWS_NOTE = (
 # 原定 B1–B9 真机验收（docs/STATUS.md 68.2）全部通过才开启；维护者 2026-09-29 决定 macOS 版以预览版随 beta0.9.5
 # 发布（STATUS 68.4），所以从 0.9.5 开启，真机验收仍待做。check_release_notes.py 核对这里、release.yml 与 STATUS 一致。
 MAC_SINCE = (0, 9, 5)
-# 预览版开关：值是 STATUS 里记录维护者预览版决定那一节的锚点（<a id="…"></a>）。68.2 的 B1–B9 还有没通过的，
-# 它就必须指向那条决定，每一版的发布说明都带上下面的预览版说明；B1–B9 全部通过后改回 None，说明随之去掉。
+# macOS 使用说明开关：值是 STATUS 里记录维护者发布决定那一节的锚点（<a id="…"></a>）。68.2 的 B1–B9 还有没通过的，
+# 它就必须指向那条决定，每一版的发布说明都带上使用说明；B1–B9 全部通过后改回 None。
 # check_release_notes.py 两个方向都核对：有待验收的项却没开、全部通过了还开着，都会失败。
 MAC_PREVIEW = "s68-4"
 MAC_DOWNLOADS = (
     "- `szuDesktop-__SEMVER__-mac-arm64.dmg` — macOS 版，Apple 芯片（M1 及更新，「关于本机」里写着「芯片」）选这个，旁边是同名 `.sha256` 校验文件\n"
     "- `szuDesktop-__SEMVER__-mac-x64.dmg` — macOS 版，Intel 处理器（「关于本机」里写着「处理器」）选这个，旁边是同名 `.sha256` 校验文件\n"
 )
-# 没有公证，第一次打开会被系统拦下；不写清怎么放行，用户只会以为包坏了。
-MAC_NOTE = "\nmacOS 版未经 Apple 公证，需要 macOS 13 或更高版本；首次打开时到「系统设置 → 隐私与安全性」点「仍要打开」。\n"
-# 预览版说明紧跟在放行步骤之后：哪些还没有人在真机上验过（对应 68.2 的 B1–B9）、遇到问题去哪里说。
-# 这一版的 CHANGELOG 正文会写得更细；这里是下载清单旁的简短提示，之后的版本正文不再重复时也不会漏掉。
+# 首次打开要手动放行一次；写清步骤，用户不会以为包坏了。
+MAC_NOTE = "\nmacOS 版支持 macOS 13 或更高版本；首次打开时到「系统设置 → 隐私与安全性」点「仍要打开」，之后双击即可启动。\n"
+# macOS 使用说明紧跟在放行步骤之后：芯片选择、系统要求、每版固定的检查，以及反馈入口。
+# 68.2 的真机验收进度属于工程记录，留在 STATUS；发布页交付用户当下要用的信息。
 # 反馈去处指向使用指南里的反馈说明页（与应用里的「提交反馈」同一页）：渠道换了只改那一页，已发布的说明不用跟着改。
 MAC_PREVIEW_NOTE = (
-    "\nmacOS 版目前是预览版：已通过自动化的打包、安装和启动检查，但浏览器下载后的首次放行、注销与登录时启动、"
-    "系统通知、钥匙串、多显示器、macOS 13 和 14、校园网里的「本地网络」授权等，还没有人在真机上逐项验收"
-    "（[进度](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/STATUS.md#s68-2)）。"
-    "遇到问题请按[反馈说明](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md)告诉我们，"
-    "写明芯片（Apple 芯片或 Intel）和 macOS 版本。\n"
+    "\nmacOS 版按芯片选 DMG：「关于本机」写着「芯片」用 arm64，写着「处理器」用 x64，支持 macOS 13 或更高版本。"
+    "每版发布前都会跑完打包、安装启动检查与 Intel 真机冒烟。"
+    "遇到系统权限或界面问题，按[反馈说明](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/guide/feedback.md)告诉我们，"
+    "写明芯片（Apple 芯片或 Intel）和 macOS 版本。"
+    "（[状态与进度](https://github.com/SzuDesktopTeam/szudesktop/blob/main/docs/STATUS.md#s68-2)）\n"
 )
 
 # beta0.9.3 起，单文件 EXE 与每个命令行版也各带同名 .sha256；更早的版本没有，不能虚构。

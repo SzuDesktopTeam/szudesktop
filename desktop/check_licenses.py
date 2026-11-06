@@ -92,12 +92,12 @@ def self_test_mac_app():
 
 def check_quickstart():
     """便携 ZIP 里的快速开始模板：make_release.py 打包前会自检，这里在 run-checks 里提前核对，
-    免得模板被改长、或删掉「不代提交」这类说明，要等到发版打包时才发现。也确认自检认得出坏模板。"""
+    免得模板被改长、或删掉数据与密码的事实说明，要等到发版打包时才发现。也确认自检认得出坏模板。"""
     import make_release  # 同目录；只取模板和自检函数，不打包
 
     problems = make_release.quickstart_problems()
     assert problems == [], "便携版快速开始模板不合约定：" + "；".join(problems)
-    assert make_release.quickstart_problems(make_release.README.replace("不代提交", "")), "删掉「不代提交」时自检没有报出"
+    assert make_release.quickstart_problems(make_release.README.replace(".szunet", "")), "删掉数据存放位置时自检没有报出"
     assert make_release.quickstart_problems(make_release.README + "补充说明\n" * 6), "模板超过 12 行时自检没有报出"
 
 

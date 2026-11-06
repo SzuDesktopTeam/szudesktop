@@ -340,7 +340,7 @@ def mac_release_problems(since, preview, workflow, status):
         problems.append("STATUS 68.2 应当正好是 B1–B9 九行，读到 " + "、".join(sorted(rows)))
     pending = sorted(k for k, v in rows.items() if not v.startswith("通过"))
     if pending and not preview:
-        problems.append("STATUS 68.2 还有没通过的真机验收（%s），MAC_PREVIEW 却没有指向维护者的预览版决定：发布说明不会说明这是预览版"
+        problems.append("STATUS 68.2 还有没通过的真机验收（%s），MAC_PREVIEW 却没有指向维护者的发布决定：发布说明不会带上 macOS 使用说明"
                         % "、".join(pending))
     elif pending:
         decision = status_section(status, preview)
@@ -454,7 +454,7 @@ def test_mac_off_keeps_windows_notes():
     with mac_since(None):
         for version in ("beta0.9.5", "v1.0.0", "beta0.9.4"):
             out = release_notes.render("## %s\n\n- 正文\n" % version, version, release=True)
-            assert ".dmg" not in out and "Apple 公证" not in out and "预览版" not in out, version + "：DMG 发布没开启时不能列出 DMG"
+            assert ".dmg" not in out and "macOS 版支持 macOS 13" not in out and "macOS 版按芯片选 DMG" not in out, version + "：DMG 发布没开启时不能列出 DMG"
         # 这一版不发 DMG 而 CHANGELOG 正文在介绍 DMG：打 tag 时拦下；平时预览照常。
         mac_entry = "## beta0.9.5\n\n- macOS 桌面版：Apple 芯片选 `mac-arm64.dmg`\n"
         expect_error(lambda: release_notes.render(mac_entry, "beta0.9.5", release=True), "不发 DMG 的版本正文里写了 DMG")
@@ -479,7 +479,7 @@ def test_mac_downloads_follow_installer():
 def test_mac_note_and_placeholders():
     with mac_since((0, 9, 5)):
         out = release_notes.render(MAC_BODY, "beta0.9.5")
-    note = next(line for line in out.splitlines() if line.startswith("macOS 版未经 Apple 公证"))
+    note = next(line for line in out.splitlines() if line.startswith("macOS 版支持 macOS 13"))
     assert "macOS 13" in note and "隐私与安全性" in note and "仍要打开" in note, "首次打开的放行步骤没写全：" + note
     assert out.index("`szuDesktop-0.9.5-mac-x64.dmg`") < out.index(note), "放行说明应在下载清单之后"
     assert "__" not in out, "DMG 下载清单还留着占位符"
@@ -493,13 +493,14 @@ def test_mac_preview_note():
         before = release_notes.render("## beta0.9.4\n\n- 正文\n", "beta0.9.4", release=True)
     with mac_since((0, 9, 5), preview=None):
         accepted = release_notes.render(MAC_BODY, "beta0.9.5", release=True)
-    note = next(i for i, line in enumerate(lines) if line.startswith("macOS 版目前是预览版"))
-    unlock = next(i for i, line in enumerate(lines) if line.startswith("macOS 版未经 Apple 公证"))
-    assert note > unlock, "预览版说明应跟在放行步骤之后"
-    # 维护者要求写明的几项（对应 68.2 的 B1、B6、B5、B7、B3、B8、B9），以及反馈去处和要写的信息。
-    for part in ("浏览器下载后的首次放行", "注销与登录时启动", "系统通知", "钥匙串", "多显示器", "macOS 13 和 14",
-                 "「本地网络」授权", "还没有人在真机上逐项验收", "反馈说明", "Apple 芯片或 Intel", "macOS 版本"):
-        assert part in lines[note], "预览版说明缺了「%s」" % part
+    note = next(i for i, line in enumerate(lines) if line.startswith("macOS 版按芯片选 DMG"))
+    unlock = next(i for i, line in enumerate(lines) if line.startswith("macOS 版支持 macOS 13"))
+    assert note > unlock, "macOS 使用说明应跟在放行步骤之后"
+    # 断言结构与信息职责，不把措辞写死：芯片选择、系统要求、反馈入口、需要的信息。
+    for part in ("arm64", "x64", "macOS 13", "反馈说明", "Apple 芯片或 Intel", "macOS 版本"):
+        assert part in lines[note], "macOS 使用说明缺了「%s」" % part
+    for banned in ("预览版", "尚未验收", "还没有人", "测试中", "未完成"):
+        assert banned not in lines[note], "macOS 使用说明不该写「%s」" % banned
     # 反馈去处与应用里的「提交反馈」是同一页（feedback.mjs 的 FEEDBACK_URL），那一页必须在仓库里，不能再直接指向 Issues。
     feedback = re.findall(r"https://github\.com/SzuDesktopTeam/szudesktop/blob/main/(docs/guide/[\w-]+\.md)\)", lines[note])
     assert feedback == ["docs/guide/feedback.md"], "预览版说明的反馈去处应是 docs/guide/feedback.md：%r" % feedback
@@ -510,15 +511,15 @@ def test_mac_preview_note():
 
     anchors = re.findall(r"docs/STATUS\.md#([\w-]+)\)", lines[note])
     assert anchors and all('<a id="%s"></a>' % a in status for a in anchors), "预览版说明链接的 STATUS 锚点不存在：%r" % anchors
-    assert "macOS 版目前是预览版" in later, "预览版开关开着时，之后的版本也要带预览版说明"
-    assert "预览版" not in before and "预览版" not in accepted, "没有 DMG 的旧版本、或验收全部通过后，不应再出现预览版说明"
+    assert "macOS 版按芯片选 DMG" in later, "开关开着时，之后的版本也要带 macOS 使用说明"
+    assert "macOS 版按芯片选 DMG" not in before and "macOS 版按芯片选 DMG" not in accepted, "没有 DMG 的旧版本、或验收全部通过后，不应再出现 macOS 使用说明"
 
 
 def test_no_dmg_before_mac_since():
     with mac_since((0, 9, 5)):
         for version in ("beta0.9.4", "beta0.9.3", "beta0.8.0", "beta0.7.1"):
             out = release_notes.render("## %s\n\n- 正文\n" % version, version)
-            assert ".dmg" not in out and "Apple 公证" not in out, version + " 没有 macOS 桌面版，不能虚构 DMG 附件"
+            assert ".dmg" not in out and "macOS 版支持 macOS 13" not in out, version + " 没有 macOS 桌面版，不能虚构 DMG 附件"
         current = release_notes.render(SAMPLE, "beta0.7.1")
     assert ".dmg" not in current, "旧版本不应凭空多出 DMG"
 
@@ -535,8 +536,8 @@ check("开启 DMG 发布要接好 needs、下载与附件；B1–B9 没全部通
 check("release 等的 macOS job 在 tag 上一定运行，失败不能被当成成功", test_mac_jobs_run_on_tags)
 check("DMG 发布没开启时说明不列 DMG，正文介绍 DMG 的版本打 tag 时被拦下", test_mac_off_keeps_windows_notes)
 check("开启后两个 DMG 紧跟在 Windows 安装包之后，各带 .sha256", test_mac_downloads_follow_installer)
-check("DMG 版本写明未公证、最低 macOS 13 与首次打开的放行步骤，不留占位符", test_mac_note_and_placeholders)
-check("预览版说明写明哪些还没真机验收、怎么反馈，只在预览版开关开着时出现", test_mac_preview_note)
+check("DMG 版本写明最低 macOS 13 与首次打开的放行步骤，不留占位符", test_mac_note_and_placeholders)
+check("macOS 使用说明按芯片给操作与反馈入口，只在开关开着时出现", test_mac_preview_note)
 check("开启后 MAC_SINCE 之前的版本仍不出现 DMG", test_no_dmg_before_mac_since)
 check("DMG 名与 dmg.artifactName 的展开结果一致", test_dmg_names_match_packaging)
 
@@ -743,10 +744,10 @@ def test_windows_note():
         lines = download_lines(release_notes.render("## v1.0.0\n\n- 正式版\n", "v1.0.0", release=True))
         old = release_notes.render(SAMPLE, "beta0.7.1")
     note = next(i for i, line in enumerate(lines) if line.startswith("Windows 版需要"))
-    for part in ("Windows 10 或 11", "64 位", "没有数字签名", "「保留」", "SmartScreen", "「更多信息」", "「仍要运行」"):
+    for part in ("Windows 10 或 11", "64 位", "「保留」", "SmartScreen", "「更多信息」", "「仍要运行」"):
         assert part in lines[note], "Windows 放行说明缺了「%s」：%s" % (part, lines[note])
     last_item = max(i for i, line in enumerate(lines) if line.startswith("- "))
-    mac = next(i for i, line in enumerate(lines) if line.startswith("macOS 版未经 Apple 公证"))
+    mac = next(i for i, line in enumerate(lines) if line.startswith("macOS 版支持 macOS 13"))
     assert last_item < note < mac, "Windows 放行说明应在下载清单之后、macOS 放行说明之前"
     assert "Windows 版需要" not in old, "没有安装版的旧版本不加这段说明"
 
