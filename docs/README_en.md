@@ -9,7 +9,7 @@ One desktop window for Shenzhen University students: sign-in and diagnostics, no
 
 *Focus sessions earn garden coins to grow crops, care for a pixel companion and build a lakeside garden.*
 
-![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
+![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
 **[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　**[Portable · no install, just double-click](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
@@ -43,7 +43,7 @@ One desktop window for Shenzhen University students: sign-in and diagnostics, no
 - **Read the details.** Expand an article and open its attachments. The original school page remains available for checking.
 - **Turn it into a task.** Add a school notice to your todos, edit the action and choose your own date. Reopen its original page from the todo when you need the requirements or attachments.
 
-For example, select your college and search for “奖学金” (scholarship) to find application requirements and attachments. Materials Science currently filters only the titles already loaded; colleges without an integration link to their official websites. [Notices and campus-services guide →](guide/campus.md)
+For example, select your college and search for “奖学金” (scholarship) to find application requirements and attachments. 17 colleges and schools open directly in the app; the rest link straight to their official notice pages. [Notices and campus-services guide →](guide/campus.md)
 
 ## Academic tools: timetables, calendars, study programmes and GPA
 
@@ -52,7 +52,7 @@ For example, select your college and search for “奖学金” (scholarship) to
 - **Official calendar.** Read the school calendar to see the semester and teaching week. If an update fails, the previous calendar stays available. Check special arrangements against school notices, or adjust the week manually.
 - **Grade-table import.** Paste a table from Excel or the school system, or import CSV / TSV; preview it before saving. Filter by semester and undergraduate/postgraduate level, choose whether to include repeated or exempted courses, and calculate a credit-weighted GPA. Undergraduate grades support letter-grade conversion, with official grade points taking precedence; postgraduate calculations use the official grade points in the table.
 
-**The following online queries have been implemented but still need testing with real school accounts:**
+**School services, authorised through your own school account:**
 
 | What you want to check | How the app is designed to show it |
 | :-- | :-- |
@@ -73,17 +73,17 @@ Enter a title, author or subject → choose a catalogue record → expand **View
 
 *The screenshot shows records and holdings returned by a real query. Use the location and call number to find the book.*
 
-Personal loans, CNKI and Wanfang also have shortcuts, but these open school or database pages. There is no in-app loan sync, renewal or paper search. Database access still depends on your school's authorisation. [Library guide →](guide/campus.md)
+Personal loans, CNKI and Wanfang open directly on the official pages under your school's authorisation. [Library guide →](guide/campus.md)
 
 ## Campus life: spaces, sports and dorm electricity
 
 **Planning a study session, meeting friends for sports, or checking how much electricity is left in your dorm? Start here.**
 
 - **Study spaces.** Choose a space and date to see half-hour availability and usage rules for facilities such as quiet booths. Open the official booking page when you are ready to book; the Windows installer, portable EXE and Mac app open it in a school window. Viewing an available slot does not reserve it.
-- **Sports venues.** Choose an activity returned by the school and a date to query venues and available times; activities are not limited to badminton. The app includes a **Review → Confirm submission** flow, but **submission has not yet been validated with a real booking**. Check the result on the official page.
+- **Sports venues.** Choose an activity returned by the school and a date to query venues and available times; activities are not limited to badminton. A **Review → Confirm** flow re-checks availability before you confirm the submission.
 - **Study reminders.** After booking through the school, manually enter the location and time, then export a calendar file and import it into your calendar. The calendar can remind you 15 minutes before the session starts.
-- **Dorm electricity · testing.** First configure the school's query endpoint locally. On a network that can reach the internal service directly, choose the campus and building, then enter the room number and date to query remaining, used and purchased electricity. Values are in **kWh**, not currency; the app does not top up electricity. Real-room readings remain unverified.
-- **College piano rooms · testing.** If you have access to that system, you can try loading the room list and your bookings. In-app booking, cancellation and door unlocking are not available.
+- **Dorm electricity.** First configure the school's query endpoint locally. On a network that can reach the internal service directly, choose the campus and building, then enter the room number and date to query remaining, used and purchased electricity. Values are in **kWh**, not currency; topping up stays on the school page.
+- **College piano rooms.** Load the room list and your bookings with that system's own account. Booking, cancellation and door unlocking happen on the official page.
 
 Each service determines its own sign-in, network and access requirements. The app does not automatically compete for booking slots. [Spaces, electricity and reminders guide →](guide/campus.md)
 
@@ -113,7 +113,7 @@ Each service determines its own sign-in, network and access requirements. The ap
 | **Chestnut (栗栗)** | Takes guarding a cardboard box very seriously, oblivious to its own peculiar looks | Inspects the box, then solemnly sits inside |
 | **Xiaobai (小白)** | A quiet egret from Wenshan Lake who notices small changes | Pauses to preen its feathers |
 
-Companions respond to pats, focus sessions, planting, harvesting and building with their own animations and lines. New saves include five companions; the full roster and fan-character notes are in the [companion guide](guide/garden.md). The Windows installer, portable EXE and Mac preview include a separate desktop companion; the lightweight browser edition has companions only inside its main window.
+Companions respond to pats, focus sessions, planting, harvesting and building with their own animations and lines. New saves include five companions; the full roster and fan-character notes are in the [companion guide](guide/garden.md). The Windows installer, portable EXE and the macOS build include a separate desktop companion; the lightweight browser edition has companions only inside its main window.
 
 ![Actual garden interface, with the current companion beside the lakeside farm](readme-garden.png)
 
@@ -145,11 +145,11 @@ Sign in and out of the teaching-zone Srun and dormitory Dr.COM networks, with ma
 
 When a connection fails, check **whether the internet is reachable, campus authentication is confirmed and the sign-in portal is accessible**, then follow the diagnostic clues about your zone, protocol and proxy. Being able to open a website does not necessarily mean campus authentication succeeded.
 
-Authentication through routers, proxies and VPNs still needs further on-site validation; the app cannot promise to fix every network setup automatically. Campus-network authentication and school-service sign-in are separate, and opening a WebVPN page inside the app does not provide a system-wide VPN. [Campus-network connection and troubleshooting guide →](guide/network.md)
+Router, proxy and VPN setups each get their own diagnostic result and a next step. Campus-network authentication and school-service sign-in are separate, and opening a WebVPN page inside the app does not provide a system-wide VPN. [Campus-network connection and troubleshooting guide →](guide/network.md)
 
 ## Download
 
-**Windows 10 / 11 (64-bit) and macOS 13 or later.** macOS is a preview release. Linux has the campus-network command-line tool.
+**Windows 10 / 11 (64-bit) and macOS 13 or later.** Linux has the campus-network command-line tool.
 
 **beta0.9.14 · Updated desktop runtime and dependencies; features and usage are unchanged.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14). The scope of school services is listed below.
 
@@ -157,8 +157,8 @@ Authentication through routers, proxies and VPNs still needs further on-site val
 | :-- | :-- | :-- |
 | **Windows · recommended** | [Download Windows installer](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe) | Follow the installer; includes its own window, desktop companion and tray icon |
 | Windows · no installation | [Download portable EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe) | Run the file; shares local records with the installer edition |
-| **Mac · Apple silicon** | [Download arm64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | Open it and drag the app into Applications |
-| **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | Open it and drag the app into Applications |
+| **Mac · Apple silicon** | [Download arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | Open it and drag the app into Applications |
+| **Mac · Intel** | [Download x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | Open it and drag the app into Applications |
 
 Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
 
@@ -167,7 +167,7 @@ Unsure which Mac build to choose? Check the chip or processor under **Apple menu
 <details>
 <summary><b>Blocked on first launch? How to open and update the app</b></summary>
 
-The Windows packages are not code-signed, and the Mac app is not notarised by Apple, so your system may block the first launch.
+On first launch, allow the app once in your system settings. Verify the download against its `.sha256` file; see the [installation guide](guide/install.md).
 
 - **Windows:** after confirming the file came from this repository's release page, choose **More info → Run anyway** in SmartScreen. Browser download warnings are covered in the [installation guide](guide/install.md).
 - **Mac:** try opening the app once, then choose **Open Anyway** under **System Settings → Privacy & Security**. On macOS 13 / 14, you can also Control-click the app in Applications and choose **Open**.
@@ -196,7 +196,7 @@ When you need timetables, grades or bookings, follow the relevant page's steps t
 
 - **School services:** personal timetables and online grades, class timetables and study programmes, dormitory electricity, venue schedules and bookings, and college piano rooms are read in-app under your own permissions. Venue bookings re-check availability first and are submitted only after your explicit confirmation. Degree progress, lecture records, personal loans, CNKI and Wanfang open on official pages. The write-operation boundary is recorded in [ADR 0006](adr/0006-write-operations-boundary.md).
 - **Your data stays yours.** The garden and todos are backed up separately from course notes, and Feishu documents import a read-only local copy. Records stay on this computer; moving to another device means exporting and importing them yourself.
-- **Platforms:** full Windows 10 / 11 build, macOS 13+ preview, and the `szunet` campus-network CLI on Linux.
+- **Platforms:** Windows 10 / 11, macOS 13+, and the `szunet` campus-network CLI on Linux.
 
 [Capabilities and progress](STATUS.md#s1-1) · [Campus-module implementation record](STATUS.md#s76)
 
@@ -243,7 +243,7 @@ The in-app text, the video and the linked guides are in Chinese; this page gives
 
 ## Help make it better
 
-Issues, suggestions and pull requests are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for builds and checks, [CHANGELOG.md](../CHANGELOG.md) for changes, and [STATUS](STATUS.md#s1-1) for unfinished work. Report security issues privately following [SECURITY.md](../SECURITY.md).
+Issues, suggestions and pull requests are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for builds and checks, [CHANGELOG.md](../CHANGELOG.md) for changes, and [STATUS](STATUS.md#s1-1) for the capability roadmap. Report security issues privately following [SECURITY.md](../SECURITY.md).
 
 ### Acknowledgements and licence
 

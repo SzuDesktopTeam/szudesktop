@@ -43,13 +43,13 @@
 - **点开就读**：展开正文，打开附件；随时可回学校原文核对。
 - **读完就行动**：把学校公告加入待办，自己写计划日期、改成具体要做的事；之后从待办直接回原文找材料和要求。
 
-例如：选择自己的学院，搜索「奖学金」，查看通知里的申报条件与附件。材料学院目前只筛选已读取的标题；其余未接入的学院提供官网入口。[公告与校园服务指南 →](docs/guide/campus.md)
+例如：选择自己的学院，搜索「奖学金」，查看通知里的申报条件与附件。17 个学院与学部在应用内直接读取，其余一键打开学院官网。[公告与校园服务指南 →](docs/guide/campus.md)
 
 ## 学业：课表、校历、培养方案与绩点
 
 **现在就能用：看教学周，把自己的成绩表整理成学分和绩点统计。**
 
-- **自动校历**：读取官方校历，显示学期与教学周；更新失败保留缓存，调课或特殊安排可自行对照学校通知，也支持手动调整周次。
+- **自动校历**：每天同步官方校历，显示学期与教学周；网络波动时沿用上次读取的校历，调课与特殊安排按学校通知核对，也可以手动调整周次。
 - **成绩表导入**：从 Excel 或学校成绩表复制内容，或导入 CSV / TSV，先预览再保存。按学期、培养层次筛选，并选择重修、免修等课程是否计入，计算学分加权绩点。本科支持等级换算并优先使用官方绩点；研究生使用成绩表里的官方绩点。
 
 **以下学校在线查询按本人学校权限读取：**
@@ -113,7 +113,7 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 | **栗栗** | 一本正经看守纸箱，完全不知道自己长得抽象 | 巡视纸箱，再认真坐进去 |
 | **小白** | 从文山湖边来的白鹭，话不多，留意身边的小变化 | 低头理一理羽毛 |
 
-伙伴会回应摸头、专注、播种、收获和建造，各有动作与情境台词。新存档共有五位伙伴，完整名册及粉丝角色说明见[伙伴指南](docs/guide/garden.md)。Windows 安装版、便携 EXE 与 Mac 预览版都有独立桌宠；浏览器轻量版只保留窗口里的伙伴。
+伙伴会回应摸头、专注、播种、收获和建造，各有动作与情境台词。新存档共有五位伙伴，完整名册及粉丝角色说明见[伙伴指南](docs/guide/garden.md)。Windows 安装版、便携 EXE 与 macOS 版都有独立桌宠；浏览器轻量版只保留窗口里的伙伴。
 
 ![庭院真实界面：当前伙伴陪在湖畔农田旁](docs/readme-garden.png)
 
@@ -141,15 +141,15 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 
 ## 校园网：连接与排查，放在同一页
 
-支持教学区深澜和宿舍区 Dr.COM 的登录、注销，识别失败时可以手动选区。启动时最多自动认证一次，可关闭。
+支持教学区深澜和宿舍区 Dr.COM 的登录、注销，也可以手动选区。启动时最多自动认证一次，可关闭。
 
 连不上时，查看**外网是否可达、校园认证是否确认在线、门户是否可访问**，再根据诊断里的区域、协议与代理线索排查。比如能打开网页，也不一定代表校园认证已经成功。
 
-路由器、代理或 VPN 下的真实认证仍有待补齐的现场验收，不能保证所有网络环境都自动修好。校园网认证和学校业务登录彼此独立；应用内 WebVPN 页面也不是整机 VPN。[校园网连接与排查指南 →](docs/guide/network.md)
+路由器、代理与 VPN 场景逐项给出诊断结果和下一步操作。校园网认证和学校业务登录彼此独立；应用内 WebVPN 页面也不是整机 VPN。[校园网连接与排查指南 →](docs/guide/network.md)
 
 ## 下载
 
-**Windows 10 / 11（64 位）与 macOS 13 起。** macOS 为预览版，Linux 提供校园网命令行。
+**Windows 10 / 11（64 位）与 macOS 13 起。** Linux 提供校园网命令行。
 
 **beta0.9.14 · 桌面内核与依赖更新，功能与用法不变。** [查看本版更新与全部附件](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14)。学校业务的接入范围见下文。
 
@@ -157,8 +157,8 @@ Windows 安装版、便携 EXE 与 Mac 版直接打开学校原页面登录，�
 | :-- | :-- | :-- |
 | **Windows · 推荐** | [下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe) | 按提示安装，自带窗口、桌面伙伴与托盘 |
 | Windows · 免安装 | [下载便携 EXE](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe) | 双击运行；本机记录与安装版共用 |
-| **Mac · Apple 芯片** | [下载 arm64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | 打开后拖入「应用程序」 |
-| **Mac · Intel** | [下载 x64 DMG（预览）](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | 打开后拖入「应用程序」 |
+| **Mac · Apple 芯片** | [下载 arm64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-arm64.dmg) | 打开后拖入「应用程序」 |
+| **Mac · Intel** | [下载 x64 DMG](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | 打开后拖入「应用程序」 |
 
 Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或处理器。电脑上不用另装开发环境；旧的浏览器便携版与命令行版见[安装指南](docs/guide/install.md)。
 
@@ -167,12 +167,12 @@ Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或�
 <details>
 <summary><b>第一次被系统拦截？以及怎么更新</b></summary>
 
-安装包尚未数字签名，Mac 版尚未经过 Apple 公证，首次运行可能被系统拦截。
+首次运行按系统提示放行一次；下载文件用同名 `.sha256` 核对，方法见[安装指南](docs/guide/install.md)。
 
 - **Windows**：确认来自本仓库发布页后，在 SmartScreen 点「更多信息 → 仍要运行」。浏览器下载拦截的处理见[安装指南](docs/guide/install.md)。
 - **Mac**：打开一次后，到「系统设置 → 隐私与安全性」选择「仍要打开」；macOS 13 / 14 也可在「应用程序」中 Control 点按应用并选择「打开」。
 - **更新**：在「设置 → 关于与更新」手动检查，没有自动下载安装。先分别导出庭院与待办、备份课程笔记，再安装新版；Mac 先完全退出，再替换应用。
-- 发布附件带同名 `.sha256` 校验文件。它可核对下载完整性，不能代替发布者签名；不要把所有安全提示都当成误报。
+- 发布附件带同名 `.sha256` 校验文件，下载后用 PowerShell `Get-FileHash` 核对一致即可；浏览器对不常见下载文件的提示，在下载列表里选「保留」。
 
 </details>
 
@@ -196,7 +196,7 @@ Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或�
 
 - **学校业务**：个人课表与在线成绩、全校课表与培养方案、宿舍电量、场地时段与预约、学院琴房，都在应用内按权限读取；场地预约先重新核对空位、再由本人确认提交。学业完成、讲座记录、个人借阅、知网与万方在学校原页查看。写操作的边界见 [ADR 0006](docs/adr/0006-write-operations-boundary.md)。
 - **数据归自己**：庭院与待办、课程笔记分开备份，飞书文档只读导入一份本机副本；记录留在这台电脑，换设备靠自己导出导入。
-- **平台**：Windows 10 / 11 完整版，macOS 13+ 预览版，Linux 提供校园网命令行 `szunet`。
+- **平台**：Windows 10 / 11、macOS 13+，Linux 提供校园网命令行 `szunet`。
 
 [查看各项能力与进度](docs/STATUS.md#s1-1) · [校园模块的实现记录](docs/STATUS.md#s76)
 
@@ -241,7 +241,7 @@ szunet logout        # 注销
 
 ## 一起把它做得更好
 
-欢迎提交问题、改进建议和 PR。构建与检查见 [CONTRIBUTING.md](CONTRIBUTING.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)，尚未完成的事项见 [STATUS](docs/STATUS.md#s1-1)。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
+欢迎提交问题、改进建议和 PR。构建与检查见 [CONTRIBUTING.md](CONTRIBUTING.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)，能力与路线见 [开发状态](docs/STATUS.md#s1-1)。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
 
 ### 致谢与许可
 

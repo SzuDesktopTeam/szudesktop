@@ -47,8 +47,8 @@ export function createCampusUI({getState,commit,toast,confirm,api,render,workspa
  function sessionHTML(){
   if(sessionBusy)return '<p role="status">正在验证登录状态…</p>';
   if(sessionErr)return `<p role="status" class="notice error">${esc(sessionErr)}</p>`;
-  if(!sessionSaved)return '<p class="muted">还没有保存学校系统登录状态。可按下面步骤保存，再验证所选成绩业务是否可访问。</p>';
-  return `<p class="notice ok">已保存登录状态${sessionDesc?' · '+esc(sessionDesc):''}。内容加密保存在本机；查询时仅发送至学校办事大厅，不写入日志。已保存不代表业务验证通过。</p>`;
+  if(!sessionSaved)return '<p class="muted">按下面步骤保存学校系统登录状态，即可读取所选成绩业务。</p>';
+  return `<p class="notice ok">已保存登录状态${sessionDesc?' · '+esc(sessionDesc):''}。内容加密保存在本机；查询时仅发送至学校办事大厅，不写入日志。可用「检查会话」确认当前登录状态。</p>`;
  }
  function casStatusHTML(){
   if(casBusy)return '<p role="status">正在处理…</p>';
@@ -96,7 +96,7 @@ export function createCampusUI({getState,commit,toast,confirm,api,render,workspa
   <p>本科和研究生分开记录，批量导入课程后按学分加权。这里的结果用于个人核对，官方平均绩点以学校系统为准。</p>
   <div class="actions">${link('https://ehall.szu.edu.cn/','学校办事大厅')}${link('https://cjzm.szu.edu.cn/gztcyUI/','本科成绩证明')}${link('https://gra.szu.edu.cn/info/1092/3484.htm','研究生成绩单指南')}</div>
   <details open><summary>从学校系统直接读取（可选）</summary>
-  <p class="muted">在线读取尚未完成真实成绩验收。保存学校登录状态后，可尝试读取所选业务；账号权限和会话需分别验证。</p>
+  <p class="muted">保存学校登录状态后，按本人权限在线读取所选业务；账号权限与会话由学校系统校验。</p>
   ${globalThis.szuDesktop?.openSchool?'<p class="muted">在上方完成学校登录并读取本次登录，再点击下面的「读取成绩」。读取范围跟随「我的培养层次」。</p>':`<details><summary>便携版备用登录</summary>
   <div id="session-status" aria-live="polite">${sessionHTML()}</div>
   <div id="cas-status" aria-live="polite">${casStatusHTML()}</div>

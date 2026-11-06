@@ -37,7 +37,7 @@
 
 **Windows 安装版和 macOS 版关掉主窗口后会继续常驻，因此不等于清除本次登录。** 完整退出请使用托盘（Mac 上是菜单栏图标）、伙伴菜单或设置中的「退出应用」，Mac 上也可以按 ⌘Q。系统浏览器中的登录状态由浏览器和学校负责，应用退出不会代为注销。
 
-系统安全存储：Windows 使用 DPAPI；macOS 使用系统钥匙串（`security`），写入前有一次性自检；Linux 使用 Secret Service（`secret-tool`）。不可用或写入失败时明确报错，不退回明文文件。桌面应用有 Windows 版和 macOS 版（预览）：Windows 版用 DPAPI，macOS 版与命令行共用钥匙串里的 `szunet` 条目；Linux 只有命令行。macOS 上的条目由系统自带的 `security` 工具写入和读出，没有另外限定只许本应用读取，同一个 macOS 用户下运行的其他程序也能通过 `security` 不经提示读出（按写入方式推断，还没在真机上核实）。这和 Windows 的 DPAPI 一样：防的是同一台电脑上的其他用户，不防同一用户下运行的恶意程序。
+系统安全存储：Windows 使用 DPAPI；macOS 使用系统钥匙串（`security`），写入前有一次性自检；Linux 使用 Secret Service（`secret-tool`）。不可用或写入失败时明确报错，不退回明文文件。桌面应用有 Windows 版和 macOS 版：Windows 版用 DPAPI，macOS 版与命令行共用钥匙串里的 `szunet` 条目；Linux 只有命令行。macOS 上的条目由系统自带的 `security` 工具写入和读出，没有另外限定只许本应用读取，同一个 macOS 用户下运行的其他程序也能通过 `security` 不经提示读出（按写入方式推断，还没在真机上核实）。这和 Windows 的 DPAPI 一样：防的是同一台电脑上的其他用户，不防同一用户下运行的恶意程序。
 
 其他约定：
 

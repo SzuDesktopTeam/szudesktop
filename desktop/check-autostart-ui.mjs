@@ -88,7 +88,7 @@ test('a failed toggle reports the reason and keeps the old state',async()=>{
 test('Electron cannot register a new Go autostart but may turn off an existing one',async()=>{
   const shell={shell:'electron'};
   const off=paintWith({supported:true,enabled:false,detail:'未开启'},shell);
-  assert.equal(off.button.disabled,true);assert.match(off.text,/安装版暂不支持开机自启/);
+  assert.equal(off.button.disabled,true);assert.match(off.text,/开机自启用 Setup 安装版开启/);
   const blocked=await clickAutostart({supported:true,enabled:false},null,shell);
   assert.equal(blocked.calls.length,0,'安装版不得新增 Go 自启登记');
   const on=paintWith({supported:true,enabled:true,detail:'已开启'},shell);

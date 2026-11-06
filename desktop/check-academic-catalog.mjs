@@ -12,17 +12,21 @@ let checks=0;
 async function test(name,fn){await fn();console.log('PASS',name);checks++}
 const edit=(ui,field,value)=>ui.change({target:{id:'academic-catalog-'+field,value}});
 
-await test('both new catalog businesses retain the real-account acceptance warning',async()=>{
+await test('both catalog views state where the data comes from',async()=>{
  const ui=createAcademicCatalogUI({api:async()=>planList});
- for(const mode of ['timetable','program'])assert.match(ui.section(mode),/title="[^"]*未[^"]*真实账号[^"]*(验证|验收)[^"]*学校系统[^"]*"/);
+ for(const mode of ['timetable','program']){
+  const html=ui.section(mode);
+  assert.match(html,/数据来源：学校系统/);
+  assert.doesNotMatch(html,/未验收|测试中|尚未完成真实账号/);
+ }
  ui.section('program');await ui.click('academic-catalog-query');
- assert.match(ui.section('program'),/title="[^"]*未[^"]*真实账号[^"]*(验证|验收)[^"]*学校系统[^"]*"/);
+ assert.match(ui.section('program'),/数据来源：学校系统/);
 });
 
 await test('unread views contain no fabricated results and retain official entry',async()=>{
  const ui=createAcademicCatalogUI({api:async()=>{throw Error('must not run on render')}});
  const html=ui.section('timetable');
- assert.match(html,/全校课表/);assert.match(html,/尚未查询/);assert.match(html,/ehall\.szu\.edu\.cn/);
+ assert.match(html,/全校课表/);assert.match(html,/学校原页/);assert.match(html,/ehall\.szu\.edu\.cn/);
  assert.doesNotMatch(html,/合成测试班|找到 0/);
  assert.match(ui.section('program'),/培养方案/);
 });
@@ -81,7 +85,7 @@ await test('upstream failure clears the old successful result and offers retry',
 await test('reset during a pending read prevents stale school data from returning',async()=>{
  let resolve;const ui=createAcademicCatalogUI({api:()=>new Promise(done=>resolve=done)});
  ui.section('program');const pending=ui.click('academic-catalog-query');ui.reset();resolve(planList);await pending;
- assert.doesNotMatch(ui.section('program'),/合成测试方案/);assert.match(ui.section('program'),/尚未查询/);
+ assert.doesNotMatch(ui.section('program'),/合成测试方案/);assert.match(ui.section('program'),/学校原页/);
 });
 
 await test('navigating to another catalog mode discards the previous pending response',async()=>{

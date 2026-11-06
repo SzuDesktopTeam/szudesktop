@@ -15,7 +15,7 @@ export function remaining(end,now=Date.now()){return end<=now?'成熟啦，随�
 export function shouldPollNetwork({exiting,hidden,page,force=false,anyPage=false,now,checkedAt}){if(exiting||hidden||!anyPage&&page!=='home'&&page!=='network')return false;return force||now-checkedAt>=25000}
 
 // 开机自启卡片的文字与按钮。读不到状态时不能画成「未开启」，安装版只允许关掉旧版留下的自启项。
-export function autostartView(st,installed){let text=st?(st.detail||'状态未知'):'正在读取…';if(installed)text+=' · 安装版暂不支持开机自启';return {text,disabled:!(st&&st.supported&&!st.error&&(!installed||st.enabled)),label:installed?(st?.enabled?'关闭旧版开机自启':'安装版暂不支持开机自启'):(st?.enabled?'关掉开机自启':'打开开机自启')}}
+export function autostartView(st,installed){let text=st?(st.detail||'状态未知'):'正在读取…';if(installed)text+=' · 开机自启用 Setup 安装版开启';return {text,disabled:!(st&&st.supported&&!st.error&&(!installed||st.enabled)),label:installed?(st?.enabled?'关闭旧版开机自启':'开机自启用 Setup 安装版开启'):(st?.enabled?'关掉开机自启':'打开开机自启')}}
 
 // 「看过引导」和「回访」是两件事：关掉引导只说明看过了，同学并没有离开过。
 // 存档创建当天、或本次打开时才新建的存档（第一次重启之前，跨过午夜也算），首页仍按首访显示：首访标题、展开的伙伴栏、「开始 5 分钟」。

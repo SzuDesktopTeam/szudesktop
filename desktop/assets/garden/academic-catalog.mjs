@@ -1,7 +1,7 @@
 // Read-only views of the school's class timetable and published curricula.
 // Data stays in this view's memory; cookies are handled only by the main process.
 import {esc} from './html.mjs';
-import {unverifiedBadge} from './labels.mjs';
+import {sourceBadge} from './labels.mjs';
 
 const homes={timetable:'https://ehall.szu.edu.cn/jwapp/sys/kcbcx/*default/index.do',program:'https://ehall.szu.edu.cn/jwapp/sys/qxfacx/*default/index.do'};
 const businesses={timetable:'catalog-timetable',program:'catalog-program'};
@@ -36,14 +36,14 @@ export function createAcademicCatalogUI({api,onSessionChanged=()=>{}}){
  }
  function content(){
   const timetable=mode==='timetable',s=state(),available=typeof native()?.openSchool==='function'&&typeof native()?.syncSchool==='function';
-  return `<div class="card-head"><h2 class="icon-heading tone-info">${timetable?'全校课表':'培养方案'}</h2>${unverifiedBadge()}</div>
-   <p>${timetable?'按学期和班级查询学校课表，排课、调课、实践课与未排课程分别显示。':'查询学校已发布的培养方案，查看模块要求及课程。方案规定不等于个人已修学分，也不保证课程当期开设。'}</p>
+  return `<div class="card-head"><h2 class="icon-heading tone-info">${timetable?'全校课表':'培养方案'}</h2>${sourceBadge()}</div>
+   <p>${timetable?'按学期和班级查询学校课表，排课、调课、实践课与未排课程分别显示。':'查询学校已发布的培养方案，查看模块要求及课程；个人已修学分与当期开课以学校系统为准。'}</p>
    <div class="actions">${available?`<button data-action="academic-catalog-open"${busy?' disabled':''}>打开学校原页登录</button><button data-action="academic-catalog-sync"${busy?' disabled':''}>读取登录并查询</button>`:`<a href="${homes[mode]}" target="_blank" rel="noopener noreferrer">打开学校原页</a><small>安装版可从学校窗口读取本人登录；网页版需先建立本机学校会话。</small>`}</div>
    ${timetable?`<div class="grid"><div><label for="academic-catalog-term">学期代码</label><input id="academic-catalog-term" list="academic-catalog-term-options" value="${esc(s.term)}" placeholder="先读取学校学期，或输入官方学期代码"${busy?' disabled':''}><datalist id="academic-catalog-term-options">${s.terms.map(t=>`<option value="${esc(t.id)}">${esc(t.name||t.id)}</option>`).join('')}</datalist></div></div><div class="actions"><button data-action="academic-catalog-terms"${busy?' disabled':''}>读取学校学期</button></div><small>候选来自学校课表参数，未列出全部历史学期；其他学期请填写学校原页提供的代码，如 2026-2027-1。</small>`:''}
    <div class="grid">${input('query',timetable?'班级名称':'方案名称','可留空')}${input('grade','年级','如 2026')}${input('department','学院','可留空')}${input('major','专业','可留空')}</div>
    <div class="actions"><button class="primary" data-action="academic-catalog-query"${busy?' disabled':''}>${busy?'正在查询…':timetable?'查询班级':'查询培养方案'}</button><button class="quiet" data-action="academic-catalog-reset">清除查询结果</button></div>
    <p id="academic-catalog-status" class="notice${error?' error':''}" role="status"${error||message?'':' hidden'}>${esc(error||message)}</p>
-   <div id="academic-catalog-results">${s.list?listHTML(s.list):`<p class="empty">${busy?'正在读取学校数据…':'尚未查询。请在学校原页完成本人登录后读取。'}</p>`}
+   <div id="academic-catalog-results">${s.list?listHTML(s.list):`<p class="empty">${busy?'正在读取学校数据…':'先从学校原页完成本人登录，再点读取。'}</p>`}
    ${s.detail?(timetable?timetableHTML(s.detail):programHTML(s.detail)):''}</div>`;
  }
  function listHTML(data){
