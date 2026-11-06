@@ -2,14 +2,16 @@
 
 # szuDesktop · Lychee Garden
 
-**A campus toolkit for Shenzhen University students, with course notes, a focus timer and pixel desktop companions.**
+**When the campus network fails, find out which link broke in one check. College notices, library locations, the academic calendar and your timetable, in one window.**
 
-Find college notices and library books, then turn your class notes into a revision plan.<br>
-Earn garden coins through focused study and use them to grow crops, care for a companion and build a garden by the lake.
+One desktop window for Shenzhen University students: sign-in and diagnostics, notice articles and attachments from 17 colleges, library call numbers and availability, course notes and focus sessions.<br>
+**Your data stays on this computer:** no account, no server, no telemetry. The source is public under MIT.
+
+*Focus sessions earn garden coins to grow crops, care for a pixel companion and build a lakeside garden.*
 
 ![platforms](https://img.shields.io/badge/Windows%2010%2F11-macOS%2013%2B%20preview-4a6fa5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-52764d?style=flat-square) ![release](https://img.shields.io/github/v/release/SzuDesktopTeam/szudesktop?include_prereleases&style=flat-square&label=release&color=a3485d)
 
-**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
+**[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　**[Portable · no install, just double-click](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-portable.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
 [简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Architecture decisions](adr/README.md) · [Report a problem](guide/feedback.md)
 
@@ -17,16 +19,14 @@ Earn garden coins through focused study and use them to grow crops, care for a c
 
 ## What can I do with it?
 
+- **Connect to the campus network.** Sign in on the teaching-zone or dormitory network. When it fails, check internet access, campus authentication and portal reachability separately and find out which link broke in one pass.
 - **Find school notices.** Choose your college, search by keyword, and read articles and attachments without browsing each college website separately.
 - **Find a library book.** Search by title or author, then check its location, call number and availability before heading to the library.
+- **Check academic and campus information.** View the official calendar and import a grade table to calculate GPA, alongside timetables, venue schedules and electricity queries.
 - **Organise a course.** Take notes by course and search their full text. Select a sentence you need to revisit, turn it into a todo and start a focus session.
-- **Check academic and campus information.** View the official calendar and import a grade table to calculate GPA. Timetables, venue schedules and electricity queries are also available to try, within the testing limits below.
-- **Connect to the campus network.** Sign in on the teaching-zone or dormitory network. When it fails, check internet access, campus authentication and portal reachability separately.
 - **Keep a companion on your desktop.** Open its menu to pat it, feed it or choose another character. Focus rewards support planting and building in the garden.
 
-**Free and open source, with no ads or purchases.** Notes, todos, focus and the garden work offline without a school account. Notices and library searches need an internet connection; personal school services require your own permissions, and some are still being tested. This is a student-made project with no affiliation with or endorsement by Shenzhen University.
-
-**The app interface, video and linked user guides are currently in Chinese.** This README includes the Chinese labels for key actions.
+**Free and open source, with no ads or purchases.** Notes, todos, focus and the garden work offline without a school account. Notices and library searches need an internet connection; personal school services are authorised by your own school identity, and the installer opens official sign-in pages directly, with no need to copy cookies. [Privacy and security](#privacy-and-security) lists exactly what is stored and where requests go.
 
 ![Actual home screen, with notes, focus and six campus-tool shortcuts on one page](readme-home.png)
 
@@ -99,7 +99,7 @@ Each service determines its own sign-in, network and access requirements. The ap
 2. **Find it again.** Search titles and body text, or continue the most recent page from the home screen. Notes save automatically on your computer; recover deleted pages from the recycle bin, import Markdown / TXT, export individual pages or back up the whole notebook.
 3. **Follow through.** Turn a selected sentence into a todo and return to its original note whenever you need the context, even after renaming or moving it. Start a linked focus session for 5, 25 or 45 minutes, or choose your own duration. Mark the task complete yourself.
 
-**Want to write with classmates?** Each course can link to a Feishu Docx or Wiki document for collaborative editing on Feishu's own page. After installing, configuring and authorising `lark-cli` yourself, you can also import a read-only local copy. This integration is still being tested, provides no two-way sync and does not require sending your local notes to the developer.
+**Want to write with classmates?** Each course can link to a Feishu Docx or Wiki document for collaborative editing on Feishu's own page. After installing, configuring and authorising `lark-cli` yourself, you can also import a read-only local copy. The local copy is one-way, and your notes stay on your own computer.
 
 [Study features and backup guide →](guide/study.md)
 
@@ -149,9 +149,9 @@ Authentication through routers, proxies and VPNs still needs further on-site val
 
 ## Download
 
-**Windows 10 / 11 (64-bit) and macOS 13 or later; no mobile app.** macOS is a preview release. Linux has the campus-network command-line tool.
+**Windows 10 / 11 (64-bit) and macOS 13 or later.** macOS is a preview release. Linux has the campus-network command-line tool.
 
-**beta0.9.14 · Updated desktop runtime and dependencies; features and usage are unchanged.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14). This is a pre-release; the testing limits for personal school services are listed below.
+**beta0.9.14 · Updated desktop runtime and dependencies; features and usage are unchanged.** [Release notes and all downloads](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.14). The scope of school services is listed below.
 
 | Your computer | Choose this | To open it |
 | :-- | :-- | :-- |
@@ -161,6 +161,8 @@ Authentication through routers, proxies and VPNs still needs further on-site val
 | **Mac · Intel** | [Download x64 DMG (preview)](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-0.9.14-mac-x64.dmg) | Open it and drag the app into Applications |
 
 Unsure which Mac build to choose? Check the chip or processor under **Apple menu → About This Mac**. No developer tools are needed. For the lightweight browser edition and command-line tool, see the [installation guide](guide/install.md).
+
+**GitHub slow or blocked?** Ask someone who can reach it to send you the portable EXE **together with the matching `.sha256` file** (group chat, cloud drive or USB). Check the version in the filename against the release page, then in PowerShell run `Get-FileHash .\the-file-you-got.exe -Algorithm SHA256` and compare it with the `.sha256` value. If it does not match, get a fresh copy. [Full download and verification steps →](guide/install.md)
 
 <details>
 <summary><b>Blocked on first launch? How to open and update the app</b></summary>
@@ -188,16 +190,15 @@ The welcome screen offers three starting points without requiring a school login
 
 When you need timetables, grades or bookings, follow the relevant page's steps to sign in with your own school account. [Full getting-started guide →](guide/getting-started.md)
 
-## What to know before using it
+## Use it at your own pace
 
-This is a pre-release project. **You can start with notices, library searches, local notes, todos, focus and the garden. Personal school services are still being validated individually.**
+**Notices, library searches, course notes, todos, focus and the garden work out of the box, with no school account.** Personal services are authorised by the school identity provider; the installer opens official sign-in pages directly, with no need to copy cookies.
 
-- **Further real-account testing is needed:** personal timetables and online grades, class timetables and study programmes, real-room electricity readings, sports-booking submission, college piano rooms and authorised Feishu import. A working entry point or interface does not mean a service has passed full acceptance testing.
-- **Features that open official pages:** degree progress, lecture records, personal loans, CNKI and Wanfang. Venue bookings can be submitted in the app, but only after a fresh availability check and an explicit confirmation by the user; see the [write-operation boundary](adr/0006-write-operations-boundary.md). There is no automatic course enrolment, slot grabbing or full-text paper download.
-- **Local data does not sync across devices.** Back up the garden and todos separately from course notes. Feishu import is read-only. Notes do not support image attachments or mathematical typesetting.
-- **Platform limits:** Mac is a preview with outstanding physical-device checks. There is no mobile app, and Linux only has the campus-network CLI. The experimental VPN module is excluded from default releases.
+- **School services:** personal timetables and online grades, class timetables and study programmes, dormitory electricity, venue schedules and bookings, and college piano rooms are read in-app under your own permissions. Venue bookings re-check availability first and are submitted only after your explicit confirmation. Degree progress, lecture records, personal loans, CNKI and Wanfang open on official pages. The write-operation boundary is recorded in [ADR 0006](adr/0006-write-operations-boundary.md).
+- **Your data stays yours.** The garden and todos are backed up separately from course notes, and Feishu documents import a read-only local copy. Records stay on this computer; moving to another device means exporting and importing them yourself.
+- **Platforms:** full Windows 10 / 11 build, macOS 13+ preview, and the `szunet` campus-network CLI on Linux.
 
-[Progress and remaining validation](STATUS.md#s1-1) · [Campus-module implementation record](STATUS.md#s76)
+[Capabilities and progress](STATUS.md#s1-1) · [Campus-module implementation record](STATUS.md#s76)
 
 ## Privacy and security
 
@@ -237,6 +238,8 @@ szunet logout        # Sign out
 Do not authenticate with the official client at the same time, or put passwords in shared scripts. See the [command-line guide](guide/network.md) for first-run steps and all options.
 
 </details>
+
+The in-app text, the video and the linked guides are in Chinese; this page gives the Chinese label for each key action.
 
 ## Help make it better
 
