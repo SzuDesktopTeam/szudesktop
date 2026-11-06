@@ -7,6 +7,12 @@ LICENSE 里，GitHub 的许可证识别因此返回 NOASSERTION —— 徽章写
 from pathlib import Path
 import sys
 
+# Windows runner 的默认控制台是 cp1252；中文成功信息会在 print 时抛 UnicodeEncodeError。
+# 与 desktop/check_status_doc.py 等检查保持一致，统一按 UTF-8 输出。
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parent.parent
 license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
 notices_text = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
