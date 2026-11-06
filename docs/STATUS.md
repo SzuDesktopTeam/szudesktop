@@ -11,7 +11,7 @@
 
 ## 1. 当前状态
 
-- **当前版本：beta0.9.15。** 产品表达与架构收口版：仓库首屏与应用首页把校园网诊断放到第一位，对外文案统一为能力清单；69 条本机接口注册独立成文件，补齐源码规模与版本号一致性护栏，新增 8 篇架构决策记录。
+- **当前版本：beta0.9.15。** 产品表达与架构收口版：仓库首屏与应用首页把校园网诊断放到第一位，对外文案统一为能力清单；69 条本机接口注册独立成文件，补齐源码规模与版本号一致性护栏，新增 8 篇架构决策记录。源码提交为 `3b3cee0`，[main 完整检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42183850258)与[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42187279318)全部通过，22 件附件见 [beta0.9.15 发布页](https://github.com/SzuDesktopTeam/szudesktop/releases/tag/beta0.9.15)，记录见[第 83 节](#s83)。
 - **本版产品更新。** 应用首页默认六项重排，课表与培养方案页换成中性的数据来源说明；中英 README、全部使用指南与技术博客改为「能做什么 + 使用条件」；`docs/guide/trial-recruit.md` 补齐群内话术、视频搜索标题与校验核对方式。安装／DMG 升级基线前移到 beta0.9.14 并钉死该版三份附件的 SHA-256。
 - **桌面交付。** Windows 安装版、带窗口和伙伴的便携 EXE、轻量浏览器版；macOS 13+ 的 Apple 芯片和 Intel DMG 仍为预览版；Linux 仅 CLI。应发布 11 个程序或压缩包，以及对应 11 个校验文件，共 22 件附件。beta0.9.15 的升级验收起点前移至 beta0.9.14。
 - **可以离线使用。** 本机课程书架与 Markdown 笔记、待办、专注、五位新档伙伴、庭院种植、委托与建设、2048、三套三渲二风景；旧档阿青保留。账户和网络不是这些功能的前提。
@@ -3899,3 +3899,21 @@ PR 安装包首轮检查发现测试脚本仍在旧设置页查找刷新按钮�
 **验证与交付（2026-11-06）**：版本改动提交为 `7b25751`。本机 `go build`、`go vet`、发布说明严格模式预检、68 项 JS 与 6 项 Python 检查通过；本机 `go test ./...` 有两个 Windows 文件锁相关用例失败、`check-desktop-settings` 被本机安全策略拦下 reg.exe，这两类在干净 runner 上不复现。[main 完整检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42163313086) 的九项任务（含真实 Intel Mac 冒烟）全部通过后打 `beta0.9.14` 标签；[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42167255520) 的 release 任务上传 22 件附件、11 份 `.sha256`，与中英 README 的四个下载链接逐一对应。
 
 本轮没有安装或替换维护者当前应用，没有新增学校业务的真实账号验收，也没有改变 1.1 表的验收范围。
+
+<a id="s83"></a>
+## 83. 产品表达收口与 beta0.9.15 发布（2026-11-06）
+
+写入时状态：本节记录 beta0.9.15 发布；实际下载与构建结果见第 1 节链接。
+
+| 事项 | 处理 |
+| --- | --- |
+| 首屏与应用首页 | 中英 README 改成「给谁 / 解决什么 / 凭什么信你」；应用首页默认六项把校园网诊断提到第一位，课表与培养方案页换成数据来源说明 |
+| 对外文案 | README 中英、全部使用指南、技术博客与 UI 可见文案统一为能力清单 + 使用条件；发布页下载说明与便携包快速开始同步改为能力与使用步骤 |
+| 架构收口 | 69 条本机接口注册独立成 `api_routes.go`，凭据检查改扫包内全部生产文件；五处源码切片工具收口为 `source-sections.mjs`；新增 `check-app-size.mjs`、`check_version_consistency.py` 两道护栏 |
+| 决策记录与许可 | `docs/adr/` 0001–0008 加索引；`LICENSE` 恢复标准 MIT 全文，第三方来源归入 `THIRD_PARTY_NOTICES.md`；推送后 GitHub 已识别为 MIT |
+| 分发物料 | `docs/guide/trial-recruit.md` 补齐群内话术、视频搜索标题、首图三句话与 `.sha256` 核对方式；便携版下载入口前置 |
+| 升级基线 | Windows Setup 与两份 DMG 从 beta0.9.13 前移到 beta0.9.14，三份 SHA-256 取自该版 Release 附件 |
+
+**验证与交付（2026-11-06）**：版本、文案与编码修复共 7 个提交推入 main。本机 `go build`、`go vet`、`go test ./...`（排除两个 Windows 文件锁用例）、`run-checks` 77 项、文档锚点 762 个链接全部通过；`check-desktop-settings` 在本机受安全策略限制，由 CI 覆盖。[main 完整检查](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42183850258) 八项核心任务（含真实 Intel Mac 冒烟）全部通过后打 `beta0.9.15` 标签；[标签发布流水线](https://github.com/SzuDesktopTeam/szudesktop/actions/runs/42187279318) 的 release 任务上传 22 件附件、11 份 `.sha256`，与中英 README 的四个下载链接逐一对应。
+
+**Windows CI 编码修复**：新加的两个 Python 检查在 Windows runner 的 cp1252 控制台打印中文时抛 `UnicodeEncodeError`，首轮 main 流水线的 `build-desktop-windows` 因此失败。按项目既有做法在脚本入口把 stdout/stderr 切到 UTF-8（`3b3cee0`），并用 `PYTHONIOENCODING=cp1252` 在本机复现、复验 8 个 Python 检查全绿后重跑；旧 run 已取消，不与本次发布关联。
