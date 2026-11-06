@@ -11,7 +11,7 @@
 
 **[下载 Windows 安装版](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　[Mac / 其他下载](#下载)　·　[一分钟视频](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
-**简体中文** · [English](docs/README_en.md) · [使用指南](docs/guide/README.md) · [反馈问题](docs/guide/feedback.md)
+**简体中文** · [English](docs/README_en.md) · [使用指南](docs/guide/README.md) · [架构决策](docs/adr/README.md) · [反馈问题](docs/guide/feedback.md)
 
 </div>
 
@@ -191,7 +191,7 @@ Mac 不确定选哪个：看「苹果菜单 → 关于本机」里的芯片或�
 这是预发布项目。**公告与馆藏、本机笔记、待办、专注和庭院可以先用起来；学校个人业务仍在逐项验收。**
 
 - **需要真实账号继续验证**：个人课表与在线成绩、全校课表与培养方案、真实房间电量、体育预约提交、学院琴房及飞书授权导入。查询入口或界面存在，不代表这些业务已经全部验收通过。
-- **只打开原页面的功能**：学业完成、讲座记录、个人借阅、知网与万方。社区预约也在学校原页完成；没有自动选课、抢位或论文全文下载。
+- **只打开原页面的功能**：学业完成、讲座记录、个人借阅、知网与万方。场地预约可在应用内提交，但要先重新核对空位、再由本人确认；没有自动选课、抢位或论文全文下载，详见[写操作边界](docs/adr/0006-write-operations-boundary.md)。
 - **本机数据不会跨设备同步**：庭院与待办、课程笔记分开备份；飞书只读导入。笔记没有图片附件或公式排版。
 - **平台范围**：Mac 是预览版，仍有真机验证项；没有手机版，Linux 只有校园网命令行。实验 VPN 不在默认发行版里。
 
@@ -247,7 +247,7 @@ szunet logout        # 注销
 - [LoveSzu](https://github.com/teleostnacl/LoveSzu)：本科课表接口事实参考，独立实现，未复制源码。
 - [SZU CLI](https://github.com/AwesomeHou/szu-cli)：全校课表、培养方案等接口与解析参考及改编；MIT，Copyright (c) 2026 SZU CLI contributors。
 - [tools4szu](https://github.com/MattDong123/tools4szu)：经作者 Matt 授权用于接口调研；按接口事实重新实现。其仓库未声明开源许可，本项目未复制或再分发其代码。
-- [SZU-login](https://github.com/Sleepstars/SZU-login)：深澜 xEncode 衍生实现，原有版权声明保留在 [LICENSE](LICENSE)。
+- [SZU-login](https://github.com/Sleepstars/SZU-login)：深澜 xEncode 衍生实现，原有版权声明保留在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 - [Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font)：TakWolf，SIL OFL 1.1；[Three.js](https://www.npmjs.com/package/three/v/0.180.0)：MIT；[Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81)：Kenton Wang 的三渲二渲染模块，MIT；[2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc)：Gabriele Cirulli 的移动与合并规则，MIT。
 - [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) 与[福大助手](https://github.com/west2-online/fzuhelper-app)：界面层级与校园服务组织参考。Electron、Chromium 的许可保留在安装目录。
 

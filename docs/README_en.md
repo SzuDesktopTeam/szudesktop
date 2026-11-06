@@ -11,7 +11,7 @@ Earn garden coins through focused study and use them to grow crops, care for a c
 
 **[Download for Windows](https://github.com/SzuDesktopTeam/szudesktop/releases/download/beta0.9.14/szuDesktop-Setup-0.9.14.exe)**　·　[Mac / other downloads](#download)　·　[One-minute video](https://www.bilibili.com/video/BV1wZpA66EVd/)
 
-[简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Report a problem](guide/feedback.md)
+[简体中文](../README.md) · **English** · [User guide](guide/README.md) · [Architecture decisions](adr/README.md) · [Report a problem](guide/feedback.md)
 
 </div>
 
@@ -193,7 +193,7 @@ When you need timetables, grades or bookings, follow the relevant page's steps t
 This is a pre-release project. **You can start with notices, library searches, local notes, todos, focus and the garden. Personal school services are still being validated individually.**
 
 - **Further real-account testing is needed:** personal timetables and online grades, class timetables and study programmes, real-room electricity readings, sports-booking submission, college piano rooms and authorised Feishu import. A working entry point or interface does not mean a service has passed full acceptance testing.
-- **Features that open official pages:** degree progress, lecture records, personal loans, CNKI and Wanfang. Community-space bookings also happen on school pages. There is no automatic course enrolment, slot grabbing or full-text paper download.
+- **Features that open official pages:** degree progress, lecture records, personal loans, CNKI and Wanfang. Venue bookings can be submitted in the app, but only after a fresh availability check and an explicit confirmation by the user; see the [write-operation boundary](adr/0006-write-operations-boundary.md). There is no automatic course enrolment, slot grabbing or full-text paper download.
 - **Local data does not sync across devices.** Back up the garden and todos separately from course notes. Feishu import is read-only. Notes do not support image attachments or mathematical typesetting.
 - **Platform limits:** Mac is a preview with outstanding physical-device checks. There is no mobile app, and Linux only has the campus-network CLI. The experimental VPN module is excluded from default releases.
 
@@ -249,7 +249,7 @@ Project code uses the [MIT License](../LICENSE). Third-party components retain t
 - [LoveSzu](https://github.com/teleostnacl/LoveSzu): factual reference for undergraduate timetable endpoints; independently implemented without copying its source.
 - [SZU CLI](https://github.com/AwesomeHou/szu-cli): endpoint and parsing reference/adaptation for class timetables, study programmes and other services; MIT, Copyright (c) 2026 SZU CLI contributors.
 - [tools4szu](https://github.com/MattDong123/tools4szu): used with author Matt's permission for interface research; reimplemented from endpoint facts. Its repository declares no open-source licence, and this project does not copy or redistribute its code.
-- [SZU-login](https://github.com/Sleepstars/SZU-login): source of the Srun xEncode derivative implementation; original copyright notices remain in [LICENSE](../LICENSE).
+- [SZU-login](https://github.com/Sleepstars/SZU-login): source of the Srun xEncode derivative implementation; original copyright notices remain in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 - [Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font): TakWolf, SIL OFL 1.1; [Three.js](https://www.npmjs.com/package/three/v/0.180.0): MIT; [Sakura Crossing](https://github.com/Kenton-GMI/sakura-crossing/tree/de01898e89c7f6ab3fad93fa802f0f5ac66fbd81): Kenton Wang's toon-rendering modules, MIT; [2048](https://github.com/gabrielecirulli/2048/tree/478b6ec346e3787f589e4af751378d06ded4cbbc): Gabriele Cirulli's movement and merging rules, MIT.
 - [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) and [FZU Helper](https://github.com/west2-online/fzuhelper-app): references for visual hierarchy and campus-service organisation. Electron and Chromium licences remain in the installation directory.
 

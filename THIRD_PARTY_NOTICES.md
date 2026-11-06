@@ -1,6 +1,6 @@
 # szuDesktop 第三方声明
 
-项目代码使用 MIT License，完整条款和 xEncode 衍生实现的版权声明见同目录 `LICENSE`。以下组件保留各自许可，项目许可不覆盖它们。
+项目代码使用 MIT License，完整条款见同目录 `LICENSE`。以下组件保留各自许可，项目许可不覆盖它们。
 
 ## Fusion Pixel Font / 缝合像素字体
 
@@ -36,9 +36,19 @@ Copyright (c) 2014 Gabriele Cirulli。原项目采用 MIT License，完整条款
 
 本项目调整模块引用为离线相对路径，并适配 Three.js 版本及场景卸载；复制与改编的文件、上游版本和变更记录见 `desktop/assets/garden/vendor/SOURCE.json`。校园场景另行实现，不捆绑上游音频、玩家控制或完整世界启动代码。
 
+## xEncode 衍生实现与深澜认证加密流程
+
+`internal/crypto/xencode.go` 的 XXTEA（xEncode）实现改写自 [Sleepstars/SZU-login](https://github.com/Sleepstars/SZU-login)，其上游为 [vidar-team/srun-login](https://github.com/vidar-team/srun-login)，两者均采用 MIT License。按 MIT 要求保留原始版权声明：
+
+> Copyright 2021 E99p1ant. All rights reserved.
+> Use of this source code is governed by a MIT-style
+> license that can be found in the LICENSE file.
+
+深澜认证的 challenge、HMAC-MD5、xEncode、自定义 Base64 与 SHA1 chksum 流程来自校园网门户页面自带的 JavaScript，本项目用 Go 重新实现，未直接引用 GPL / AGPL 授权的代码。接入点自动发现与判区的实测记录见 `docs/blog/`。
+
 ## 协议参考与美术
 
-- xEncode 实现改写自 MIT 项目 Sleepstars/SZU-login（https://github.com/Sleepstars/SZU-login），其上游为 vidar-team/srun-login；原始版权声明保留在 `LICENSE`。
+- xEncode 实现的来源与原始版权声明见上一节。
 - 学校接口的事实性调研参考 MattDong123/tools4szu（https://github.com/MattDong123/tools4szu）。该参考仓库未声明开源许可；本项目按接口事实重新实现，不复制或再分发其代码。
 - 默认发行资源使用项目 SVG、像素角色、CSS 场景、开源字体和生成的校园背景；自 beta0.9.3 起另含上述开源渲染模块和本项目校园三维场景。不捆绑 Stardew Valley、Terraria、Minecraft 的游戏美术或原版游戏字体。游戏名称属于各自权利人，风格参考不表示合作或授权。
 - 实验 VPN 模块不进入默认发行构建；该模块的第三方来源与授权仍待核实，不能视为完成许可核验的发行功能。
