@@ -5,7 +5,7 @@ go 1.26.6
 require (
 	github.com/refraction-networking/utls v1.8.2
 	golang.org/x/net v0.62.0
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.50.0
 	golang.org/x/text v0.43.0
 	gvisor.dev/gvisor v0.0.0-20250307022919-35e47cb01460
 )
